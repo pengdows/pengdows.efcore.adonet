@@ -53,7 +53,7 @@ public class AdoNetModificationCommandBatchFactory(
     : IModificationCommandBatchFactory
 {
     private readonly int _maxBatchSize = capabilities.SupportsMultipleStatementsPerCommand
-        ? options.FindExtension<RelationalOptionsExtension>()?.MaxBatchSize ?? capabilities.DefaultMaxBatchSize
+        ? RelationalOptionsExtension.Extract(options).MaxBatchSize ?? capabilities.DefaultMaxBatchSize
         : 1;
 
     public virtual ModificationCommandBatch Create()

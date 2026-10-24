@@ -12,16 +12,18 @@ namespace pengdows.efcore.adonet.Tests;
 /// </summary>
 public sealed class FakeDatabase
 {
-    private readonly List<string> _log = [];
+    private readonly List<string> _commands = [];
+    private readonly List<string> _parameters = [];
 
     public fakeDbConnection Connection { get; } = new() { ConnectionString = $"Data Source=fake;EmulatedProduct={SupportedDatabase.PostgreSql}" };
 
-    /// <summary>Executed commands, each as EF logs it: parameters, then the SQL.</summary>
+    /// <summary>The SQL of each executed command, in order.</summary>
     public IReadOnlyList<string> Commands
-        => _log;
+        => _commands;
 
-    public string Sql
-        => string.Join("\n", _log);
+    /// <summary>Each executed command's parameter list as EF logs it, e.g. <c>@p0='1', @p1='x' (Size = 4000)</c>.</summary>
+    public IReadOnlyList<string> Parameters
+        => _parameters;
 
     public ItemContext Context(IAdoNetDialect dialect, Action<AdoNetDbContextOptionsBuilder>? adoNet = null)
         => new(new DbContextOptionsBuilder<ItemContext>()
@@ -31,8 +33,18 @@ public sealed class FakeDatabase
                 adoNet?.Invoke(o);
             })
             .EnableSensitiveDataLogging()
-            .LogTo(m => _log.Add(m.ReplaceLineEndings("\n")), [RelationalEventId.CommandExecuted])
+            .LogTo(Record, [RelationalEventId.CommandExecuted])
             .Options);
+
+    // "info: ... CommandExecuted ...\n      Executed DbCommand (1ms) [Parameters=[...], CommandType=...]\n      SQL..."
+    private void Record(string message)
+    {
+        var lines = message.ReplaceLineEndings("\n").Split('\n');
+        var header = lines[1];
+        var start = header.IndexOf("[Parameters=[", StringComparison.Ordinal) + "[Parameters=[".Length;
+        _parameters.Add(header[start..header.IndexOf("], CommandType=", StringComparison.Ordinal)]);
+        _commands.Add(string.Join("\n", lines.Skip(2).Select(l => l.Length >= 6 ? l[6..] : l.TrimStart())).TrimEnd());
+    }
 
     /// <summary>The next reader returns these rows.</summary>
     public void Returns(params Dictionary<string, object?>[] rows)

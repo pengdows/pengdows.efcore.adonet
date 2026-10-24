@@ -1,0 +1,196 @@
+using Microsoft.EntityFrameworkCore;
+
+namespace pengdows.efcore.adonet.Tests;
+
+/// <summary>What SaveChanges writes and reads back under each key retrieval strategy and batching capability.</summary>
+public class SaveChangesTests
+{
+    private readonly FakeDatabase _db = new();
+
+    private static CancellationToken Ct
+        => TestContext.Current.CancellationToken;
+
+    private static Item NewItem(string name = "n")
+        => new() { Name = name };
+
+    [Fact]
+    public async Task Returning_reads_the_key_back_from_the_insert()
+    {
+        await using var context = _db.Context(TestDialects.Ansi);
+        var item = NewItem();
+        _db.Returns(FakeDatabase.Row("Id", 7));
+
+        context.Add(item);
+        await context.SaveChangesAsync(Ct);
+
+        Assert.Equal(7, item.Id);
+        Assert.Matches(@"INSERT INTO ""Items"" \(.*\)\nVALUES \(.*\)\nRETURNING ""Id"";", Assert.Single(_db.Commands));
+    }
+
+    [Fact]
+    public async Task Returning_detects_a_concurrency_conflict_when_no_row_comes_back()
+    {
+        await using var context = _db.Context(TestDialects.Ansi);
+        var item = new Item { Id = 1, Version = 3 };
+        context.Attach(item);
+        item.Name = "changed";
+
+        await Assert.ThrowsAsync<DbUpdateConcurrencyException>(() => context.SaveChangesAsync(Ct));
+        Assert.Matches(@"UPDATE ""Items"" SET ""Name"" = @p\d+\nWHERE ""Id"" = @p\d+ AND ""Version"" = @p\d+\nRETURNING 1;", Assert.Single(_db.Commands));
+    }
+
+    [Fact]
+    public async Task Returning_delete_succeeds_when_its_row_comes_back()
+    {
+        await using var context = _db.Context(TestDialects.Ansi);
+        context.Remove(new Item { Id = 1, Version = 3 });
+        _db.Returns(FakeDatabase.Row("1", 1));
+
+        await context.SaveChangesAsync(Ct);
+
+        Assert.Contains("DELETE FROM \"Items\"\nWHERE \"Id\" = @p0 AND \"Version\" = @p1\nRETURNING 1;", Assert.Single(_db.Commands));
+    }
+
+    [Fact]
+    public async Task Select_after_reads_the_key_with_the_identity_and_rows_affected_functions()
+    {
+        await using var context = _db.Context(TestDialects.SelectAfter);
+        var item = NewItem();
+        _db.Returns(FakeDatabase.Row("Id", 9));
+
+        context.Add(item);
+        await context.SaveChangesAsync(Ct);
+
+        Assert.Equal(9, item.Id);
+        Assert.Contains("SELECT \"Id\"\nFROM \"Items\"\nWHERE row_count() = 1 AND \"Id\" = last_id();", Assert.Single(_db.Commands));
+    }
+
+    [Fact]
+    public async Task Select_after_checks_updates_and_deletes_with_the_rows_affected_function()
+    {
+        await using (var context = _db.Context(TestDialects.SelectAfter))
+        {
+            var item = new Item { Id = 1 };
+            context.Attach(item);
+            item.Name = "changed";
+            _db.Returns(FakeDatabase.Row("count", 0));
+
+            await Assert.ThrowsAsync<DbUpdateConcurrencyException>(() => context.SaveChangesAsync(Ct));
+        }
+
+        await using (var context = _db.Context(TestDialects.SelectAfter))
+        {
+            context.Remove(new Item { Id = 2 });
+            _db.Returns(FakeDatabase.Row("count", 1));
+
+            await context.SaveChangesAsync(Ct);
+        }
+
+        Assert.All(_db.Commands, c => Assert.EndsWith("SELECT row_count();", c.TrimEnd()));
+        Assert.Contains("UPDATE \"Items\" SET", _db.Commands[0]);
+        Assert.Contains("DELETE FROM \"Items\"", _db.Commands[1]);
+    }
+
+    [Fact]
+    public async Task Sequence_draws_the_key_before_a_plain_insert()
+    {
+        await using var context = _db.Context(TestDialects.Sequence);
+        var item = NewItem();
+        _db.Connection.EnqueueScalarResult(42);
+
+        context.Add(item);
+        Assert.Equal(42, item.Id);
+
+        // fakeDb 2.0.5 reports RecordsAffected = 0, which is exactly a row that wasn't written.
+        await Assert.ThrowsAsync<DbUpdateConcurrencyException>(() => context.SaveChangesAsync(Ct));
+        Assert.EndsWith("VALUES (NEXT VALUE FOR \"Items_Id_seq\")", _db.Commands[0]);
+        Assert.Matches(@"INSERT INTO ""Items"" \(""Id"", .*\)\nVALUES \(@p0, .*\);$", _db.Commands[1]);
+        Assert.DoesNotContain("RETURNING", _db.Commands[1]);
+    }
+
+    [Fact]
+    public void Sequence_works_synchronously_too()
+    {
+        using var context = _db.Context(TestDialects.Sequence);
+        var item = NewItem();
+        _db.Connection.EnqueueScalarResult(43);
+
+        context.Add(item);
+        Assert.Equal(43, item.Id);
+
+        Assert.Throws<DbUpdateConcurrencyException>(() => context.SaveChanges());
+        Assert.Equal(2, _db.Commands.Count);
+    }
+
+    [Fact]
+    public async Task Sequence_keys_convert_to_the_key_type()
+    {
+        await using var context = _db.Context(TestDialects.Sequence);
+        _db.Connection.EnqueueScalarResult(5);
+        _db.Connection.EnqueueScalarResult(6L);
+
+        var longKeyed = (await context.AddAsync(new LongKeyed(), Ct)).Entity;
+        var shortKeyed = (await context.AddAsync(new ShortKeyed(), Ct)).Entity;
+
+        Assert.Equal(5L, longKeyed.Id);
+        Assert.Equal((short)6, shortKeyed.Id);
+        Assert.EndsWith("VALUES (NEXT VALUE FOR \"LongKeyed_Id_seq\")", _db.Commands[0]);
+        Assert.EndsWith("VALUES (NEXT VALUE FOR \"ShortKeyed_Id_seq\")", _db.Commands[1]);
+    }
+
+    [Fact]
+    public async Task Sequence_rejects_other_store_generated_columns()
+    {
+        await using var context = _db.Context(TestDialects.Sequence);
+        _db.Connection.EnqueueScalarResult(1);
+        context.Add(new Defaulted());
+
+        var error = await Assert.ThrowsAsync<NotSupportedException>(() => context.SaveChangesAsync(Ct));
+
+        Assert.Contains("'Defaulted.Counter'", error.Message);
+    }
+
+    [Fact]
+    public async Task Multi_statement_dialects_batch_up_to_their_default_size()
+    {
+        await using var context = _db.Context(TestDialects.BatchesOfTwo);
+        _db.Connection.EnqueueMultiResultReader([[FakeDatabase.Row("Id", 1)], [FakeDatabase.Row("Id", 2)]]);
+        _db.Returns(FakeDatabase.Row("Id", 3));
+
+        context.AddRange(NewItem("a"), NewItem("b"), NewItem("c"));
+        await context.SaveChangesAsync(Ct);
+
+        Assert.Equal(2, _db.Commands.Count);
+        Assert.Equal(2, CountOf("INSERT INTO", _db.Commands[0]));
+    }
+
+    [Fact]
+    public async Task Max_batch_size_overrides_the_dialect_default()
+    {
+        await using var context = _db.Context(TestDialects.BatchesOfTwo, o => o.MaxBatchSize(1));
+        _db.Returns(FakeDatabase.Row("Id", 1));
+        _db.Returns(FakeDatabase.Row("Id", 2));
+
+        context.AddRange(NewItem("a"), NewItem("b"));
+        await context.SaveChangesAsync(Ct);
+
+        Assert.Equal(2, _db.Commands.Count);
+    }
+
+    [Fact]
+    public async Task Single_statement_dialects_never_batch()
+    {
+        await using var context = _db.Context(TestDialects.Ansi, o => o.MaxBatchSize(50));
+        _db.Returns(FakeDatabase.Row("Id", 1));
+        _db.Returns(FakeDatabase.Row("Id", 2));
+
+        context.AddRange(NewItem("a"), NewItem("b"));
+        await context.SaveChangesAsync(Ct);
+
+        Assert.Equal(2, _db.Commands.Count);
+        Assert.All(_db.Commands, c => Assert.Equal(1, CountOf("INSERT INTO", c)));
+    }
+
+    private static int CountOf(string text, string within)
+        => (within.Length - within.Replace(text, "").Length) / text.Length;
+}
