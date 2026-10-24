@@ -1,61 +1,131 @@
 # pengdows.efcore.adonet
 
-A provider-agnostic EF Core 10 relational provider. It reaches the database only through the ADO.NET abstractions:
-`DbProviderFactory`, `DbDataSource`, `DbConnection` and `DbTransaction`. An `AdoNetSqlDialect` supplies the
-SQL details that ADO.NET can't describe.
+An EF Core 10 relational provider split in two: a **core** that knows only ADO.NET, EF Core and a plugin contract,
+and **dialect plugins** that describe and implement what makes each database different.
 
 ```csharp
-// Any registered ADO.NET provider; the dialect is detected from the factory, or falls back to ANSI.
-options.UseAdoNet(SqliteFactory.Instance, "Data Source=app.db");
-options.UseAdoNet("DuckDB.NET.Data", connectionString);              // via DbProviderFactories
-options.UseAdoNet(dataSource);                                        // caller owns the DbDataSource
-options.UseAdoNet(connection, contextOwnsConnection: false);
-options.UseAdoNet(factory, cs, o => o.UseDialect(MyDialect.Instance).MaxBatchSize(50));
+// Switching databases changes two arguments: the ADO.NET factory and the dialect.
+options.UseAdoNet(NpgsqlFactory.Instance,          connectionString, PostgreSqlDialect.Instance);
+options.UseAdoNet(SqlClientFactory.Instance,       connectionString, SqlServerDialect.Instance);
+options.UseAdoNet(MySqlConnectorFactory.Instance,  connectionString, MySqlDialect.Instance);
+
+// Or each plugin's shorthand.
+options.UseAdoNetPostgreSql(connectionString);
 ```
 
-## How it stays provider-neutral
+The core never names a database. Adding one must not require changing it; if it does, that's a missing extension
+point. A test enforces that the core references no driver and defines no dialect but ANSI.
 
-| Concern | Mechanism |
+## Layers
+
+| Layer | Responsibility |
 |---|---|
-| Connections | `DbDataSource.CreateConnection()` or `DbProviderFactory.CreateConnection()`. EF opens late and closes early, so pooling stays with the provider. |
-| Parameters | EF's stock type mappings bind via `DbType`/`Size`/`Precision`, never provider parameter types. The dialect controls the marker (`@`, `:`, `$`) and whether `ParameterName` includes it. |
-| Savepoints | `DbTransaction.Save/Rollback(name)/Release`, gated on `DbTransaction.SupportsSavepoints`. No SQL text. |
-| Close | Calls `Close()` only on open connections; some providers (DuckDB.NET) throw on a second `Close()`. |
-| Paging | `OFFSET … FETCH` (ANSI), `LIMIT … OFFSET`, or `TOP(n)` with `OFFSET … FETCH` only when skipping (SQL Server), plus an optional "no limit" value for OFFSET-only queries. For engines that only accept literals there, values are inlined once known, and EF doesn't cache that SQL. |
-| Generated values | `RETURNING`; or `INSERT …; SELECT … WHERE {rows-affected}=1 AND key={identity-fn}`; or **RecordsAffected**: plain one-statement commands checked through `DbDataReader.RecordsAffected`, with integer keys taken from `NEXT VALUE FOR "{table}_{column}_seq"` before the insert. |
-| Booleans | Where a bool value can't be a predicate (SQL Server's `BIT`), `x = TRUE` and `CASE WHEN … THEN TRUE ELSE FALSE END` are added where needed, with the dialect's TRUE/FALSE literals. |
-| Batching | Several commands are batched into one `DbCommand` only if the dialect allows multiple statements; otherwise each command runs on its own. |
+| EF Core | LINQ, mapping, change tracking |
+| **pengdows.efcore.adonet** (core) | Connections and `DbDataSource`s, transactions and savepoints, parameter binding through `DbType`, batching, concurrency checks, the query pipeline, and ISO SQL defaults for everything a dialect may override |
+| **Dialect plugin** | SQL words and grammar, type names, capabilities; optionally migrations, LINQ translations, bulk loading — and it may use its driver's own APIs |
+| ADO.NET driver | The database access contract |
 
-Dialects are cached per **instance** in EF's internal service provider. Use shared static instances
-(`AdoNetSqlDialect.Ansi`, `SqliteSqlDialect.Instance`, …) and don't create a new one per context.
+## The plugin contract
 
-Built-in dialects: `Ansi`, `SqliteSqlDialect`, `LegacySqliteSqlDialect` (pre-3.35, no RETURNING), `DuckDbSqlDialect`,
-`PostgreSqlDialect` (Npgsql), `MySqlSqlDialect` (MySqlConnector / MySql.Data: backticks, `LAST_INSERT_ID()`, GUIDs as
-`CHAR(36)`, no `DateTimeOffset`), `SqlServerSqlDialect` (Microsoft.Data.SqlClient / System.Data.SqlClient: `TOP`, `BIT`
-predicates, `COUNT_BIG`, keys via `SCOPE_IDENTITY()`; identifiers stay double-quoted, so `QUOTED_IDENTIFIER` must be ON, as it is by
-default), `FlatFileSqlDialect` (pengdows.flatfile: strict ISO SQL, `:name` parameters, literal-only paging, sequence keys).
-To support another database, subclass `AdoNetSqlDialect` and override what differs. Add it to
-`AdoNetSqlDialect.Detect` if you want it auto-detected.
+```csharp
+public interface IAdoNetDialect
+{
+    string Name { get; }
+    ISqlDialect Sql { get; }                    // required: words + grammar parts
+    ITypeMappingDialect TypeMappings { get; }   // required: store type names
+    IDatabaseCapabilities Capabilities { get; } // required: what the driver accepts
+    void ConfigureServices(IServiceCollection services); // optional EF services; these win over the core's
+}
+```
 
-## Not supported (by design, for now)
+`AdoNetDialect`, `AnsiSqlDialect` and `AnsiTypeMappings` supply ISO SQL throughout, so a dialect overrides only what
+its database does differently. Grammar comes in parts a dialect picks, named for their shape rather than a database:
 
-- Migrations, `EnsureCreated`, database create/delete. Manage the schema outside EF; `Exists`/`HasTables` work.
-- Positional (`?`) parameters, as used by ODBC/OleDb. EF reuses named parameters within one statement.
-- Provider-specific LINQ translations (`string.Contains`, date parts, …). Only EF's relational defaults are
-  available; register an `IMethodCallTranslatorPlugin` to add more.
+| Part | Variants |
+|---|---|
+| `PagingSyntax` | `OffsetFetch`, `TopOrOffsetFetch`, `LimitOffset(noLimitValue)`, any `.WithLiteralValues()` |
+| `BooleanSyntax` | `Native`, `BitValues` (values aren't predicates: `x = TRUE` / `CASE WHEN`) |
+| `KeyRetrieval` | `Returning`, `SelectAfter(identityFunction, rowsAffectedFunction)`, `Sequence(...)` |
+| `DmlSyntax` (`ExecuteUpdate`/`ExecuteDelete`) | `Standard`, `UnaliasedTarget`, `TargetAliasFrom`, `MultiTable` |
 
-## Build / test
+Each part is an abstract class: a database with its own form (Firebird's `FIRST`/`SKIP`, Oracle's `ROWNUM`) subclasses it.
+
+Optional services a dialect may register in `ConfigureServices`, each with an ISO default in the core:
+
+| Service | Core default | Plugins overriding it |
+|---|---|---|
+| `IMigrationsSqlGenerator` | `AdoNetMigrationsSqlGenerator`: ISO DDL, identity as `GENERATED BY DEFAULT AS IDENTITY` | SQL Server, MySQL, SQLite, DuckDB |
+| `IHistoryRepository` | `AdoNetHistoryRepository`: `INFORMATION_SCHEMA`, a lock row in `__EFMigrationsLock` | MySQL, SQLite |
+| `IAdoNetBulkLoader` | `AdoNetInsertBulkLoader`: multi-row `INSERT ... VALUES` | SQL Server (`SqlBulkCopy`), PostgreSQL (binary `COPY`) |
+| anything else EF resolves | EF's relational defaults | — |
+
+EF builds one internal service provider per distinct dialect, as decided by the dialect's `Equals`/`GetHashCode`.
+Share instances (`SqlServerDialect.Instance`), or give a configurable dialect value equality.
+
+Without `UseDialect`, the dialect is looked up in `AdoNetDialects`, where plugins register through
+`XxxDbContextOptionsBuilderExtensions.RegisterDialect()`; an unregistered factory gets ANSI.
+
+## Databases
+
+| Plugin | Driver | Queries, saves, bulk DML, bulk insert | Migrations | Known gaps |
+|---|---|---|---|---|
+| `postgresql` | Npgsql | ✅ (bulk insert: binary `COPY`) | ✅ | — |
+| `sqlserver` | Microsoft.Data.SqlClient | ✅ (bulk insert: `SqlBulkCopy`) | ✅ | — |
+| `mysql` | MySqlConnector | ✅ | ✅ | — |
+| `sqlite` (+ pre-3.35) | Microsoft.Data.Sqlite | ✅ | ✅ except `ALTER COLUMN` | Needs a table rebuild, not implemented |
+| `duckdb` | DuckDB.NET | ✅ | `CreateTables` only | DuckDB can't `ALTER` a table with indexes or foreign keys |
+| `flatfile` | pengdows.flatfile | ✅ except below | `CreateTables` only | Engine (0.2.1-preview.8): `FETCH FIRST` in derived tables, `NOT` as an UPDATE value, joined `IN` subqueries, `ALTER SEQUENCE ... RENAME`, `ALTER COLUMN`; dialect: no `UPDATE` through a join without a target alias |
+
+Gaps are recorded per fixture in `KnownEngineGaps` and reported as skipped tests with the reason.
+
+`BulkInsert` doesn't read back keys the database generates (sequence keys are drawn first and set on the entities),
+writes every mapped column (database defaults don't apply), and doesn't support owned or complex types.
+
+## Size
+
+Code lines (no blanks or comments) and Release DLL size, against the official providers on the same EF Core:
+
+| Package | Lines | DLL |
+|---|---|---|
+| core | 2,220 | 103 KB |
+| sqlserver | 238 | 18 KB |
+| postgresql | 124 | 13 KB |
+| mysql | 126 | 11 KB |
+| sqlite | 90 | 10 KB |
+| duckdb | 135 | 11 KB |
+| flatfile | 44 | 7 KB |
+| Microsoft.EntityFrameworkCore.SqlServer 10.0.11 | 23,474 | 627 KB |
+| Microsoft.EntityFrameworkCore.Sqlite.Core 10.0.11 | 8,677 | 304 KB |
+| Npgsql.EntityFrameworkCore.PostgreSQL 10.0.3 | — | 663 KB |
+
+Not a feature-for-feature comparison: the official providers also scaffold, translate hundreds of LINQ methods, and
+support spatial, JSON, temporal tables and more. The number to watch is how large a plugin grows as it reaches parity
+on what it needs, while the core stays put.
+
+## Tests
 
 ```bash
-dotnet test                                   # Sqlite (in-memory), legacy Sqlite, DuckDB, pengdows.flatfile (temp dirs),
-                                              # PostgreSQL, SQL Server and MySQL (Docker via Testcontainers; skipped without Docker)
-dotnet test --filter "FullyQualifiedName~DuckDb"
+dotnet test     # every project; server databases run in Docker (Testcontainers) and are skipped without it
+dotnet test test/pengdows.efcore.adonet.Tests   # the core alone: fakeDb and an in-memory SQLite connection, no servers
 ```
 
-`ProviderConformanceTests<TFixture>` is a single suite written only against EF and ADO.NET abstractions. To check a new
-provider, add a `ProviderFixture` (factory, connection string, DDL) and a one-line subclass of the suite. Failures caused
-by the database engine itself go in the fixture's `KnownEngineGaps` and are reported as skipped with the reason.
+- **Core** (`pengdows.efcore.adonet.Tests`): every grammar part, key strategy, DML form, DDL form, the history lock,
+  bulk loading, connection lifecycle and failure paths, against dialects composed from parts the way an outside plugin
+  would, on `pengdows.crud.fakeDb`. SQL is read from EF's own command log. 99% line, 92% branch coverage of the core
+  from these tests alone.
+- **Testing package** (`pengdows.efcore.adonet.Testing`): the conformance suites a plugin runs —
+  `ProviderConformanceTests`, `MigrationsConformanceTests`, `BulkConformanceTests`. Write a `ProviderFixture`
+  (factory, connection string, dialect, DDL) and a one-line subclass of each suite.
+- **Plugins** (`pengdows.efcore.adonet.<db>.Tests`): their fixture, the three suites, and their SQL shapes.
 
-Known engine gaps:
-- pengdows.flatfile 0.2.1-preview.8 rejects `FETCH FIRST` inside a derived table, which EF emits for
-  `Include(...)` combined with `Single`/`Take`.
+## Writing a plugin
+
+1. Reference `pengdows.efcore.adonet` (and your driver, if you use its APIs).
+2. Subclass `AdoNetDialect`; override `Sql`, `TypeMappings`, `Capabilities` with what differs from ISO.
+3. Add a `UseAdoNetXxx` extension and a `RegisterDialect()`.
+4. In a test project, reference `pengdows.efcore.adonet.Testing`, write a fixture, subclass the three suites.
+5. Where a suite fails, override a grammar part or register a service in `ConfigureServices` (migrations,
+   history, bulk loader, translators); record what the engine itself can't do in `KnownEngineGaps`.
+
+The SQL Server plugin is the fullest example: words, `TopOrOffsetFetch`, `BitValues`, `SelectAfter`,
+`TargetAliasFrom`, a migrations generator and a native bulk loader, in 238 lines.
