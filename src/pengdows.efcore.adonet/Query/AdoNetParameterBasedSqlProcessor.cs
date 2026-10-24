@@ -7,7 +7,8 @@ namespace pengdows.efcore.adonet.Query;
 /// <summary>
 ///     Runs once parameter values are known. For dialects that reject parameters in OFFSET/FETCH, replaces them with
 ///     constants; reading the values through <see cref="ParametersCacheDecorator.GetAndDisableCaching" /> keeps EF
-///     from caching SQL that now depends on them.
+///     from caching SQL that now depends on them. For dialects without boolean expressions, converts between
+///     bool values and conditions (<see cref="AdoNetSearchConditionConverter" />).
 /// </summary>
 public class AdoNetParameterBasedSqlProcessor(
     RelationalParameterBasedSqlProcessorDependencies dependencies,
@@ -19,9 +20,15 @@ public class AdoNetParameterBasedSqlProcessor(
     {
         queryExpression = base.Process(queryExpression, parametersDecorator);
 
-        return dialect.SupportsParametersInPaging
+        if (!dialect.SupportsParametersInPaging)
+        {
+            queryExpression = new PagingParameterInliner(parametersDecorator).Visit(queryExpression);
+        }
+
+        // After null semantics, which add conditions of their own.
+        return dialect.SupportsBooleanExpressions
             ? queryExpression
-            : new PagingParameterInliner(parametersDecorator).Visit(queryExpression);
+            : new AdoNetSearchConditionConverter(Dependencies.SqlExpressionFactory).Visit(queryExpression);
     }
 
     private sealed class PagingParameterInliner(ParametersCacheDecorator parametersDecorator) : ExpressionVisitor

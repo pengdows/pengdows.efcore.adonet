@@ -1,8 +1,10 @@
 using DuckDB.NET.Data;
+using Microsoft.Data.SqlClient;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Npgsql;
 using pengdows.efcore.adonet.Dialects;
 using pengdows.flatfile;
 
@@ -75,6 +77,59 @@ public class SqlGenerationTests
 
         Assert.Contains("= :name", sql);
         Assert.Contains("OFFSET 5 ROWS FETCH NEXT 10 ROWS ONLY", sql);
+    }
+
+    [Fact]
+    public void PostgreSql_uses_limit_offset()
+    {
+        using var context = Context(b => b.UseAdoNet(NpgsqlFactory.Instance, "Host=localhost"));
+
+        var sql = PagedQuery(context);
+
+        Assert.Contains("= @name", sql);
+        Assert.Matches(@"LIMIT @p\w*\s+OFFSET @p\w*", sql);
+    }
+
+    [Fact]
+    public void SqlServer_uses_top_without_an_offset()
+    {
+        using var context = Context(b => b.UseAdoNet(SqlClientFactory.Instance, "Server=localhost"));
+
+        var sql = context.Blogs.Take(3).ToQueryString();
+
+        Assert.Matches(@"SELECT TOP\(@p\w*\) ", sql);
+        Assert.DoesNotContain("FETCH", sql);
+    }
+
+    [Fact]
+    public void SqlServer_orders_by_a_constant_when_offset_has_no_ordering()
+    {
+        using var context = Context(b => b.UseAdoNet(SqlClientFactory.Instance, "Server=localhost"));
+
+        Assert.Matches(@"ORDER BY \(SELECT 1\)\s+OFFSET @p\w* ROWS", context.Blogs.Skip(3).ToQueryString());
+        Assert.Matches(@"OFFSET @p\w* ROWS FETCH NEXT @p\w* ROWS ONLY", PagedQuery(context));
+    }
+
+    [Fact]
+    public void SqlServer_converts_between_bit_values_and_conditions()
+    {
+        using var context = Context(b => b.UseAdoNet(SqlClientFactory.Instance, "Server=localhost"));
+
+        var where = context.Blogs.Where(b => b.IsActive && !b.IsActive).ToQueryString();
+        var select = context.Blogs.Select(b => new { Big = b.Rating > 5, b.IsActive }).ToQueryString();
+
+        Assert.Contains("WHERE \"b\".\"IsActive\" = CAST(1 AS BIT) AND NOT (\"b\".\"IsActive\" = CAST(1 AS BIT))", where);
+        Assert.Contains("CASE\n    WHEN \"b\".\"Rating\" > 5.0 THEN CAST(1 AS BIT)\n    ELSE CAST(0 AS BIT)\nEND AS \"Big\"", select.ReplaceLineEndings("\n"));
+        Assert.Contains("\"b\".\"IsActive\"", select);
+    }
+
+    [Fact]
+    public void SqlServer_long_count_uses_count_big()
+    {
+        using var context = Context(b => b.UseAdoNet(SqlClientFactory.Instance, "Server=localhost"));
+
+        Assert.Contains("COUNT_BIG(*)", context.Blogs.GroupBy(b => b.Name).Select(g => g.LongCount()).ToQueryString());
+        Assert.DoesNotContain("COUNT_BIG", context.Blogs.GroupBy(b => b.Name).Select(g => g.Count()).ToQueryString());
     }
 
     [Fact]

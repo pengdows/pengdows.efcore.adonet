@@ -9,7 +9,13 @@ public enum PagingStyle
     OffsetFetch,
 
     /// <summary><c>LIMIT m OFFSET n</c>.</summary>
-    LimitOffset
+    LimitOffset,
+
+    /// <summary>
+    ///     <c>SELECT TOP(m)</c> without an offset, otherwise <c>OFFSET n ROWS FETCH NEXT m ROWS ONLY</c> with
+    ///     <c>ORDER BY (SELECT 1)</c> when the query has no ordering (SQL Server).
+    /// </summary>
+    TopOrOffsetFetch
 }
 
 public enum GeneratedValueRetrieval
@@ -85,6 +91,17 @@ public class AdoNetSqlDialect
     /// <summary>When false, OFFSET/LIMIT values are inlined as literals (the generated SQL is then not cached).</summary>
     public virtual bool SupportsParametersInPaging => true;
 
+    /// <summary>
+    ///     Whether boolean values and conditions are interchangeable: a bool column can be a WHERE predicate and a
+    ///     comparison can be projected. When false (SQL Server's BIT), values used as predicates become
+    ///     <c>x = TRUE</c> and conditions used as values become <c>CASE WHEN ... THEN TRUE ELSE FALSE END</c>,
+    ///     with TRUE/FALSE written as <see cref="TrueLiteral" />/<see cref="FalseLiteral" />.
+    /// </summary>
+    public virtual bool SupportsBooleanExpressions => true;
+
+    /// <summary>The aggregate for <c>LongCount</c>, for databases whose <c>COUNT</c> returns a 32-bit integer.</summary>
+    public virtual string LongCountFunction => "COUNT";
+
     public virtual string TrueLiteral => "TRUE";
     public virtual string FalseLiteral => "FALSE";
 
@@ -146,6 +163,9 @@ public class AdoNetSqlDialect
             "Microsoft.Data.Sqlite.SqliteFactory" or "System.Data.SQLite.SQLiteFactory" => SqliteSqlDialect.Instance,
             "DuckDB.NET.Data.DuckDBClientFactory" => DuckDbSqlDialect.Instance,
             "pengdows.flatfile.FlatFileProviderFactory" => FlatFileSqlDialect.Instance,
+            "Npgsql.NpgsqlFactory" => PostgreSqlDialect.Instance,
+            "MySqlConnector.MySqlConnectorFactory" or "MySql.Data.MySqlClient.MySqlClientFactory" => MySqlSqlDialect.Instance,
+            "Microsoft.Data.SqlClient.SqlClientFactory" or "System.Data.SqlClient.SqlClientFactory" => SqlServerSqlDialect.Instance,
             _ => Ansi
         };
 }

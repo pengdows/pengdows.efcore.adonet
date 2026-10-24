@@ -21,15 +21,19 @@ options.UseAdoNet(factory, cs, o => o.UseDialect(MyDialect.Instance).MaxBatchSiz
 | Parameters | EF's stock type mappings bind via `DbType`/`Size`/`Precision`, never provider parameter types. The dialect controls the marker (`@`, `:`, `$`) and whether `ParameterName` includes it. |
 | Savepoints | `DbTransaction.Save/Rollback(name)/Release`, gated on `DbTransaction.SupportsSavepoints`. No SQL text. |
 | Close | Calls `Close()` only on open connections; some providers (DuckDB.NET) throw on a second `Close()`. |
-| Paging | `OFFSET … FETCH` (ANSI) or `LIMIT … OFFSET`, plus an optional "no limit" value for OFFSET-only queries. For engines that only accept literals there, values are inlined once known, and EF doesn't cache that SQL. |
+| Paging | `OFFSET … FETCH` (ANSI), `LIMIT … OFFSET`, or `TOP(n)` with `OFFSET … FETCH` only when skipping (SQL Server), plus an optional "no limit" value for OFFSET-only queries. For engines that only accept literals there, values are inlined once known, and EF doesn't cache that SQL. |
 | Generated values | `RETURNING`; or `INSERT …; SELECT … WHERE {rows-affected}=1 AND key={identity-fn}`; or **RecordsAffected**: plain one-statement commands checked through `DbDataReader.RecordsAffected`, with integer keys taken from `NEXT VALUE FOR "{table}_{column}_seq"` before the insert. |
+| Booleans | Where a bool value can't be a predicate (SQL Server's `BIT`), `x = TRUE` and `CASE WHEN … THEN TRUE ELSE FALSE END` are added where needed, with the dialect's TRUE/FALSE literals. |
 | Batching | Several commands are batched into one `DbCommand` only if the dialect allows multiple statements; otherwise each command runs on its own. |
 
 Dialects are cached per **instance** in EF's internal service provider. Use shared static instances
 (`AdoNetSqlDialect.Ansi`, `SqliteSqlDialect.Instance`, …) and don't create a new one per context.
 
 Built-in dialects: `Ansi`, `SqliteSqlDialect`, `LegacySqliteSqlDialect` (pre-3.35, no RETURNING), `DuckDbSqlDialect`,
-`FlatFileSqlDialect` (pengdows.flatfile: strict ISO SQL, `:name` parameters, literal-only paging, sequence keys).
+`PostgreSqlDialect` (Npgsql), `MySqlSqlDialect` (MySqlConnector / MySql.Data: backticks, `LAST_INSERT_ID()`, GUIDs as
+`CHAR(36)`, no `DateTimeOffset`), `SqlServerSqlDialect` (Microsoft.Data.SqlClient / System.Data.SqlClient: `TOP`, `BIT`
+predicates, `COUNT_BIG`, keys via `SCOPE_IDENTITY()`; identifiers stay double-quoted, so `QUOTED_IDENTIFIER` must be ON, as it is by
+default), `FlatFileSqlDialect` (pengdows.flatfile: strict ISO SQL, `:name` parameters, literal-only paging, sequence keys).
 To support another database, subclass `AdoNetSqlDialect` and override what differs. Add it to
 `AdoNetSqlDialect.Detect` if you want it auto-detected.
 
@@ -39,13 +43,12 @@ To support another database, subclass `AdoNetSqlDialect` and override what diffe
 - Positional (`?`) parameters, as used by ODBC/OleDb. EF reuses named parameters within one statement.
 - Provider-specific LINQ translations (`string.Contains`, date parts, …). Only EF's relational defaults are
   available; register an `IMethodCallTranslatorPlugin` to add more.
-- SQL Server needs `TOP` and bool-predicate rewriting; databases without a boolean type need `1/0` predicates.
-  Neither is expressible in the dialect yet.
 
 ## Build / test
 
 ```bash
-dotnet test                                   # Sqlite (in-memory), legacy Sqlite, DuckDB and pengdows.flatfile (temp dirs); no servers
+dotnet test                                   # Sqlite (in-memory), legacy Sqlite, DuckDB, pengdows.flatfile (temp dirs),
+                                              # PostgreSQL, SQL Server and MySQL (Docker via Testcontainers; skipped without Docker)
 dotnet test --filter "FullyQualifiedName~DuckDb"
 ```
 

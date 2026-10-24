@@ -19,6 +19,11 @@ public abstract class ProviderConformanceTests<TFixture>(TFixture fixture) : ICl
 
     public async ValueTask InitializeAsync()
     {
+        if (Fixture.SkipReason is { } skipReason)
+        {
+            Assert.Skip(skipReason);
+        }
+
         if (Fixture.KnownEngineGaps.TryGetValue(TestContext.Current.Test!.TestCase.TestMethodName ?? "", out var reason))
         {
             Assert.Skip(reason);
@@ -183,7 +188,8 @@ public abstract class ProviderConformanceTests<TFixture>(TFixture fixture) : ICl
         await using var context = Fixture.CreateContext();
         var blog = await context.Blogs.SingleAsync(Ct);
 
-        await Fixture.ExecuteAsync($"UPDATE \"Blogs\" SET \"Name\" = 'changed elsewhere' WHERE \"Id\" = {blog.Id}");
+        await Fixture.ExecuteAsync(
+            $"UPDATE {Fixture.Quote("Blogs")} SET {Fixture.Quote("Name")} = 'changed elsewhere' WHERE {Fixture.Quote("Id")} = {blog.Id}");
 
         blog.Name = "mine";
         await Assert.ThrowsAsync<DbUpdateConcurrencyException>(() => context.SaveChangesAsync(Ct));
@@ -312,3 +318,9 @@ public class LegacySqliteConformanceTests(LegacySqliteFixture fixture) : Provide
 public class DuckDbConformanceTests(DuckDbFixture fixture) : ProviderConformanceTests<DuckDbFixture>(fixture);
 
 public class FlatFileConformanceTests(FlatFileFixture fixture) : ProviderConformanceTests<FlatFileFixture>(fixture);
+
+public class PostgreSqlConformanceTests(PostgreSqlFixture fixture) : ProviderConformanceTests<PostgreSqlFixture>(fixture);
+
+public class SqlServerConformanceTests(SqlServerFixture fixture) : ProviderConformanceTests<SqlServerFixture>(fixture);
+
+public class MySqlConformanceTests(MySqlFixture fixture) : ProviderConformanceTests<MySqlFixture>(fixture);
