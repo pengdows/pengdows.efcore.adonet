@@ -364,6 +364,45 @@ public abstract class ProviderConformanceTests<TFixture>(TFixture fixture) : ICl
         }
     }
 
+    [Fact]
+    public void Synchronous_insert_query_update_delete_and_transaction()
+    {
+        var blog = NewBlog("sync");
+        blog.Posts.Add(new Post { Title = "p" });
+        using (var context = Fixture.CreateContext())
+        {
+            context.Add(blog);
+            context.SaveChanges();
+        }
+
+        using (var context = Fixture.CreateContext())
+        {
+            var loaded = context.Blogs.Single(b => b.Id == blog.Id);
+            var post = Assert.Single(context.Posts.Where(p => p.BlogId == blog.Id).ToList());
+            Assert.Equal("p", post.Title);
+
+            loaded.Rating = 5m;
+            context.Remove(post);
+            context.SaveChanges();
+        }
+
+        using (var context = Fixture.CreateContext())
+        {
+            using var transaction = context.Database.BeginTransaction();
+            context.Add(NewBlog("rolled-back"));
+            context.SaveChanges();
+            transaction.Rollback();
+        }
+
+        using (var context = Fixture.CreateContext())
+        {
+            Assert.Equal([("sync", 5m)], context.Blogs.Select(b => new { b.Name, b.Rating }).AsEnumerable().Select(b => (b.Name, b.Rating)));
+            Assert.Equal(0, context.Posts.Count());
+            Assert.Equal(1, context.Blogs.Where(b => b.Rating == 5m).ExecuteUpdate(s => s.SetProperty(b => b.Name, "renamed")));
+            Assert.Equal(1, context.Blogs.ExecuteDelete());
+        }
+    }
+
     protected async Task SeedAsync(int count)
     {
         await using var context = Fixture.CreateContext();
