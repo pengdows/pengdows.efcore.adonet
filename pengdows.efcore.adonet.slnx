@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/pengdows.efcore.adonet/pengdows.efcore.adonet.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/pengdows.efcore.adonet.Tests/pengdows.efcore.adonet.Tests.csproj" />
+  </Folder>
+</Solution>

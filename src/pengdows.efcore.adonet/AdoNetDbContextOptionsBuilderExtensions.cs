@@ -1,0 +1,121 @@
+using System.Data.Common;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using pengdows.efcore.adonet.Infrastructure;
+
+namespace pengdows.efcore.adonet;
+
+public static class AdoNetDbContextOptionsBuilderExtensions
+{
+    /// <summary>
+    ///     Uses <paramref name="providerFactory" /> to create a connection per context (pooling is the provider's).
+    ///     The dialect is detected from the factory when not given.
+    /// </summary>
+    public static DbContextOptionsBuilder UseAdoNet(
+        this DbContextOptionsBuilder optionsBuilder,
+        DbProviderFactory providerFactory,
+        string connectionString,
+        Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
+    {
+        ArgumentNullException.ThrowIfNull(providerFactory);
+        ArgumentException.ThrowIfNullOrWhiteSpace(connectionString);
+
+        var extension = GetOrCreateExtension(optionsBuilder, providerFactory)
+            .WithProviderFactory(providerFactory);
+
+        return Apply(optionsBuilder, (AdoNetOptionsExtension)extension.WithConnectionString(connectionString), adoNetOptionsAction);
+    }
+
+    /// <summary>Resolves the factory from <see cref="DbProviderFactories" /> so the provider can be chosen by configuration.</summary>
+    public static DbContextOptionsBuilder UseAdoNet(
+        this DbContextOptionsBuilder optionsBuilder,
+        string providerInvariantName,
+        string connectionString,
+        Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
+        => optionsBuilder.UseAdoNet(DbProviderFactories.GetFactory(providerInvariantName), connectionString, adoNetOptionsAction);
+
+    /// <summary>Connections come from <paramref name="dataSource" />, which the caller owns and disposes.</summary>
+    public static DbContextOptionsBuilder UseAdoNet(
+        this DbContextOptionsBuilder optionsBuilder,
+        DbDataSource dataSource,
+        Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
+    {
+        ArgumentNullException.ThrowIfNull(dataSource);
+
+        DbProviderFactory? factory;
+        using (var probe = dataSource.CreateConnection())
+        {
+            factory = DbProviderFactories.GetFactory(probe);
+        }
+
+        return Apply(optionsBuilder, GetOrCreateExtension(optionsBuilder, factory).WithDataSource(dataSource), adoNetOptionsAction);
+    }
+
+    public static DbContextOptionsBuilder UseAdoNet(
+        this DbContextOptionsBuilder optionsBuilder,
+        DbConnection connection,
+        bool contextOwnsConnection = false,
+        Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
+    {
+        ArgumentNullException.ThrowIfNull(connection);
+
+        var extension = GetOrCreateExtension(optionsBuilder, DbProviderFactories.GetFactory(connection))
+            .WithConnection(connection, contextOwnsConnection);
+
+        return Apply(optionsBuilder, (AdoNetOptionsExtension)extension, adoNetOptionsAction);
+    }
+
+    public static DbContextOptionsBuilder<TContext> UseAdoNet<TContext>(
+        this DbContextOptionsBuilder<TContext> optionsBuilder,
+        DbProviderFactory providerFactory,
+        string connectionString,
+        Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
+        where TContext : DbContext
+        => (DbContextOptionsBuilder<TContext>)((DbContextOptionsBuilder)optionsBuilder).UseAdoNet(
+            providerFactory, connectionString, adoNetOptionsAction);
+
+    public static DbContextOptionsBuilder<TContext> UseAdoNet<TContext>(
+        this DbContextOptionsBuilder<TContext> optionsBuilder,
+        string providerInvariantName,
+        string connectionString,
+        Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
+        where TContext : DbContext
+        => (DbContextOptionsBuilder<TContext>)((DbContextOptionsBuilder)optionsBuilder).UseAdoNet(
+            providerInvariantName, connectionString, adoNetOptionsAction);
+
+    public static DbContextOptionsBuilder<TContext> UseAdoNet<TContext>(
+        this DbContextOptionsBuilder<TContext> optionsBuilder,
+        DbDataSource dataSource,
+        Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
+        where TContext : DbContext
+        => (DbContextOptionsBuilder<TContext>)((DbContextOptionsBuilder)optionsBuilder).UseAdoNet(dataSource, adoNetOptionsAction);
+
+    public static DbContextOptionsBuilder<TContext> UseAdoNet<TContext>(
+        this DbContextOptionsBuilder<TContext> optionsBuilder,
+        DbConnection connection,
+        bool contextOwnsConnection = false,
+        Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
+        where TContext : DbContext
+        => (DbContextOptionsBuilder<TContext>)((DbContextOptionsBuilder)optionsBuilder).UseAdoNet(
+            connection, contextOwnsConnection, adoNetOptionsAction);
+
+    private static AdoNetOptionsExtension GetOrCreateExtension(DbContextOptionsBuilder optionsBuilder, DbProviderFactory? factory)
+        => optionsBuilder.Options.FindExtension<AdoNetOptionsExtension>()
+            ?? new AdoNetOptionsExtension().WithDialect(AdoNetSqlDialect.Detect(factory));
+
+    private static DbContextOptionsBuilder Apply(
+        DbContextOptionsBuilder optionsBuilder,
+        AdoNetOptionsExtension extension,
+        Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction)
+    {
+        ((IDbContextOptionsBuilderInfrastructure)optionsBuilder).AddOrUpdateExtension(extension);
+
+        var coreOptionsExtension = optionsBuilder.Options.FindExtension<CoreOptionsExtension>() ?? new CoreOptionsExtension();
+        ((IDbContextOptionsBuilderInfrastructure)optionsBuilder).AddOrUpdateExtension(
+            RelationalOptionsExtension.WithDefaultWarningConfiguration(coreOptionsExtension));
+
+        adoNetOptionsAction?.Invoke(new AdoNetDbContextOptionsBuilder(optionsBuilder));
+
+        return optionsBuilder;
+    }
+}
