@@ -1,3 +1,7 @@
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.Extensions.DependencyInjection;
+
 namespace pengdows.efcore.adonet.sqlserver;
 
 /// <summary>
@@ -12,6 +16,10 @@ public sealed class SqlServerDialect : AdoNetDialect
     public override ISqlDialect Sql { get; } = new SqlServerSql();
     public override ITypeMappingDialect TypeMappings { get; } = new SqlServerTypeMappings();
     public override IDatabaseCapabilities Capabilities { get; } = new DatabaseCapabilities(SupportsMultipleStatementsPerCommand: true, DefaultMaxBatchSize: 42);
+
+    public override void ConfigureServices(IServiceCollection services)
+        => new EntityFrameworkRelationalServicesBuilder(services)
+            .TryAdd<IMigrationsSqlGenerator, SqlServerMigrationsSqlGenerator>();
 }
 
 public sealed class SqlServerSql : AnsiSqlDialect
@@ -42,4 +50,9 @@ public sealed class SqlServerTypeMappings : AnsiTypeMappings
 
     public override string? GetStoreType(Type clrType)
         => StoreTypes.GetValueOrDefault(clrType) ?? base.GetStoreType(clrType);
+
+    public override string? GetStoreType(Type clrType, int? size, int? precision, int? scale)
+        => clrType == typeof(string) && size != null ? (size <= 4000 ? $"NVARCHAR({size})" : "NVARCHAR(MAX)")
+            : clrType == typeof(byte[]) && size != null ? (size <= 8000 ? $"VARBINARY({size})" : "VARBINARY(MAX)")
+            : base.GetStoreType(clrType, size, precision, scale);
 }

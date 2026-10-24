@@ -33,8 +33,16 @@ public sealed class FlatFileFixture : ProviderFixture
             "pengdows.flatfile 0.2.1-preview.8 resolves \"b\".\"IsActive\" against Posts inside a joined IN subquery",
 
         // Not the engine: without a target alias, strict ISO SQL has no form for an UPDATE whose rows come from a join.
-        ["Execute_update_filters_through_a_navigation"] = "DmlSyntax.UnaliasedTarget cannot write an UPDATE through a join"
+        ["Execute_update_filters_through_a_navigation"] = "DmlSyntax.UnaliasedTarget cannot write an UPDATE through a join",
+
+        // Renaming a table renames its key sequence: ALTER SEQUENCE "Authors_Id_seq" RENAME TO "Writers_Id_seq".
+        ["Migrate_applies_records_and_reverts_migrations"] = "pengdows.flatfile 0.2.1-preview.8 has no ALTER SEQUENCE ... RENAME TO",
+        ["Migrations_apply_synchronously_too"] = "pengdows.flatfile 0.2.1-preview.8 has no ALTER SEQUENCE ... RENAME TO",
+        ["Alter_column_changes_size_nullability_and_default"] = "pengdows.flatfile 0.2.1-preview.8 has no ALTER COLUMN (nor ALTER SEQUENCE)"
     };
+
+    public override IReadOnlyList<string> ModelSequences { get; } =
+        ["SchemaAuthors_Id_seq", "SchemaBooks_Id_seq", "Authors_Id_seq", "Writers_Id_seq", "Shelves_Id_seq"];
 
     // No identity columns: keys come from the "{table}_{column}_seq" sequences the dialect expects.
     protected override IEnumerable<string> Ddl =>
@@ -70,3 +78,5 @@ public sealed class FlatFileFixture : ProviderFixture
 /// <summary>A server database started in Docker through Testcontainers. Without Docker the suite is skipped.</summary>
 
 public class FlatFileConformanceTests(FlatFileFixture fixture) : ProviderConformanceTests<FlatFileFixture>(fixture);
+
+public class FlatFileMigrationsConformanceTests(FlatFileFixture fixture) : MigrationsConformanceTests<FlatFileFixture>(fixture);

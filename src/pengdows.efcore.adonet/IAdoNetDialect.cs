@@ -65,6 +65,12 @@ public interface ITypeMappingDialect
 {
     /// <summary>The store type for one of <see cref="AnsiTypeMappings.SupportedClrTypes" />, or null when the database has none.</summary>
     string? GetStoreType(Type clrType);
+
+    /// <summary>
+    ///     The store type with a length (strings, binary) or precision and scale (decimals) from the model, e.g. from
+    ///     <c>[MaxLength]</c> or <c>HasPrecision</c>; null when facets don't change it.
+    /// </summary>
+    string? GetStoreType(Type clrType, int? size, int? precision, int? scale);
 }
 
 /// <summary>What the driver accepts, as opposed to what the SQL looks like.</summary>

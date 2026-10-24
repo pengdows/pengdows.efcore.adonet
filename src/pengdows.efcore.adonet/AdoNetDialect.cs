@@ -84,6 +84,12 @@ public class AnsiTypeMappings : ITypeMappingDialect
 
     public virtual string? GetStoreType(Type clrType)
         => StoreTypes.GetValueOrDefault(clrType);
+
+    public virtual string? GetStoreType(Type clrType, int? size, int? precision, int? scale)
+        => clrType == typeof(string) && size != null ? $"VARCHAR({size})"
+            : clrType == typeof(byte[]) && size != null ? $"VARBINARY({size})"
+            : clrType == typeof(decimal) && precision != null ? $"DECIMAL({precision},{scale ?? 0})"
+            : null;
 }
 
 public sealed record DatabaseCapabilities(bool SupportsMultipleStatementsPerCommand = false, int DefaultMaxBatchSize = 1)

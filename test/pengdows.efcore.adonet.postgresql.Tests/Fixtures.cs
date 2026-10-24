@@ -39,3 +39,5 @@ public sealed class PostgreSqlFixture : ContainerFixture
 }
 
 public class PostgreSqlConformanceTests(PostgreSqlFixture fixture) : ProviderConformanceTests<PostgreSqlFixture>(fixture);
+
+public class PostgreSqlMigrationsConformanceTests(PostgreSqlFixture fixture) : MigrationsConformanceTests<PostgreSqlFixture>(fixture);

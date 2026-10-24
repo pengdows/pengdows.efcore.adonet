@@ -39,3 +39,5 @@ public sealed class SqlServerFixture : ContainerFixture
 }
 
 public class SqlServerConformanceTests(SqlServerFixture fixture) : ProviderConformanceTests<SqlServerFixture>(fixture);
+
+public class SqlServerMigrationsConformanceTests(SqlServerFixture fixture) : MigrationsConformanceTests<SqlServerFixture>(fixture);

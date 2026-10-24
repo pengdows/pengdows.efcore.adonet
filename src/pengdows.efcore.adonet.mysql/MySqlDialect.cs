@@ -1,3 +1,7 @@
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.Extensions.DependencyInjection;
+
 namespace pengdows.efcore.adonet.mysql;
 
 /// <summary>
@@ -12,6 +16,11 @@ public sealed class MySqlDialect : AdoNetDialect
     public override ISqlDialect Sql { get; } = new MySqlSql();
     public override ITypeMappingDialect TypeMappings { get; } = new MySqlTypeMappings();
     public override IDatabaseCapabilities Capabilities { get; } = new DatabaseCapabilities(SupportsMultipleStatementsPerCommand: true, DefaultMaxBatchSize: 128);
+
+    public override void ConfigureServices(IServiceCollection services)
+        => new EntityFrameworkRelationalServicesBuilder(services)
+            .TryAdd<IMigrationsSqlGenerator, MySqlMigrationsSqlGenerator>()
+            .TryAdd<IHistoryRepository, MySqlHistoryRepository>();
 }
 
 public sealed class MySqlSql : AnsiSqlDialect

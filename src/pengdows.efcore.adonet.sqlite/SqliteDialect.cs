@@ -1,3 +1,7 @@
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.Extensions.DependencyInjection;
+
 namespace pengdows.efcore.adonet.sqlite;
 
 public class SqliteDialect : AdoNetDialect
@@ -8,6 +12,11 @@ public class SqliteDialect : AdoNetDialect
     public override ISqlDialect Sql { get; } = new SqliteSql();
     public override ITypeMappingDialect TypeMappings { get; } = new SqliteTypeMappings();
     public override IDatabaseCapabilities Capabilities { get; } = new DatabaseCapabilities(SupportsMultipleStatementsPerCommand: true, DefaultMaxBatchSize: 128);
+
+    public override void ConfigureServices(IServiceCollection services)
+        => new EntityFrameworkRelationalServicesBuilder(services)
+            .TryAdd<IMigrationsSqlGenerator, SqliteMigrationsSqlGenerator>()
+            .TryAdd<IHistoryRepository, SqliteHistoryRepository>();
 }
 
 /// <summary>SQLite before 3.35 has no RETURNING; keys come back through <c>last_insert_rowid()</c>.</summary>
@@ -38,5 +47,8 @@ public sealed class SqliteTypeMappings : AnsiTypeMappings
     public override string? GetStoreType(Type clrType)
         => clrType == typeof(string) ? "TEXT"
             : clrType == typeof(byte[]) || clrType == typeof(Guid) ? "BLOB"
+
+            // Every integer is INTEGER, which also makes any integer key the rowid.
+            : clrType == typeof(long) || clrType == typeof(short) || clrType == typeof(byte) ? "INTEGER"
             : base.GetStoreType(clrType);
 }

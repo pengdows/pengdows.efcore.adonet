@@ -11,6 +11,7 @@ public class AdoNetTypeMappingSource : RelationalTypeMappingSource
 {
     private readonly Dictionary<Type, RelationalTypeMapping> _clrTypeMappings = [];
     private readonly Dictionary<string, RelationalTypeMapping> _storeTypeMappings = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ITypeMappingDialect _typeMappings;
 
     public AdoNetTypeMappingSource(
         TypeMappingSourceDependencies dependencies,
@@ -19,6 +20,8 @@ public class AdoNetTypeMappingSource : RelationalTypeMappingSource
         ISqlDialect sql)
         : base(dependencies, relationalDependencies)
     {
+        _typeMappings = typeMappings;
+
         foreach (var clrType in AnsiTypeMappings.SupportedClrTypes)
         {
             if (typeMappings.GetStoreType(clrType) is not { } storeType)
@@ -73,9 +76,18 @@ public class AdoNetTypeMappingSource : RelationalTypeMappingSource
         if (mappingInfo.ClrType is { } clrType
             && _clrTypeMappings.TryGetValue(clrType, out mapping))
         {
-            return mappingInfo.StoreTypeName is { } storeTypeName
-                ? mapping.WithStoreTypeAndSize(storeTypeName, mappingInfo.Size)
-                : mapping;
+            if (mappingInfo.StoreTypeName is { } storeTypeName)
+            {
+                return mapping.WithStoreTypeAndSize(storeTypeName, mappingInfo.Size);
+            }
+
+            if (_typeMappings.GetStoreType(clrType, mappingInfo.Size, mappingInfo.Precision, mappingInfo.Scale) is { } sized)
+            {
+                mapping = mapping.WithStoreTypeAndSize(sized, mappingInfo.Size);
+                return mappingInfo.Precision is { } precision ? mapping.WithPrecisionAndScale(precision, mappingInfo.Scale) : mapping;
+            }
+
+            return mapping;
         }
 
         if (mappingInfo.StoreTypeName is { } storeType

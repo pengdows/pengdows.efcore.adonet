@@ -22,6 +22,9 @@ public abstract class ProviderFixture : IAsyncLifetime
     /// </summary>
     public virtual IReadOnlyDictionary<string, string> KnownEngineGaps { get; } = new Dictionary<string, string>();
 
+    /// <summary>Sequences the dialect creates for the migrations tests' tables, dropped between tests.</summary>
+    public virtual IReadOnlyList<string> ModelSequences { get; } = [];
+
     /// <summary>Set when the database can't be reached (e.g. no Docker); every test is then reported as skipped.</summary>
     public string? SkipReason { get; protected set; }
 
@@ -46,6 +49,15 @@ public abstract class ProviderFixture : IAsyncLifetime
 
     public BlogContext CreateContext()
         => new(Options);
+
+    /// <summary>A context for <typeparamref name="TContext" /> configured like <see cref="Options" />.</summary>
+    public TContext CreateContext<TContext>(Func<DbContextOptions<TContext>, TContext> create)
+        where TContext : DbContext
+    {
+        var builder = new DbContextOptionsBuilder<TContext>();
+        UseProvider(builder);
+        return create(builder.ForTestMigrations().Options);
+    }
 
     public virtual async ValueTask InitializeAsync()
     {

@@ -24,4 +24,8 @@ public sealed class PostgreSqlTypeMappings : AnsiTypeMappings
 {
     public override string? GetStoreType(Type clrType)
         => clrType == typeof(byte[]) ? "BYTEA" : base.GetStoreType(clrType);
+
+    // BYTEA takes no length.
+    public override string? GetStoreType(Type clrType, int? size, int? precision, int? scale)
+        => clrType == typeof(byte[]) ? null : base.GetStoreType(clrType, size, precision, scale);
 }

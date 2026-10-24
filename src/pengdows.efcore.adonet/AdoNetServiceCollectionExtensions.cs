@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Query;
@@ -38,6 +39,8 @@ public static class AdoNetServiceCollectionExtensions
             .TryAdd<IRelationalTransactionFactory, AdoNetRelationalTransactionFactory>()
             .TryAdd<IRelationalDatabaseCreator, AdoNetDatabaseCreator>()
             .TryAdd<IHistoryRepository, AdoNetHistoryRepository>()
+            .TryAdd<IMigrationsSqlGenerator, AdoNetMigrationsSqlGenerator>()
+            .TryAdd<IRelationalAnnotationProvider, AdoNetAnnotationProvider>()
             .TryAdd<IQuerySqlGeneratorFactory, AdoNetQuerySqlGeneratorFactory>()
             .TryAdd<IQueryableMethodTranslatingExpressionVisitorFactory, AdoNetQueryableMethodTranslatingExpressionVisitorFactory>()
             .TryAdd<IUpdateSqlGenerator, AdoNetUpdateSqlGenerator>()
