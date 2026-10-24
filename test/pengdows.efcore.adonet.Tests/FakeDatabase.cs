@@ -33,6 +33,7 @@ public sealed class FakeDatabase
                 adoNet?.Invoke(o);
             })
             .EnableSensitiveDataLogging()
+            .AllowManyDialects()
             .LogTo(Record, [RelationalEventId.CommandExecuted])
             .Options);
 

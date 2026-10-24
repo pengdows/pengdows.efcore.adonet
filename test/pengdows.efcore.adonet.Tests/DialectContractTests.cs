@@ -19,7 +19,8 @@ public class DialectContractTests
     private static BlogContext Context(IAdoNetDialect dialect, Action<DbContextOptionsBuilder>? configure = null)
     {
         var builder = new DbContextOptionsBuilder<BlogContext>()
-            .UseAdoNet(SqliteFactory.Instance, "Data Source=:memory:", o => o.UseDialect(dialect));
+            .UseAdoNet(SqliteFactory.Instance, "Data Source=:memory:", o => o.UseDialect(dialect))
+            .AllowManyDialects();
         configure?.Invoke(builder);
         return new BlogContext(builder.Options);
     }
@@ -78,8 +79,9 @@ public class DialectContractTests
     public void Switching_databases_changes_only_the_factory_and_the_dialect()
     {
         using var generic = new BlogContext(
-            new DbContextOptionsBuilder<BlogContext>().UseAdoNet(SqliteFactory.Instance, "Data Source=:memory:", ComposedDialect.Instance).Options);
-        var builder = new DbContextOptionsBuilder<BlogContext>();
+            new DbContextOptionsBuilder<BlogContext>().UseAdoNet(SqliteFactory.Instance, "Data Source=:memory:", ComposedDialect.Instance)
+                .AllowManyDialects().Options);
+        var builder = new DbContextOptionsBuilder<BlogContext>().AllowManyDialects();
         ((DbContextOptionsBuilder)builder).UseAdoNet(SqliteFactory.Instance, "Data Source=:memory:", ComposedDialect.Instance, o => o.MaxBatchSize(7));
         using var nonGeneric = new BlogContext(builder.Options);
 
@@ -110,14 +112,19 @@ public class DialectContractTests
 
         Assert.Same(ComposedDialect.Instance, AdoNetDialects.Find(factory));
         using var context = new BlogContext(
-            new DbContextOptionsBuilder<BlogContext>().UseAdoNet(factory, "Data Source=:memory:").Options);
+            new DbContextOptionsBuilder<BlogContext>().UseAdoNet(factory, "Data Source=:memory:").AllowManyDialects().Options);
         Assert.Same(ComposedDialect.Instance, context.GetService<IAdoNetDialect>());
     }
 
     [Fact]
     public void Equal_dialects_share_the_internal_service_provider()
     {
-        // EF throws after 20 internal service providers when this warning is configured to throw.
+        // The first context may be the one that creates this dialect's service provider; after it, none may be created.
+        using (var first = Context(new ConfigurableDialect(compatibilityLevel: 150)))
+        {
+            Assert.NotNull(first.Model);
+        }
+
         for (var i = 0; i < 30; i++)
         {
             using var context = Context(

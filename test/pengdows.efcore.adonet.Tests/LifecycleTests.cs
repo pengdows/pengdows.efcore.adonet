@@ -19,7 +19,7 @@ public class LifecycleTests
 
     private static ItemContext FromFactory(DbProviderFactory factory, Action<DbContextOptionsBuilder>? configure = null)
     {
-        var builder = new DbContextOptionsBuilder<ItemContext>().UseAdoNet(factory, ConnectionString, AdoNetDialect.Ansi);
+        var builder = new DbContextOptionsBuilder<ItemContext>().UseAdoNet(factory, ConnectionString, AdoNetDialect.Ansi).AllowManyDialects();
         configure?.Invoke(builder);
         return new ItemContext(builder.Options);
     }
@@ -65,7 +65,7 @@ public class LifecycleTests
 
         // Sync dispose: fakeDb 2.0.5 counts a DisposeAsync twice.
         using (var context = new ItemContext(
-                   new DbContextOptionsBuilder<ItemContext>().UseAdoNet(connection, contextOwnsConnection: true).Options))
+                   new DbContextOptionsBuilder<ItemContext>().UseAdoNet(connection, contextOwnsConnection: true).AllowManyDialects().Options))
         {
             await context.Items.ToListAsync(Ct);
         }
@@ -94,7 +94,7 @@ public class LifecycleTests
         var factory = new fakeDbFactory(SupportedDatabase.PostgreSql);
         using var dataSource = factory.CreateDataSource(ConnectionString);
 
-        using (var context = new ItemContext(new DbContextOptionsBuilder<ItemContext>().UseAdoNet(dataSource).Options))
+        using (var context = new ItemContext(new DbContextOptionsBuilder<ItemContext>().UseAdoNet(dataSource).AllowManyDialects().Options))
         {
             await context.Items.ToListAsync(Ct);
         }
@@ -148,6 +148,7 @@ public class LifecycleTests
             new DbContextOptionsBuilder<ItemContext>()
                 .UseAdoNet(db.Connection, contextOwnsConnection: false, o => o.UseDialect(AdoNetDialect.Ansi))
                 .AddInterceptors(failures)
+                .AllowManyDialects()
                 .Options);
         using var transaction = context.Database.BeginTransaction();
 

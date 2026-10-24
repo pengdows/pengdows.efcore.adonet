@@ -10,7 +10,7 @@ namespace pengdows.efcore.adonet.Tests;
 public class ConnectionSourceTests
 {
     private static BlogContext Context(DbProviderFactory factory, string connectionString)
-        => new(new DbContextOptionsBuilder<BlogContext>().UseAdoNet(factory, connectionString).Options);
+        => new(new DbContextOptionsBuilder<BlogContext>().UseAdoNet(factory, connectionString).AllowManyDialects().Options);
 
     [Fact]
     public void A_factory_is_used_through_one_data_source_per_connection_string()

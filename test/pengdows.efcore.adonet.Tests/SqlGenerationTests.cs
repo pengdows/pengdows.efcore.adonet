@@ -10,7 +10,7 @@ public class SqlGenerationTests
 {
     private static BlogContext Context(Action<DbContextOptionsBuilder> configure)
     {
-        var builder = new DbContextOptionsBuilder<BlogContext>();
+        var builder = new DbContextOptionsBuilder<BlogContext>().AllowManyDialects();
         configure(builder);
         return new BlogContext(builder.Options);
     }
@@ -30,7 +30,12 @@ public class SqlGenerationTests
     [Fact]
     public void Same_dialect_instance_reuses_the_internal_service_provider()
     {
-        // EF throws after 20 internal service providers when this warning is configured to throw.
+        // The first context may be the one that creates the service provider; after it, none may be created.
+        using (var first = Context(b => b.UseAdoNet(SqliteFactory.Instance, "Data Source=warmup;Mode=Memory")))
+        {
+            Assert.NotNull(first.Model);
+        }
+
         for (var i = 0; i < 30; i++)
         {
             using var context = Context(b => b

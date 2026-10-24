@@ -29,6 +29,12 @@ public class AdoNetTypeMappingSource : RelationalTypeMappingSource
             var mapping = CreateMapping(clrType, storeType, sql);
             _clrTypeMappings[clrType] = mapping;
             _storeTypeMappings.TryAdd(storeType, mapping);
+
+            // Also by base name, so DECIMAL(10,4) finds the DECIMAL(18,2) mapping.
+            if (storeType.IndexOf('(') is > 0 and var parenthesis)
+            {
+                _storeTypeMappings.TryAdd(storeType[..parenthesis].TrimEnd(), mapping);
+            }
         }
     }
 

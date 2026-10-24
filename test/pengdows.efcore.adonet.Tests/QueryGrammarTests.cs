@@ -126,6 +126,12 @@ public class QueryGrammarTests
     }
 
     [Fact]
+    public void Orderings_are_values()
+        => Assert.Contains(
+            "ORDER BY CASE\n    WHEN \"i\".\"Price\" > 1.0 THEN 1\n    ELSE 0\nEND",
+            Sql(TestDialects.Bit, c => c.Items.OrderBy(i => i.Price > 1)));
+
+    [Fact]
     public void Exists_is_written_as_a_value()
         => Assert.Contains(
             "WHEN EXISTS (",

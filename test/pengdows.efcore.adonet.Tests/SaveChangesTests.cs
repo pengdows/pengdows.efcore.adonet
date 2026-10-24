@@ -123,6 +123,29 @@ public class SaveChangesTests
     }
 
     [Fact]
+    public async Task Sequence_updates_and_deletes_are_plain_statements_checked_by_rows_affected()
+    {
+        await using (var context = _db.Context(TestDialects.Sequence))
+        {
+            var item = new Item { Id = 1, Version = 2 };
+            context.Attach(item);
+            item.Name = "changed";
+
+            await Assert.ThrowsAsync<DbUpdateConcurrencyException>(() => context.SaveChangesAsync(Ct));
+        }
+
+        await using (var context = _db.Context(TestDialects.Sequence))
+        {
+            context.Remove(new Item { Id = 2, Version = 2 });
+
+            Assert.Throws<DbUpdateConcurrencyException>(() => context.SaveChanges());
+        }
+
+        Assert.Equal("UPDATE \"Items\" SET \"Name\" = @p0\nWHERE \"Id\" = @p1 AND \"Version\" = @p2;", _db.Commands[0]);
+        Assert.Equal("DELETE FROM \"Items\"\nWHERE \"Id\" = @p0 AND \"Version\" = @p1;", _db.Commands[1]);
+    }
+
+    [Fact]
     public async Task Sequence_keys_convert_to_the_key_type()
     {
         await using var context = _db.Context(TestDialects.Sequence);
