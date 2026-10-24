@@ -7,13 +7,13 @@ using Microsoft.EntityFrameworkCore.ValueGeneration;
 namespace pengdows.efcore.adonet.Storage;
 
 /// <summary>
-///     Under <see cref="GeneratedValueRetrieval.RecordsAffected" />, store-generated integer keys are replaced by
-///     values drawn from the dialect's key sequence. Generators are built per selection (this service is scoped)
+///     Under <see cref="SequenceKeyRetrieval" />, store-generated integer keys are replaced by
+///     values drawn from the key's sequence. Generators are built per selection (this service is scoped)
 ///     because they hold the current connection.
 /// </summary>
 public class AdoNetValueGeneratorSelector(
     ValueGeneratorSelectorDependencies dependencies,
-    AdoNetSqlDialect dialect,
+    ISqlDialect dialect,
     IRelationalConnection connection,
     IRawSqlCommandBuilder rawSqlCommandBuilder,
     IRelationalCommandDiagnosticsLogger commandLogger,
@@ -22,7 +22,7 @@ public class AdoNetValueGeneratorSelector(
 {
     public override bool TrySelect(IProperty property, ITypeBase typeBase, out ValueGenerator? valueGenerator)
     {
-        if (dialect.GeneratedValues != GeneratedValueRetrieval.RecordsAffected
+        if (dialect.Keys is not SequenceKeyRetrieval keys
             || property.ValueGenerated != ValueGenerated.OnAdd
             || !property.IsPrimaryKey()
             || property.GetValueGeneratorFactory() != null
@@ -35,8 +35,8 @@ public class AdoNetValueGeneratorSelector(
 
         var table = StoreObjectIdentifier.Table(tableName, entityType.GetSchema());
         var sequence = sqlGenerationHelper.DelimitIdentifier(
-            dialect.GetKeySequenceName(tableName, property.GetColumnName(table)!), table.Schema);
-        var sql = dialect.GetNextSequenceValueSql(sequence);
+            keys.GetSequenceName(tableName, property.GetColumnName(table)!), table.Schema);
+        var sql = keys.GetNextValueSql(sequence);
 
         var clrType = Nullable.GetUnderlyingType(property.ClrType) ?? property.ClrType;
         valueGenerator = clrType == typeof(int) ? new AdoNetSequenceValueGenerator<int>(sql, connection, rawSqlCommandBuilder, commandLogger)

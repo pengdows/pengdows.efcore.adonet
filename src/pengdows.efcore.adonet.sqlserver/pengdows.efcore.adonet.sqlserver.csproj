@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>SQL Server dialect for pengdows.efcore.adonet (Microsoft.Data.SqlClient).</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\pengdows.efcore.adonet\pengdows.efcore.adonet.csproj" />
+    <PackageReference Include="Microsoft.Data.SqlClient" />
+    <!-- Pins the vulnerable 9.0.x pulled in transitively by Microsoft.Data.SqlClient. -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" />
+  </ItemGroup>
+</Project>

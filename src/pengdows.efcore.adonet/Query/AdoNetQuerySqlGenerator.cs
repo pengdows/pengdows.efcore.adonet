@@ -4,98 +4,98 @@ using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 
 namespace pengdows.efcore.adonet.Query;
 
-public class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencies, AdoNetSqlDialect dialect)
-    : QuerySqlGenerator(dependencies)
+/// <summary>EF's relational SQL, with paging, <c>LongCount</c> and bulk DML as the dialect writes them.</summary>
+public class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencies, ISqlDialect dialect)
+    : QuerySqlGenerator(dependencies), IQuerySqlWriter
 {
-    protected override void GenerateTop(SelectExpression selectExpression)
+    private TableExpression? _qualifyWithTableName;
+
+    protected override Expression VisitDelete(DeleteExpression deleteExpression)
+        => dialect.Dml.TryGenerateDelete(this, deleteExpression) ? deleteExpression : base.VisitDelete(deleteExpression);
+
+    protected override Expression VisitUpdate(UpdateExpression updateExpression)
+        => dialect.Dml.TryGenerateUpdate(this, updateExpression) ? updateExpression : base.VisitUpdate(updateExpression);
+
+    protected override Expression VisitColumn(ColumnExpression columnExpression)
     {
-        if (dialect.Paging == PagingStyle.TopOrOffsetFetch && selectExpression is { Limit: { } limit, Offset: null })
+        if (_qualifyWithTableName is { } table && columnExpression.TableAlias == table.Alias)
         {
-            Sql.Append("TOP(");
-            Visit(limit);
-            Sql.Append(") ");
+            Sql.Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(table.Name, table.Schema))
+                .Append(".")
+                .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(columnExpression.Name));
+            return columnExpression;
         }
+
+        return base.VisitColumn(columnExpression);
     }
+
+    protected override void GenerateTop(SelectExpression selectExpression)
+        => dialect.Paging.GenerateTop(this, selectExpression);
 
     protected override void GenerateOrderings(SelectExpression selectExpression)
     {
         base.GenerateOrderings(selectExpression);
-
-        // OFFSET/FETCH is part of ORDER BY on SQL Server.
-        if (dialect.Paging == PagingStyle.TopOrOffsetFetch
-            && selectExpression is { Orderings.Count: 0, Offset: not null })
-        {
-            Sql.AppendLine().Append("ORDER BY (SELECT 1)");
-        }
+        dialect.Paging.GenerateAfterOrderings(this, selectExpression);
     }
 
     protected override void GenerateLimitOffset(SelectExpression selectExpression)
-    {
-        if (dialect.Paging == PagingStyle.TopOrOffsetFetch)
-        {
-            // A limit without an offset was written as TOP.
-            if (selectExpression.Offset != null)
-            {
-                base.GenerateLimitOffset(selectExpression);
-            }
-
-            return;
-        }
-
-        if (dialect.Paging == PagingStyle.OffsetFetch)
-        {
-            base.GenerateLimitOffset(selectExpression);
-            return;
-        }
-
-        if (selectExpression.Limit == null && selectExpression.Offset == null)
-        {
-            return;
-        }
-
-        if (selectExpression.Limit != null)
-        {
-            Sql.AppendLine().Append("LIMIT ");
-            Visit(selectExpression.Limit);
-        }
-        else if (dialect.NoLimitValue != null)
-        {
-            Sql.AppendLine().Append("LIMIT ").Append(dialect.NoLimitValue);
-        }
-
-        if (selectExpression.Offset != null)
-        {
-            Sql.AppendLine().Append("OFFSET ");
-            Visit(selectExpression.Offset);
-        }
-    }
+        => dialect.Paging.GenerateLimitOffset(this, selectExpression);
 
     protected override Expression VisitSqlFunction(SqlFunctionExpression sqlFunctionExpression)
     {
-        if (sqlFunctionExpression is { IsBuiltIn: true, Name: "COUNT", Instance: null, Arguments: { } arguments }
+        // EF's COUNT always has exactly one argument: * or an expression.
+        if (sqlFunctionExpression is { IsBuiltIn: true, Name: "COUNT", Instance: null, Arguments: [var argument] }
             && sqlFunctionExpression.Type == typeof(long)
             && dialect.LongCountFunction != "COUNT")
         {
             Sql.Append(dialect.LongCountFunction).Append("(");
-            for (var i = 0; i < arguments.Count; i++)
-            {
-                if (i > 0)
-                {
-                    Sql.Append(", ");
-                }
-
-                Visit(arguments[i]);
-            }
-
+            Visit(argument);
             Sql.Append(")");
             return sqlFunctionExpression;
         }
 
         return base.VisitSqlFunction(sqlFunctionExpression);
     }
+
+    IQuerySqlWriter IQuerySqlWriter.Append(string sql)
+    {
+        Sql.Append(sql);
+        return this;
+    }
+
+    IQuerySqlWriter IQuerySqlWriter.AppendLine()
+    {
+        Sql.AppendLine();
+        return this;
+    }
+
+    IQuerySqlWriter IQuerySqlWriter.AppendIdentifier(string name, string? schema)
+    {
+        Sql.Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(name, schema));
+        return this;
+    }
+
+    IQuerySqlWriter IQuerySqlWriter.Visit(Expression expression)
+    {
+        Visit(expression);
+        return this;
+    }
+
+    IDisposable IQuerySqlWriter.QualifyWithTableName(TableExpression table)
+    {
+        var previous = _qualifyWithTableName;
+        _qualifyWithTableName = table;
+        return new Restore(() => _qualifyWithTableName = previous);
+    }
+
+    private sealed class Restore(Action restore) : IDisposable
+    {
+        public void Dispose()
+            => restore();
+    }
 }
 
-public class AdoNetQuerySqlGeneratorFactory(QuerySqlGeneratorDependencies dependencies, AdoNetSqlDialect dialect)
+public class AdoNetQuerySqlGeneratorFactory(QuerySqlGeneratorDependencies dependencies, ISqlDialect dialect)
     : IQuerySqlGeneratorFactory
 {
     public virtual QuerySqlGenerator Create()

@@ -42,21 +42,22 @@ public class AdoNetRecordsAffectedModificationCommandBatch(ModificationCommandBa
 }
 
 /// <summary>
-///     Batches several modifications into one DbCommand only when the dialect says the provider accepts
+///     Batches several modifications into one DbCommand only when the dialect says the driver accepts
 ///     multiple statements per command; otherwise every modification gets its own command.
 /// </summary>
 public class AdoNetModificationCommandBatchFactory(
     ModificationCommandBatchFactoryDependencies dependencies,
     IDbContextOptions options,
-    AdoNetSqlDialect dialect)
+    ISqlDialect sql,
+    IDatabaseCapabilities capabilities)
     : IModificationCommandBatchFactory
 {
-    private readonly int _maxBatchSize = dialect.SupportsMultipleStatementsPerCommand
-        ? options.FindExtension<RelationalOptionsExtension>()?.MaxBatchSize ?? dialect.DefaultMaxBatchSize
+    private readonly int _maxBatchSize = capabilities.SupportsMultipleStatementsPerCommand
+        ? options.FindExtension<RelationalOptionsExtension>()?.MaxBatchSize ?? capabilities.DefaultMaxBatchSize
         : 1;
 
     public virtual ModificationCommandBatch Create()
-        => dialect.GeneratedValues == GeneratedValueRetrieval.RecordsAffected
+        => sql.Keys is SequenceKeyRetrieval
             ? new AdoNetRecordsAffectedModificationCommandBatch(dependencies)
             : _maxBatchSize == 1
                 ? new SingularModificationCommandBatch(dependencies)

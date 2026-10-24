@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>MySQL dialect for pengdows.efcore.adonet (MySqlConnector).</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\pengdows.efcore.adonet\pengdows.efcore.adonet.csproj" />
+    <PackageReference Include="MySqlConnector" />
+  </ItemGroup>
+</Project>

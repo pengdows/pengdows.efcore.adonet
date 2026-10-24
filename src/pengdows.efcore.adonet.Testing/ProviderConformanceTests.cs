@@ -2,9 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
-using pengdows.efcore.adonet.Infrastructure;
 
-namespace pengdows.efcore.adonet.Tests;
+namespace pengdows.efcore.adonet.Testing;
 
 /// <summary>
 ///     One suite, written only against EF Core and ADO.NET abstractions, run unchanged against every provider.
@@ -36,11 +35,11 @@ public abstract class ProviderConformanceTests<TFixture>(TFixture fixture) : ICl
         => ValueTask.CompletedTask;
 
     [Fact]
-    public void Dialect_is_detected_from_the_provider_factory()
+    public void Context_uses_the_expected_dialect()
     {
         using var context = Fixture.CreateContext();
 
-        Assert.Same(Fixture.ExpectedDialect, context.GetService<IDbContextOptions>().FindExtension<AdoNetOptionsExtension>()!.Dialect);
+        Assert.Same(Fixture.ExpectedDialect, context.GetService<IAdoNetDialect>());
     }
 
     [Fact]
@@ -273,19 +272,95 @@ public abstract class ProviderConformanceTests<TFixture>(TFixture fixture) : ICl
         await context.SaveChangesAsync(Ct);
 
         var insert = Assert.Single(commands, c => c.Contains("INSERT INTO"));
-        switch (Fixture.ExpectedDialect.GeneratedValues)
+        switch (Fixture.ExpectedDialect.Sql.Keys)
         {
-            case GeneratedValueRetrieval.Returning:
+            case ReturningKeyRetrieval:
                 Assert.Contains("RETURNING", insert);
                 break;
-            case GeneratedValueRetrieval.SelectAfter:
+            case SelectAfterKeyRetrieval selectAfter:
                 Assert.DoesNotContain("RETURNING", insert);
-                Assert.Contains(Fixture.ExpectedDialect.IdentityFunction!, insert);
+                Assert.Contains(selectAfter.IdentityFunction, insert);
                 break;
-            case GeneratedValueRetrieval.RecordsAffected:
+            case SequenceKeyRetrieval:
                 Assert.DoesNotContain("RETURNING", insert);
                 Assert.Contains(commands, c => c.Contains("NEXT VALUE FOR"));
                 break;
+        }
+    }
+
+    [Fact]
+    public async Task Execute_update_changes_matching_rows()
+    {
+        await SeedAsync(4);
+        await using (var context = Fixture.CreateContext())
+        {
+            var updated = await context.Blogs
+                .Where(b => b.IsActive)
+                .ExecuteUpdateAsync(s => s.SetProperty(b => b.Rating, 7m).SetProperty(b => b.IsActive, b => !b.IsActive), Ct);
+
+            Assert.Equal(2, updated);
+        }
+
+        await using (var context = Fixture.CreateContext())
+        {
+            Assert.Equal(
+                ["blog0", "blog2"],
+                await context.Blogs.Where(b => b.Rating == 7m && !b.IsActive).OrderBy(b => b.Name).Select(b => b.Name).ToListAsync(Ct));
+        }
+    }
+
+    [Fact]
+    public async Task Execute_delete_removes_matching_rows()
+    {
+        await SeedAsync(4);
+        await using (var context = Fixture.CreateContext())
+        {
+            Assert.Equal(2, await context.Blogs.Where(b => b.Rating >= 2m).ExecuteDeleteAsync(Ct));
+        }
+
+        await using (var context = Fixture.CreateContext())
+        {
+            Assert.Equal(["blog0", "blog1"], await context.Blogs.OrderBy(b => b.Name).Select(b => b.Name).ToListAsync(Ct));
+        }
+    }
+
+    [Fact]
+    public async Task Execute_delete_filters_through_a_navigation()
+    {
+        await using (var context = Fixture.CreateContext())
+        {
+            var active = NewBlog("active", active: true);
+            active.Posts.Add(new Post { Title = "kept" });
+            var inactive = NewBlog("inactive", active: false);
+            inactive.Posts.AddRange([new Post { Title = "gone1" }, new Post { Title = "gone2" }]);
+            context.AddRange(active, inactive);
+            await context.SaveChangesAsync(Ct);
+        }
+
+        await using (var context = Fixture.CreateContext())
+        {
+            Assert.Equal(2, await context.Posts.Where(p => !p.Blog.IsActive).ExecuteDeleteAsync(Ct));
+            Assert.Equal(["kept"], await context.Posts.Select(p => p.Title).ToListAsync(Ct));
+        }
+    }
+
+    [Fact]
+    public async Task Execute_update_filters_through_a_navigation()
+    {
+        await using (var context = Fixture.CreateContext())
+        {
+            var active = NewBlog("active", active: true);
+            active.Posts.AddRange([new Post { Title = "a1" }, new Post { Title = "a2" }]);
+            var inactive = NewBlog("inactive", active: false);
+            inactive.Posts.Add(new Post { Title = "i1" });
+            context.AddRange(active, inactive);
+            await context.SaveChangesAsync(Ct);
+        }
+
+        await using (var context = Fixture.CreateContext())
+        {
+            Assert.Equal(2, await context.Posts.Where(p => p.Blog.IsActive).ExecuteUpdateAsync(s => s.SetProperty(p => p.Title, "live"), Ct));
+            Assert.Equal(["i1", "live", "live"], await context.Posts.OrderBy(p => p.Title).Select(p => p.Title).ToListAsync(Ct));
         }
     }
 
@@ -310,17 +385,3 @@ public abstract class ProviderConformanceTests<TFixture>(TFixture fixture) : ICl
             ExternalId = Guid.NewGuid()
         };
 }
-
-public class SqliteConformanceTests(SqliteFixture fixture) : ProviderConformanceTests<SqliteFixture>(fixture);
-
-public class LegacySqliteConformanceTests(LegacySqliteFixture fixture) : ProviderConformanceTests<LegacySqliteFixture>(fixture);
-
-public class DuckDbConformanceTests(DuckDbFixture fixture) : ProviderConformanceTests<DuckDbFixture>(fixture);
-
-public class FlatFileConformanceTests(FlatFileFixture fixture) : ProviderConformanceTests<FlatFileFixture>(fixture);
-
-public class PostgreSqlConformanceTests(PostgreSqlFixture fixture) : ProviderConformanceTests<PostgreSqlFixture>(fixture);
-
-public class SqlServerConformanceTests(SqlServerFixture fixture) : ProviderConformanceTests<SqlServerFixture>(fixture);
-
-public class MySqlConformanceTests(MySqlFixture fixture) : ProviderConformanceTests<MySqlFixture>(fixture);

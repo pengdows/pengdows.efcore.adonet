@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>PostgreSQL dialect for pengdows.efcore.adonet (Npgsql).</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\pengdows.efcore.adonet\pengdows.efcore.adonet.csproj" />
+    <PackageReference Include="Npgsql" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\pengdows.efcore.adonet.duckdb\pengdows.efcore.adonet.duckdb.csproj" />
+    <ProjectReference Include="..\..\src\pengdows.efcore.adonet.Testing\pengdows.efcore.adonet.Testing.csproj" />
+    <PackageReference Include="DuckDB.NET.Data.Full" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="coverlet.collector" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>

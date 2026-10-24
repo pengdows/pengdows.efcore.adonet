@@ -12,7 +12,7 @@ namespace pengdows.efcore.adonet.Storage;
 public class AdoNetDatabaseCreator(
     RelationalDatabaseCreatorDependencies dependencies,
     IRawSqlCommandBuilder rawSqlCommandBuilder,
-    AdoNetSqlDialect dialect)
+    IAdoNetDialect dialect)
     : RelationalDatabaseCreator(dependencies)
 {
     public override bool Exists()
@@ -32,7 +32,7 @@ public class AdoNetDatabaseCreator(
     public override bool HasTables()
         => Convert.ToInt64(
                 rawSqlCommandBuilder
-                    .Build(dialect.HasTablesSql)
+                    .Build(dialect.Sql.HasTablesSql)
                     .ExecuteScalar(
                         new RelationalCommandParameterObject(
                             Dependencies.Connection,

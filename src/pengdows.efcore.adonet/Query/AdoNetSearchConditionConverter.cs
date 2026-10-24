@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 namespace pengdows.efcore.adonet.Query;
 
 /// <summary>
-///     For dialects without boolean expressions (see <see cref="AdoNetSqlDialect.SupportsBooleanExpressions" />):
+///     For <see cref="BooleanSyntax.BitValues" />:
 ///     a bool value where a predicate is required becomes <c>x = TRUE</c>, and a condition where a value is required
 ///     becomes <c>CASE WHEN condition THEN TRUE ELSE FALSE END</c>. Runs after null semantics have been applied.
 /// </summary>
@@ -17,8 +17,6 @@ public class AdoNetSearchConditionConverter(ISqlExpressionFactory sqlExpressionF
     {
         switch (node)
         {
-            case ShapedQueryExpression shaped:
-                return shaped.UpdateQueryExpression(Value(shaped.QueryExpression));
             case SelectExpression select:
                 return select.Update(
                     select.Tables.Select(t => Value(t)).ToList(),

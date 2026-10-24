@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Data;
 using System.Data.Common;
 using Microsoft.EntityFrameworkCore;
@@ -7,12 +8,17 @@ using pengdows.efcore.adonet.Infrastructure;
 namespace pengdows.efcore.adonet.Storage;
 
 /// <summary>
-///     Creates connections only through the ADO.NET abstractions (<see cref="DbDataSource" /> or
-///     <see cref="DbProviderFactory" />). EF's base class opens late and closes early around each operation,
+///     Creates connections only through <see cref="DbDataSource" />: the caller's, or one made by
+///     <see cref="DbProviderFactory.CreateDataSource" />. EF's base class opens late and closes early around each operation,
 ///     so pooling stays with the underlying provider.
 /// </summary>
 public class AdoNetRelationalConnection : RelationalConnection
 {
+    // Drivers with their own data source (Npgsql, MySqlConnector) pool per data source, so one per context would mean a pool
+    // per context. Like the drivers' global pools, these live for the process. Lazy keeps a lost race from leaking one.
+    private static readonly ConcurrentDictionary<(DbProviderFactory Factory, string ConnectionString), Lazy<DbDataSource>> DataSources
+        = new();
+
     private readonly AdoNetOptionsExtension _extension;
 
     public AdoNetRelationalConnection(RelationalConnectionDependencies dependencies)
@@ -39,20 +45,14 @@ public class AdoNetRelationalConnection : RelationalConnection
         }
     }
 
+    // ConnectionString, not the options' value, so Database.SetConnectionString is honored.
     protected override DbConnection CreateDbConnection()
-    {
-        if (_extension.DataSource is { } dataSource)
-        {
-            return dataSource.CreateConnection();
-        }
-
-        var factory = _extension.ProviderFactory!;
-        var connection = factory.CreateConnection()
-            ?? throw new InvalidOperationException($"{factory.GetType().Name}.CreateConnection() returned null.");
-
-        connection.ConnectionString = ConnectionString;
-        return connection;
-    }
+        => (_extension.DataSource
+                ?? DataSources.GetOrAdd(
+                        (_extension.ProviderFactory!, ConnectionString!),
+                        static key => new Lazy<DbDataSource>(() => key.Factory.CreateDataSource(key.ConnectionString)))
+                    .Value)
+            .CreateConnection();
 
     // DbConnection.Close is documented as safe to call on a closed connection and EF relies on that,
     // but not every provider honors it (DuckDB.NET throws), so only close what is open.

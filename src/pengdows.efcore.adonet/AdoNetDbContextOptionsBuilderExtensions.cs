@@ -9,7 +9,7 @@ public static class AdoNetDbContextOptionsBuilderExtensions
 {
     /// <summary>
     ///     Uses <paramref name="providerFactory" /> to create a connection per context (pooling is the provider's).
-    ///     The dialect is detected from the factory when not given.
+    ///     Without <c>UseDialect</c>, the dialect registered for the factory in <see cref="AdoNetDialects" /> is used.
     /// </summary>
     public static DbContextOptionsBuilder UseAdoNet(
         this DbContextOptionsBuilder optionsBuilder,
@@ -24,6 +24,29 @@ public static class AdoNetDbContextOptionsBuilderExtensions
             .WithProviderFactory(providerFactory);
 
         return Apply(optionsBuilder, (AdoNetOptionsExtension)extension.WithConnectionString(connectionString), adoNetOptionsAction);
+    }
+
+    /// <summary>
+    ///     The whole database integration in two arguments: the ADO.NET factory and the dialect. Switching databases
+    ///     changes only these.
+    /// </summary>
+    public static DbContextOptionsBuilder UseAdoNet(
+        this DbContextOptionsBuilder optionsBuilder,
+        DbProviderFactory providerFactory,
+        string connectionString,
+        IAdoNetDialect dialect,
+        Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
+    {
+        ArgumentNullException.ThrowIfNull(dialect);
+
+        return optionsBuilder.UseAdoNet(
+            providerFactory,
+            connectionString,
+            o =>
+            {
+                o.UseDialect(dialect);
+                adoNetOptionsAction?.Invoke(o);
+            });
     }
 
     /// <summary>Resolves the factory from <see cref="DbProviderFactories" /> so the provider can be chosen by configuration.</summary>
@@ -76,6 +99,16 @@ public static class AdoNetDbContextOptionsBuilderExtensions
 
     public static DbContextOptionsBuilder<TContext> UseAdoNet<TContext>(
         this DbContextOptionsBuilder<TContext> optionsBuilder,
+        DbProviderFactory providerFactory,
+        string connectionString,
+        IAdoNetDialect dialect,
+        Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
+        where TContext : DbContext
+        => (DbContextOptionsBuilder<TContext>)((DbContextOptionsBuilder)optionsBuilder).UseAdoNet(
+            providerFactory, connectionString, dialect, adoNetOptionsAction);
+
+    public static DbContextOptionsBuilder<TContext> UseAdoNet<TContext>(
+        this DbContextOptionsBuilder<TContext> optionsBuilder,
         string providerInvariantName,
         string connectionString,
         Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
@@ -101,7 +134,7 @@ public static class AdoNetDbContextOptionsBuilderExtensions
 
     private static AdoNetOptionsExtension GetOrCreateExtension(DbContextOptionsBuilder optionsBuilder, DbProviderFactory? factory)
         => optionsBuilder.Options.FindExtension<AdoNetOptionsExtension>()
-            ?? new AdoNetOptionsExtension().WithDialect(AdoNetSqlDialect.Detect(factory));
+            ?? new AdoNetOptionsExtension().WithDialect(AdoNetDialects.Find(factory));
 
     private static DbContextOptionsBuilder Apply(
         DbContextOptionsBuilder optionsBuilder,

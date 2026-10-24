@@ -15,26 +15,27 @@ public class AdoNetTypeMappingSource : RelationalTypeMappingSource
     public AdoNetTypeMappingSource(
         TypeMappingSourceDependencies dependencies,
         RelationalTypeMappingSourceDependencies relationalDependencies,
-        AdoNetSqlDialect dialect)
+        ITypeMappingDialect typeMappings,
+        ISqlDialect sql)
         : base(dependencies, relationalDependencies)
     {
-        foreach (var clrType in AdoNetSqlDialect.SupportedClrTypes)
+        foreach (var clrType in AnsiTypeMappings.SupportedClrTypes)
         {
-            if (dialect.GetStoreType(clrType) is not { } storeType)
+            if (typeMappings.GetStoreType(clrType) is not { } storeType)
             {
                 continue;
             }
 
-            var mapping = CreateMapping(clrType, storeType, dialect);
+            var mapping = CreateMapping(clrType, storeType, sql);
             _clrTypeMappings[clrType] = mapping;
             _storeTypeMappings.TryAdd(storeType, mapping);
         }
     }
 
-    protected virtual RelationalTypeMapping CreateMapping(Type clrType, string storeType, AdoNetSqlDialect dialect)
+    protected virtual RelationalTypeMapping CreateMapping(Type clrType, string storeType, ISqlDialect sql)
         => clrType switch
         {
-            _ when clrType == typeof(bool) => new AdoNetBoolTypeMapping(storeType, dialect.TrueLiteral, dialect.FalseLiteral),
+            _ when clrType == typeof(bool) => new AdoNetBoolTypeMapping(storeType, sql.TrueLiteral, sql.FalseLiteral),
             _ when clrType == typeof(byte) => new ByteTypeMapping(storeType),
             _ when clrType == typeof(short) => new ShortTypeMapping(storeType),
             _ when clrType == typeof(int) => new IntTypeMapping(storeType),

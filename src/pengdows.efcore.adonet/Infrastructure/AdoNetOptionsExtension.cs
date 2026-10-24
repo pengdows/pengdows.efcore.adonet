@@ -1,5 +1,5 @@
 using System.Data.Common;
-using System.Runtime.CompilerServices;
+using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,7 +11,7 @@ public class AdoNetOptionsExtension : RelationalOptionsExtension
     private DbContextOptionsExtensionInfo? _info;
     private DbProviderFactory? _providerFactory;
     private DbDataSource? _dataSource;
-    private AdoNetSqlDialect _dialect = AdoNetSqlDialect.Ansi;
+    private IAdoNetDialect _dialect = AdoNetDialect.Ansi;
 
     public AdoNetOptionsExtension()
     {
@@ -36,7 +36,7 @@ public class AdoNetOptionsExtension : RelationalOptionsExtension
     public virtual DbDataSource? DataSource
         => _dataSource;
 
-    public virtual AdoNetSqlDialect Dialect
+    public virtual IAdoNetDialect Dialect
         => _dialect;
 
     protected override RelationalOptionsExtension Clone()
@@ -56,7 +56,7 @@ public class AdoNetOptionsExtension : RelationalOptionsExtension
         return clone;
     }
 
-    public virtual AdoNetOptionsExtension WithDialect(AdoNetSqlDialect dialect)
+    public virtual AdoNetOptionsExtension WithDialect(IAdoNetDialect dialect)
     {
         var clone = (AdoNetOptionsExtension)Clone();
         clone._dialect = dialect;
@@ -70,8 +70,24 @@ public class AdoNetOptionsExtension : RelationalOptionsExtension
     {
         base.Validate(options);
 
-        // The dialect partitions the service provider, so this runs once per dialect instance.
-        _dialect.Validate();
+        // The dialect partitions the service provider, so this runs once per distinct dialect.
+        Validate(_dialect);
+    }
+
+    /// <summary>Combinations of dialect parts the provider cannot work with.</summary>
+    public static void Validate(IAdoNetDialect dialect)
+    {
+        if (string.IsNullOrEmpty(dialect.Sql.ParameterMarker))
+        {
+            throw new NotSupportedException(
+                $"Dialect '{dialect.Name}': positional ('?') parameters are not supported; EF Core reuses named parameters within a statement.");
+        }
+
+        if (dialect.Sql.Keys is SelectAfterKeyRetrieval && !dialect.Capabilities.SupportsMultipleStatementsPerCommand)
+        {
+            throw new NotSupportedException(
+                $"Dialect '{dialect.Name}': SelectAfter key retrieval needs multiple statements per command.");
+        }
     }
 
     private sealed class ExtensionInfo(AdoNetOptionsExtension extension) : RelationalExtensionInfo(extension)
@@ -82,18 +98,19 @@ public class AdoNetOptionsExtension : RelationalOptionsExtension
         public override bool IsDatabaseProvider
             => true;
 
-        // The dialect is consumed by singleton services, so it must partition the internal service provider.
+        // The dialect is consumed by singleton services and registers services of its own, so it partitions the internal
+        // service provider. Equality is the dialect's: reference equality unless it defines value equality.
         public override int GetServiceProviderHashCode()
-            => RuntimeHelpers.GetHashCode(Extension._dialect);
+            => Extension._dialect.GetHashCode();
 
         public override bool ShouldUseSameServiceProvider(DbContextOptionsExtensionInfo other)
             => other is ExtensionInfo otherInfo
-                && ReferenceEquals(Extension._dialect, otherInfo.Extension._dialect);
+                && Extension._dialect.Equals(otherInfo.Extension._dialect);
 
         public override string LogFragment
             => base.LogFragment + "Dialect=" + Extension._dialect.Name + " ";
 
         public override void PopulateDebugInfo(IDictionary<string, string> debugInfo)
-            => debugInfo["AdoNet:Dialect"] = RuntimeHelpers.GetHashCode(Extension._dialect).ToString();
+            => debugInfo["AdoNet:Dialect"] = Extension._dialect.GetHashCode().ToString(CultureInfo.InvariantCulture);
     }
 }

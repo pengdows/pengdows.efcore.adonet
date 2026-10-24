@@ -1,8 +1,21 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/pengdows.efcore.adonet/pengdows.efcore.adonet.csproj" />
+    <Project Path="src/pengdows.efcore.adonet.Testing/pengdows.efcore.adonet.Testing.csproj" />
+    <Project Path="src/pengdows.efcore.adonet.sqlite/pengdows.efcore.adonet.sqlite.csproj" />
+    <Project Path="src/pengdows.efcore.adonet.duckdb/pengdows.efcore.adonet.duckdb.csproj" />
+    <Project Path="src/pengdows.efcore.adonet.postgresql/pengdows.efcore.adonet.postgresql.csproj" />
+    <Project Path="src/pengdows.efcore.adonet.sqlserver/pengdows.efcore.adonet.sqlserver.csproj" />
+    <Project Path="src/pengdows.efcore.adonet.mysql/pengdows.efcore.adonet.mysql.csproj" />
+    <Project Path="src/pengdows.efcore.adonet.flatfile/pengdows.efcore.adonet.flatfile.csproj" />
   </Folder>
   <Folder Name="/test/">
     <Project Path="test/pengdows.efcore.adonet.Tests/pengdows.efcore.adonet.Tests.csproj" />
+    <Project Path="test/pengdows.efcore.adonet.sqlite.Tests/pengdows.efcore.adonet.sqlite.Tests.csproj" />
+    <Project Path="test/pengdows.efcore.adonet.duckdb.Tests/pengdows.efcore.adonet.duckdb.Tests.csproj" />
+    <Project Path="test/pengdows.efcore.adonet.postgresql.Tests/pengdows.efcore.adonet.postgresql.Tests.csproj" />
+    <Project Path="test/pengdows.efcore.adonet.sqlserver.Tests/pengdows.efcore.adonet.sqlserver.Tests.csproj" />
+    <Project Path="test/pengdows.efcore.adonet.mysql.Tests/pengdows.efcore.adonet.mysql.Tests.csproj" />
+    <Project Path="test/pengdows.efcore.adonet.flatfile.Tests/pengdows.efcore.adonet.flatfile.Tests.csproj" />
   </Folder>
 </Solution>

@@ -21,10 +21,13 @@ public static class AdoNetServiceCollectionExtensions
 {
     /// <summary>
     ///     Registers the provider's services in EF's internal service provider. Called by
-    ///     <see cref="AdoNetOptionsExtension.ApplyServices" />; everything not listed here uses EF's relational defaults.
+    ///     <see cref="AdoNetOptionsExtension.ApplyServices" />. The dialect registers first, and everything here is TryAdd,
+    ///     so the dialect's services win; anything neither registers uses EF's relational defaults.
     /// </summary>
-    public static IServiceCollection AddEntityFrameworkAdoNet(this IServiceCollection services, AdoNetSqlDialect dialect)
+    public static IServiceCollection AddEntityFrameworkAdoNet(this IServiceCollection services, IAdoNetDialect dialect)
     {
+        dialect.ConfigureServices(services);
+
         new EntityFrameworkRelationalServicesBuilder(services)
             .TryAdd<LoggingDefinitions, AdoNetLoggingDefinitions>()
             .TryAdd<IDatabaseProvider, DatabaseProvider<AdoNetOptionsExtension>>()
@@ -36,11 +39,16 @@ public static class AdoNetServiceCollectionExtensions
             .TryAdd<IRelationalDatabaseCreator, AdoNetDatabaseCreator>()
             .TryAdd<IHistoryRepository, AdoNetHistoryRepository>()
             .TryAdd<IQuerySqlGeneratorFactory, AdoNetQuerySqlGeneratorFactory>()
+            .TryAdd<IQueryableMethodTranslatingExpressionVisitorFactory, AdoNetQueryableMethodTranslatingExpressionVisitorFactory>()
             .TryAdd<IUpdateSqlGenerator, AdoNetUpdateSqlGenerator>()
             .TryAdd<IModificationCommandBatchFactory, AdoNetModificationCommandBatchFactory>()
             .TryAdd<IRelationalParameterBasedSqlProcessorFactory, AdoNetParameterBasedSqlProcessorFactory>()
             .TryAdd<IValueGeneratorSelector, AdoNetValueGeneratorSelector>()
-            .TryAddProviderSpecificServices(b => b.TryAddSingleton(dialect))
+            .TryAddProviderSpecificServices(b => b
+                .TryAddSingleton(dialect)
+                .TryAddSingleton(dialect.Sql)
+                .TryAddSingleton(dialect.TypeMappings)
+                .TryAddSingleton(dialect.Capabilities))
             .TryAddCoreServices();
 
         return services;

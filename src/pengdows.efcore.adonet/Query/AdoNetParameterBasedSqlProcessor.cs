@@ -7,39 +7,31 @@ namespace pengdows.efcore.adonet.Query;
 /// <summary>
 ///     Runs once parameter values are known. For dialects that reject parameters in OFFSET/FETCH, replaces them with
 ///     constants; reading the values through <see cref="ParametersCacheDecorator.GetAndDisableCaching" /> keeps EF
-///     from caching SQL that now depends on them. For dialects without boolean expressions, converts between
-///     bool values and conditions (<see cref="AdoNetSearchConditionConverter" />).
+///     from caching SQL that now depends on them. Then applies the dialect's <see cref="BooleanSyntax" />.
 /// </summary>
 public class AdoNetParameterBasedSqlProcessor(
     RelationalParameterBasedSqlProcessorDependencies dependencies,
     RelationalParameterBasedSqlProcessorParameters parameters,
-    AdoNetSqlDialect dialect)
+    ISqlDialect dialect)
     : RelationalParameterBasedSqlProcessor(dependencies, parameters)
 {
     public override Expression Process(Expression queryExpression, ParametersCacheDecorator parametersDecorator)
     {
         queryExpression = base.Process(queryExpression, parametersDecorator);
 
-        if (!dialect.SupportsParametersInPaging)
+        if (dialect.Paging.InlinesValues)
         {
             queryExpression = new PagingParameterInliner(parametersDecorator).Visit(queryExpression);
         }
 
         // After null semantics, which add conditions of their own.
-        return dialect.SupportsBooleanExpressions
-            ? queryExpression
-            : new AdoNetSearchConditionConverter(Dependencies.SqlExpressionFactory).Visit(queryExpression);
+        return dialect.Booleans.Process(queryExpression, Dependencies.SqlExpressionFactory);
     }
 
     private sealed class PagingParameterInliner(ParametersCacheDecorator parametersDecorator) : ExpressionVisitor
     {
         protected override Expression VisitExtension(Expression node)
         {
-            if (node is ShapedQueryExpression shaped)
-            {
-                return shaped.UpdateQueryExpression(Visit(shaped.QueryExpression));
-            }
-
             var visited = base.VisitExtension(node);
             if (visited is not SelectExpression select
                 || (select.Offset is not SqlParameterExpression && select.Limit is not SqlParameterExpression))
@@ -70,7 +62,7 @@ public class AdoNetParameterBasedSqlProcessor(
 
 public class AdoNetParameterBasedSqlProcessorFactory(
     RelationalParameterBasedSqlProcessorDependencies dependencies,
-    AdoNetSqlDialect dialect)
+    ISqlDialect dialect)
     : IRelationalParameterBasedSqlProcessorFactory
 {
     public virtual RelationalParameterBasedSqlProcessor Create(RelationalParameterBasedSqlProcessorParameters parameters)

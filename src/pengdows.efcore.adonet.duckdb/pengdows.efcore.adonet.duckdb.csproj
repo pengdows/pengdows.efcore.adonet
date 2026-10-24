@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>DuckDB dialect for pengdows.efcore.adonet (DuckDB.NET).</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\pengdows.efcore.adonet\pengdows.efcore.adonet.csproj" />
+    <PackageReference Include="DuckDB.NET.Data" />
+  </ItemGroup>
+</Project>

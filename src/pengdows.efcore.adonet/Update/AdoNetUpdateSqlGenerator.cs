@@ -7,9 +7,9 @@ namespace pengdows.efcore.adonet.Update;
 
 /// <summary>
 ///     Reads back generated values and checks concurrency with <c>RETURNING</c>, with a follow-up <c>SELECT</c> in the
-///     same command, or with plain statements checked via RecordsAffected, as chosen by <see cref="AdoNetSqlDialect.GeneratedValues" />.
+///     same command, or with plain statements checked via RecordsAffected, as chosen by <see cref="ISqlDialect.Keys" />.
 /// </summary>
-public class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependencies, AdoNetSqlDialect dialect)
+public class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependencies, IAdoNetDialect dialect)
     : UpdateAndSelectSqlGenerator(dependencies)
 {
     public override ResultSetMapping AppendInsertOperation(
@@ -17,11 +17,11 @@ public class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependencie
         IReadOnlyModificationCommand command,
         int commandPosition,
         out bool requiresTransaction)
-        => dialect.GeneratedValues switch
+        => dialect.Sql.Keys switch
         {
-            GeneratedValueRetrieval.Returning
+            ReturningKeyRetrieval
                 => AppendInsertReturningOperation(commandStringBuilder, command, commandPosition, out requiresTransaction),
-            GeneratedValueRetrieval.SelectAfter
+            SelectAfterKeyRetrieval
                 => AppendInsertAndSelectOperation(commandStringBuilder, command, commandPosition, out requiresTransaction),
             _ => AppendPlainOperation(commandStringBuilder, command, out requiresTransaction)
         };
@@ -31,11 +31,11 @@ public class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependencie
         IReadOnlyModificationCommand command,
         int commandPosition,
         out bool requiresTransaction)
-        => dialect.GeneratedValues switch
+        => dialect.Sql.Keys switch
         {
-            GeneratedValueRetrieval.Returning
+            ReturningKeyRetrieval
                 => AppendUpdateReturningOperation(commandStringBuilder, command, commandPosition, out requiresTransaction),
-            GeneratedValueRetrieval.SelectAfter
+            SelectAfterKeyRetrieval
                 => AppendUpdateAndSelectOperation(commandStringBuilder, command, commandPosition, out requiresTransaction),
             _ => AppendPlainOperation(commandStringBuilder, command, out requiresTransaction)
         };
@@ -45,17 +45,17 @@ public class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependencie
         IReadOnlyModificationCommand command,
         int commandPosition,
         out bool requiresTransaction)
-        => dialect.GeneratedValues switch
+        => dialect.Sql.Keys switch
         {
-            GeneratedValueRetrieval.Returning
+            ReturningKeyRetrieval
                 => AppendDeleteReturningOperation(commandStringBuilder, command, commandPosition, out requiresTransaction),
-            GeneratedValueRetrieval.SelectAfter
+            SelectAfterKeyRetrieval
                 => AppendDeleteAndSelectOperation(commandStringBuilder, command, commandPosition, out requiresTransaction),
             _ => AppendPlainOperation(commandStringBuilder, command, out requiresTransaction)
         };
 
     /// <summary>
-    ///     <see cref="GeneratedValueRetrieval.RecordsAffected" />: the statement alone, with no result set;
+    ///     <see cref="SequenceKeyRetrieval" />: the statement alone, with no result set;
     ///     <see cref="AdoNetRecordsAffectedModificationCommandBatch" /> checks the affected row count.
     /// </summary>
     protected virtual ResultSetMapping AppendPlainOperation(
@@ -99,12 +99,12 @@ public class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependencie
     protected override void AppendIdentityWhereCondition(StringBuilder commandStringBuilder, IColumnModification columnModification)
     {
         SqlGenerationHelper.DelimitIdentifier(commandStringBuilder, columnModification.ColumnName);
-        commandStringBuilder.Append(" = ").Append(dialect.IdentityFunction);
+        commandStringBuilder.Append(" = ").Append(SelectAfter.IdentityFunction);
     }
 
     protected override void AppendRowsAffectedWhereCondition(StringBuilder commandStringBuilder, int expectedRowsAffected)
         => commandStringBuilder
-            .Append(dialect.RowsAffectedFunction)
+            .Append(SelectAfter.RowsAffectedFunction)
             .Append(" = ")
             .Append(expectedRowsAffected.ToString(CultureInfo.InvariantCulture));
 
@@ -116,10 +116,13 @@ public class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependencie
     {
         commandStringBuilder
             .Append("SELECT ")
-            .Append(dialect.RowsAffectedFunction)
+            .Append(SelectAfter.RowsAffectedFunction)
             .AppendLine(SqlGenerationHelper.StatementTerminator)
             .AppendLine();
 
         return ResultSetMapping.LastInResultSet | ResultSetMapping.ResultSetWithRowsAffectedOnly;
     }
+
+    private SelectAfterKeyRetrieval SelectAfter
+        => (SelectAfterKeyRetrieval)dialect.Sql.Keys;
 }
