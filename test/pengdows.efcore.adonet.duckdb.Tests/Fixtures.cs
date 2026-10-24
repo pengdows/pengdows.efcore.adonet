@@ -62,3 +62,5 @@ public sealed class DuckDbFixture : ProviderFixture
 public class DuckDbConformanceTests(DuckDbFixture fixture) : ProviderConformanceTests<DuckDbFixture>(fixture);
 
 public class DuckDbMigrationsConformanceTests(DuckDbFixture fixture) : MigrationsConformanceTests<DuckDbFixture>(fixture);
+
+public class DuckDbBulkConformanceTests(DuckDbFixture fixture) : BulkConformanceTests<DuckDbFixture>(fixture);

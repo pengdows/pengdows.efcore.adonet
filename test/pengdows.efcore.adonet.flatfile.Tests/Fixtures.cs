@@ -80,3 +80,5 @@ public sealed class FlatFileFixture : ProviderFixture
 public class FlatFileConformanceTests(FlatFileFixture fixture) : ProviderConformanceTests<FlatFileFixture>(fixture);
 
 public class FlatFileMigrationsConformanceTests(FlatFileFixture fixture) : MigrationsConformanceTests<FlatFileFixture>(fixture);
+
+public class FlatFileBulkConformanceTests(FlatFileFixture fixture) : BulkConformanceTests<FlatFileFixture>(fixture);

@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore.Update;
 using Microsoft.EntityFrameworkCore.ValueGeneration;
 using Microsoft.Extensions.DependencyInjection;
+using pengdows.efcore.adonet.Bulk;
 using pengdows.efcore.adonet.Diagnostics;
 using pengdows.efcore.adonet.Infrastructure;
 using pengdows.efcore.adonet.Metadata;
@@ -51,7 +52,8 @@ public static class AdoNetServiceCollectionExtensions
                 .TryAddSingleton(dialect)
                 .TryAddSingleton(dialect.Sql)
                 .TryAddSingleton(dialect.TypeMappings)
-                .TryAddSingleton(dialect.Capabilities))
+                .TryAddSingleton(dialect.Capabilities)
+                .TryAddScoped<IAdoNetBulkLoader, AdoNetInsertBulkLoader>())
             .TryAddCoreServices();
 
         return services;

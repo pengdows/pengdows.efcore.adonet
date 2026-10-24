@@ -1,6 +1,7 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Query;
 using pengdows.efcore.adonet.Testing;
 
 namespace pengdows.efcore.adonet.Tests;
@@ -30,20 +31,11 @@ public class SqlGenerationTests
     [Fact]
     public void Same_dialect_instance_reuses_the_internal_service_provider()
     {
-        // The first context may be the one that creates the service provider; after it, none may be created.
-        using (var first = Context(b => b.UseAdoNet(SqliteFactory.Instance, "Data Source=warmup;Mode=Memory")))
-        {
-            Assert.NotNull(first.Model);
-        }
+        // Singleton services are shared exactly when the internal service provider is.
+        using var first = Context(b => b.UseAdoNet(SqliteFactory.Instance, "Data Source=one;Mode=Memory"));
+        using var second = Context(b => b.UseAdoNet(SqliteFactory.Instance, "Data Source=two;Mode=Memory"));
 
-        for (var i = 0; i < 30; i++)
-        {
-            using var context = Context(b => b
-                .UseAdoNet(SqliteFactory.Instance, $"Data Source=db{i};Mode=Memory")
-                .ConfigureWarnings(w => w.Throw(CoreEventId.ManyServiceProvidersCreatedWarning)));
-
-            Assert.NotNull(context.Model);
-        }
+        Assert.Same(first.GetService<IQuerySqlGeneratorFactory>(), second.GetService<IQuerySqlGeneratorFactory>());
     }
 
     [Fact]

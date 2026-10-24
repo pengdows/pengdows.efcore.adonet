@@ -1,3 +1,7 @@
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using pengdows.efcore.adonet.Bulk;
+
 namespace pengdows.efcore.adonet.postgresql;
 
 public sealed class PostgreSqlDialect : AdoNetDialect
@@ -7,7 +11,10 @@ public sealed class PostgreSqlDialect : AdoNetDialect
     public override string Name => "PostgreSQL";
     public override ISqlDialect Sql { get; } = new PostgreSqlSql();
     public override ITypeMappingDialect TypeMappings { get; } = new PostgreSqlTypeMappings();
-    public override IDatabaseCapabilities Capabilities { get; } = new DatabaseCapabilities(SupportsMultipleStatementsPerCommand: true, DefaultMaxBatchSize: 128);
+    public override IDatabaseCapabilities Capabilities { get; } = new DatabaseCapabilities(SupportsMultipleStatementsPerCommand: true, DefaultMaxBatchSize: 128, MaxParametersPerCommand: 65535);
+
+    public override void ConfigureServices(IServiceCollection services)
+        => services.TryAddScoped<IAdoNetBulkLoader, PostgreSqlBulkLoader>();
 }
 
 public sealed class PostgreSqlSql : AnsiSqlDialect

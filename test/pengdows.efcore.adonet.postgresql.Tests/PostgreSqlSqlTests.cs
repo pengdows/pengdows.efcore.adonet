@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using pengdows.efcore.adonet.Bulk;
 using pengdows.efcore.adonet.Testing;
 
 namespace pengdows.efcore.adonet.postgresql.Tests;
@@ -27,5 +29,13 @@ public class PostgreSqlSqlTests
 
         Assert.Contains("= @name", sql);
         Assert.Matches(@"LIMIT @p\w*\s+OFFSET @p\w*", sql);
+    }
+
+    [Fact]
+    public void Bulk_loads_use_the_native_loader()
+    {
+        using var context = Context(b => b.UseAdoNetPostgreSql("Host=localhost"));
+
+        Assert.IsType<PostgreSqlBulkLoader>(context.GetService<IAdoNetBulkLoader>());
     }
 }

@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using pengdows.efcore.adonet.Bulk;
 using pengdows.efcore.adonet.Testing;
 
 namespace pengdows.efcore.adonet.sqlserver.Tests;
@@ -57,5 +59,13 @@ public class SqlServerSqlTests
 
         Assert.Contains("COUNT_BIG(*)", context.Blogs.GroupBy(b => b.Name).Select(g => g.LongCount()).ToQueryString());
         Assert.DoesNotContain("COUNT_BIG", context.Blogs.GroupBy(b => b.Name).Select(g => g.Count()).ToQueryString());
+    }
+
+    [Fact]
+    public void Bulk_loads_use_the_native_loader()
+    {
+        using var context = Context(b => b.UseAdoNetSqlServer("Server=localhost"));
+
+        Assert.IsType<SqlServerBulkLoader>(context.GetService<IAdoNetBulkLoader>());
     }
 }

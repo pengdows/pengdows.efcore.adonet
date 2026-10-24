@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -119,20 +120,13 @@ public class DialectContractTests
     [Fact]
     public void Equal_dialects_share_the_internal_service_provider()
     {
-        // The first context may be the one that creates this dialect's service provider; after it, none may be created.
-        using (var first = Context(new ConfigurableDialect(compatibilityLevel: 150)))
-        {
-            Assert.NotNull(first.Model);
-        }
+        // Singleton services are shared exactly when the internal service provider is.
+        using var first = Context(new ConfigurableDialect(compatibilityLevel: 150));
+        using var second = Context(new ConfigurableDialect(compatibilityLevel: 150));
+        using var other = Context(new ConfigurableDialect(compatibilityLevel: 100));
 
-        for (var i = 0; i < 30; i++)
-        {
-            using var context = Context(
-                new ConfigurableDialect(compatibilityLevel: 150),
-                b => b.ConfigureWarnings(w => w.Throw(CoreEventId.ManyServiceProvidersCreatedWarning)));
-
-            Assert.NotNull(context.Model);
-        }
+        Assert.Same(first.GetService<IQuerySqlGeneratorFactory>(), second.GetService<IQuerySqlGeneratorFactory>());
+        Assert.NotSame(first.GetService<IQuerySqlGeneratorFactory>(), other.GetService<IQuerySqlGeneratorFactory>());
     }
 
     [Fact]

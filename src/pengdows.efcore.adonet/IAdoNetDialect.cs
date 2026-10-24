@@ -81,4 +81,7 @@ public interface IDatabaseCapabilities
 
     /// <summary>Maximum commands per SaveChanges batch when the user doesn't set MaxBatchSize. Ignored unless multi-statement commands are supported.</summary>
     int DefaultMaxBatchSize { get; }
+
+    /// <summary>The most parameters one command may carry (bulk loads size their INSERTs by it).</summary>
+    int MaxParametersPerCommand { get; }
 }

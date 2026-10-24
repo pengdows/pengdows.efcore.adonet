@@ -15,7 +15,7 @@ public sealed class MySqlDialect : AdoNetDialect
     public override string Name => "MySQL";
     public override ISqlDialect Sql { get; } = new MySqlSql();
     public override ITypeMappingDialect TypeMappings { get; } = new MySqlTypeMappings();
-    public override IDatabaseCapabilities Capabilities { get; } = new DatabaseCapabilities(SupportsMultipleStatementsPerCommand: true, DefaultMaxBatchSize: 128);
+    public override IDatabaseCapabilities Capabilities { get; } = new DatabaseCapabilities(SupportsMultipleStatementsPerCommand: true, DefaultMaxBatchSize: 128, MaxParametersPerCommand: 65535);
 
     public override void ConfigureServices(IServiceCollection services)
         => new EntityFrameworkRelationalServicesBuilder(services)

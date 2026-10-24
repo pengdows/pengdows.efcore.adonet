@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using pengdows.efcore.adonet.Bulk;
 
 namespace pengdows.efcore.adonet.sqlserver;
 
@@ -15,11 +17,14 @@ public sealed class SqlServerDialect : AdoNetDialect
     public override string Name => "SQL Server";
     public override ISqlDialect Sql { get; } = new SqlServerSql();
     public override ITypeMappingDialect TypeMappings { get; } = new SqlServerTypeMappings();
-    public override IDatabaseCapabilities Capabilities { get; } = new DatabaseCapabilities(SupportsMultipleStatementsPerCommand: true, DefaultMaxBatchSize: 42);
+    public override IDatabaseCapabilities Capabilities { get; } = new DatabaseCapabilities(SupportsMultipleStatementsPerCommand: true, DefaultMaxBatchSize: 42, MaxParametersPerCommand: 2000);
 
     public override void ConfigureServices(IServiceCollection services)
-        => new EntityFrameworkRelationalServicesBuilder(services)
+    {
+        new EntityFrameworkRelationalServicesBuilder(services)
             .TryAdd<IMigrationsSqlGenerator, SqlServerMigrationsSqlGenerator>();
+        services.TryAddScoped<IAdoNetBulkLoader, SqlServerBulkLoader>();
+    }
 }
 
 public sealed class SqlServerSql : AnsiSqlDialect

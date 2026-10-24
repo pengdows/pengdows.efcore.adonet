@@ -41,3 +41,5 @@ public sealed class MySqlFixture : ContainerFixture
 public class MySqlConformanceTests(MySqlFixture fixture) : ProviderConformanceTests<MySqlFixture>(fixture);
 
 public class MySqlMigrationsConformanceTests(MySqlFixture fixture) : MigrationsConformanceTests<MySqlFixture>(fixture);
+
+public class MySqlBulkConformanceTests(MySqlFixture fixture) : BulkConformanceTests<MySqlFixture>(fixture);

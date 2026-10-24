@@ -92,7 +92,10 @@ public class AnsiTypeMappings : ITypeMappingDialect
             : null;
 }
 
-public sealed record DatabaseCapabilities(bool SupportsMultipleStatementsPerCommand = false, int DefaultMaxBatchSize = 1)
+public sealed record DatabaseCapabilities(
+    bool SupportsMultipleStatementsPerCommand = false,
+    int DefaultMaxBatchSize = 1,
+    int MaxParametersPerCommand = 999)
     : IDatabaseCapabilities
 {
     /// <summary>One statement per command.</summary>
