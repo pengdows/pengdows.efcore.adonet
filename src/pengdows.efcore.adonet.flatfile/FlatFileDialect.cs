@@ -22,8 +22,8 @@ public sealed class FlatFileTypeMappings : AnsiTypeMappings
             : clrType == typeof(TimeSpan) ? null
             : base.GetStoreType(clrType);
 
-    public override string? GetStoreType(Type clrType, int? size, int? precision, int? scale, bool fixedLength)
-        => clrType == typeof(byte[]) ? null : base.GetStoreType(clrType, size, precision, scale, fixedLength);
+    public override string? GetStoreType(Type clrType, StoreTypeFacets facets)
+        => clrType == typeof(byte[]) ? null : base.GetStoreType(clrType, facets);
 }
 
 public sealed class FlatFileSql : AnsiSqlDialect

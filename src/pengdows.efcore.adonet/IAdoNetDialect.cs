@@ -82,10 +82,10 @@ public interface ITypeMappingDialect
     string? GetStoreType(Type clrType);
 
     /// <summary>
-    ///     The store type with a length (strings, binary) or precision and scale (decimals) from the model, e.g. from
-    ///     <c>[MaxLength]</c>, <c>IsFixedLength</c> or <c>HasPrecision</c>; null when facets don't change it.
+    ///     The store type with the model's facets, e.g. from <c>[MaxLength]</c>, <c>IsFixedLength</c>, <c>IsUnicode</c> or
+    ///     <c>HasPrecision</c>; null when they don't change it.
     /// </summary>
-    string? GetStoreType(Type clrType, int? size, int? precision, int? scale, bool fixedLength);
+    string? GetStoreType(Type clrType, StoreTypeFacets facets);
 
     /// <summary>
     ///     The CLR types a store type holds without conversion, the default first; empty when the name isn't known.
@@ -105,6 +105,14 @@ public interface ITypeMappingDialect
     /// </summary>
     string FormatLiteral(object value, string storeType, string literal);
 }
+
+/// <summary>The facets of a property that can change its store type.</summary>
+/// <param name="Size">The length of a string or binary column.</param>
+/// <param name="Precision">The precision of a decimal (or a time with fractional seconds).</param>
+/// <param name="Scale">The scale of a decimal.</param>
+/// <param name="FixedLength">Whether a string or binary column is padded to its length.</param>
+/// <param name="Unicode">Whether a string column holds Unicode text; true unless the model says otherwise.</param>
+public sealed record StoreTypeFacets(int? Size = null, int? Precision = null, int? Scale = null, bool FixedLength = false, bool Unicode = true);
 
 /// <summary>What the driver accepts, as opposed to what the SQL looks like.</summary>
 public interface IDatabaseCapabilities

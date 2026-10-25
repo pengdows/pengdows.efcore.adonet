@@ -74,6 +74,8 @@ public static class TestDialects
     public static readonly IAdoNetDialect StringParameters4000 = new PartsDialect(
         "String parameters 4000", typeMappings: new StringParameterSizes());
 
+    public static readonly IAdoNetDialect NationalStrings = new PartsDialect("National strings", typeMappings: new NationalStringTypeMappings());
+
     public static readonly IAdoNetDialect PreferExists = new PartsDialect("Prefer EXISTS", new PartsSql(preferExistsToIn: true));
 
     public static readonly IAdoNetDialect CastLiterals = new PartsDialect("Cast literals", typeMappings: new CastLiteralTypeMappings());

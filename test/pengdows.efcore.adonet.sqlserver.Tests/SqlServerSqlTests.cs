@@ -54,6 +54,28 @@ public class SqlServerSqlTests
         Assert.Equal(storeType, context.GetService<IRelationalTypeMappingSource>().FindMapping(clrType)!.StoreType);
     }
 
+    public static TheoryData<Type, StoreTypeFacets, string?> FacetedStoreTypes => new()
+    {
+        { typeof(string), new StoreTypeFacets(Size: 50), "nvarchar(50)" },
+        { typeof(string), new StoreTypeFacets(Size: 50, Unicode: false), "varchar(50)" },
+        { typeof(string), new StoreTypeFacets(Size: 5, FixedLength: true), "nchar(5)" },
+        { typeof(string), new StoreTypeFacets(Size: 5, FixedLength: true, Unicode: false), "char(5)" },
+        { typeof(string), new StoreTypeFacets(Size: 4001), "nvarchar(max)" },
+        { typeof(string), new StoreTypeFacets(Size: 8000, Unicode: false), "varchar(8000)" },
+        { typeof(string), new StoreTypeFacets(Size: 8001, Unicode: false), "varchar(max)" },
+        { typeof(string), new StoreTypeFacets(Unicode: false), "varchar(max)" },
+        { typeof(string), new StoreTypeFacets(), null },
+        { typeof(byte[]), new StoreTypeFacets(Size: 32, FixedLength: true), "binary(32)" },
+        { typeof(byte[]), new StoreTypeFacets(Size: 32), "varbinary(32)" },
+        { typeof(byte[]), new StoreTypeFacets(Size: 8001), "varbinary(max)" },
+        { typeof(decimal), new StoreTypeFacets(Precision: 10), "decimal(10,0)" }
+    };
+
+    [Theory]
+    [MemberData(nameof(FacetedStoreTypes))]
+    public void Names_faceted_store_types(Type clrType, StoreTypeFacets facets, string? storeType)
+        => Assert.Equal(storeType, SqlServerDialect.Instance.TypeMappings.GetStoreType(clrType, facets));
+
     [Theory]
     [InlineData("money", typeof(decimal))]
     [InlineData("smallmoney", typeof(decimal))]

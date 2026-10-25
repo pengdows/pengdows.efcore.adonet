@@ -140,12 +140,13 @@ public class AdoNetDecimalTypeMapping : DecimalTypeMapping
 
     protected override void ConfigureParameter(DbParameter parameter)
     {
-        if (Precision is { } precision)
+        // DbParameter's facets are bytes; a database's larger precision (PostgreSQL's numeric goes to 1000) is left to it.
+        if (Precision is { } precision and <= byte.MaxValue)
         {
             parameter.Precision = (byte)precision;
         }
 
-        if (Scale is { } scale)
+        if (Scale is { } scale and <= byte.MaxValue)
         {
             parameter.Scale = (byte)scale;
         }

@@ -67,14 +67,19 @@ public class AdoNetTypeMappingSource : RelationalTypeMappingSource
     // The dialect's default store type, e.g. DECIMAL(18,2), carries the precision and scale parameters bind with.
     private RelationalTypeMapping DecimalMapping(string storeType)
     {
-        var facets = storeType.IndexOf('(') is > 0 and var open && storeType.EndsWith(')')
+        var (precision, scale) = DecimalFacets(storeType);
+        return new AdoNetDecimalTypeMapping(storeType, _typeMappings, precision, scale);
+    }
+
+    // DECIMAL(p,s), DECIMAL(p) meaning scale 0, or plain DECIMAL leaving both to the database.
+    private static (int? Precision, int? Scale) DecimalFacets(string storeType)
+    {
+        var facets = (storeType.IndexOf('(') is > 0 and var open) && storeType.EndsWith(')')
             ? storeType[(open + 1)..^1].Split(',')
             : [];
-        return new AdoNetDecimalTypeMapping(
-            storeType,
-            _typeMappings,
-            facets.Length > 0 && int.TryParse(facets[0], out var precision) ? precision : null,
-            facets.Length > 1 && int.TryParse(facets[1], out var scale) ? scale : null);
+        int? precision = (facets.Length > 0) && int.TryParse(facets[0], out var p) ? p : null;
+        int? scale = (facets.Length > 1) && int.TryParse(facets[1], out var s) ? s : null;
+        return (precision, precision == null ? null : (scale ?? 0));
     }
 
     protected override RelationalTypeMapping? FindMapping(in RelationalTypeMappingInfo mappingInfo)
@@ -97,7 +102,7 @@ public class AdoNetTypeMappingSource : RelationalTypeMappingSource
                 return null;
             }
 
-            return mapping.WithTypeMappingInfo(mappingInfo);
+            return WithStoreTypeFacets(mapping.WithTypeMappingInfo(mappingInfo), mappingInfo);
         }
 
         if (mappingInfo.ClrType is { } clrType
@@ -105,7 +110,7 @@ public class AdoNetTypeMappingSource : RelationalTypeMappingSource
         {
             if (mappingInfo.StoreTypeName is { } storeTypeName)
             {
-                return mapping.WithStoreTypeAndSize(storeTypeName, mappingInfo.Size);
+                return WithStoreTypeFacets(mapping.WithStoreTypeAndSize(storeTypeName, mappingInfo.Size), mappingInfo);
             }
 
             // A precision without a scale means scale 0, not the default mapping's.
@@ -115,8 +120,9 @@ public class AdoNetTypeMappingSource : RelationalTypeMappingSource
                 mapping = mapping.WithPrecisionAndScale(precision, 0);
             }
 
-            return _typeMappings.GetStoreType(
-                    clrType, mappingInfo.Size, mappingInfo.Precision, mappingInfo.Scale, mappingInfo.IsFixedLength == true) is { } sized
+            var facets = new StoreTypeFacets(
+                mappingInfo.Size, mappingInfo.Precision, mappingInfo.Scale, mappingInfo.IsFixedLength == true, mappingInfo.IsUnicode != false);
+            return _typeMappings.GetStoreType(clrType, facets) is { } sized
                 ? mapping.WithStoreTypeAndSize(sized, mappingInfo.Size)
                 : mapping;
         }
@@ -126,9 +132,21 @@ public class AdoNetTypeMappingSource : RelationalTypeMappingSource
                 || (mappingInfo.StoreTypeNameBase is { } storeTypeBase
                     && _storeTypeMappings.TryGetValue(storeTypeBase, out mapping))))
         {
-            return mapping.WithStoreTypeAndSize(storeType, mappingInfo.Size);
+            return WithStoreTypeFacets(mapping.WithStoreTypeAndSize(storeType, mappingInfo.Size), mappingInfo);
         }
 
         return null;
+    }
+
+    // A named decimal type binds with that type's own precision and scale, never the default mapping's (18, 2).
+    private static RelationalTypeMapping WithStoreTypeFacets(RelationalTypeMapping mapping, in RelationalTypeMappingInfo mappingInfo)
+    {
+        if ((mapping.ClrType != typeof(decimal)) || (mappingInfo.StoreTypeName is not { } storeType))
+        {
+            return mapping;
+        }
+
+        var (precision, scale) = DecimalFacets(storeType);
+        return mapping.WithPrecisionAndScale(precision, scale);
     }
 }

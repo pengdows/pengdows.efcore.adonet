@@ -51,6 +51,6 @@ public sealed class DuckDbTypeMappings : AnsiTypeMappings
         };
 
     // BLOB takes no length.
-    public override string? GetStoreType(Type clrType, int? size, int? precision, int? scale, bool fixedLength)
-        => clrType == typeof(byte[]) ? null : base.GetStoreType(clrType, size, precision, scale, fixedLength);
+    public override string? GetStoreType(Type clrType, StoreTypeFacets facets)
+        => clrType == typeof(byte[]) ? null : base.GetStoreType(clrType, facets);
 }

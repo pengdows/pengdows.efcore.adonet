@@ -173,9 +173,22 @@ public sealed class SqlServerTypeMappings : AnsiTypeMappings
     public override IReadOnlyList<Type> GetClrTypes(string storeTypeBase)
         => ClrTypes.TryGetValue(storeTypeBase, out var types) ? types : base.GetClrTypes(storeTypeBase);
 
-    public override string? GetStoreType(Type clrType, int? size, int? precision, int? scale, bool fixedLength)
-        => (clrType == typeof(string)) && (size != null) ? (size <= 4000 ? (fixedLength ? $"nchar({size})" : $"nvarchar({size})") : "nvarchar(max)")
-            : (clrType == typeof(byte[])) && (size != null) ? (size <= 8000 ? $"varbinary({size})" : "varbinary(max)")
-            : (clrType == typeof(decimal)) && (precision != null) ? $"decimal({precision},{scale ?? 0})"
-            : base.GetStoreType(clrType, size, precision, scale, fixedLength);
+    // nvarchar and nchar hold up to 4000 characters, varchar, char, varbinary and binary up to 8000 bytes; beyond, (max).
+    public override string? GetStoreType(Type clrType, StoreTypeFacets facets)
+        => clrType == typeof(string) ? StringType(facets)
+            : (clrType == typeof(byte[])) && (facets.Size is { } size)
+                ? (size <= 8000 ? (facets.FixedLength ? $"binary({size})" : $"varbinary({size})") : "varbinary(max)")
+            : (clrType == typeof(decimal)) && (facets.Precision is { } precision) ? $"decimal({precision},{facets.Scale ?? 0})"
+            : base.GetStoreType(clrType, facets);
+
+    private static string? StringType(StoreTypeFacets facets)
+    {
+        var (prefix, bound) = facets.Unicode ? ("n", 4000) : ("", 8000);
+        if (facets.Size is not { } size)
+        {
+            return facets.Unicode ? null : "varchar(max)";
+        }
+
+        return size <= bound ? $"{prefix}{(facets.FixedLength ? "char" : "varchar")}({size})" : $"{prefix}varchar(max)";
+    }
 }

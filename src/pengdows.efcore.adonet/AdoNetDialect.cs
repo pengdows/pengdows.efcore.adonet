@@ -125,11 +125,14 @@ public class AnsiTypeMappings : ITypeMappingDialect
     public virtual IReadOnlyList<Type> GetClrTypes(string storeTypeBase)
         => ClrTypes.TryGetValue(storeTypeBase, out var types) ? types : [];
 
-    public virtual string? GetStoreType(Type clrType, int? size, int? precision, int? scale, bool fixedLength)
-        => clrType == typeof(string) && size != null ? fixedLength ? $"CHAR({size})" : $"VARCHAR({size})"
-            : clrType == typeof(byte[]) && size != null ? $"VARBINARY({size})"
-            : clrType == typeof(decimal) && precision != null ? $"DECIMAL({precision},{scale ?? 0})"
-            : null;
+    public virtual string? GetStoreType(Type clrType, StoreTypeFacets facets)
+        => facets switch
+        {
+            { Size: { } size } when clrType == typeof(string) => facets.FixedLength ? $"CHAR({size})" : $"VARCHAR({size})",
+            { Size: { } size } when clrType == typeof(byte[]) => facets.FixedLength ? $"BINARY({size})" : $"VARBINARY({size})",
+            { Precision: { } precision } when clrType == typeof(decimal) => $"DECIMAL({precision},{facets.Scale ?? 0})",
+            _ => null
+        };
 }
 
 public sealed record DatabaseCapabilities(

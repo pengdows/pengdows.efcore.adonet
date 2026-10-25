@@ -54,6 +54,24 @@ public class ParameterTests
     }
 
     [Fact]
+    public void A_decimal_with_an_explicit_store_type_takes_that_types_precision_and_scale()
+    {
+        var amount = 2.5m;
+
+        Assert.Equal("@amount='2.5' (Precision = 10)", ParametersOf(TestDialects.Ansi, c => c.Coded.Where(x => x.Typed > amount)));
+        Assert.Equal("@amount='2.5' (Precision = 12) (Scale = 3)", ParametersOf(TestDialects.Ansi, c => c.Coded.Where(x => x.TypedWithScale > amount)));
+        Assert.Equal("@amount='2.5'", ParametersOf(TestDialects.Ansi, c => c.Coded.Where(x => x.Untyped > amount)));
+    }
+
+    [Fact]
+    public void A_precision_beyond_a_byte_is_left_to_the_driver()
+    {
+        var amount = 2.5m;
+
+        Assert.Equal("@amount='2.5' (Scale = 2)", ParametersOf(TestDialects.Ansi, c => c.Coded.Where(x => x.Huge > amount)));
+    }
+
+    [Fact]
     public void A_fixed_length_parameter_stays_fixed_only_when_the_value_fills_it()
     {
         var full = "abcde";
@@ -86,6 +104,38 @@ public class FacetStoreTypeTests
         Assert.Equal("CHAR(5)", entity.FindProperty(nameof(Coded.Tag))!.GetColumnType());
         Assert.Equal("VARCHAR(10)", entity.FindProperty(nameof(Coded.Code))!.GetColumnType());
     }
+
+    [Fact]
+    public void Fixed_length_binary_is_a_binary_column()
+    {
+        using var context = new FakeDatabase().ContextOf<FacetContext>(TestDialects.Ansi, o => new FacetContext(o));
+
+        Assert.Equal("BINARY(32)", context.Model.FindEntityType(typeof(Coded))!.FindProperty(nameof(Coded.Hash))!.GetColumnType());
+    }
+
+    [Fact]
+    public void The_dialect_is_told_whether_a_string_is_unicode()
+    {
+        using var context = new FakeDatabase().ContextOf<FacetContext>(TestDialects.NationalStrings, o => new FacetContext(o));
+        var entity = context.Model.FindEntityType(typeof(Coded))!;
+
+        Assert.Equal("NATIONAL CHARACTER VARYING(10)", entity.FindProperty(nameof(Coded.Code))!.GetColumnType());
+        Assert.Equal("VARCHAR(10)", entity.FindProperty(nameof(Coded.AsciiCode))!.GetColumnType());
+        Assert.Equal("NATIONAL CHARACTER VARYING", entity.FindProperty(nameof(Coded.Note))!.GetColumnType());
+        Assert.Equal("VARCHAR", entity.FindProperty(nameof(Coded.Ascii))!.GetColumnType());
+    }
+}
+
+/// <summary>Names unicode strings as ISO's national character type.</summary>
+public sealed class NationalStringTypeMappings : AnsiTypeMappings
+{
+    public override string? GetStoreType(Type clrType)
+        => clrType == typeof(string) ? "NATIONAL CHARACTER VARYING" : base.GetStoreType(clrType);
+
+    public override string? GetStoreType(Type clrType, StoreTypeFacets facets)
+        => clrType != typeof(string) ? base.GetStoreType(clrType, facets)
+            : facets.Unicode ? (facets.Size is { } size ? $"NATIONAL CHARACTER VARYING({size})" : null)
+            : facets.Size is { } ansiSize ? $"VARCHAR({ansiSize})" : "VARCHAR";
 }
 
 public class Coded
@@ -109,6 +159,19 @@ public class Coded
     [Unicode(false)]
     public string? Ascii { get; set; }
 
+    [MaxLength(10)]
+    [Unicode(false)]
+    public string? AsciiCode { get; set; }
+
+    public decimal Typed { get; set; }
+    public decimal TypedWithScale { get; set; }
+    public decimal Untyped { get; set; }
+
+    [Precision(300, 2)]
+    public decimal Huge { get; set; }
+
+    public byte[]? Hash { get; set; }
+
     public string? AsciiTag { get; set; }
 }
 
@@ -120,5 +183,9 @@ public class FacetContext(DbContextOptions<FacetContext> options) : DbContext(op
     {
         modelBuilder.Entity<Coded>().Property(c => c.Tag).HasMaxLength(5).IsFixedLength();
         modelBuilder.Entity<Coded>().Property(c => c.AsciiTag).HasMaxLength(3).IsFixedLength().IsUnicode(false);
+        modelBuilder.Entity<Coded>().Property(c => c.Typed).HasColumnType("DECIMAL(10)");
+        modelBuilder.Entity<Coded>().Property(c => c.TypedWithScale).HasColumnType("NUMERIC(12,3)");
+        modelBuilder.Entity<Coded>().Property(c => c.Untyped).HasColumnType("DECIMAL");
+        modelBuilder.Entity<Coded>().Property(c => c.Hash).HasMaxLength(32).IsFixedLength();
     }
 }

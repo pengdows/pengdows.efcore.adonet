@@ -10,7 +10,7 @@ public class AdoNetSqlGenerationHelper(RelationalSqlGenerationHelperDependencies
     public override string GenerateParameterName(string name)
         => dialect.ParameterNameIncludesMarker
             ? GenerateParameterNamePlaceholder(name)
-            : name.StartsWith(dialect.ParameterMarker, StringComparison.Ordinal) ? name[dialect.ParameterMarker.Length..] : name;
+            : (name.StartsWith(dialect.ParameterMarker, StringComparison.Ordinal) ? name[dialect.ParameterMarker.Length..] : name);
 
     public override void GenerateParameterName(StringBuilder builder, string name)
         => builder.Append(GenerateParameterName(name));
