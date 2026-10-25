@@ -11,10 +11,19 @@ namespace pengdows.efcore.adonet.mysql;
 /// </summary>
 public sealed class MySqlDialect : AdoNetDialect
 {
-    public static readonly MySqlDialect Instance = new();
+    public static readonly MySqlDialect Instance = new(backslashEscapes: true);
 
-    public override string Name => "MySQL";
-    public override ISqlDialect Sql { get; } = new MySqlSql();
+    /// <summary>For servers whose sql_mode has NO_BACKSLASH_ESCAPES, where a backslash in a string is just a backslash.</summary>
+    public static readonly MySqlDialect NoBackslashEscapes = new(backslashEscapes: false);
+
+    private MySqlDialect(bool backslashEscapes)
+    {
+        Name = backslashEscapes ? "MySQL" : "MySQL (NO_BACKSLASH_ESCAPES)";
+        Sql = new MySqlSql(backslashEscapes);
+    }
+
+    public override string Name { get; }
+    public override ISqlDialect Sql { get; }
     public override ITypeMappingDialect TypeMappings { get; } = new MySqlTypeMappings();
     public override IDatabaseCapabilities Capabilities { get; } = new DatabaseCapabilities(SupportsMultipleStatementsPerCommand: true, DefaultMaxBatchSize: 128, MaxParametersPerCommand: 65535);
 
@@ -24,7 +33,7 @@ public sealed class MySqlDialect : AdoNetDialect
             .TryAdd<IHistoryRepository, MySqlHistoryRepository>();
 }
 
-public sealed class MySqlSql : AnsiSqlDialect
+public sealed class MySqlSql(bool backslashEscapes = true) : AnsiSqlDialect
 {
     public override string IdentifierQuotePrefix => "`";
     public override string IdentifierQuoteSuffix => "`";
@@ -36,9 +45,9 @@ public sealed class MySqlSql : AnsiSqlDialect
     public override string DefaultValues => "() VALUES ()";
     public override string CurrentSchema => "DATABASE()";
 
-    // Backslash is an escape character in MySQL string literals (unless NO_BACKSLASH_ESCAPES is set).
+    // Backslash is an escape character in MySQL string literals, unless the server's sql_mode has NO_BACKSLASH_ESCAPES.
     public override string StringLiteral(string value)
-        => base.StringLiteral(value.Replace(@"\", @"\\"));
+        => base.StringLiteral(backslashEscapes ? value.Replace(@"\", @"\\") : value);
 
     // INFORMATION_SCHEMA.TABLES spans every database on the server.
     public override string HasTablesSql

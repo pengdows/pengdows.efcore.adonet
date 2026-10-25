@@ -118,7 +118,7 @@ public class SqlServerTestStore : RelationalTestStore
         // pengdows: the AdoNet SQL Server plugin in place of UseSqlServer/UseAzureSql.
         => UseConnectionString
             ? builder.UseAdoNetSqlServer(ConnectionString, b => b.ApplyConfiguration())
-            : builder.UseAdoNetSqlServer(Connection, b => b.ApplyConfiguration());
+            : builder.UseAdoNetSqlServer(Connection, contextOwnsConnection: false, b => b.ApplyConfiguration());
 
     private async Task<bool> CleanDatabaseAsync(Func<DbContext, Task>? clean)
     {
