@@ -165,7 +165,9 @@ internal sealed class SqlServerTypeMappings : AnsiTypeMappings
         => literal.Contains('E', StringComparison.OrdinalIgnoreCase) || !char.IsDigit(literal[^1]) ? literal : literal + "E0";
 
     // SQL Server reads a literal below 2.2250738585072014E-308 as 0, though its arithmetic keeps such values: the value is
-    // written times 2^52, which is exact and normal, and divided back.
+    // written times 2^52, which is exact and normal, and divided back. The official provider writes the plain literal (see
+    // UPSTREAM_ISSUES.md). Behaviour reference (not copied):
+    // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.SqlServer/Storage/Internal/SqlServerDoubleTypeMapping.cs
     private static string SubnormalLiteral(double value)
         => $"({FloatLiteral((value * 4503599627370496d).ToString("R", CultureInfo.InvariantCulture))} / 4503599627370496E0)";
 

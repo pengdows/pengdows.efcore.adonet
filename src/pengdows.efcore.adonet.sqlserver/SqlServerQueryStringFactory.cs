@@ -10,6 +10,10 @@ namespace pengdows.efcore.adonet.sqlserver;
 ///     <c>ToQueryString</c> as runnable T-SQL: each parameter is a <c>DECLARE</c> of the store type this dialect maps its value
 ///     and facets to, set to the literal its type mapping writes.
 /// </summary>
+/// <remarks>
+///     Behaviour reference (not copied):
+///     https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.SqlServer/Query/Internal/SqlServerQueryStringFactory.cs
+/// </remarks>
 internal class SqlServerQueryStringFactory(IRelationalTypeMappingSource typeMappingSource, IAdoNetDialect dialect)
     : IRelationalQueryStringFactory
 {

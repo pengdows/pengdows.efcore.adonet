@@ -5,6 +5,11 @@ using Microsoft.EntityFrameworkCore;
 namespace pengdows.efcore.adonet.sqlserver.Tests;
 
 /// <summary><c>ToQueryString</c> on SQL Server is runnable T-SQL: run on the server, it finds what the query finds.</summary>
+/// <remarks>
+///     Covers the official provider's DECLARE-per-parameter query strings. Runs on: SQL Server (provider-only: other
+///     dialects keep EF's commented parameter list). Behaviour reference (not copied):
+///     https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.SqlServer/Query/Internal/SqlServerQueryStringFactory.cs
+/// </remarks>
 public class SqlServerQueryStringTests(SqlServerFixture fixture) : IClassFixture<SqlServerFixture>
 {
     private const string Hostile = "it's '' -- ; DROP TABLE [Samples]; /* \r\n \u0000 🚀 @p0 */";
