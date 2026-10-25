@@ -13,6 +13,7 @@
     <Project Path="test/pengdows.efcore.adonet.Tests/pengdows.efcore.adonet.Tests.csproj" />
     <Project Path="test/pengdows.efcore.adonet.sqlite.Tests/pengdows.efcore.adonet.sqlite.Tests.csproj" />
     <Project Path="test/pengdows.efcore.adonet.duckdb.Tests/pengdows.efcore.adonet.duckdb.Tests.csproj" />
+    <Project Path="test/pengdows.efcore.adonet.postgresql.FunctionalTests/pengdows.efcore.adonet.postgresql.FunctionalTests.csproj" />
     <Project Path="test/pengdows.efcore.adonet.postgresql.Tests/pengdows.efcore.adonet.postgresql.Tests.csproj" />
     <Project Path="test/pengdows.efcore.adonet.sqlserver.Tests/pengdows.efcore.adonet.sqlserver.Tests.csproj" />
     <Project Path="test/pengdows.efcore.adonet.sqlserver.FunctionalTests/pengdows.efcore.adonet.sqlserver.FunctionalTests.csproj" />

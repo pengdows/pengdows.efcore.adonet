@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The Npgsql EF Core provider's functional tests (npgsql/efcore.pg v10.0.3, PostgreSQL License: LICENSE.efcore.pg), run
+    against the AdoNet PostgreSQL plugin. Test files are copied unchanged; files marked "pengdows:" bind the plugin
+    instead of Npgsql.EntityFrameworkCore.PostgreSQL, or leave out what only that provider's own API can express.
+  -->
+  <Import Project="..\FunctionalTests.props" />
+
+  <ItemGroup>
+    <Using Include="Npgsql" />
+    <Using Include="pengdows.efcore.adonet.postgresql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\pengdows.efcore.adonet.postgresql\pengdows.efcore.adonet.postgresql.csproj" />
+    <PackageReference Include="Testcontainers.PostgreSql" />
+  </ItemGroup>
+
+</Project>
