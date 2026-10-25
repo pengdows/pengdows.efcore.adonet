@@ -122,6 +122,8 @@ pengdows.efcore.adonet.ISqlDialect.Paging.get -> pengdows.efcore.adonet.PagingSy
 pengdows.efcore.adonet.ISqlDialect.ParameterMarker.get -> string!
 pengdows.efcore.adonet.ISqlDialect.ParameterNameIncludesMarker.get -> bool
 pengdows.efcore.adonet.ISqlDialect.PreferExistsToIn.get -> bool
+pengdows.efcore.adonet.ISqlDialect.RequiresQuoting(string! identifier) -> bool
+pengdows.efcore.adonet.ISqlDialect.RowValues.get -> bool
 pengdows.efcore.adonet.ISqlDialect.Savepoints.get -> pengdows.efcore.adonet.SavepointSyntax?
 pengdows.efcore.adonet.ISqlDialect.StringLiteral(string! value) -> string!
 pengdows.efcore.adonet.ISqlDialect.SupportsSchemas.get -> bool
@@ -238,6 +240,8 @@ virtual pengdows.efcore.adonet.AnsiSqlDialect.Paging.get -> pengdows.efcore.adon
 virtual pengdows.efcore.adonet.AnsiSqlDialect.ParameterMarker.get -> string!
 virtual pengdows.efcore.adonet.AnsiSqlDialect.ParameterNameIncludesMarker.get -> bool
 virtual pengdows.efcore.adonet.AnsiSqlDialect.PreferExistsToIn.get -> bool
+virtual pengdows.efcore.adonet.AnsiSqlDialect.RequiresQuoting(string! identifier) -> bool
+virtual pengdows.efcore.adonet.AnsiSqlDialect.RowValues.get -> bool
 virtual pengdows.efcore.adonet.AnsiSqlDialect.Savepoints.get -> pengdows.efcore.adonet.SavepointSyntax?
 virtual pengdows.efcore.adonet.AnsiSqlDialect.StringLiteral(string! value) -> string!
 virtual pengdows.efcore.adonet.AnsiSqlDialect.SupportsSchemas.get -> bool

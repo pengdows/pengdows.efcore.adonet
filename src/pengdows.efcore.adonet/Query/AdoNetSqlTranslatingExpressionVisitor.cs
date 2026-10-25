@@ -16,16 +16,19 @@ internal class AdoNetSqlTranslatingExpressionVisitor : RelationalSqlTranslatingE
 {
     private readonly QueryCompilationContext _queryCompilationContext;
     private readonly FunctionSyntax _functions;
+    private readonly bool _rowValues;
 
     public AdoNetSqlTranslatingExpressionVisitor(
         RelationalSqlTranslatingExpressionVisitorDependencies dependencies,
         QueryCompilationContext queryCompilationContext,
         QueryableMethodTranslatingExpressionVisitor queryableMethodTranslatingExpressionVisitor,
-        FunctionSyntax functions)
+        FunctionSyntax functions,
+        bool rowValues)
         : base(dependencies, queryCompilationContext, queryableMethodTranslatingExpressionVisitor)
     {
         _queryCompilationContext = queryCompilationContext;
         _functions = functions;
+        _rowValues = rowValues;
     }
 
     private static readonly MethodInfo PatternMethod
@@ -40,6 +43,11 @@ internal class AdoNetSqlTranslatingExpressionVisitor : RelationalSqlTranslatingE
 
     protected override Expression VisitMethodCall(MethodCallExpression methodCallExpression)
     {
+        if (_rowValues && TryTranslateTupleEquals(methodCallExpression) is { } rowComparison)
+        {
+            return rowComparison;
+        }
+
         if ((methodCallExpression is { Object: { } instance, Arguments: [var argument] })
             && (methodCallExpression.Method.DeclaringType == typeof(string))
             && (argument.Type == typeof(string))
@@ -69,6 +77,40 @@ internal class AdoNetSqlTranslatingExpressionVisitor : RelationalSqlTranslatingE
         return base.VisitMethodCall(methodCallExpression);
     }
 
+    // tuple.Equals(other), both built in the query: (a, b) = (x, y), each pair typed as its own comparison would be.
+    private SqlExpression? TryTranslateTupleEquals(MethodCallExpression call)
+    {
+        if ((call is not { Method.Name: nameof(Equals), Object: { } instance, Arguments: [var argument] })
+            || !instance.Type.IsAssignableTo(typeof(System.Runtime.CompilerServices.ITuple))
+            || (RowValueSqlExpression.Elements(instance) is not { } left)
+            || (RowValueSqlExpression.Elements(argument) is not { } right)
+            || (left.Count != right.Count))
+        {
+            return null;
+        }
+
+        var leftValues = new SqlExpression[left.Count];
+        var rightValues = new SqlExpression[right.Count];
+        for (var i = 0; i < left.Count; i++)
+        {
+            if ((Visit(left[i]) is not SqlExpression l)
+                || (Visit(right[i]) is not SqlExpression r)
+                || (Dependencies.SqlExpressionFactory.Equal(l, r) is not SqlBinaryExpression pair))
+            {
+                return null;
+            }
+
+            (leftValues[i], rightValues[i]) = (pair.Left, pair.Right);
+        }
+
+        return new SqlBinaryExpression(
+            ExpressionType.Equal,
+            new RowValueSqlExpression(leftValues, instance.Type),
+            new RowValueSqlExpression(rightValues, argument.Type),
+            typeof(bool),
+            Dependencies.TypeMappingSource.FindMapping(typeof(bool)));
+    }
+
     private static string? Pattern(QueryContext queryContext, string parameterName, Match match, FunctionSyntax functions)
         => queryContext.Parameters[parameterName] is string value && functions.EscapeLikePattern(value) is { } escaped
             ? match switch
@@ -86,5 +128,6 @@ internal class AdoNetSqlTranslatingExpressionVisitorFactory(RelationalSqlTransla
     public virtual RelationalSqlTranslatingExpressionVisitor Create(
         QueryCompilationContext queryCompilationContext,
         QueryableMethodTranslatingExpressionVisitor queryableMethodTranslatingExpressionVisitor)
-        => new AdoNetSqlTranslatingExpressionVisitor(dependencies, queryCompilationContext, queryableMethodTranslatingExpressionVisitor, dialect.Functions);
+        => new AdoNetSqlTranslatingExpressionVisitor(
+            dependencies, queryCompilationContext, queryableMethodTranslatingExpressionVisitor, dialect.Functions, dialect.RowValues);
 }

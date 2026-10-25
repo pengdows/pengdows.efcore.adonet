@@ -29,6 +29,18 @@ public class SqlGenerationTests
     }
 
     [Fact]
+    public void A_dialect_quotes_only_identifiers_its_database_needs_quoted()
+    {
+        using var context = Context(b => b.UseAdoNet(SqliteFactory.Instance, "Data Source=:memory:", o => o.UseDialect(TestDialects.LowerCaseUnquoted)));
+        var helper = context.GetService<Microsoft.EntityFrameworkCore.Storage.ISqlGenerationHelper>();
+
+        Assert.Equal("b", helper.DelimitIdentifier("b"));
+        Assert.Equal("\"Blogs\"", helper.DelimitIdentifier("Blogs"));
+        Assert.Equal("\"Blogs\".b", helper.DelimitIdentifier("b", "Blogs"));
+        Assert.Contains("FROM \"Blogs\" AS b", context.Blogs.ToQueryString());
+    }
+
+    [Fact]
     public void Same_dialect_instance_reuses_the_internal_service_provider()
     {
         // Singleton services are shared exactly when the internal service provider is.

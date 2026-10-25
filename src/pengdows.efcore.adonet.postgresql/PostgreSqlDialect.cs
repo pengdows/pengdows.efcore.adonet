@@ -1,4 +1,6 @@
+using System.Data;
 using System.Globalization;
+using Npgsql;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using pengdows.efcore.adonet.Bulk;
@@ -24,6 +26,26 @@ public sealed class PostgreSqlDialect : AdoNetDialect
 
 internal sealed class PostgreSqlSql : AnsiSqlDialect
 {
+    // The reserved words as Npgsql lists them, which is where the official provider takes them from too.
+    private static readonly Lazy<HashSet<string>> ReservedWords = new(() =>
+    {
+        using var connection = new NpgsqlConnection();
+        return connection.GetSchema("ReservedWords").Rows.Cast<DataRow>()
+            .Select(r => (string)r["ReservedWord"])
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+    });
+
+    // Unquoted names fold to lower case, so a name needs quotes unless it is lower-case letters, digits, _ and $ (not
+    // starting with a digit or $) and no reserved word. Follows npgsql/efcore.pg's NpgsqlSqlGenerationHelper (PostgreSQL License).
+    public override bool RequiresQuoting(string identifier)
+        => (identifier.Length == 0)
+            || !(IsLowerAscii(identifier[0]) || (identifier[0] == '_'))
+            || identifier.Skip(1).Any(c => !(IsLowerAscii(c) || char.IsAsciiDigit(c) || (c == '_') || (c == '$')))
+            || ReservedWords.Value.Contains(identifier);
+
+    private static bool IsLowerAscii(char c)
+        => c is >= 'a' and <= 'z';
+
     public override PagingSyntax Paging { get; } = PagingSyntax.LimitOffset();
     public override FunctionSyntax Functions { get; } = new PostgreSqlFunctions();
     public override string CurrentSchema => "CURRENT_SCHEMA";

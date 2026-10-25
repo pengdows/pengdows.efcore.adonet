@@ -53,7 +53,8 @@ its database does differently. Grammar comes in parts a dialect picks, named for
 Each part is an abstract class: a database with its own form (Firebird's `FIRST`/`SKIP`, Oracle's `ROWNUM`) subclasses it.
 String constants go through `ISqlDialect.StringLiteral` (SQL Server prefixes `N`, MySQL doubles backslashes unless the
 server has `NO_BACKSLASH_ESCAPES`: `MySqlDialect.NoBackslashEscapes`); other constants through
-`ITypeMappingDialect.FormatLiteral`, which must write what a parameter of the same value would store. A few single
+`ITypeMappingDialect.FormatLiteral`, which must write what a parameter of the same value would store. Identifiers are
+quoted where `RequiresQuoting` says (always, by default; PostgreSQL leaves lower-case names bare). A few single
 words too: `DefaultValues` (an INSERT with no columns: MySQL's `() VALUES ()`) and `CurrentSchema`. Store types come
 from `GetStoreType(clrType, StoreTypeFacets)`: size, precision, scale, fixed length, Unicode.
 
@@ -70,6 +71,7 @@ uses, e.g. SQL Server's `"DATEPART(year, {0})"` for `EXTRACT(YEAR FROM {0})`:
 | `StartsWith`, `EndsWith`, `Contains` | constants and parameters: `LIKE` with wildcards escaped (a parameter's pattern is computed at run time, so an index serves it); columns, or anything where LIKE has no `ESCAPE`: compared by position |
 | `string.IsNullOrWhiteSpace` | `x IS NULL OR TRIM(x) = ''` |
 | `Math.Abs`, `Floor`, `Ceiling`, `Round`, `Pow`, `Sqrt` | `ABS`, `FLOOR`, `CEILING`, `ROUND`, `POWER`, `SQRT` |
+| `tuple.Equals(other)` (`Tuple`, `ValueTuple`, `.Create`) | ISO row values `(a, b) = (x, y)`, nullable pairs compared on their own; `ISqlDialect.RowValues = false` (SQL Server) leaves them untranslated |
 | `Year` ... `Second` of `DateTime`, `DateTimeOffset`, `DateOnly` | `EXTRACT(YEAR FROM ...)` ... (whole seconds); a `DateTimeOffset` first through `OffsetDateTime`, so parts are those of the value as it reads back |
 
 Anything else a plugin translates registers EF's own `IMethodCallTranslatorPlugin`/`IMemberTranslatorPlugin` in
@@ -118,7 +120,7 @@ Code lines (no blanks or comments) and Release DLL size, against the official pr
 |---|---|---|
 | core | 3,477 | 148 KB |
 | sqlserver | 476 | 28 KB |
-| postgresql | 182 | 16 KB |
+| postgresql | 198 | 16 KB |
 | mysql | 195 | 14 KB |
 | sqlite | 160 | 13 KB |
 | duckdb | 189 | 13 KB |
@@ -149,8 +151,10 @@ dotnet test test/pengdows.efcore.adonet.Tests   # the core alone: fakeDb and an 
   against the same value saved through a parameter). Write a `ProviderFixture` (factory, connection string,
   dialect, DDL) and a one-line subclass of each suite.
 - **Plugins** (`pengdows.efcore.adonet.<db>.Tests`): their fixture, the suites, their entry points and SQL shapes.
-- **EF Core's own SQL Server tests** (`pengdows.efcore.adonet.sqlserver.FunctionalTests`): suites copied unchanged from
-  EF Core 10.0.11 against Microsoft's SQL baselines; the Where suite passes 409 of 409.
+- **The official providers' own tests**, copied unchanged with only their test-store binding adapted, on a shared
+  harness (`pengdows.efcore.adonet.FunctionalTests.Shared`, `test/FunctionalTests.props`):
+  `pengdows.efcore.adonet.sqlserver.FunctionalTests` (EF Core 10.0.11, Microsoft's SQL baselines; Where: 409 of 409) and
+  `pengdows.efcore.adonet.postgresql.FunctionalTests` (npgsql/efcore.pg 10.0.3; Where: 408 of 408).
 
 Public API is declared in each project's `PublicAPI.*.txt` and enforced by PublicApiAnalyzers; why each public type is
 public is in [docs/PUBLIC_API.md](docs/PUBLIC_API.md). Reviews follow [REVIEW_POLICY.md](REVIEW_POLICY.md).

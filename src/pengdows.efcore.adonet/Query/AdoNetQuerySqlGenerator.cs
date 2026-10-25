@@ -29,6 +29,28 @@ internal class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencie
         return base.VisitColumn(columnExpression);
     }
 
+    protected override Expression VisitExtension(Expression extensionExpression)
+    {
+        if (extensionExpression is not RowValueSqlExpression rowValue)
+        {
+            return base.VisitExtension(extensionExpression);
+        }
+
+        Sql.Append("(");
+        for (var i = 0; i < rowValue.Values.Count; i++)
+        {
+            if (i > 0)
+            {
+                Sql.Append(", ");
+            }
+
+            Visit(rowValue.Values[i]);
+        }
+
+        Sql.Append(")");
+        return rowValue;
+    }
+
     protected override Expression VisitSqlBinary(SqlBinaryExpression sqlBinaryExpression)
     {
         if (sqlBinaryExpression is { OperatorType: ExpressionType.Add } && sqlBinaryExpression.Type == typeof(string))

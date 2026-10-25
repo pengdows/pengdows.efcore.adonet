@@ -234,6 +234,7 @@ pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Math_on_dou
 pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Null_or_white_space() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Parameter_patterns_match_wildcards_literally() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Replace() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Row_values() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Substring() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.TranslationConformanceTests(TFixture! fixture) -> void
 pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Trimming() -> System.Threading.Tasks.Task!

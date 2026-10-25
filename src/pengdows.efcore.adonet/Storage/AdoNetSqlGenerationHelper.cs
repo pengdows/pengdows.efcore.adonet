@@ -29,7 +29,9 @@ internal class AdoNetSqlGenerationHelper(RelationalSqlGenerationHelperDependenci
         => builder.Append(EscapeIdentifier(identifier));
 
     public override string DelimitIdentifier(string identifier)
-        => dialect.IdentifierQuotePrefix + EscapeIdentifier(identifier) + dialect.IdentifierQuoteSuffix;
+        => dialect.RequiresQuoting(identifier)
+            ? dialect.IdentifierQuotePrefix + EscapeIdentifier(identifier) + dialect.IdentifierQuoteSuffix
+            : identifier;
 
     public override void DelimitIdentifier(StringBuilder builder, string identifier)
         => builder.Append(DelimitIdentifier(identifier));

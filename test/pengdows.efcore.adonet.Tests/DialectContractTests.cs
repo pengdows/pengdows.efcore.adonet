@@ -123,7 +123,8 @@ public class DialectContractTests
             .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
             .SelectMany(f => File.ReadLines(f).Select((line, i) => (File: Path.GetFileName(f), Line: i + 1, Text: line)))
             // Attribution of code adapted from EF's providers names where it came from.
-            .Where(l => !l.Text.Contains("(MIT, .NET Foundation)", StringComparison.Ordinal))
+            .Where(l => !l.Text.Contains("(MIT, .NET Foundation)", StringComparison.Ordinal)
+                && !l.Text.Contains("(PostgreSQL License)", StringComparison.Ordinal))
             .Where(l => names.Any(n => l.Text.Contains(n, StringComparison.Ordinal)))
             .Select(l => $"{l.File}:{l.Line}: {l.Text.Trim()}")
             .ToList();

@@ -38,7 +38,9 @@ public sealed class PartsSql(
     string defaultValues = "DEFAULT VALUES",
     string? currentSchema = null,
     SavepointSyntax? savepoints = null,
-    bool noSavepoints = false) : AnsiSqlDialect
+    bool noSavepoints = false,
+    bool rowValues = true,
+    Func<string, bool>? requiresQuoting = null) : AnsiSqlDialect
 {
     public override PagingSyntax Paging { get; } = paging ?? PagingSyntax.OffsetFetch;
     public override BooleanSyntax Booleans { get; } = booleans ?? BooleanSyntax.Native;
@@ -55,6 +57,10 @@ public sealed class PartsSql(
     public override string DefaultValues => defaultValues;
     public override string? CurrentSchema => currentSchema;
     public override SavepointSyntax? Savepoints => noSavepoints ? null : savepoints ?? SavepointSyntax.Iso;
+    public override bool RowValues => rowValues;
+
+    public override bool RequiresQuoting(string identifier)
+        => requiresQuoting?.Invoke(identifier) ?? base.RequiresQuoting(identifier);
 
     public override string StringLiteral(string value)
         => stringLiteral?.Invoke(value) ?? base.StringLiteral(value);
@@ -108,6 +114,9 @@ public static class TestDialects
     public static readonly IAdoNetDialect TransactionSavepoints = new PartsDialect(
         "Transaction savepoints", new PartsSql(savepoints: new SavepointSyntax("SAVE TRANSACTION {0}", "ROLLBACK TRANSACTION {0}", release: null)));
     public static readonly IAdoNetDialect NoSubstrings = new PartsDialect("No substrings", new PartsSql(functions: new NoSubstringFunctions()));
+    public static readonly IAdoNetDialect LowerCaseUnquoted = new PartsDialect(
+        "Lower case unquoted", new PartsSql(requiresQuoting: i => i.Any(c => !char.IsLower(c))));
+    public static readonly IAdoNetDialect NoRowValues = new PartsDialect("No row values", new PartsSql(rowValues: false));
     public static readonly IAdoNetDialect NoEscape = new PartsDialect("No escape", new PartsSql(functions: new NoEscapeFunctions()));
     public static readonly IAdoNetDialect NoFunctions = new PartsDialect("No functions", new PartsSql(functions: new NoFunctions()));
 

@@ -34,6 +34,9 @@ public interface ISqlDialect
     string IdentifierQuotePrefix { get; }
     string IdentifierQuoteSuffix { get; }
 
+    /// <summary>Whether <paramref name="identifier" /> must be quoted to mean itself; quoting every one is always safe.</summary>
+    bool RequiresQuoting(string identifier);
+
     /// <summary>When false, schema names in the model are ignored when generating SQL.</summary>
     bool SupportsSchemas { get; }
 
@@ -79,6 +82,9 @@ public interface ISqlDialect
 
     /// <summary>Savepoints as SQL, where the driver's transactions have none; null when the database has none.</summary>
     SavepointSyntax? Savepoints { get; }
+
+    /// <summary>Whether tuple comparisons can be written as ISO row values, <c>(a, b) = (x, y)</c>.</summary>
+    bool RowValues { get; }
 
     /// <summary>Returns the number of user tables in the current database or schema.</summary>
     string HasTablesSql { get; }

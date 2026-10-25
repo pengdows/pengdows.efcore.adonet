@@ -156,6 +156,21 @@ public abstract class TranslationConformanceTests<TFixture>(TFixture fixture) : 
     }
 
     [Fact]
+    public async Task Row_values()
+    {
+        if (!Fixture.ExpectedDialect.Sql.RowValues)
+        {
+            Fixture.SkipFor("no row value comparisons");
+        }
+
+        await Matches(b => new Tuple<string, bool>(b.Name, b.IsActive).Equals(new Tuple<string, bool>(Seeded.Name, true)));
+        await Matches(b => new Tuple<string, bool>(b.Name, b.IsActive).Equals(new Tuple<string, bool>(Seeded.Name, false)));
+        await Matches(b => !new Tuple<string, bool>(b.Name, b.IsActive).Equals(new Tuple<string, bool>("x", true)));
+        await Matches(b => ValueTuple.Create(b.Rating, b.Name).Equals(ValueTuple.Create(12.37m, Seeded.Name)));
+        await Matches(b => new Tuple<decimal>(b.Rating).Equals(new Tuple<decimal>(12.37m)));
+    }
+
+    [Fact]
     public async Task Date_parts()
     {
         await Server(b => b.CreatedAt.Year);
