@@ -6,4 +6,7 @@
     <ProjectReference Include="..\pengdows.efcore.adonet\pengdows.efcore.adonet.csproj" />
     <PackageReference Include="MySqlConnector" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="pengdows.efcore.adonet.mysql.Tests" />
+  </ItemGroup>
 </Project>

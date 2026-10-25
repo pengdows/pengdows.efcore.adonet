@@ -10,7 +10,7 @@ namespace pengdows.efcore.adonet.Storage;
 ///     Fetches a permanent key from a database sequence before the INSERT, for databases that cannot return
 ///     generated values. One round trip per new entity; a hi-lo block allocator would be the next step.
 /// </summary>
-public class AdoNetSequenceValueGenerator<TValue>(
+internal class AdoNetSequenceValueGenerator<TValue>(
     string nextValueSql,
     IRelationalConnection connection,
     IRawSqlCommandBuilder rawSqlCommandBuilder,

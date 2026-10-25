@@ -9,7 +9,7 @@ namespace pengdows.efcore.adonet.Storage;
 ///     Creating and dropping databases has no portable ADO.NET or SQL form, so those operations are not supported;
 ///     <see cref="Exists" /> and <see cref="HasTables" /> work for any provider.
 /// </summary>
-public class AdoNetDatabaseCreator(
+internal class AdoNetDatabaseCreator(
     RelationalDatabaseCreatorDependencies dependencies,
     IRawSqlCommandBuilder rawSqlCommandBuilder,
     IAdoNetDialect dialect)

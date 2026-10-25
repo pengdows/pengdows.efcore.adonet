@@ -12,7 +12,7 @@ namespace pengdows.efcore.adonet.Query;
 ///     stay values: <c>a ^ b</c>, <c>~(a ^ b)</c>, <c>~a</c>. Runs after null semantics have been applied.
 /// </summary>
 /// <remarks>Adapted from EF Core's SQL Server <c>SearchConditionConverter</c> (MIT, .NET Foundation).</remarks>
-public class AdoNetSearchConditionConverter(ISqlExpressionFactory sqlExpressionFactory, bool bitwiseOperators = false) : ExpressionVisitor
+internal class AdoNetSearchConditionConverter(ISqlExpressionFactory sqlExpressionFactory, bool bitwiseOperators = false) : ExpressionVisitor
 {
     [return: NotNullIfNotNull(nameof(expression))]
     public override Expression? Visit(Expression? expression)

@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata;
 namespace pengdows.efcore.adonet.Metadata;
 
 /// <summary>Carries <see cref="AdoNetAnnotationNames.Identity" /> from properties to the columns migrations see.</summary>
-public class AdoNetAnnotationProvider(RelationalAnnotationProviderDependencies dependencies) : RelationalAnnotationProvider(dependencies)
+internal class AdoNetAnnotationProvider(RelationalAnnotationProviderDependencies dependencies) : RelationalAnnotationProvider(dependencies)
 {
     public override IEnumerable<IAnnotation> For(IColumn column, bool designTime)
     {

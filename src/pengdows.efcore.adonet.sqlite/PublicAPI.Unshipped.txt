@@ -1,0 +1,23 @@
+#nullable enable
+override pengdows.efcore.adonet.sqlite.LegacySqliteDialect.Name.get -> string!
+override pengdows.efcore.adonet.sqlite.LegacySqliteDialect.Sql.get -> pengdows.efcore.adonet.ISqlDialect!
+override pengdows.efcore.adonet.sqlite.SqliteDialect.Capabilities.get -> pengdows.efcore.adonet.IDatabaseCapabilities!
+override pengdows.efcore.adonet.sqlite.SqliteDialect.ConfigureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> void
+override pengdows.efcore.adonet.sqlite.SqliteDialect.Name.get -> string!
+override pengdows.efcore.adonet.sqlite.SqliteDialect.Sql.get -> pengdows.efcore.adonet.ISqlDialect!
+override pengdows.efcore.adonet.sqlite.SqliteDialect.TypeMappings.get -> pengdows.efcore.adonet.ITypeMappingDialect!
+pengdows.efcore.adonet.sqlite.LegacySqliteDialect
+pengdows.efcore.adonet.sqlite.SqliteDbContextOptionsBuilderExtensions
+pengdows.efcore.adonet.sqlite.SqliteDialect
+pengdows.efcore.adonet.sqlite.SqliteDialect.SqliteDialect() -> void
+static pengdows.efcore.adonet.sqlite.SqliteDbContextOptionsBuilderExtensions.RegisterDialect() -> void
+static pengdows.efcore.adonet.sqlite.SqliteDbContextOptionsBuilderExtensions.UseAdoNetSqlite(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder! optionsBuilder, string! connectionString, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder!
+static pengdows.efcore.adonet.sqlite.SqliteDbContextOptionsBuilderExtensions.UseAdoNetSqlite(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder! optionsBuilder, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder!
+static pengdows.efcore.adonet.sqlite.SqliteDbContextOptionsBuilderExtensions.UseAdoNetSqlite(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder! optionsBuilder, System.Data.Common.DbConnection! connection, bool contextOwnsConnection = false, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder!
+static pengdows.efcore.adonet.sqlite.SqliteDbContextOptionsBuilderExtensions.UseAdoNetSqlite(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder! optionsBuilder, System.Data.Common.DbDataSource! dataSource, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder!
+static pengdows.efcore.adonet.sqlite.SqliteDbContextOptionsBuilderExtensions.UseAdoNetSqlite<TContext>(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>! optionsBuilder, string! connectionString, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>!
+static pengdows.efcore.adonet.sqlite.SqliteDbContextOptionsBuilderExtensions.UseAdoNetSqlite<TContext>(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>! optionsBuilder, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>!
+static pengdows.efcore.adonet.sqlite.SqliteDbContextOptionsBuilderExtensions.UseAdoNetSqlite<TContext>(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>! optionsBuilder, System.Data.Common.DbConnection! connection, bool contextOwnsConnection = false, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>!
+static pengdows.efcore.adonet.sqlite.SqliteDbContextOptionsBuilderExtensions.UseAdoNetSqlite<TContext>(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>! optionsBuilder, System.Data.Common.DbDataSource! dataSource, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>!
+static readonly pengdows.efcore.adonet.sqlite.LegacySqliteDialect.Instance -> pengdows.efcore.adonet.sqlite.LegacySqliteDialect!
+static readonly pengdows.efcore.adonet.sqlite.SqliteDialect.Instance -> pengdows.efcore.adonet.sqlite.SqliteDialect!

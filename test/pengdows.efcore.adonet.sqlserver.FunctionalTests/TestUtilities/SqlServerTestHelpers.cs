@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Data.SqlClient;
-using pengdows.efcore.adonet.Diagnostics;
 
 namespace Microsoft.EntityFrameworkCore.TestUtilities;
 
@@ -21,5 +20,8 @@ public class SqlServerTestHelpers : RelationalTestHelpers
     public override DbContextOptionsBuilder UseProviderOptions(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseAdoNetSqlServer(new SqlConnection("Database=DummyDatabase"));
 
-    public override LoggingDefinitions LoggingDefinitions { get; } = new AdoNetLoggingDefinitions();
+    // pengdows: the provider's definitions are internal; they come from its services.
+    public override LoggingDefinitions LoggingDefinitions { get; }
+        = new ServiceCollection().AddEntityFrameworkAdoNet(SqlServerDialect.Instance).BuildServiceProvider()
+            .GetRequiredService<LoggingDefinitions>();
 }

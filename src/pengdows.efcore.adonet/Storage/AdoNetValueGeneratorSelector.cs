@@ -11,7 +11,7 @@ namespace pengdows.efcore.adonet.Storage;
 ///     values drawn from the key's sequence. Generators are built per selection (this service is scoped)
 ///     because they hold the current connection.
 /// </summary>
-public class AdoNetValueGeneratorSelector(
+internal class AdoNetValueGeneratorSelector(
     ValueGeneratorSelectorDependencies dependencies,
     ISqlDialect dialect,
     IRelationalConnection connection,

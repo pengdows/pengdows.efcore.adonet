@@ -1,0 +1,298 @@
+#nullable enable
+abstract pengdows.efcore.adonet.AdoNetDialect.Name.get -> string!
+abstract pengdows.efcore.adonet.BooleanSyntax.Process(System.Linq.Expressions.Expression! query, Microsoft.EntityFrameworkCore.Query.ISqlExpressionFactory! sqlExpressionFactory) -> System.Linq.Expressions.Expression!
+abstract pengdows.efcore.adonet.PagingSyntax.GenerateLimitOffset(pengdows.efcore.adonet.IQuerySqlWriter! sql, Microsoft.EntityFrameworkCore.Query.SqlExpressions.SelectExpression! select) -> void
+const pengdows.efcore.adonet.AdoNetAnnotationNames.Identity = "AdoNet:Identity" -> string!
+const pengdows.efcore.adonet.AdoNetAnnotationNames.IdentityColumns = "AdoNet:IdentityColumns" -> string!
+const pengdows.efcore.adonet.AdoNetAnnotationNames.Prefix = "AdoNet:" -> string!
+override pengdows.efcore.adonet.AdoNetDialect.ToString() -> string!
+override pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.ApplyServices(Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> void
+override pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.Clone() -> Microsoft.EntityFrameworkCore.Infrastructure.RelationalOptionsExtension!
+override pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.Info.get -> Microsoft.EntityFrameworkCore.Infrastructure.DbContextOptionsExtensionInfo!
+override pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.Validate(Microsoft.EntityFrameworkCore.Infrastructure.IDbContextOptions! options) -> void
+override pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.WithConnection(System.Data.Common.DbConnection? connection) -> Microsoft.EntityFrameworkCore.Infrastructure.RelationalOptionsExtension!
+override pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.WithConnection(System.Data.Common.DbConnection? connection, bool owned) -> Microsoft.EntityFrameworkCore.Infrastructure.RelationalOptionsExtension!
+override pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.AcquireDatabaseLock() -> Microsoft.EntityFrameworkCore.Migrations.IMigrationsDatabaseLock!
+override pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.AcquireDatabaseLockAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Microsoft.EntityFrameworkCore.Migrations.IMigrationsDatabaseLock!>!
+override pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.ExistsSql.get -> string!
+override pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.GetBeginIfExistsScript(string! migrationId) -> string!
+override pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.GetBeginIfNotExistsScript(string! migrationId) -> string!
+override pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.GetCreateIfNotExistsScript() -> string!
+override pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.GetEndIfScript() -> string!
+override pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.InterpretExistsResult(object? value) -> bool
+override pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.LockReleaseBehavior.get -> Microsoft.EntityFrameworkCore.Migrations.LockReleaseBehavior
+override pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.ColumnDefinition(string? schema, string! table, string! name, Microsoft.EntityFrameworkCore.Migrations.Operations.ColumnOperation! operation, Microsoft.EntityFrameworkCore.Metadata.IModel? model, Microsoft.EntityFrameworkCore.Migrations.MigrationCommandListBuilder! builder) -> void
+override pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.ComputedColumnDefinition(string? schema, string! table, string! name, Microsoft.EntityFrameworkCore.Migrations.Operations.ColumnOperation! operation, Microsoft.EntityFrameworkCore.Metadata.IModel? model, Microsoft.EntityFrameworkCore.Migrations.MigrationCommandListBuilder! builder) -> void
+override pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.Generate(Microsoft.EntityFrameworkCore.Migrations.Operations.AlterColumnOperation! operation, Microsoft.EntityFrameworkCore.Metadata.IModel? model, Microsoft.EntityFrameworkCore.Migrations.MigrationCommandListBuilder! builder) -> void
+override pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.Generate(Microsoft.EntityFrameworkCore.Migrations.Operations.CreateTableOperation! operation, Microsoft.EntityFrameworkCore.Metadata.IModel? model, Microsoft.EntityFrameworkCore.Migrations.MigrationCommandListBuilder! builder, bool terminate = true) -> void
+override pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.Generate(Microsoft.EntityFrameworkCore.Migrations.Operations.DropIndexOperation! operation, Microsoft.EntityFrameworkCore.Metadata.IModel? model, Microsoft.EntityFrameworkCore.Migrations.MigrationCommandListBuilder! builder, bool terminate = true) -> void
+override pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.Generate(Microsoft.EntityFrameworkCore.Migrations.Operations.DropTableOperation! operation, Microsoft.EntityFrameworkCore.Metadata.IModel? model, Microsoft.EntityFrameworkCore.Migrations.MigrationCommandListBuilder! builder, bool terminate = true) -> void
+override pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.Generate(Microsoft.EntityFrameworkCore.Migrations.Operations.EnsureSchemaOperation! operation, Microsoft.EntityFrameworkCore.Metadata.IModel? model, Microsoft.EntityFrameworkCore.Migrations.MigrationCommandListBuilder! builder) -> void
+override pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.Generate(Microsoft.EntityFrameworkCore.Migrations.Operations.RenameColumnOperation! operation, Microsoft.EntityFrameworkCore.Metadata.IModel? model, Microsoft.EntityFrameworkCore.Migrations.MigrationCommandListBuilder! builder) -> void
+override pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.Generate(Microsoft.EntityFrameworkCore.Migrations.Operations.RenameIndexOperation! operation, Microsoft.EntityFrameworkCore.Metadata.IModel? model, Microsoft.EntityFrameworkCore.Migrations.MigrationCommandListBuilder! builder) -> void
+override pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.Generate(Microsoft.EntityFrameworkCore.Migrations.Operations.RenameSequenceOperation! operation, Microsoft.EntityFrameworkCore.Metadata.IModel? model, Microsoft.EntityFrameworkCore.Migrations.MigrationCommandListBuilder! builder) -> void
+override pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.Generate(Microsoft.EntityFrameworkCore.Migrations.Operations.RenameTableOperation! operation, Microsoft.EntityFrameworkCore.Metadata.IModel? model, Microsoft.EntityFrameworkCore.Migrations.MigrationCommandListBuilder! builder) -> void
+pengdows.efcore.adonet.AdoNetAnnotationNames
+pengdows.efcore.adonet.AdoNetBulkExtensions
+pengdows.efcore.adonet.AdoNetDbContextOptionsBuilderExtensions
+pengdows.efcore.adonet.AdoNetDialect
+pengdows.efcore.adonet.AdoNetDialect.AdoNetDialect() -> void
+pengdows.efcore.adonet.AdoNetDialects
+pengdows.efcore.adonet.AdoNetServiceCollectionExtensions
+pengdows.efcore.adonet.AnsiSqlDialect
+pengdows.efcore.adonet.AnsiSqlDialect.AnsiSqlDialect() -> void
+pengdows.efcore.adonet.AnsiTypeMappings
+pengdows.efcore.adonet.AnsiTypeMappings.AnsiTypeMappings() -> void
+pengdows.efcore.adonet.BooleanSyntax
+pengdows.efcore.adonet.BooleanSyntax.BooleanSyntax() -> void
+pengdows.efcore.adonet.Bulk.AdoNetInsertBulkLoader
+pengdows.efcore.adonet.Bulk.AdoNetInsertBulkLoader.AdoNetInsertBulkLoader(Microsoft.EntityFrameworkCore.Storage.IRawSqlCommandBuilder! rawSqlCommandBuilder, Microsoft.EntityFrameworkCore.Storage.ISqlGenerationHelper! sqlGenerationHelper, Microsoft.EntityFrameworkCore.Storage.IRelationalConnection! connection, Microsoft.EntityFrameworkCore.Diagnostics.IRelationalCommandDiagnosticsLogger! commandLogger, pengdows.efcore.adonet.IAdoNetDialect! dialect) -> void
+pengdows.efcore.adonet.Bulk.BulkColumn
+pengdows.efcore.adonet.Bulk.BulkColumn.BulkColumn(string! Name, Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping! TypeMapping) -> void
+pengdows.efcore.adonet.Bulk.BulkColumn.Name.get -> string!
+pengdows.efcore.adonet.Bulk.BulkColumn.Name.init -> void
+pengdows.efcore.adonet.Bulk.BulkColumn.TypeMapping.get -> Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping!
+pengdows.efcore.adonet.Bulk.BulkColumn.TypeMapping.init -> void
+pengdows.efcore.adonet.Bulk.BulkLoad
+pengdows.efcore.adonet.Bulk.BulkLoad.BulkLoad() -> void
+pengdows.efcore.adonet.Bulk.BulkLoad.Columns.get -> System.Collections.Generic.IReadOnlyList<pengdows.efcore.adonet.Bulk.BulkColumn!>!
+pengdows.efcore.adonet.Bulk.BulkLoad.Columns.init -> void
+pengdows.efcore.adonet.Bulk.BulkLoad.Connection.get -> System.Data.Common.DbConnection!
+pengdows.efcore.adonet.Bulk.BulkLoad.Connection.init -> void
+pengdows.efcore.adonet.Bulk.BulkLoad.Context.get -> Microsoft.EntityFrameworkCore.DbContext!
+pengdows.efcore.adonet.Bulk.BulkLoad.Context.init -> void
+pengdows.efcore.adonet.Bulk.BulkLoad.Rows.get -> System.Collections.Generic.IReadOnlyList<object?[]!>!
+pengdows.efcore.adonet.Bulk.BulkLoad.Rows.init -> void
+pengdows.efcore.adonet.Bulk.BulkLoad.Schema.get -> string?
+pengdows.efcore.adonet.Bulk.BulkLoad.Schema.init -> void
+pengdows.efcore.adonet.Bulk.BulkLoad.Table.get -> string!
+pengdows.efcore.adonet.Bulk.BulkLoad.Table.init -> void
+pengdows.efcore.adonet.Bulk.BulkLoad.Transaction.get -> System.Data.Common.DbTransaction!
+pengdows.efcore.adonet.Bulk.BulkLoad.Transaction.init -> void
+pengdows.efcore.adonet.Bulk.IAdoNetBulkLoader
+pengdows.efcore.adonet.Bulk.IAdoNetBulkLoader.Load(pengdows.efcore.adonet.Bulk.BulkLoad! load) -> void
+pengdows.efcore.adonet.Bulk.IAdoNetBulkLoader.LoadAsync(pengdows.efcore.adonet.Bulk.BulkLoad! load, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.DatabaseCapabilities
+pengdows.efcore.adonet.DatabaseCapabilities.DatabaseCapabilities(bool SupportsMultipleStatementsPerCommand = false, int DefaultMaxBatchSize = 1, int MaxParametersPerCommand = 999) -> void
+pengdows.efcore.adonet.DatabaseCapabilities.DefaultMaxBatchSize.get -> int
+pengdows.efcore.adonet.DatabaseCapabilities.DefaultMaxBatchSize.init -> void
+pengdows.efcore.adonet.DatabaseCapabilities.MaxParametersPerCommand.get -> int
+pengdows.efcore.adonet.DatabaseCapabilities.MaxParametersPerCommand.init -> void
+pengdows.efcore.adonet.DatabaseCapabilities.SupportsMultipleStatementsPerCommand.get -> bool
+pengdows.efcore.adonet.DatabaseCapabilities.SupportsMultipleStatementsPerCommand.init -> void
+pengdows.efcore.adonet.DmlSyntax
+pengdows.efcore.adonet.DmlSyntax.DmlSyntax() -> void
+pengdows.efcore.adonet.FunctionSyntax
+pengdows.efcore.adonet.FunctionSyntax.EscapeLikePattern(string! value) -> string?
+pengdows.efcore.adonet.FunctionSyntax.FunctionSyntax() -> void
+pengdows.efcore.adonet.IAdoNetDialect
+pengdows.efcore.adonet.IAdoNetDialect.Capabilities.get -> pengdows.efcore.adonet.IDatabaseCapabilities!
+pengdows.efcore.adonet.IAdoNetDialect.ConfigureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> void
+pengdows.efcore.adonet.IAdoNetDialect.Name.get -> string!
+pengdows.efcore.adonet.IAdoNetDialect.Sql.get -> pengdows.efcore.adonet.ISqlDialect!
+pengdows.efcore.adonet.IAdoNetDialect.TypeMappings.get -> pengdows.efcore.adonet.ITypeMappingDialect!
+pengdows.efcore.adonet.IDatabaseCapabilities
+pengdows.efcore.adonet.IDatabaseCapabilities.DefaultMaxBatchSize.get -> int
+pengdows.efcore.adonet.IDatabaseCapabilities.MaxParametersPerCommand.get -> int
+pengdows.efcore.adonet.IDatabaseCapabilities.SupportsMultipleStatementsPerCommand.get -> bool
+pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder
+pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder.AdoNetDbContextOptionsBuilder(Microsoft.EntityFrameworkCore.DbContextOptionsBuilder! optionsBuilder) -> void
+pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension
+pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.AdoNetOptionsExtension() -> void
+pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.AdoNetOptionsExtension(pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension! copyFrom) -> void
+pengdows.efcore.adonet.IQuerySqlWriter
+pengdows.efcore.adonet.IQuerySqlWriter.Append(string! sql) -> pengdows.efcore.adonet.IQuerySqlWriter!
+pengdows.efcore.adonet.IQuerySqlWriter.AppendIdentifier(string! name, string? schema = null) -> pengdows.efcore.adonet.IQuerySqlWriter!
+pengdows.efcore.adonet.IQuerySqlWriter.AppendLine() -> pengdows.efcore.adonet.IQuerySqlWriter!
+pengdows.efcore.adonet.IQuerySqlWriter.QualifyWithTableName(Microsoft.EntityFrameworkCore.Query.SqlExpressions.TableExpression! table) -> System.IDisposable!
+pengdows.efcore.adonet.IQuerySqlWriter.Visit(System.Linq.Expressions.Expression! expression) -> pengdows.efcore.adonet.IQuerySqlWriter!
+pengdows.efcore.adonet.ISqlDialect
+pengdows.efcore.adonet.ISqlDialect.Booleans.get -> pengdows.efcore.adonet.BooleanSyntax!
+pengdows.efcore.adonet.ISqlDialect.CurrentSchema.get -> string?
+pengdows.efcore.adonet.ISqlDialect.DefaultValues.get -> string!
+pengdows.efcore.adonet.ISqlDialect.Dml.get -> pengdows.efcore.adonet.DmlSyntax!
+pengdows.efcore.adonet.ISqlDialect.FalseLiteral.get -> string!
+pengdows.efcore.adonet.ISqlDialect.Functions.get -> pengdows.efcore.adonet.FunctionSyntax!
+pengdows.efcore.adonet.ISqlDialect.HasTablesSql.get -> string!
+pengdows.efcore.adonet.ISqlDialect.IdentifierQuotePrefix.get -> string!
+pengdows.efcore.adonet.ISqlDialect.IdentifierQuoteSuffix.get -> string!
+pengdows.efcore.adonet.ISqlDialect.Keys.get -> pengdows.efcore.adonet.KeyRetrieval!
+pengdows.efcore.adonet.ISqlDialect.LongCountFunction.get -> string!
+pengdows.efcore.adonet.ISqlDialect.Paging.get -> pengdows.efcore.adonet.PagingSyntax!
+pengdows.efcore.adonet.ISqlDialect.ParameterMarker.get -> string!
+pengdows.efcore.adonet.ISqlDialect.ParameterNameIncludesMarker.get -> bool
+pengdows.efcore.adonet.ISqlDialect.PreferExistsToIn.get -> bool
+pengdows.efcore.adonet.ISqlDialect.Savepoints.get -> pengdows.efcore.adonet.SavepointSyntax?
+pengdows.efcore.adonet.ISqlDialect.StringLiteral(string! value) -> string!
+pengdows.efcore.adonet.ISqlDialect.SupportsSchemas.get -> bool
+pengdows.efcore.adonet.ISqlDialect.TrueLiteral.get -> string!
+pengdows.efcore.adonet.ITypeMappingDialect
+pengdows.efcore.adonet.ITypeMappingDialect.FormatLiteral(object! value, string! storeType, string! literal) -> string!
+pengdows.efcore.adonet.ITypeMappingDialect.GetClrTypes(string! storeTypeBase) -> System.Collections.Generic.IReadOnlyList<System.Type!>!
+pengdows.efcore.adonet.ITypeMappingDialect.GetStoreType(System.Type! clrType) -> string?
+pengdows.efcore.adonet.ITypeMappingDialect.GetStoreType(System.Type! clrType, pengdows.efcore.adonet.StoreTypeFacets! facets) -> string?
+pengdows.efcore.adonet.ITypeMappingDialect.StringParameterSize(bool unicode) -> int?
+pengdows.efcore.adonet.KeyRetrieval
+pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository
+pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.AdoNetHistoryRepository(Microsoft.EntityFrameworkCore.Migrations.HistoryRepositoryDependencies! dependencies, pengdows.efcore.adonet.IAdoNetDialect! dialect) -> void
+pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.Dialect.get -> pengdows.efcore.adonet.IAdoNetDialect!
+pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator
+pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.AdoNetMigrationsSqlGenerator(Microsoft.EntityFrameworkCore.Migrations.MigrationsSqlGeneratorDependencies! dependencies, pengdows.efcore.adonet.IAdoNetDialect! dialect) -> void
+pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.Dialect.get -> pengdows.efcore.adonet.IAdoNetDialect!
+pengdows.efcore.adonet.PagingSyntax
+pengdows.efcore.adonet.PagingSyntax.InlinesValues.get -> bool
+pengdows.efcore.adonet.PagingSyntax.PagingSyntax() -> void
+pengdows.efcore.adonet.PagingSyntax.WithLiteralValues() -> pengdows.efcore.adonet.PagingSyntax!
+pengdows.efcore.adonet.Query.SqlTemplate
+pengdows.efcore.adonet.ReturningKeyRetrieval
+pengdows.efcore.adonet.ReturningKeyRetrieval.ReturningKeyRetrieval() -> void
+pengdows.efcore.adonet.SavepointSyntax
+pengdows.efcore.adonet.SavepointSyntax.Create.get -> string!
+pengdows.efcore.adonet.SavepointSyntax.Release.get -> string?
+pengdows.efcore.adonet.SavepointSyntax.RollbackTo.get -> string!
+pengdows.efcore.adonet.SavepointSyntax.SavepointSyntax(string! create, string! rollbackTo, string? release) -> void
+pengdows.efcore.adonet.SelectAfterKeyRetrieval
+pengdows.efcore.adonet.SelectAfterKeyRetrieval.IdentityFunction.get -> string!
+pengdows.efcore.adonet.SelectAfterKeyRetrieval.RowsAffectedFunction.get -> string!
+pengdows.efcore.adonet.SelectAfterKeyRetrieval.SelectAfterKeyRetrieval(string! identityFunction, string! rowsAffectedFunction) -> void
+pengdows.efcore.adonet.SequenceKeyRetrieval
+pengdows.efcore.adonet.SequenceKeyRetrieval.GetNextValueSql(string! delimitedSequenceName) -> string!
+pengdows.efcore.adonet.SequenceKeyRetrieval.GetSequenceName(string! table, string! column) -> string!
+pengdows.efcore.adonet.SequenceKeyRetrieval.SequenceKeyRetrieval(System.Func<string!, string!, string!>! sequenceName, System.Func<string!, string!>! nextValueSql) -> void
+pengdows.efcore.adonet.StoreTypeFacets
+pengdows.efcore.adonet.StoreTypeFacets.FixedLength.get -> bool
+pengdows.efcore.adonet.StoreTypeFacets.FixedLength.init -> void
+pengdows.efcore.adonet.StoreTypeFacets.Precision.get -> int?
+pengdows.efcore.adonet.StoreTypeFacets.Precision.init -> void
+pengdows.efcore.adonet.StoreTypeFacets.Scale.get -> int?
+pengdows.efcore.adonet.StoreTypeFacets.Scale.init -> void
+pengdows.efcore.adonet.StoreTypeFacets.Size.get -> int?
+pengdows.efcore.adonet.StoreTypeFacets.Size.init -> void
+pengdows.efcore.adonet.StoreTypeFacets.StoreTypeFacets(int? Size = null, int? Precision = null, int? Scale = null, bool FixedLength = false, bool Unicode = true) -> void
+pengdows.efcore.adonet.StoreTypeFacets.Unicode.get -> bool
+pengdows.efcore.adonet.StoreTypeFacets.Unicode.init -> void
+static pengdows.efcore.adonet.AdoNetBulkExtensions.BulkInsert<TEntity>(this Microsoft.EntityFrameworkCore.DbContext! context, System.Collections.Generic.IEnumerable<TEntity!>! entities) -> long
+static pengdows.efcore.adonet.AdoNetBulkExtensions.BulkInsertAsync<TEntity>(this Microsoft.EntityFrameworkCore.DbContext! context, System.Collections.Generic.IEnumerable<TEntity!>! entities, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<long>!
+static pengdows.efcore.adonet.AdoNetDbContextOptionsBuilderExtensions.UseAdoNet(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder! optionsBuilder, string! providerInvariantName, string! connectionString, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder!
+static pengdows.efcore.adonet.AdoNetDbContextOptionsBuilderExtensions.UseAdoNet(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder! optionsBuilder, System.Data.Common.DbConnection! connection, bool contextOwnsConnection = false, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder!
+static pengdows.efcore.adonet.AdoNetDbContextOptionsBuilderExtensions.UseAdoNet(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder! optionsBuilder, System.Data.Common.DbDataSource! dataSource, pengdows.efcore.adonet.IAdoNetDialect! dialect, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder!
+static pengdows.efcore.adonet.AdoNetDbContextOptionsBuilderExtensions.UseAdoNet(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder! optionsBuilder, System.Data.Common.DbDataSource! dataSource, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder!
+static pengdows.efcore.adonet.AdoNetDbContextOptionsBuilderExtensions.UseAdoNet(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder! optionsBuilder, System.Data.Common.DbProviderFactory! providerFactory, string! connectionString, pengdows.efcore.adonet.IAdoNetDialect! dialect, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder!
+static pengdows.efcore.adonet.AdoNetDbContextOptionsBuilderExtensions.UseAdoNet(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder! optionsBuilder, System.Data.Common.DbProviderFactory! providerFactory, string! connectionString, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder!
+static pengdows.efcore.adonet.AdoNetDbContextOptionsBuilderExtensions.UseAdoNet(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder! optionsBuilder, System.Data.Common.DbProviderFactory! providerFactory, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder!
+static pengdows.efcore.adonet.AdoNetDbContextOptionsBuilderExtensions.UseAdoNet<TContext>(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>! optionsBuilder, string! providerInvariantName, string! connectionString, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>!
+static pengdows.efcore.adonet.AdoNetDbContextOptionsBuilderExtensions.UseAdoNet<TContext>(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>! optionsBuilder, System.Data.Common.DbConnection! connection, bool contextOwnsConnection = false, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>!
+static pengdows.efcore.adonet.AdoNetDbContextOptionsBuilderExtensions.UseAdoNet<TContext>(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>! optionsBuilder, System.Data.Common.DbDataSource! dataSource, pengdows.efcore.adonet.IAdoNetDialect! dialect, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>!
+static pengdows.efcore.adonet.AdoNetDbContextOptionsBuilderExtensions.UseAdoNet<TContext>(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>! optionsBuilder, System.Data.Common.DbDataSource! dataSource, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>!
+static pengdows.efcore.adonet.AdoNetDbContextOptionsBuilderExtensions.UseAdoNet<TContext>(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>! optionsBuilder, System.Data.Common.DbProviderFactory! providerFactory, string! connectionString, pengdows.efcore.adonet.IAdoNetDialect! dialect, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>!
+static pengdows.efcore.adonet.AdoNetDbContextOptionsBuilderExtensions.UseAdoNet<TContext>(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>! optionsBuilder, System.Data.Common.DbProviderFactory! providerFactory, string! connectionString, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>!
+static pengdows.efcore.adonet.AdoNetDbContextOptionsBuilderExtensions.UseAdoNet<TContext>(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>! optionsBuilder, System.Data.Common.DbProviderFactory! providerFactory, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>!
+static pengdows.efcore.adonet.AdoNetDialect.Ansi.get -> pengdows.efcore.adonet.IAdoNetDialect!
+static pengdows.efcore.adonet.AdoNetDialects.Find(System.Data.Common.DbProviderFactory? factory) -> pengdows.efcore.adonet.IAdoNetDialect?
+static pengdows.efcore.adonet.AdoNetDialects.Register(System.Type! factoryType, pengdows.efcore.adonet.IAdoNetDialect! dialect) -> void
+static pengdows.efcore.adonet.AdoNetDialects.Register<TFactory>(pengdows.efcore.adonet.IAdoNetDialect! dialect) -> void
+static pengdows.efcore.adonet.AdoNetServiceCollectionExtensions.AddEntityFrameworkAdoNet(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, pengdows.efcore.adonet.IAdoNetDialect! dialect) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static pengdows.efcore.adonet.AnsiTypeMappings.SupportedClrTypes.get -> System.Collections.Generic.IReadOnlyCollection<System.Type!>!
+static pengdows.efcore.adonet.BooleanSyntax.BitValues.get -> pengdows.efcore.adonet.BooleanSyntax!
+static pengdows.efcore.adonet.BooleanSyntax.BitValuesWithBitwiseOperators.get -> pengdows.efcore.adonet.BooleanSyntax!
+static pengdows.efcore.adonet.BooleanSyntax.Native.get -> pengdows.efcore.adonet.BooleanSyntax!
+static pengdows.efcore.adonet.DmlSyntax.AppendSetters(pengdows.efcore.adonet.IQuerySqlWriter! sql, Microsoft.EntityFrameworkCore.Query.SqlExpressions.UpdateExpression! update, bool qualified) -> void
+static pengdows.efcore.adonet.DmlSyntax.AppendTables(pengdows.efcore.adonet.IQuerySqlWriter! sql, Microsoft.EntityFrameworkCore.Query.SqlExpressions.SelectExpression! select) -> void
+static pengdows.efcore.adonet.DmlSyntax.AppendWhere(pengdows.efcore.adonet.IQuerySqlWriter! sql, Microsoft.EntityFrameworkCore.Query.SqlExpressions.SelectExpression! select) -> void
+static pengdows.efcore.adonet.DmlSyntax.IsJoinsAndPredicateOnly(Microsoft.EntityFrameworkCore.Query.SqlExpressions.SelectExpression! select) -> bool
+static pengdows.efcore.adonet.DmlSyntax.MultiTable.get -> pengdows.efcore.adonet.DmlSyntax!
+static pengdows.efcore.adonet.DmlSyntax.Standard.get -> pengdows.efcore.adonet.DmlSyntax!
+static pengdows.efcore.adonet.DmlSyntax.TargetAliasFrom.get -> pengdows.efcore.adonet.DmlSyntax!
+static pengdows.efcore.adonet.DmlSyntax.UnaliasedTarget.get -> pengdows.efcore.adonet.DmlSyntax!
+static pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.Validate(pengdows.efcore.adonet.IAdoNetDialect! dialect) -> void
+static pengdows.efcore.adonet.KeyRetrieval.Returning.get -> pengdows.efcore.adonet.ReturningKeyRetrieval!
+static pengdows.efcore.adonet.KeyRetrieval.SelectAfter(string! identityFunction, string! rowsAffectedFunction) -> pengdows.efcore.adonet.SelectAfterKeyRetrieval!
+static pengdows.efcore.adonet.KeyRetrieval.Sequence(System.Func<string!, string!, string!>? sequenceName = null, System.Func<string!, string!>? nextValueSql = null) -> pengdows.efcore.adonet.SequenceKeyRetrieval!
+static pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.IsIdentity(Microsoft.EntityFrameworkCore.Migrations.Operations.ColumnOperation! column) -> bool
+static pengdows.efcore.adonet.PagingSyntax.LimitOffset(string? noLimitValue = null) -> pengdows.efcore.adonet.PagingSyntax!
+static pengdows.efcore.adonet.PagingSyntax.OffsetFetch.get -> pengdows.efcore.adonet.PagingSyntax!
+static pengdows.efcore.adonet.PagingSyntax.TopOrOffsetFetch.get -> pengdows.efcore.adonet.PagingSyntax!
+static pengdows.efcore.adonet.Query.SqlTemplate.Call(this Microsoft.EntityFrameworkCore.Query.ISqlExpressionFactory! sqlExpressionFactory, string? template, System.Collections.Generic.IReadOnlyList<Microsoft.EntityFrameworkCore.Query.SqlExpressions.SqlExpression!>! arguments, System.Type! returnType, Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping? typeMapping) -> Microsoft.EntityFrameworkCore.Query.SqlExpressions.SqlExpression?
+static pengdows.efcore.adonet.Query.SqlTemplate.TryGetTemplate(Microsoft.EntityFrameworkCore.Query.SqlExpressions.SqlFunctionExpression! function, out string! template) -> bool
+static pengdows.efcore.adonet.SavepointSyntax.Iso.get -> pengdows.efcore.adonet.SavepointSyntax!
+static readonly pengdows.efcore.adonet.AnsiSqlDialect.Instance -> pengdows.efcore.adonet.AnsiSqlDialect!
+static readonly pengdows.efcore.adonet.AnsiTypeMappings.Instance -> pengdows.efcore.adonet.AnsiTypeMappings!
+static readonly pengdows.efcore.adonet.DatabaseCapabilities.Default -> pengdows.efcore.adonet.DatabaseCapabilities!
+static readonly pengdows.efcore.adonet.FunctionSyntax.Iso -> pengdows.efcore.adonet.FunctionSyntax!
+virtual pengdows.efcore.adonet.AdoNetDialect.Capabilities.get -> pengdows.efcore.adonet.IDatabaseCapabilities!
+virtual pengdows.efcore.adonet.AdoNetDialect.ConfigureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> void
+virtual pengdows.efcore.adonet.AdoNetDialect.Sql.get -> pengdows.efcore.adonet.ISqlDialect!
+virtual pengdows.efcore.adonet.AdoNetDialect.TypeMappings.get -> pengdows.efcore.adonet.ITypeMappingDialect!
+virtual pengdows.efcore.adonet.AnsiSqlDialect.Booleans.get -> pengdows.efcore.adonet.BooleanSyntax!
+virtual pengdows.efcore.adonet.AnsiSqlDialect.CurrentSchema.get -> string?
+virtual pengdows.efcore.adonet.AnsiSqlDialect.DefaultValues.get -> string!
+virtual pengdows.efcore.adonet.AnsiSqlDialect.Dml.get -> pengdows.efcore.adonet.DmlSyntax!
+virtual pengdows.efcore.adonet.AnsiSqlDialect.FalseLiteral.get -> string!
+virtual pengdows.efcore.adonet.AnsiSqlDialect.Functions.get -> pengdows.efcore.adonet.FunctionSyntax!
+virtual pengdows.efcore.adonet.AnsiSqlDialect.HasTablesSql.get -> string!
+virtual pengdows.efcore.adonet.AnsiSqlDialect.IdentifierQuotePrefix.get -> string!
+virtual pengdows.efcore.adonet.AnsiSqlDialect.IdentifierQuoteSuffix.get -> string!
+virtual pengdows.efcore.adonet.AnsiSqlDialect.Keys.get -> pengdows.efcore.adonet.KeyRetrieval!
+virtual pengdows.efcore.adonet.AnsiSqlDialect.LongCountFunction.get -> string!
+virtual pengdows.efcore.adonet.AnsiSqlDialect.Paging.get -> pengdows.efcore.adonet.PagingSyntax!
+virtual pengdows.efcore.adonet.AnsiSqlDialect.ParameterMarker.get -> string!
+virtual pengdows.efcore.adonet.AnsiSqlDialect.ParameterNameIncludesMarker.get -> bool
+virtual pengdows.efcore.adonet.AnsiSqlDialect.PreferExistsToIn.get -> bool
+virtual pengdows.efcore.adonet.AnsiSqlDialect.Savepoints.get -> pengdows.efcore.adonet.SavepointSyntax?
+virtual pengdows.efcore.adonet.AnsiSqlDialect.StringLiteral(string! value) -> string!
+virtual pengdows.efcore.adonet.AnsiSqlDialect.SupportsSchemas.get -> bool
+virtual pengdows.efcore.adonet.AnsiSqlDialect.TrueLiteral.get -> string!
+virtual pengdows.efcore.adonet.AnsiTypeMappings.FormatLiteral(object! value, string! storeType, string! literal) -> string!
+virtual pengdows.efcore.adonet.AnsiTypeMappings.GetClrTypes(string! storeTypeBase) -> System.Collections.Generic.IReadOnlyList<System.Type!>!
+virtual pengdows.efcore.adonet.AnsiTypeMappings.GetStoreType(System.Type! clrType) -> string?
+virtual pengdows.efcore.adonet.AnsiTypeMappings.GetStoreType(System.Type! clrType, pengdows.efcore.adonet.StoreTypeFacets! facets) -> string?
+virtual pengdows.efcore.adonet.AnsiTypeMappings.StringParameterSize(bool unicode) -> int?
+virtual pengdows.efcore.adonet.Bulk.AdoNetInsertBulkLoader.Load(pengdows.efcore.adonet.Bulk.BulkLoad! load) -> void
+virtual pengdows.efcore.adonet.Bulk.AdoNetInsertBulkLoader.LoadAsync(pengdows.efcore.adonet.Bulk.BulkLoad! load, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+virtual pengdows.efcore.adonet.Bulk.AdoNetInsertBulkLoader.MaxRowsPerCommand.get -> int
+virtual pengdows.efcore.adonet.DmlSyntax.CanDeleteDirectly(Microsoft.EntityFrameworkCore.Query.SqlExpressions.SelectExpression! select) -> bool?
+virtual pengdows.efcore.adonet.DmlSyntax.TryGenerateDelete(pengdows.efcore.adonet.IQuerySqlWriter! sql, Microsoft.EntityFrameworkCore.Query.SqlExpressions.DeleteExpression! delete) -> bool
+virtual pengdows.efcore.adonet.DmlSyntax.TryGenerateUpdate(pengdows.efcore.adonet.IQuerySqlWriter! sql, Microsoft.EntityFrameworkCore.Query.SqlExpressions.UpdateExpression! update) -> bool
+virtual pengdows.efcore.adonet.FunctionSyntax.Abs.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.Ceiling.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.Concat.get -> string!
+virtual pengdows.efcore.adonet.FunctionSyntax.Day.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.Floor.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.Hour.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.Length.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.LikeEscapeCharacter.get -> char?
+virtual pengdows.efcore.adonet.FunctionSyntax.LikeSpecialCharacters.get -> string!
+virtual pengdows.efcore.adonet.FunctionSyntax.Lower.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.Minute.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.Month.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.OffsetDateTime.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.Position.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.Power.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.Replace.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.Round.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.RoundDigits.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.Second.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.Sqrt.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.Substring.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.SubstringFrom.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.Trim.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.TrimEnd.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.TrimStart.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.Upper.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.Year.get -> string?
+virtual pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder.UseDialect(pengdows.efcore.adonet.IAdoNetDialect! dialect) -> pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!
+virtual pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.Dialect.get -> pengdows.efcore.adonet.IAdoNetDialect!
+virtual pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.WithDataSource(System.Data.Common.DbDataSource! dataSource) -> pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension!
+virtual pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.WithDialect(pengdows.efcore.adonet.IAdoNetDialect! dialect) -> pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension!
+virtual pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.WithProviderFactory(System.Data.Common.DbProviderFactory! providerFactory) -> pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension!
+virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.AcquireLockSql() -> string!
+virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.GetCreateLockTableCommands() -> System.Collections.Generic.IReadOnlyList<Microsoft.EntityFrameworkCore.Migrations.MigrationCommand!>!
+virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.HolderSql() -> string!
+virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.LockTableName.get -> string!
+virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.LockTimeout.get -> System.TimeSpan
+virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.ReleaseLockSql() -> string!
+virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.TableExistsSql(string! table, string? schema) -> string!
+virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.TakeOverSql(string! holder) -> string!
+virtual pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.IdentityDefinition(string? schema, string! table, string! name, Microsoft.EntityFrameworkCore.Migrations.Operations.ColumnOperation! operation, Microsoft.EntityFrameworkCore.Migrations.MigrationCommandListBuilder! builder) -> void
+virtual pengdows.efcore.adonet.PagingSyntax.GenerateAfterOrderings(pengdows.efcore.adonet.IQuerySqlWriter! sql, Microsoft.EntityFrameworkCore.Query.SqlExpressions.SelectExpression! select) -> void
+virtual pengdows.efcore.adonet.PagingSyntax.GenerateTop(pengdows.efcore.adonet.IQuerySqlWriter! sql, Microsoft.EntityFrameworkCore.Query.SqlExpressions.SelectExpression! select) -> void

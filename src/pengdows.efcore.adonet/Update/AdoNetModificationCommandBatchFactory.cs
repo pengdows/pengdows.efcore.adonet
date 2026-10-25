@@ -5,14 +5,14 @@ using Microsoft.EntityFrameworkCore.Update;
 
 namespace pengdows.efcore.adonet.Update;
 
-public class AdoNetModificationCommandBatch(ModificationCommandBatchFactoryDependencies dependencies, int maxBatchSize)
+internal class AdoNetModificationCommandBatch(ModificationCommandBatchFactoryDependencies dependencies, int maxBatchSize)
     : AffectedCountModificationCommandBatch(dependencies, maxBatchSize);
 
 /// <summary>
 ///     One statement per command, whose affected row count is read from <see cref="System.Data.Common.DbDataReader.RecordsAffected" />
 ///     (valid after the reader is closed) rather than from a result set.
 /// </summary>
-public class AdoNetRecordsAffectedModificationCommandBatch(ModificationCommandBatchFactoryDependencies dependencies)
+internal class AdoNetRecordsAffectedModificationCommandBatch(ModificationCommandBatchFactoryDependencies dependencies)
     : AffectedCountModificationCommandBatch(dependencies, maxBatchSize: 1)
 {
     protected override void Consume(RelationalDataReader reader)
@@ -45,7 +45,7 @@ public class AdoNetRecordsAffectedModificationCommandBatch(ModificationCommandBa
 ///     Batches several modifications into one DbCommand only when the dialect says the driver accepts
 ///     multiple statements per command; otherwise every modification gets its own command.
 /// </summary>
-public class AdoNetModificationCommandBatchFactory(
+internal class AdoNetModificationCommandBatchFactory(
     ModificationCommandBatchFactoryDependencies dependencies,
     IDbContextOptions options,
     ISqlDialect sql,

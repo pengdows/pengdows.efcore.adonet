@@ -6,4 +6,7 @@
     <ProjectReference Include="..\pengdows.efcore.adonet\pengdows.efcore.adonet.csproj" />
     <PackageReference Include="Npgsql" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="pengdows.efcore.adonet.postgresql.Tests" />
+  </ItemGroup>
 </Project>

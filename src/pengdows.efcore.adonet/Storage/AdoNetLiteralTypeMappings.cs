@@ -5,7 +5,7 @@ namespace pengdows.efcore.adonet.Storage;
 
 // EF's stock mappings, each writing its constants through ITypeMappingDialect.FormatLiteral.
 
-public class AdoNetByteTypeMapping : ByteTypeMapping
+internal class AdoNetByteTypeMapping : ByteTypeMapping
 {
     private readonly ITypeMappingDialect _dialect;
 
@@ -24,7 +24,7 @@ public class AdoNetByteTypeMapping : ByteTypeMapping
         => _dialect.FormatLiteral(value, StoreType, base.GenerateNonNullSqlLiteral(value));
 }
 
-public class AdoNetShortTypeMapping : ShortTypeMapping
+internal class AdoNetShortTypeMapping : ShortTypeMapping
 {
     private readonly ITypeMappingDialect _dialect;
 
@@ -43,7 +43,7 @@ public class AdoNetShortTypeMapping : ShortTypeMapping
         => _dialect.FormatLiteral(value, StoreType, base.GenerateNonNullSqlLiteral(value));
 }
 
-public class AdoNetIntTypeMapping : IntTypeMapping
+internal class AdoNetIntTypeMapping : IntTypeMapping
 {
     private readonly ITypeMappingDialect _dialect;
 
@@ -62,7 +62,7 @@ public class AdoNetIntTypeMapping : IntTypeMapping
         => _dialect.FormatLiteral(value, StoreType, base.GenerateNonNullSqlLiteral(value));
 }
 
-public class AdoNetLongTypeMapping : LongTypeMapping
+internal class AdoNetLongTypeMapping : LongTypeMapping
 {
     private readonly ITypeMappingDialect _dialect;
 
@@ -81,7 +81,7 @@ public class AdoNetLongTypeMapping : LongTypeMapping
         => _dialect.FormatLiteral(value, StoreType, base.GenerateNonNullSqlLiteral(value));
 }
 
-public class AdoNetFloatTypeMapping : FloatTypeMapping
+internal class AdoNetFloatTypeMapping : FloatTypeMapping
 {
     private readonly ITypeMappingDialect _dialect;
 
@@ -100,7 +100,7 @@ public class AdoNetFloatTypeMapping : FloatTypeMapping
         => _dialect.FormatLiteral(value, StoreType, base.GenerateNonNullSqlLiteral(value));
 }
 
-public class AdoNetDoubleTypeMapping : DoubleTypeMapping
+internal class AdoNetDoubleTypeMapping : DoubleTypeMapping
 {
     private readonly ITypeMappingDialect _dialect;
 
@@ -120,7 +120,7 @@ public class AdoNetDoubleTypeMapping : DoubleTypeMapping
 }
 
 /// <summary>Also binds the column's precision and scale, so the parameter's type doesn't vary with its value.</summary>
-public class AdoNetDecimalTypeMapping : DecimalTypeMapping
+internal class AdoNetDecimalTypeMapping : DecimalTypeMapping
 {
     private readonly ITypeMappingDialect _dialect;
 
@@ -153,7 +153,7 @@ public class AdoNetDecimalTypeMapping : DecimalTypeMapping
     }
 }
 
-public class AdoNetDateTimeTypeMapping : DateTimeTypeMapping
+internal class AdoNetDateTimeTypeMapping : DateTimeTypeMapping
 {
     private readonly ITypeMappingDialect _dialect;
 
@@ -172,7 +172,7 @@ public class AdoNetDateTimeTypeMapping : DateTimeTypeMapping
         => _dialect.FormatLiteral(value, StoreType, base.GenerateNonNullSqlLiteral(value));
 }
 
-public class AdoNetDateTimeOffsetTypeMapping : DateTimeOffsetTypeMapping
+internal class AdoNetDateTimeOffsetTypeMapping : DateTimeOffsetTypeMapping
 {
     private readonly ITypeMappingDialect _dialect;
 
@@ -191,7 +191,7 @@ public class AdoNetDateTimeOffsetTypeMapping : DateTimeOffsetTypeMapping
         => _dialect.FormatLiteral(value, StoreType, base.GenerateNonNullSqlLiteral(value));
 }
 
-public class AdoNetDateOnlyTypeMapping : DateOnlyTypeMapping
+internal class AdoNetDateOnlyTypeMapping : DateOnlyTypeMapping
 {
     private readonly ITypeMappingDialect _dialect;
 
@@ -210,7 +210,7 @@ public class AdoNetDateOnlyTypeMapping : DateOnlyTypeMapping
         => _dialect.FormatLiteral(value, StoreType, base.GenerateNonNullSqlLiteral(value));
 }
 
-public class AdoNetTimeOnlyTypeMapping : TimeOnlyTypeMapping
+internal class AdoNetTimeOnlyTypeMapping : TimeOnlyTypeMapping
 {
     private readonly ITypeMappingDialect _dialect;
 
@@ -229,7 +229,7 @@ public class AdoNetTimeOnlyTypeMapping : TimeOnlyTypeMapping
         => _dialect.FormatLiteral(value, StoreType, base.GenerateNonNullSqlLiteral(value));
 }
 
-public class AdoNetTimeSpanTypeMapping : TimeSpanTypeMapping
+internal class AdoNetTimeSpanTypeMapping : TimeSpanTypeMapping
 {
     private readonly ITypeMappingDialect _dialect;
 
@@ -248,7 +248,7 @@ public class AdoNetTimeSpanTypeMapping : TimeSpanTypeMapping
         => _dialect.FormatLiteral(value, StoreType, base.GenerateNonNullSqlLiteral(value));
 }
 
-public class AdoNetGuidTypeMapping : GuidTypeMapping
+internal class AdoNetGuidTypeMapping : GuidTypeMapping
 {
     private readonly ITypeMappingDialect _dialect;
 
@@ -267,7 +267,7 @@ public class AdoNetGuidTypeMapping : GuidTypeMapping
         => _dialect.FormatLiteral(value, StoreType, base.GenerateNonNullSqlLiteral(value));
 }
 
-public class AdoNetByteArrayTypeMapping : ByteArrayTypeMapping
+internal class AdoNetByteArrayTypeMapping : ByteArrayTypeMapping
 {
     private readonly ITypeMappingDialect _dialect;
 

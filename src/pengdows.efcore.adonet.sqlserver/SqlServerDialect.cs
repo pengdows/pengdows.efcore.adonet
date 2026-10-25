@@ -16,6 +16,10 @@ public sealed class SqlServerDialect : AdoNetDialect
 {
     public static readonly SqlServerDialect Instance = new();
 
+    private SqlServerDialect()
+    {
+    }
+
     public override string Name => "SQL Server";
     public override ISqlDialect Sql { get; } = new SqlServerSql();
     public override ITypeMappingDialect TypeMappings { get; } = new SqlServerTypeMappings();
@@ -30,7 +34,7 @@ public sealed class SqlServerDialect : AdoNetDialect
     }
 }
 
-public sealed class SqlServerSql : AnsiSqlDialect
+internal sealed class SqlServerSql : AnsiSqlDialect
 {
     public override string IdentifierQuotePrefix => "[";
     public override string IdentifierQuoteSuffix => "]";
@@ -58,7 +62,7 @@ public sealed class SqlServerSql : AnsiSqlDialect
 ///     is bounded by DATALENGTH, which is never less than the length. LEN returns bigint for MAX types, hence the CAST.
 ///     CHARINDEX finds an empty string nowhere; .NET finds it at 0.
 /// </summary>
-public sealed class SqlServerFunctions : FunctionSyntax
+internal sealed class SqlServerFunctions : FunctionSyntax
 {
     public override string Concat => "{0} + {1}";
     public override string? TrimStart => "LTRIM({0})";
@@ -77,7 +81,7 @@ public sealed class SqlServerFunctions : FunctionSyntax
     public override string LikeSpecialCharacters => "%_[";
 }
 
-public sealed class SqlServerTypeMappings : AnsiTypeMappings
+internal sealed class SqlServerTypeMappings : AnsiTypeMappings
 {
     // As the official provider names them.
     private static readonly Dictionary<Type, string> StoreTypes = new()

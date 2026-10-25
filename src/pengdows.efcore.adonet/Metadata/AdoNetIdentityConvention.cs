@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 namespace pengdows.efcore.adonet.Metadata;
 
 /// <summary>Marks single-column integer keys that the database generates (see <see cref="AdoNetAnnotationNames.Identity" />).</summary>
-public class AdoNetIdentityConvention : IModelFinalizingConvention
+internal class AdoNetIdentityConvention : IModelFinalizingConvention
 {
     public virtual void ProcessModelFinalizing(IConventionModelBuilder modelBuilder, IConventionContext<IConventionModelBuilder> context)
     {

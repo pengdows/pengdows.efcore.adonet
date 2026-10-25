@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace pengdows.efcore.adonet.Storage;
 
-public class AdoNetBoolTypeMapping : BoolTypeMapping
+internal class AdoNetBoolTypeMapping : BoolTypeMapping
 {
     private readonly string _trueLiteral;
     private readonly string _falseLiteral;

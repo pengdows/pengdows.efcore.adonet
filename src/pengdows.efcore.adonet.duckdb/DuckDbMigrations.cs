@@ -9,7 +9,7 @@ namespace pengdows.efcore.adonet.duckdb;
 ///     DuckDB has no identity columns: a generated key defaults to <c>nextval</c> of a sequence created with its table.
 ///     Foreign keys can't cascade, so referential actions are left to EF's client-side cascade.
 /// </summary>
-public class DuckDbMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dependencies, IAdoNetDialect dialect)
+internal class DuckDbMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dependencies, IAdoNetDialect dialect)
     : AdoNetMigrationsSqlGenerator(dependencies, dialect)
 {
     protected override void Generate(CreateTableOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)

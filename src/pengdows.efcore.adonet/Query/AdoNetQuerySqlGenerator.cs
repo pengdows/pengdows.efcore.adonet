@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 namespace pengdows.efcore.adonet.Query;
 
 /// <summary>EF's relational SQL, with paging, functions, <c>LongCount</c> and bulk DML as the dialect writes them.</summary>
-public class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencies, ISqlDialect dialect)
+internal class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencies, ISqlDialect dialect)
     : QuerySqlGenerator(dependencies), IQuerySqlWriter
 {
     private TableExpression? _qualifyWithTableName;
@@ -150,7 +150,7 @@ public class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencies,
     }
 }
 
-public class AdoNetQuerySqlGeneratorFactory(QuerySqlGeneratorDependencies dependencies, ISqlDialect dialect)
+internal class AdoNetQuerySqlGeneratorFactory(QuerySqlGeneratorDependencies dependencies, ISqlDialect dialect)
     : IQuerySqlGeneratorFactory
 {
     public virtual QuerySqlGenerator Create()

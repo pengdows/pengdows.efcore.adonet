@@ -90,6 +90,29 @@ public class DialectContractTests
         Assert.Same(ComposedDialect.Instance, nonGeneric.GetService<IAdoNetDialect>());
     }
 
+    // Raw ADO.NET objects don't leave the library (REVIEW_POLICY 4D), except where docs/PUBLIC_API.md records why.
+    [Fact]
+    public void Public_api_hands_out_no_raw_ado_net_objects_but_the_recorded_ones()
+    {
+        var src = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../src"));
+        string[] recorded =
+        [
+            "pengdows.efcore.adonet.Bulk.BulkLoad.Connection.get -> System.Data.Common.DbConnection!",
+            "pengdows.efcore.adonet.Bulk.BulkLoad.Transaction.get -> System.Data.Common.DbTransaction!",
+            "abstract pengdows.efcore.adonet.Testing.ProviderFixture.Factory.get -> System.Data.Common.DbProviderFactory!"
+        ];
+
+        var handedOut = Directory.EnumerateFiles(src, "PublicAPI.*.txt", SearchOption.AllDirectories)
+            .SelectMany(File.ReadLines)
+            .Where(l => l.Contains(" -> System.Data.", StringComparison.Ordinal)
+                && System.Text.RegularExpressions.Regex.IsMatch(l, @"-> System\.Data\.(Common\.)?(I?Db\w*|DbDataSource)[!?]?$"))
+            .Except(recorded)
+            .ToList();
+
+        Assert.True(Directory.Exists(src), src);
+        Assert.Empty(handedOut);
+    }
+
     [Fact]
     public void Core_source_names_no_database()
     {

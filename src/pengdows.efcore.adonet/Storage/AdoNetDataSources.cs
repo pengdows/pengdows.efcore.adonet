@@ -9,7 +9,7 @@ namespace pengdows.efcore.adonet.Storage;
 ///     internal service provider, which owns it: the data sources, their pools and the connection strings they hold are
 ///     released when that provider is disposed. Data sources the application passes in are the application's.
 /// </summary>
-public sealed class AdoNetDataSources : IDisposable
+internal sealed class AdoNetDataSources : IDisposable
 {
     // Lazy keeps a lost race from creating, and leaking, a second data source.
     private readonly ConcurrentDictionary<(DbProviderFactory Factory, string ConnectionString), Lazy<DbDataSource>> _dataSources = new();

@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 namespace pengdows.efcore.adonet.Query;
 
 /// <summary>EF's relational translators, then the core's, which write SQL through the dialect's <see cref="FunctionSyntax" />.</summary>
-public class AdoNetMethodCallTranslatorProvider : RelationalMethodCallTranslatorProvider
+internal class AdoNetMethodCallTranslatorProvider : RelationalMethodCallTranslatorProvider
 {
     public AdoNetMethodCallTranslatorProvider(RelationalMethodCallTranslatorProviderDependencies dependencies, ISqlDialect dialect)
         : base(dependencies)
@@ -22,7 +22,7 @@ public class AdoNetMethodCallTranslatorProvider : RelationalMethodCallTranslator
     }
 }
 
-public class AdoNetMemberTranslatorProvider : RelationalMemberTranslatorProvider
+internal class AdoNetMemberTranslatorProvider : RelationalMemberTranslatorProvider
 {
     public AdoNetMemberTranslatorProvider(
         RelationalMemberTranslatorProviderDependencies dependencies,
@@ -33,7 +33,7 @@ public class AdoNetMemberTranslatorProvider : RelationalMemberTranslatorProvider
 }
 
 /// <summary>String methods. .NET positions are 0-based and SQL's 1-based; the translator converts.</summary>
-public class AdoNetStringMethodTranslator(
+internal class AdoNetStringMethodTranslator(
     ISqlExpressionFactory sqlExpressionFactory,
     IRelationalTypeMappingSource typeMappingSource,
     FunctionSyntax functions) : IMethodCallTranslator
@@ -151,7 +151,7 @@ public class AdoNetStringMethodTranslator(
     }
 }
 
-public class AdoNetMathTranslator(ISqlExpressionFactory sqlExpressionFactory, FunctionSyntax functions) : IMethodCallTranslator
+internal class AdoNetMathTranslator(ISqlExpressionFactory sqlExpressionFactory, FunctionSyntax functions) : IMethodCallTranslator
 {
     public virtual SqlExpression? Translate(
         SqlExpression? instance,
@@ -190,7 +190,7 @@ public class AdoNetMathTranslator(ISqlExpressionFactory sqlExpressionFactory, Fu
 }
 
 /// <summary><c>string.Length</c>, and the date parts of <see cref="DateTime" />, <see cref="DateTimeOffset" /> and <see cref="DateOnly" />.</summary>
-public class AdoNetMemberTranslator(
+internal class AdoNetMemberTranslator(
     ISqlExpressionFactory sqlExpressionFactory,
     IRelationalTypeMappingSource typeMappingSource,
     FunctionSyntax functions) : IMemberTranslator

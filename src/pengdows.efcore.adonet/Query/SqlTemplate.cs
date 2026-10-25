@@ -36,7 +36,7 @@ public static class SqlTemplate
 
     /// <summary>Writes <paramref name="template" />, visiting each <c>{n}</c> argument where it appears.</summary>
     /// <exception cref="InvalidOperationException">The template is malformed or names an argument there isn't.</exception>
-    public static void Write(string template, IReadOnlyList<Expression> arguments, Action<string> append, Action<Expression> visit)
+    internal static void Write(string template, IReadOnlyList<Expression> arguments, Action<string> append, Action<Expression> visit)
     {
         var text = new StringBuilder();
         foreach (var part in Parse(template, arguments.Count))

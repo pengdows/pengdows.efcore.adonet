@@ -7,4 +7,14 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
+  <!-- Every public or protected member of a library is declared in PublicAPI.*.txt (REVIEW_POLICY 4D); reasons in docs/PUBLIC_API.md. -->
+  <ItemGroup Condition="$(MSBuildProjectDirectory.Contains('$([System.IO.Path]::DirectorySeparatorChar)src$([System.IO.Path]::DirectorySeparatorChar)'))">
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="all" />
+  </ItemGroup>
+  <!-- RS0026/RS0027 (optional parameters across overloads) are off, as in EF Core's own repository: the UseAdoNet...
+       entry points follow EF's Use... overload conventions, and overrides of EF virtuals keep EF's optional parameters.
+       RS0016/RS0017, declaring every added or removed member, stay errors. -->
+  <PropertyGroup Condition="$(MSBuildProjectDirectory.Contains('$([System.IO.Path]::DirectorySeparatorChar)src$([System.IO.Path]::DirectorySeparatorChar)'))">
+    <NoWarn>$(NoWarn);RS0026;RS0027</NoWarn>
+  </PropertyGroup>
 </Project>

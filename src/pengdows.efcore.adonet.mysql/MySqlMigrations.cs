@@ -6,7 +6,7 @@ using pengdows.efcore.adonet.Migrations;
 namespace pengdows.efcore.adonet.mysql;
 
 /// <summary>MySQL where it differs from ISO: AUTO_INCREMENT, MODIFY COLUMN, and indexes named within their table.</summary>
-public class MySqlMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dependencies, IAdoNetDialect dialect)
+internal class MySqlMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dependencies, IAdoNetDialect dialect)
     : AdoNetMigrationsSqlGenerator(dependencies, dialect)
 {
     protected override void IdentityDefinition(string? schema, string table, string name, ColumnOperation operation, MigrationCommandListBuilder builder)
@@ -54,7 +54,7 @@ public class MySqlMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies depe
 }
 
 /// <summary>INFORMATION_SCHEMA spans every database on the server; look only in the current one.</summary>
-public class MySqlHistoryRepository(HistoryRepositoryDependencies dependencies, IAdoNetDialect dialect)
+internal class MySqlHistoryRepository(HistoryRepositoryDependencies dependencies, IAdoNetDialect dialect)
     : AdoNetHistoryRepository(dependencies, dialect)
 {
     protected override string TableExistsSql(string table, string? schema)

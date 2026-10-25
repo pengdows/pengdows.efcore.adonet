@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 namespace pengdows.efcore.adonet.sqlserver;
 
 /// <summary><c>ToQueryString</c> as runnable T-SQL: each parameter is a <c>DECLARE</c> with its type and value.</summary>
-public class SqlServerQueryStringFactory(IRelationalTypeMappingSource typeMappingSource) : IRelationalQueryStringFactory
+internal class SqlServerQueryStringFactory(IRelationalTypeMappingSource typeMappingSource) : IRelationalQueryStringFactory
 {
     public virtual string Create(DbCommand command)
     {

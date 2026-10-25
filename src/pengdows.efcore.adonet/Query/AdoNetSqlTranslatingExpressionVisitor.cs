@@ -12,7 +12,7 @@ namespace pengdows.efcore.adonet.Query;
 ///     prefix match. Everything else goes to the translators.
 /// </summary>
 /// <remarks>Follows EF Core's SQL Server provider (MIT, .NET Foundation).</remarks>
-public class AdoNetSqlTranslatingExpressionVisitor : RelationalSqlTranslatingExpressionVisitor
+internal class AdoNetSqlTranslatingExpressionVisitor : RelationalSqlTranslatingExpressionVisitor
 {
     private readonly QueryCompilationContext _queryCompilationContext;
     private readonly FunctionSyntax _functions;
@@ -80,7 +80,7 @@ public class AdoNetSqlTranslatingExpressionVisitor : RelationalSqlTranslatingExp
             : null;
 }
 
-public class AdoNetSqlTranslatingExpressionVisitorFactory(RelationalSqlTranslatingExpressionVisitorDependencies dependencies, ISqlDialect dialect)
+internal class AdoNetSqlTranslatingExpressionVisitorFactory(RelationalSqlTranslatingExpressionVisitorDependencies dependencies, ISqlDialect dialect)
     : IRelationalSqlTranslatingExpressionVisitorFactory
 {
     public virtual RelationalSqlTranslatingExpressionVisitor Create(

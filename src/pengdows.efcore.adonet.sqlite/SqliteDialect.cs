@@ -9,6 +9,10 @@ public class SqliteDialect : AdoNetDialect
 {
     public static readonly SqliteDialect Instance = new();
 
+    protected SqliteDialect()
+    {
+    }
+
     public override string Name => "SQLite";
     public override ISqlDialect Sql { get; } = new SqliteSql();
     public override ITypeMappingDialect TypeMappings { get; } = new SqliteTypeMappings();
@@ -25,11 +29,15 @@ public sealed class LegacySqliteDialect : SqliteDialect
 {
     public static new readonly LegacySqliteDialect Instance = new();
 
+    private LegacySqliteDialect()
+    {
+    }
+
     public override string Name => "SQLite (pre-3.35)";
     public override ISqlDialect Sql { get; } = new LegacySqliteSql();
 }
 
-public class SqliteSql : AnsiSqlDialect
+internal class SqliteSql : AnsiSqlDialect
 {
     public override bool SupportsSchemas => false;
     public override PagingSyntax Paging { get; } = PagingSyntax.LimitOffset(noLimitValue: "-1");
@@ -39,12 +47,12 @@ public class SqliteSql : AnsiSqlDialect
         => "SELECT COUNT(*) FROM \"sqlite_master\" WHERE \"type\" = 'table' AND \"rootpage\" IS NOT NULL";
 }
 
-public sealed class LegacySqliteSql : SqliteSql
+internal sealed class LegacySqliteSql : SqliteSql
 {
     public override KeyRetrieval Keys { get; } = KeyRetrieval.SelectAfter("last_insert_rowid()", "changes()");
 }
 
-public sealed class SqliteTypeMappings : AnsiTypeMappings
+internal sealed class SqliteTypeMappings : AnsiTypeMappings
 {
     public override string? GetStoreType(Type clrType)
         => clrType == typeof(string) ? "TEXT"
@@ -76,7 +84,7 @@ public sealed class SqliteTypeMappings : AnsiTypeMappings
 ///     Dates are text, so their parts come from STRFTIME. STRFTIME moves a time with an offset to UTC, so the offset (always
 ///     six characters: +hh:mm) is cut off first, leaving the parts of the value's own time.
 /// </summary>
-public sealed class SqliteFunctions : FunctionSyntax
+internal sealed class SqliteFunctions : FunctionSyntax
 {
     public override string? OffsetDateTime => "SUBSTR({0}, 1, LENGTH({0}) - 6)";
     public override string? TrimStart => "LTRIM({0})";

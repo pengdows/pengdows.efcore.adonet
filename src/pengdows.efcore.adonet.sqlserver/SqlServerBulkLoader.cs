@@ -11,7 +11,7 @@ namespace pengdows.efcore.adonet.sqlserver;
 ///     <see cref="SqlBulkCopy" /> for Microsoft.Data.SqlClient connections; multi-row INSERT for any other driver. Like an
 ///     INSERT, the copy checks constraints and fires triggers, and it is bounded by the context's command timeout.
 /// </summary>
-public class SqlServerBulkLoader(
+internal class SqlServerBulkLoader(
     IRawSqlCommandBuilder rawSqlCommandBuilder,
     ISqlGenerationHelper sqlGenerationHelper,
     IRelationalConnection connection,

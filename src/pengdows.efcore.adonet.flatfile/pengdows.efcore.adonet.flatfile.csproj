@@ -6,4 +6,7 @@
     <ProjectReference Include="..\pengdows.efcore.adonet\pengdows.efcore.adonet.csproj" />
     <PackageReference Include="pengdows.flatfile" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="pengdows.efcore.adonet.flatfile.Tests" />
+  </ItemGroup>
 </Project>

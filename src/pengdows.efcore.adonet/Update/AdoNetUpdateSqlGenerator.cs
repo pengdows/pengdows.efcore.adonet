@@ -9,7 +9,7 @@ namespace pengdows.efcore.adonet.Update;
 ///     Reads back generated values and checks concurrency with <c>RETURNING</c>, with a follow-up <c>SELECT</c> in the
 ///     same command, or with plain statements checked via RecordsAffected, as chosen by <see cref="ISqlDialect.Keys" />.
 /// </summary>
-public class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependencies, IAdoNetDialect dialect)
+internal class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependencies, IAdoNetDialect dialect)
     : UpdateAndSelectSqlGenerator(dependencies)
 {
     public override ResultSetMapping AppendInsertOperation(

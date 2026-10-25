@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace pengdows.efcore.adonet.Storage;
 
-public class AdoNetSqlGenerationHelper(RelationalSqlGenerationHelperDependencies dependencies, ISqlDialect dialect)
+internal class AdoNetSqlGenerationHelper(RelationalSqlGenerationHelperDependencies dependencies, ISqlDialect dialect)
     : RelationalSqlGenerationHelper(dependencies)
 {
     // Name given to DbParameter.ParameterName.

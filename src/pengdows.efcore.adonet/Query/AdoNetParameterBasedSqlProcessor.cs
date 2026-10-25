@@ -9,7 +9,7 @@ namespace pengdows.efcore.adonet.Query;
 ///     constants; reading the values through <see cref="ParametersCacheDecorator.GetAndDisableCaching" /> keeps EF
 ///     from caching SQL that now depends on them. Then applies the dialect's <see cref="BooleanSyntax" />.
 /// </summary>
-public class AdoNetParameterBasedSqlProcessor(
+internal class AdoNetParameterBasedSqlProcessor(
     RelationalParameterBasedSqlProcessorDependencies dependencies,
     RelationalParameterBasedSqlProcessorParameters parameters,
     ISqlDialect dialect)
@@ -63,7 +63,7 @@ public class AdoNetParameterBasedSqlProcessor(
     }
 }
 
-public class AdoNetParameterBasedSqlProcessorFactory(
+internal class AdoNetParameterBasedSqlProcessorFactory(
     RelationalParameterBasedSqlProcessorDependencies dependencies,
     ISqlDialect dialect)
     : IRelationalParameterBasedSqlProcessorFactory
@@ -73,7 +73,7 @@ public class AdoNetParameterBasedSqlProcessorFactory(
 }
 
 /// <summary>EF's null semantics, with the dialect's preference between nullable IN and EXISTS.</summary>
-public class AdoNetSqlNullabilityProcessor(
+internal class AdoNetSqlNullabilityProcessor(
     RelationalParameterBasedSqlProcessorDependencies dependencies,
     RelationalParameterBasedSqlProcessorParameters parameters,
     ISqlDialect dialect)

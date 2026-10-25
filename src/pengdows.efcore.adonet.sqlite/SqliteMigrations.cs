@@ -5,7 +5,7 @@ using pengdows.efcore.adonet.Migrations;
 
 namespace pengdows.efcore.adonet.sqlite;
 
-public class SqliteMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dependencies, IAdoNetDialect dialect)
+internal class SqliteMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dependencies, IAdoNetDialect dialect)
     : AdoNetMigrationsSqlGenerator(dependencies, dialect)
 {
     // A single INTEGER primary key column is the rowid, which the database assigns.
@@ -18,7 +18,7 @@ public class SqliteMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dep
             "SQLite has no ALTER COLUMN; changing a column needs the table rebuilt, which this dialect doesn't do yet.");
 }
 
-public class SqliteHistoryRepository(HistoryRepositoryDependencies dependencies, IAdoNetDialect dialect)
+internal class SqliteHistoryRepository(HistoryRepositoryDependencies dependencies, IAdoNetDialect dialect)
     : AdoNetHistoryRepository(dependencies, dialect)
 {
     protected override string TableExistsSql(string table, string? schema)

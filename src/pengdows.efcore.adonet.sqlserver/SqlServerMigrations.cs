@@ -6,7 +6,7 @@ using pengdows.efcore.adonet.Migrations;
 namespace pengdows.efcore.adonet.sqlserver;
 
 /// <summary>T-SQL where it differs from ISO: IDENTITY, sp_rename, ALTER COLUMN, and named default constraints.</summary>
-public class SqlServerMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dependencies, IAdoNetDialect dialect)
+internal class SqlServerMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dependencies, IAdoNetDialect dialect)
     : AdoNetMigrationsSqlGenerator(dependencies, dialect)
 {
     protected override void IdentityDefinition(string? schema, string table, string name, ColumnOperation operation, MigrationCommandListBuilder builder)

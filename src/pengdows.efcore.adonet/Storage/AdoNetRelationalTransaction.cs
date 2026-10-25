@@ -13,7 +13,7 @@ namespace pengdows.efcore.adonet.Storage;
 ///     dialect's <see cref="SavepointSyntax" />, as commands in the transaction; with neither, EF skips savepoints.
 ///     Logging and interception match EF's base implementation.
 /// </summary>
-public class AdoNetRelationalTransaction(
+internal class AdoNetRelationalTransaction(
     IRelationalConnection connection,
     DbTransaction transaction,
     Guid transactionId,
@@ -162,7 +162,7 @@ public class AdoNetRelationalTransaction(
     }
 }
 
-public class AdoNetRelationalTransactionFactory(RelationalTransactionFactoryDependencies dependencies, ISqlDialect dialect)
+internal class AdoNetRelationalTransactionFactory(RelationalTransactionFactoryDependencies dependencies, ISqlDialect dialect)
     : RelationalTransactionFactory(dependencies)
 {
     public override RelationalTransaction Create(

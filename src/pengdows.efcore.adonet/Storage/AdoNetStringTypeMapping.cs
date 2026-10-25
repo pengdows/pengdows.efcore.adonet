@@ -8,7 +8,7 @@ namespace pengdows.efcore.adonet.Storage;
 ///     Binds through <see cref="DbType" />: <c>String</c>/<c>AnsiString</c>, or their fixed-length forms for fixed-length
 ///     columns. Constants are written by the dialect's <see cref="ISqlDialect.StringLiteral" />.
 /// </summary>
-public class AdoNetStringTypeMapping : StringTypeMapping
+internal class AdoNetStringTypeMapping : StringTypeMapping
 {
     private readonly ISqlDialect _sql;
     private readonly ITypeMappingDialect _typeMappings;

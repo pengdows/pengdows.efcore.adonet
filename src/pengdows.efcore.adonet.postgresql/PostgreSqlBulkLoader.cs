@@ -6,7 +6,7 @@ using pengdows.efcore.adonet.Bulk;
 namespace pengdows.efcore.adonet.postgresql;
 
 /// <summary>Binary <c>COPY ... FROM STDIN</c> for Npgsql connections; multi-row INSERT for any other driver.</summary>
-public class PostgreSqlBulkLoader(
+internal class PostgreSqlBulkLoader(
     IRawSqlCommandBuilder rawSqlCommandBuilder,
     ISqlGenerationHelper sqlGenerationHelper,
     IRelationalConnection connection,

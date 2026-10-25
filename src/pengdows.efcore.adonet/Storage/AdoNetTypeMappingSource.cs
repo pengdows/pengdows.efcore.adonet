@@ -7,7 +7,7 @@ namespace pengdows.efcore.adonet.Storage;
 ///     Maps CLR types to EF's stock relational mappings, which bind parameters via the portable
 ///     <see cref="DbType" /> (never provider-specific parameter types). Store type names come from the dialect.
 /// </summary>
-public class AdoNetTypeMappingSource : RelationalTypeMappingSource
+internal class AdoNetTypeMappingSource : RelationalTypeMappingSource
 {
     private readonly Dictionary<Type, RelationalTypeMapping> _clrTypeMappings = [];
     private readonly Dictionary<string, RelationalTypeMapping> _storeTypeMappings = new(StringComparer.OrdinalIgnoreCase);

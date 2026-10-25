@@ -8,4 +8,7 @@
     <!-- Pins the vulnerable 9.0.x pulled in transitively by Microsoft.Data.SqlClient. -->
     <PackageReference Include="System.Security.Cryptography.Pkcs" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="pengdows.efcore.adonet.sqlserver.Tests" />
+  </ItemGroup>
 </Project>

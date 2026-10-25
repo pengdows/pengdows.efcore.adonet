@@ -8,6 +8,10 @@ public sealed class FlatFileDialect : AdoNetDialect
 {
     public static readonly FlatFileDialect Instance = new();
 
+    private FlatFileDialect()
+    {
+    }
+
     public override string Name => "pengdows.flatfile";
     public override ISqlDialect Sql { get; } = new FlatFileSql();
     public override IDatabaseCapabilities Capabilities { get; } = new DatabaseCapabilities(SupportsMultipleStatementsPerCommand: true, DefaultMaxBatchSize: 1);
@@ -15,7 +19,7 @@ public sealed class FlatFileDialect : AdoNetDialect
 }
 
 /// <summary>Binary data is a BLOB, of no declared length; there is no INTERVAL type, so no <see cref="TimeSpan" />.</summary>
-public sealed class FlatFileTypeMappings : AnsiTypeMappings
+internal sealed class FlatFileTypeMappings : AnsiTypeMappings
 {
     public override string? GetStoreType(Type clrType)
         => clrType == typeof(byte[]) ? "BLOB"
@@ -26,7 +30,7 @@ public sealed class FlatFileTypeMappings : AnsiTypeMappings
         => clrType == typeof(byte[]) ? null : base.GetStoreType(clrType, facets);
 }
 
-public sealed class FlatFileSql : AnsiSqlDialect
+internal sealed class FlatFileSql : AnsiSqlDialect
 {
     public override string ParameterMarker => ":";
     public override bool ParameterNameIncludesMarker => false;
@@ -40,7 +44,7 @@ public sealed class FlatFileSql : AnsiSqlDialect
 ///     There is no FLOOR; the SECOND field is already whole. LIKE ignores ESCAPE (an escaped pattern never matches), so
 ///     patterns that would need escaping are compared by position instead.
 /// </summary>
-public sealed class FlatFileFunctions : FunctionSyntax
+internal sealed class FlatFileFunctions : FunctionSyntax
 {
     public override char? LikeEscapeCharacter => null;
     public override string? Second => "EXTRACT(SECOND FROM {0})";

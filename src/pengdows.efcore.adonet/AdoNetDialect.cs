@@ -26,7 +26,7 @@ public abstract class AdoNetDialect : IAdoNetDialect
         => Name;
 }
 
-public sealed class AnsiDialect : AdoNetDialect
+internal sealed class AnsiDialect : AdoNetDialect
 {
     public override string Name => "ANSI";
 }

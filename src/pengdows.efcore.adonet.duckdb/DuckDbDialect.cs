@@ -9,6 +9,10 @@ public sealed class DuckDbDialect : AdoNetDialect
 {
     public static readonly DuckDbDialect Instance = new();
 
+    private DuckDbDialect()
+    {
+    }
+
     public override string Name => "DuckDB";
     public override ISqlDialect Sql { get; } = new DuckDbSql();
     public override ITypeMappingDialect TypeMappings { get; } = new DuckDbTypeMappings();
@@ -19,7 +23,7 @@ public sealed class DuckDbDialect : AdoNetDialect
             .TryAdd<IMigrationsSqlGenerator, DuckDbMigrationsSqlGenerator>();
 }
 
-public sealed class DuckDbSql : AnsiSqlDialect
+internal sealed class DuckDbSql : AnsiSqlDialect
 {
     public override string ParameterMarker => "$";
     public override bool ParameterNameIncludesMarker => false;
@@ -35,12 +39,12 @@ public sealed class DuckDbSql : AnsiSqlDialect
 ///     A TIMESTAMPTZ holds an instant, whose parts EXTRACT takes in the session's time zone; DuckDB.NET reads it back at UTC,
 ///     so its parts are taken at UTC.
 /// </summary>
-public sealed class DuckDbFunctions : FunctionSyntax
+internal sealed class DuckDbFunctions : FunctionSyntax
 {
     public override string? OffsetDateTime => "({0} AT TIME ZONE 'UTC')";
 }
 
-public sealed class DuckDbTypeMappings : AnsiTypeMappings
+internal sealed class DuckDbTypeMappings : AnsiTypeMappings
 {
     public override string? GetStoreType(Type clrType)
         => clrType == typeof(byte[]) ? "BLOB" : base.GetStoreType(clrType);

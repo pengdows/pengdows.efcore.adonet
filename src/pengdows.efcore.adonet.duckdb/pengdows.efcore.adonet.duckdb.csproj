@@ -6,4 +6,7 @@
     <ProjectReference Include="..\pengdows.efcore.adonet\pengdows.efcore.adonet.csproj" />
     <PackageReference Include="DuckDB.NET.Data" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="pengdows.efcore.adonet.duckdb.Tests" />
+  </ItemGroup>
 </Project>

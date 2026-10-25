@@ -11,7 +11,7 @@ namespace pengdows.efcore.adonet.Storage;
 ///     <see cref="DbProviderFactory.CreateDataSource" />. EF's base class opens late and closes early around each operation,
 ///     so pooling stays with the underlying provider.
 /// </summary>
-public class AdoNetRelationalConnection : RelationalConnection
+internal class AdoNetRelationalConnection : RelationalConnection
 {
     private readonly AdoNetOptionsExtension _extension;
     private readonly AdoNetDataSources _dataSources;

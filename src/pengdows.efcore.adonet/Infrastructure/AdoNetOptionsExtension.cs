@@ -35,11 +35,11 @@ public class AdoNetOptionsExtension : RelationalOptionsExtension
         => _info ??= new ExtensionInfo(this);
 
     /// <summary>Used with <see cref="RelationalOptionsExtension.ConnectionString" /> to create connections.</summary>
-    public virtual DbProviderFactory? ProviderFactory
+    internal DbProviderFactory? ProviderFactory
         => _providerFactory;
 
     /// <summary>When set, connections come from here; the caller owns its lifetime (and its pool).</summary>
-    public virtual DbDataSource? DataSource
+    internal DbDataSource? DataSource
         => _dataSource;
 
     /// <summary>The dialect from <c>UseDialect</c>, else the one registered for the configured factory.</summary>

@@ -33,7 +33,7 @@ public sealed class MySqlDialect : AdoNetDialect
             .TryAdd<IHistoryRepository, MySqlHistoryRepository>();
 }
 
-public sealed class MySqlSql(bool backslashEscapes = true) : AnsiSqlDialect
+internal sealed class MySqlSql(bool backslashEscapes = true) : AnsiSqlDialect
 {
     public override string IdentifierQuotePrefix => "`";
     public override string IdentifierQuoteSuffix => "`";
@@ -58,7 +58,7 @@ public sealed class MySqlSql(bool backslashEscapes = true) : AnsiSqlDialect
 ///     <c>||</c> means OR. FLOOR and CEILING of a DECIMAL return BIGINT; adding 0.0 keeps the result a decimal. The SECOND
 ///     part is already whole, and CAST has no INTEGER target.
 /// </summary>
-public sealed class MySqlFunctions : FunctionSyntax
+internal sealed class MySqlFunctions : FunctionSyntax
 {
     public override string? Second => "EXTRACT(SECOND FROM {0})";
     public override string Concat => "CONCAT({0}, {1})";
@@ -66,7 +66,7 @@ public sealed class MySqlFunctions : FunctionSyntax
     public override string? Ceiling => "(CEILING({0}) + 0.0)";
 }
 
-public sealed class MySqlTypeMappings : AnsiTypeMappings
+internal sealed class MySqlTypeMappings : AnsiTypeMappings
 {
     private static readonly Dictionary<Type, string> StoreTypes = new()
     {
