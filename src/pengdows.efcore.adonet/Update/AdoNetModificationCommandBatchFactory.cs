@@ -9,19 +9,23 @@ internal class AdoNetModificationCommandBatch(ModificationCommandBatchFactoryDep
     : AffectedCountModificationCommandBatch(dependencies, maxBatchSize);
 
 /// <summary>
-///     One statement per command, whose affected row count is read from <see cref="System.Data.Common.DbDataReader.RecordsAffected" />
-///     (valid after the reader is closed) rather than from a result set.
+///     Commands whose affected row count is read from <see cref="System.Data.Common.DbDataReader.RecordsAffected" />
+///     (valid after the reader is closed) rather than from a result set. The batch size is one for providers that cannot
+///     execute multiple statements and larger when they explicitly support it.
 /// </summary>
-internal class AdoNetRecordsAffectedModificationCommandBatch(ModificationCommandBatchFactoryDependencies dependencies)
-    : AffectedCountModificationCommandBatch(dependencies, maxBatchSize: 1)
+internal class AdoNetRecordsAffectedModificationCommandBatch(
+    ModificationCommandBatchFactoryDependencies dependencies,
+    int maxBatchSize)
+    : AffectedCountModificationCommandBatch(dependencies, maxBatchSize)
 {
     protected override void Consume(RelationalDataReader reader)
     {
         base.Consume(reader);
 
-        if (RowsAffected(reader) is { } rowsAffected and not 1)
+        if (RowsAffected(reader) is { } rowsAffected && rowsAffected != ModificationCommands.Count)
         {
-            ThrowAggregateUpdateConcurrencyException(reader, commandIndex: 1, expectedRowsAffected: 1, rowsAffected);
+            ThrowAggregateUpdateConcurrencyException(
+                reader, commandIndex: ModificationCommands.Count, expectedRowsAffected: ModificationCommands.Count, rowsAffected);
         }
     }
 
@@ -29,16 +33,19 @@ internal class AdoNetRecordsAffectedModificationCommandBatch(ModificationCommand
     {
         await base.ConsumeAsync(reader, cancellationToken).ConfigureAwait(false);
 
-        if (RowsAffected(reader) is { } rowsAffected and not 1)
+        if (RowsAffected(reader) is { } rowsAffected && rowsAffected != ModificationCommands.Count)
         {
             await ThrowAggregateUpdateConcurrencyExceptionAsync(
-                    reader, commandIndex: 1, expectedRowsAffected: 1, rowsAffected, cancellationToken)
+                    reader, commandIndex: ModificationCommands.Count, expectedRowsAffected: ModificationCommands.Count, rowsAffected,
+                    cancellationToken)
                 .ConfigureAwait(false);
         }
     }
 
     private int? RowsAffected(RelationalDataReader reader)
-        => ResultSetMappings is [ResultSetMapping.NoResults] ? reader.DbDataReader.RecordsAffected : null;
+        => ResultSetMappings.All(mapping => mapping == ResultSetMapping.NoResults)
+            ? reader.DbDataReader.RecordsAffected
+            : null;
 }
 
 /// <summary>
@@ -57,8 +64,10 @@ internal class AdoNetModificationCommandBatchFactory(
         : 1;
 
     public virtual ModificationCommandBatch Create()
-        => sql.Keys is SequenceKeyRetrieval
-            ? new AdoNetRecordsAffectedModificationCommandBatch(dependencies)
+        => sql.Keys is SequenceKeyRetrieval && !capabilities.SupportsMultipleStatementsPerCommand
+            ? new AdoNetRecordsAffectedModificationCommandBatch(dependencies, 1)
+            : sql.Keys is SequenceKeyRetrieval
+                ? new AdoNetRecordsAffectedModificationCommandBatch(dependencies, _maxBatchSize)
             : _maxBatchSize == 1
                 ? new SingularModificationCommandBatch(dependencies)
                 : new AdoNetModificationCommandBatch(dependencies, _maxBatchSize);

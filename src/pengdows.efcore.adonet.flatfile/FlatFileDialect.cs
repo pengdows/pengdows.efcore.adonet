@@ -17,7 +17,7 @@ public sealed class FlatFileDialect : AdoNetDialect
     public override IDatabaseCapabilities Capabilities { get; } = new DatabaseCapabilities
     {
         SupportsMultipleStatementsPerCommand = true,
-        DefaultMaxBatchSize = 1
+        DefaultMaxBatchSize = 128
     };
 }
 
