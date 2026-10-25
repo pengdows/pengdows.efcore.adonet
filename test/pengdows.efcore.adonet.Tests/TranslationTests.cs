@@ -138,8 +138,16 @@ public class TranslationTests
         Assert.Contains(@"EXTRACT(DAY FROM ""i"".""At"")", Ansi(c => c.Items.Select(i => i.At.Day)));
         Assert.Contains(@"EXTRACT(HOUR FROM ""i"".""At"")", Ansi(c => c.Items.Select(i => i.At.Hour)));
         Assert.Contains(@"EXTRACT(MINUTE FROM ""i"".""At"")", Ansi(c => c.Items.Select(i => i.At.Minute)));
-        Assert.Contains(@"EXTRACT(SECOND FROM ""i"".""At"")", Ansi(c => c.Items.Select(i => i.At.Second)));
+        Assert.Contains(@"CAST(FLOOR(EXTRACT(SECOND FROM ""i"".""At"")) AS INTEGER)", Ansi(c => c.Items.Select(i => i.At.Second)));
         Assert.Contains(@"EXTRACT(YEAR FROM ""i"".""Day"")", Ansi(c => c.Items.Select(i => i.Day.Year)));
+    }
+
+    [Fact]
+    public void Date_offset_parts_are_taken_from_the_value_as_the_dialect_writes_it()
+    {
+        Assert.Contains(@"EXTRACT(HOUR FROM ""i"".""AtOffset"")", Ansi(c => c.Items.Select(i => i.AtOffset.Hour)));
+        Assert.Contains(@"DATEPART(year, LOCAL(""i"".""AtOffset""))", Sql(TestDialects.Functions, c => c.Items.Select(i => i.AtOffset.Year)));
+        Assert.Contains(@"DATEPART(year, ""i"".""At"")", Sql(TestDialects.Functions, c => c.Items.Select(i => i.At.Year)));
     }
 
     [Fact]
@@ -173,7 +181,8 @@ public class TranslationTests
         { "Contains(parameter)", i => i.Name!.Contains(i.Name) },
         { "IsNullOrWhiteSpace", i => string.IsNullOrWhiteSpace(i.Name) },
         { "Abs", i => System.Math.Abs(i.Price) > 1 },
-        { "Year", i => i.At.Year > 1 }
+        { "Year", i => i.At.Year > 1 },
+        { "Hour of an offset", i => i.AtOffset.Hour > 1 }
     };
 
     [Theory]
@@ -228,6 +237,7 @@ public sealed class TestFunctions : FunctionSyntax
     public override string Position => "CHARINDEX({0}, {1})";
     public override string Upper => "{{fn UCASE({0})}}";
     public override string Year => "DATEPART(year, {0})";
+    public override string OffsetDateTime => "LOCAL({0})";
     public override string? Sqrt => null;
     public override char LikeEscapeCharacter => '!';
     public override string LikeSpecialCharacters => "%_[";
@@ -260,6 +270,7 @@ public sealed class NoFunctions : FunctionSyntax
     public override string? Trim => null;
     public override string? Abs => null;
     public override string? Year => null;
+    public override string? OffsetDateTime => null;
 }
 
 public static class PluginFunctions

@@ -80,3 +80,7 @@ public class SqliteTranslationConformanceTests(SqliteFixture fixture) : Translat
 public class LegacySqliteBulkConformanceTests(LegacySqliteFixture fixture) : BulkConformanceTests<LegacySqliteFixture>(fixture);
 
 public class LegacySqliteTranslationConformanceTests(LegacySqliteFixture fixture) : TranslationConformanceTests<LegacySqliteFixture>(fixture);
+
+public class SqliteLiteralConformanceTests(SqliteFixture fixture) : LiteralConformanceTests<SqliteFixture>(fixture);
+
+public class LegacySqliteLiteralConformanceTests(LegacySqliteFixture fixture) : LiteralConformanceTests<LegacySqliteFixture>(fixture);

@@ -13,15 +13,7 @@ public abstract class BulkConformanceTests<TFixture>(TFixture fixture) : IClassF
 
     public async ValueTask InitializeAsync()
     {
-        if (Fixture.SkipReason is { } skipReason)
-        {
-            Assert.Skip(skipReason);
-        }
-
-        if (Fixture.KnownEngineGaps.TryGetValue(TestContext.Current.Test!.TestCase.TestMethodName ?? "", out var reason))
-        {
-            Assert.Skip(reason);
-        }
+        Fixture.SkipIfNotRunnable();
 
         await Fixture.ResetAsync();
     }

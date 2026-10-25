@@ -26,10 +26,10 @@ public class SqlServerQueryStringFactory(IRelationalTypeMappingSource typeMappin
             var typeName = TypeName(parameter);
             builder.Append("DECLARE ").Append(parameter.ParameterName).Append(' ').Append(typeName).Append(" = ");
             builder.Append(
-                parameter.Value is null || parameter.Value == DBNull.Value
+                (parameter.Value is null) || (parameter.Value == DBNull.Value)
                     ? "NULL"
-                    : typeMappingSource.FindMapping(parameter.Value.GetType(), typeName)?.GenerateSqlLiteral(parameter.Value)
-                    ?? parameter.Value.ToString());
+                    : (typeMappingSource.FindMapping(parameter.Value.GetType(), typeName)?.GenerateSqlLiteral(parameter.Value)
+                        ?? parameter.Value.ToString()));
             builder.AppendLine(";");
         }
 
@@ -58,7 +58,7 @@ public class SqlServerQueryStringFactory(IRelationalTypeMappingSource typeMappin
                 SqlDbType.Money => "money",
                 SqlDbType.NChar => "nchar" + Size(parameter),
                 SqlDbType.NText => "ntext",
-                SqlDbType.NVarChar => "nvarchar" + SizeOrMax(parameter),
+                SqlDbType.NVarChar => "nvarchar" + SizeOrMax(parameter, 4000),
                 SqlDbType.Real => "real",
                 SqlDbType.SmallDateTime => "smalldatetime",
                 SqlDbType.SmallInt => "smallint",
@@ -70,8 +70,8 @@ public class SqlServerQueryStringFactory(IRelationalTypeMappingSource typeMappin
                 SqlDbType.TinyInt => "tinyint",
                 SqlDbType.Udt => sql.UdtTypeName,
                 SqlDbType.UniqueIdentifier => "uniqueIdentifier",
-                SqlDbType.VarBinary => "varbinary" + SizeOrMax(parameter),
-                SqlDbType.VarChar => "varchar" + SizeOrMax(parameter),
+                SqlDbType.VarBinary => "varbinary" + SizeOrMax(parameter, 8000),
+                SqlDbType.VarChar => "varchar" + SizeOrMax(parameter, 8000),
                 SqlDbType.Xml => "xml",
                 _ => "sql_variant"
             };
@@ -79,8 +79,9 @@ public class SqlServerQueryStringFactory(IRelationalTypeMappingSource typeMappin
     private static string Size(DbParameter parameter)
         => Facet(parameter.Size);
 
-    private static string SizeOrMax(DbParameter parameter)
-        => parameter.Size == -1 ? "(max)" : Size(parameter);
+    // SqlClient sizes an unsized parameter to its value, which may be longer than the bounded type allows.
+    private static string SizeOrMax(DbParameter parameter, int bound)
+        => (parameter.Size == -1) || (parameter.Size > bound) ? "(max)" : Size(parameter);
 
     private static string Facet(int value)
         => value > 0 ? $"({value.ToString(CultureInfo.InvariantCulture)})" : "";

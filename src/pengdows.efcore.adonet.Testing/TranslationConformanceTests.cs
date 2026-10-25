@@ -10,14 +10,14 @@ namespace pengdows.efcore.adonet.Testing;
 public abstract class TranslationConformanceTests<TFixture>(TFixture fixture) : IClassFixture<TFixture>, IAsyncLifetime
     where TFixture : ProviderFixture
 {
-    // Spaces to trim, LIKE wildcards and the usual escape character to match literally, mixed case. The rating is no
-    // rounding midpoint: .NET rounds those to even, SQL away from zero.
+    // Spaces to trim, LIKE wildcards (and SQL Server's [) and the usual escape character to match literally, mixed case.
+    // The rating is no rounding midpoint: .NET rounds those to even, SQL away from zero. The time has a fraction of a second.
     private static readonly Blog Seeded = new()
     {
-        Name = @"  Ab%_c\d  ",
+        Name = @"  Ab%_c\d[x]  ",
         Rating = 12.37m,
         IsActive = true,
-        CreatedAt = new DateTime(2024, 3, 5, 6, 7, 8, DateTimeKind.Unspecified),
+        CreatedAt = new DateTime(2024, 3, 5, 6, 7, 8, 500, DateTimeKind.Unspecified),
         ExternalId = Guid.NewGuid()
     };
 
@@ -28,15 +28,7 @@ public abstract class TranslationConformanceTests<TFixture>(TFixture fixture) : 
 
     public async ValueTask InitializeAsync()
     {
-        if (Fixture.SkipReason is { } skipReason)
-        {
-            Assert.Skip(skipReason);
-        }
-
-        if (Fixture.KnownEngineGaps.TryGetValue(TestContext.Current.Test!.TestCase.TestMethodName ?? "", out var reason))
-        {
-            Assert.Skip(reason);
-        }
+        Fixture.SkipIfNotRunnable();
 
         await Fixture.ResetAsync();
         await using var context = Fixture.CreateContext();
@@ -96,6 +88,7 @@ public abstract class TranslationConformanceTests<TFixture>(TFixture fixture) : 
     [Fact]
     public async Task Substring()
     {
+        await Server(b => b.Name.Substring(1));
         await Server(b => b.Name.Substring(3));
         await Server(b => b.Name.Substring(2, 3));
     }
@@ -121,6 +114,8 @@ public abstract class TranslationConformanceTests<TFixture>(TFixture fixture) : 
         await Matches(b => b.Name.Contains(@"%_c\"));
         await Matches(b => b.Name.Contains("b%c"));
         await Matches(b => b.Name.Contains(""));
+        await Matches(b => b.Name.Contains("[x]"));
+        await Matches(b => b.Name.EndsWith("[x]  "));
     }
 
     [Fact]
@@ -169,5 +164,6 @@ public abstract class TranslationConformanceTests<TFixture>(TFixture fixture) : 
         await Server(b => b.CreatedAt.Hour);
         await Server(b => b.CreatedAt.Minute);
         await Server(b => b.CreatedAt.Second);
+        await Matches(b => b.CreatedAt.Second == 8);
     }
 }

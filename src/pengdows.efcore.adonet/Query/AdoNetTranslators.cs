@@ -234,6 +234,11 @@ public class AdoNetMemberTranslator(
                 }
                 : null;
 
+        if (type == typeof(DateTimeOffset))
+        {
+            template = functions.OffsetDateTime is { } offset ? template?.Replace("{0}", offset, StringComparison.Ordinal) : null;
+        }
+
         return sqlExpressionFactory.Call(template, [instance], typeof(int), typeMappingSource.FindMapping(typeof(int)));
     }
 }

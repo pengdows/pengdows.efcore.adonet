@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.DependencyInjection;
@@ -43,9 +44,13 @@ public sealed class MySqlSql : AnsiSqlDialect
         => "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_SCHEMA = DATABASE()";
 }
 
-/// <summary><c>||</c> means OR. FLOOR and CEILING of a DECIMAL return BIGINT; adding 0.0 keeps the result a decimal.</summary>
+/// <summary>
+///     <c>||</c> means OR. FLOOR and CEILING of a DECIMAL return BIGINT; adding 0.0 keeps the result a decimal. The SECOND
+///     part is already whole, and CAST has no INTEGER target.
+/// </summary>
 public sealed class MySqlFunctions : FunctionSyntax
 {
+    public override string? Second => "EXTRACT(SECOND FROM {0})";
     public override string Concat => "CONCAT({0}, {1})";
     public override string? Floor => "(FLOOR({0}) + 0.0)";
     public override string? Ceiling => "(CEILING({0}) + 0.0)";
@@ -66,6 +71,28 @@ public sealed class MySqlTypeMappings : AnsiTypeMappings
         [typeof(Guid)] = "CHAR(36)",
         [typeof(byte[])] = "LONGBLOB"
     };
+
+    private static readonly TimeSpan MaxTime = new(838, 59, 59);
+
+    // TIME spans -838:59:59 to 838:59:59 and counts hours past a day; outside that MySQL would clip the value.
+    public override string FormatLiteral(object value, string storeType, string literal)
+    {
+        if (value is not TimeSpan span)
+        {
+            return literal;
+        }
+
+        if (span.Duration() > MaxTime)
+        {
+            throw new ArgumentOutOfRangeException(nameof(value), span, $"MySQL's TIME holds -838:59:59 to 838:59:59; {span} is outside it.");
+        }
+
+        var magnitude = span.Duration();
+        var fraction = (magnitude.Ticks % TimeSpan.TicksPerSecond) == 0 ? "" : magnitude.ToString(@"\.ffffff", CultureInfo.InvariantCulture);
+        return "TIME '" + (span < TimeSpan.Zero ? "-" : "")
+            + ((long)magnitude.TotalHours).ToString("00", CultureInfo.InvariantCulture)
+            + magnitude.ToString(@"\:mm\:ss", CultureInfo.InvariantCulture) + fraction + "'";
+    }
 
     // No time-zone-aware type.
     public override string? GetStoreType(Type clrType)

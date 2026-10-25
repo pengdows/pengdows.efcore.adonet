@@ -45,7 +45,11 @@ public sealed class FlatFileFixture : ProviderFixture
         ["Trimming"] = "pengdows.flatfile 0.2.1-preview.8 trims both ends for TRIM(LEADING FROM x) and TRIM(TRAILING FROM x)",
         ["Replace"] = "pengdows.flatfile 0.2.1-preview.8 has no REPLACE",
         ["Math_on_decimals"] = "pengdows.flatfile 0.2.1-preview.8 has no FLOOR, CEILING or ROUND",
-        ["Math_on_doubles"] = "pengdows.flatfile 0.2.1-preview.8 has no FLOOR, CEILING or ROUND"
+        ["Math_on_doubles"] = "pengdows.flatfile 0.2.1-preview.8 has no FLOOR, CEILING or ROUND",
+
+        // ISO: a timestamp literal with a zone displacement is a TIMESTAMP WITH TIME ZONE. Probed: the engine reads it as a
+        // plain timestamp, then compares a DateTimeOffset with a DateTime and throws.
+        ["Date_offset_constants_and_parts"] = "pengdows.flatfile 0.2.1-preview.8 types TIMESTAMP '...+02:00' without its time zone"
     };
 
     public override IReadOnlyList<string> ModelSequences { get; } =
@@ -93,3 +97,5 @@ public class FlatFileMigrationsConformanceTests(FlatFileFixture fixture) : Migra
 public class FlatFileBulkConformanceTests(FlatFileFixture fixture) : BulkConformanceTests<FlatFileFixture>(fixture);
 
 public class FlatFileTranslationConformanceTests(FlatFileFixture fixture) : TranslationConformanceTests<FlatFileFixture>(fixture);
+
+public class FlatFileLiteralConformanceTests(FlatFileFixture fixture) : LiteralConformanceTests<FlatFileFixture>(fixture);

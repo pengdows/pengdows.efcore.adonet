@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.DependencyInjection;
@@ -52,11 +53,32 @@ public sealed class SqliteTypeMappings : AnsiTypeMappings
             // Every integer is INTEGER, which also makes any integer key the rowid.
             : clrType == typeof(long) || clrType == typeof(short) || clrType == typeof(byte) ? "INTEGER"
             : base.GetStoreType(clrType);
+
+    // SQLite has no date, time or uuid types: Microsoft.Data.Sqlite binds them as text. A constant must be the same text, or
+    // it won't compare equal to what a parameter stored.
+    public override string FormatLiteral(object value, string storeType, string literal)
+        => value switch
+        {
+            DateTime dateTime => Text(dateTime, @"yyyy\-MM\-dd HH\:mm\:ss.FFFFFFF"),
+            DateTimeOffset offset => Text(offset, @"yyyy\-MM\-dd HH\:mm\:ss.FFFFFFFzzz"),
+            DateOnly date => Text(date, @"yyyy\-MM\-dd"),
+            TimeOnly time => Text(time, (time.Ticks % TimeSpan.TicksPerSecond) == 0 ? @"HH\:mm\:ss" : @"HH\:mm\:ss\.fffffff"),
+            TimeSpan span => Text(span, "c"),
+            Guid guid => "'" + guid.ToString().ToUpperInvariant() + "'",
+            _ => literal
+        };
+
+    private static string Text(IFormattable value, string format)
+        => "'" + value.ToString(format, CultureInfo.InvariantCulture) + "'";
 }
 
-/// <summary>Dates are text, so their parts come from STRFTIME.</summary>
+/// <summary>
+///     Dates are text, so their parts come from STRFTIME. STRFTIME moves a time with an offset to UTC, so the offset (always
+///     six characters: +hh:mm) is cut off first, leaving the parts of the value's own time.
+/// </summary>
 public sealed class SqliteFunctions : FunctionSyntax
 {
+    public override string? OffsetDateTime => "SUBSTR({0}, 1, LENGTH({0}) - 6)";
     public override string? TrimStart => "LTRIM({0})";
     public override string? TrimEnd => "RTRIM({0})";
     public override string? Length => "LENGTH({0})";

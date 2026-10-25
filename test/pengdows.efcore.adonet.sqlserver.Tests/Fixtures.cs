@@ -15,12 +15,6 @@ public sealed class SqlServerFixture : ContainerFixture
     protected override void UseProvider(DbContextOptionsBuilder builder)
         => builder.UseAdoNetSqlServer(ConnectionString);
 
-    public override IReadOnlyDictionary<string, string> KnownEngineGaps { get; } = new Dictionary<string, string>
-    {
-        // SQL Server compares strings ignoring trailing spaces, and LEN ignores them too; the official provider writes LEN.
-        ["Length"] = "SQL Server's LEN ignores trailing spaces, as the official provider's translation does"
-    };
-
     protected override IDatabaseContainer CreateContainer()
         => new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-latest").Build();
 
@@ -52,3 +46,5 @@ public class SqlServerMigrationsConformanceTests(SqlServerFixture fixture) : Mig
 public class SqlServerBulkConformanceTests(SqlServerFixture fixture) : BulkConformanceTests<SqlServerFixture>(fixture);
 
 public class SqlServerTranslationConformanceTests(SqlServerFixture fixture) : TranslationConformanceTests<SqlServerFixture>(fixture);
+
+public class SqlServerLiteralConformanceTests(SqlServerFixture fixture) : LiteralConformanceTests<SqlServerFixture>(fixture);

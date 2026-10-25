@@ -15,6 +15,14 @@ public sealed class PostgreSqlFixture : ContainerFixture
     protected override void UseProvider(DbContextOptionsBuilder builder)
         => builder.UseAdoNetPostgreSql(ConnectionString);
 
+    // Npgsql writes timestamptz from UTC values only.
+    public override TimeSpan StorableOffset
+        => TimeSpan.Zero;
+
+    // A session time zone other than UTC, so nothing passes only because the server's zone happens to be UTC.
+    public override string ConnectionString
+        => base.ConnectionString + ";Timezone=America/New_York";
+
     protected override IDatabaseContainer CreateContainer()
         => new PostgreSqlBuilder("postgres:17-alpine").Build();
 
@@ -46,3 +54,5 @@ public class PostgreSqlMigrationsConformanceTests(PostgreSqlFixture fixture) : M
 public class PostgreSqlBulkConformanceTests(PostgreSqlFixture fixture) : BulkConformanceTests<PostgreSqlFixture>(fixture);
 
 public class PostgreSqlTranslationConformanceTests(PostgreSqlFixture fixture) : TranslationConformanceTests<PostgreSqlFixture>(fixture);
+
+public class PostgreSqlLiteralConformanceTests(PostgreSqlFixture fixture) : LiteralConformanceTests<PostgreSqlFixture>(fixture);

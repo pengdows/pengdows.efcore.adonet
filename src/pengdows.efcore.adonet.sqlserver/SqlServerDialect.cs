@@ -49,17 +49,19 @@ public sealed class SqlServerSql : AnsiSqlDialect
 }
 
 /// <summary>
-///     As the official provider writes them. LEN ignores trailing spaces, as SQL Server's string comparison does; it returns
-///     bigint for MAX types, hence the CAST. CHARINDEX finds an empty string nowhere; .NET finds it at 0.
+///     Mostly as the official provider writes them. LEN ignores trailing spaces, so lengths count after spaces are replaced
+///     (one pass over the string; the official provider writes plain LEN and gets them wrong), and a substring to the end
+///     is bounded by DATALENGTH, which is never less than the length. LEN returns bigint for MAX types, hence the CAST.
+///     CHARINDEX finds an empty string nowhere; .NET finds it at 0.
 /// </summary>
 public sealed class SqlServerFunctions : FunctionSyntax
 {
     public override string Concat => "{0} + {1}";
     public override string? TrimStart => "LTRIM({0})";
     public override string? TrimEnd => "RTRIM({0})";
-    public override string? Length => "CAST(LEN({0}) AS int)";
+    public override string? Length => "CAST(LEN(REPLACE({0}, ' ', '_')) AS int)";
     public override string? Substring => "SUBSTRING({0}, {1}, {2})";
-    public override string? SubstringFrom => "SUBSTRING({0}, {1}, LEN({0}))";
+    public override string? SubstringFrom => "SUBSTRING({0}, {1}, DATALENGTH({0}))";
     public override string? Position => "CAST(CASE WHEN DATALENGTH({0}) = 0 THEN 1 ELSE CHARINDEX({0}, {1}) END AS int)";
     public override string? Round => "ROUND({0}, 0)";
     public override string? Year => "DATEPART(year, {0})";
@@ -121,7 +123,7 @@ public sealed class SqlServerTypeMappings : AnsiTypeMappings
         => value switch
         {
             short or byte or long or float => $"CAST({literal} AS {storeType})",
-            double d => literal.Contains('E') || literal.Contains('e') || double.IsNaN(d) || double.IsInfinity(d) ? literal : literal + "E0",
+            double d => (literal.Contains('E') || literal.Contains('e') || double.IsNaN(d) || double.IsInfinity(d)) ? literal : literal + "E0",
             DateTime dateTime => Format(dateTime, BaseName(storeType) switch
             {
                 "date" => "yyyy-MM-dd",
@@ -131,11 +133,23 @@ public sealed class SqlServerTypeMappings : AnsiTypeMappings
             }),
             DateOnly date => Format(date, "yyyy-MM-dd"),
             TimeOnly time => Format(time, time.Ticks % TimeSpan.TicksPerSecond == 0 ? @"HH\:mm\:ss" : @"HH\:mm\:ss" + Fraction('F', Precision(storeType), @"\.")),
-            TimeSpan span => Format(span, span.Milliseconds == 0 ? @"hh\:mm\:ss" : @"hh\:mm\:ss" + Fraction('F', Precision(storeType), @"\.")),
+            TimeSpan span => TimeLiteral(span, storeType),
             DateTimeOffset offset => Format(offset, "yyyy-MM-ddTHH:mm:ss" + Fraction('f', Precision(storeType)) + "zzz"),
             byte[] bytes => "0x" + Convert.ToHexString(bytes),
             _ => literal
         };
+
+    // time holds a time of day: a span outside [0, 24h) has no time literal, and writing its hours alone would change it.
+    private static string TimeLiteral(TimeSpan span, string storeType)
+    {
+        if ((span < TimeSpan.Zero) || (span >= TimeSpan.FromDays(1)))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(span), span, $"A '{storeType}' column holds a time of day, from 00:00:00 up to 24 hours; {span} isn't one.");
+        }
+
+        return Format(span, (span.Ticks % TimeSpan.TicksPerSecond) == 0 ? @"hh\:mm\:ss" : @"hh\:mm\:ss" + Fraction('F', Precision(storeType), @"\."));
+    }
 
     private static string BaseName(string storeType)
         => storeType.IndexOf('(') is > 0 and var parenthesis ? storeType[..parenthesis].Trim() : storeType;
@@ -160,8 +174,8 @@ public sealed class SqlServerTypeMappings : AnsiTypeMappings
         => ClrTypes.TryGetValue(storeTypeBase, out var types) ? types : base.GetClrTypes(storeTypeBase);
 
     public override string? GetStoreType(Type clrType, int? size, int? precision, int? scale, bool fixedLength)
-        => clrType == typeof(string) && size != null ? (size <= 4000 ? fixedLength ? $"nchar({size})" : $"nvarchar({size})" : "nvarchar(max)")
-            : clrType == typeof(byte[]) && size != null ? (size <= 8000 ? $"varbinary({size})" : "varbinary(max)")
-            : clrType == typeof(decimal) && precision != null ? $"decimal({precision},{scale ?? 0})"
+        => (clrType == typeof(string)) && (size != null) ? (size <= 4000 ? (fixedLength ? $"nchar({size})" : $"nvarchar({size})") : "nvarchar(max)")
+            : (clrType == typeof(byte[])) && (size != null) ? (size <= 8000 ? $"varbinary({size})" : "varbinary(max)")
+            : (clrType == typeof(decimal)) && (precision != null) ? $"decimal({precision},{scale ?? 0})"
             : base.GetStoreType(clrType, size, precision, scale, fixedLength);
 }

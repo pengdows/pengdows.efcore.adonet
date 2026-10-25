@@ -109,6 +109,8 @@ public class SqlServerSqlTests
         { "time", new TimeOnly(3, 4, 5), "'03:04:05'" },
         { "time", new TimeOnly(3, 4, 5, 6), "'03:04:05.006'" },
         { "time", new TimeSpan(3, 4, 5), "'03:04:05'" },
+        { "time", new TimeSpan(1), "'00:00:00.0000001'" },
+        { "time(3)", new TimeSpan(0, 3, 4, 5, 6), "'03:04:05.006'" },
         { "datetimeoffset", new DateTimeOffset(1998, 1, 2, 3, 4, 5, TimeSpan.FromHours(1)), "'1998-01-02T03:04:05.0000000+01:00'" },
         { "varbinary(max)", new byte[] { 1, 0xAB }, "0x01AB" },
         { "decimal(18,2)", 1.5m, "1.5" }
@@ -125,6 +127,17 @@ public class SqlServerSqlTests
         Assert.Equal(literal, mapping.GenerateSqlLiteral(value));
     }
 
+    [Theory]
+    [InlineData(-1L)]
+    [InlineData(864_000_000_000L)]
+    public void Time_spans_outside_a_day_are_refused_as_time_literals(long ticks)
+    {
+        using var context = Context(b => b.UseAdoNetSqlServer("Server=localhost"));
+        var mapping = context.GetService<IRelationalTypeMappingSource>().FindMapping(typeof(TimeSpan), "time")!;
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => mapping.GenerateSqlLiteral(new TimeSpan(ticks)));
+    }
+
     [Fact]
     public void Query_strings_declare_their_parameters_as_runnable_t_sql()
     {
@@ -137,6 +150,17 @@ public class SqlServerSqlTests
 
         Assert.StartsWith("DECLARE @name nvarchar(4000) = N'it''s';\nDECLARE @rating decimal(18,2) = 2.5;\n", sql);
         Assert.Contains("\n\nSELECT [b].[Id]", sql);
+    }
+
+    [Fact]
+    public void Query_strings_declare_values_longer_than_a_bounded_type_as_max()
+    {
+        using var context = Context(b => b.UseAdoNetSqlServer("Server=localhost"));
+        var name = new string('x', 4001);
+
+        var sql = context.Blogs.Where(b => b.Name == name).ToQueryString();
+
+        Assert.StartsWith("DECLARE @name nvarchar(max) = N'xxx", sql);
     }
 
     [Fact]

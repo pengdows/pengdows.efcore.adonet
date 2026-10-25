@@ -52,8 +52,15 @@ public class FunctionSyntax
     public virtual string? Hour => "EXTRACT(HOUR FROM {0})";
     public virtual string? Minute => "EXTRACT(MINUTE FROM {0})";
 
-    /// <summary>Whole seconds.</summary>
-    public virtual string? Second => "EXTRACT(SECOND FROM {0})";
+    /// <summary>Whole seconds. ISO's SECOND field keeps the fraction (8.5), so the default floors it.</summary>
+    public virtual string? Second => "CAST(FLOOR(EXTRACT(SECOND FROM {0})) AS INTEGER)";
+
+    /// <summary>
+    ///     A <see cref="DateTimeOffset" /> as written before a date part is taken from it, so the parts are those of the offset
+    ///     the value reads back with, as .NET's are; it fills <c>{0}</c> of <see cref="Year" />...<see cref="Second" />. ISO's
+    ///     parts of a TIMESTAMP WITH TIME ZONE are already the value's own. Null leaves the parts untranslated.
+    /// </summary>
+    public virtual string? OffsetDateTime => "{0}";
 
     /// <summary>Escapes LIKE wildcards in constant patterns; also written as the pattern's <c>ESCAPE</c> character.</summary>
     public virtual char LikeEscapeCharacter => '\\';

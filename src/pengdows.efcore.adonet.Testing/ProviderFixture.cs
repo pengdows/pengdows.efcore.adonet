@@ -1,5 +1,7 @@
 using System.Data.Common;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace pengdows.efcore.adonet.Testing;
 
@@ -9,6 +11,7 @@ namespace pengdows.efcore.adonet.Testing;
 /// </summary>
 public abstract class ProviderFixture : IAsyncLifetime
 {
+    private readonly HashSet<Type> _created = [];
     private DbContextOptions<BlogContext>? _options;
 
     public abstract DbProviderFactory Factory { get; }
@@ -21,6 +24,10 @@ public abstract class ProviderFixture : IAsyncLifetime
     ///     keyed by test method name. They are reported as skipped with the reason instead of silently passing.
     /// </summary>
     public virtual IReadOnlyDictionary<string, string> KnownEngineGaps { get; } = new Dictionary<string, string>();
+
+    /// <summary>The offset a <see cref="DateTimeOffset" /> is saved with: one that moves the date, unless the driver refuses it.</summary>
+    public virtual TimeSpan StorableOffset
+        => TimeSpan.FromHours(2);
 
     /// <summary>Sequences the dialect creates for the migrations tests' tables, dropped between tests.</summary>
     public virtual IReadOnlyList<string> ModelSequences { get; } = [];
@@ -57,6 +64,34 @@ public abstract class ProviderFixture : IAsyncLifetime
         var builder = new DbContextOptionsBuilder<TContext>();
         UseProvider(builder);
         return create(builder.ForTestMigrations().Options);
+    }
+
+    /// <summary>Skips the calling test when the database can't be reached, or when it is one of <see cref="KnownEngineGaps" />.</summary>
+    public void SkipIfNotRunnable()
+    {
+        if (SkipReason is { } skipReason)
+        {
+            Assert.Skip(skipReason);
+        }
+
+        if (KnownEngineGaps.TryGetValue(TestContext.Current.Test!.TestCase.TestMethodName ?? "", out var reason))
+        {
+            Assert.Skip(reason);
+        }
+    }
+
+    /// <summary>Creates <typeparamref name="TContext" />'s tables, through the dialect's own DDL, the first time it is asked.</summary>
+    public async Task CreateTablesOnceAsync<TContext>(Func<DbContextOptions<TContext>, TContext> create)
+        where TContext : DbContext
+    {
+        if (_created.Contains(typeof(TContext)))
+        {
+            return;
+        }
+
+        await using var context = CreateContext(create);
+        await context.GetService<IRelationalDatabaseCreator>().CreateTablesAsync();
+        _created.Add(typeof(TContext));
     }
 
     public virtual async ValueTask InitializeAsync()

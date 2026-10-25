@@ -1678,12 +1678,13 @@ WHERE [c].[City] = @cities1
     {
         await base.Filter_non_nullable_value_after_FirstOrDefault_on_empty_collection(async);
 
+        // pengdows: string.Length counts trailing spaces, as .NET does; the official provider's plain LEN doesn't.
         AssertSql(
             """
 SELECT [c].[CustomerID], [c].[Address], [c].[City], [c].[CompanyName], [c].[ContactName], [c].[ContactTitle], [c].[Country], [c].[Fax], [c].[Phone], [c].[PostalCode], [c].[Region]
 FROM [Customers] AS [c]
 WHERE (
-    SELECT TOP(1) CAST(LEN([o].[CustomerID]) AS int)
+    SELECT TOP(1) CAST(LEN(REPLACE([o].[CustomerID], ' ', '_')) AS int)
     FROM [Orders] AS [o]
     WHERE [o].[CustomerID] = N'John Doe') = 0
 """);
