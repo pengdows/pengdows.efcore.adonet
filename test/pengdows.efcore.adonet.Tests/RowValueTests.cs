@@ -28,6 +28,15 @@ public class RowValueTests
     }
 
     [Fact]
+    public void Tuples_compared_with_operators_are_row_values_too()
+    {
+        Assert.Equal(@"(""i"".""Version"", ""i"".""Tiny"") = (1, 2)",
+            Where(TestDialects.Ansi, c => c.Items.Where(i => new Tuple<int, byte>(i.Version, i.Tiny) == new Tuple<int, byte>(1, 2))));
+        Assert.Equal(@"(""i"".""Version"", ""i"".""Tiny"") <> (1, 2)",
+            Where(TestDialects.Ansi, c => c.Items.Where(i => new Tuple<int, byte>(i.Version, i.Tiny) != new Tuple<int, byte>(1, 2))));
+    }
+
+    [Fact]
     public void Value_tuples_compare_as_row_values()
         => Assert.Equal(@"(""i"".""Version"", ""i"".""Tiny"") = (1, 2)",
             Where(TestDialects.Ansi, c => c.Items.Where(i => ValueTuple.Create(i.Version, i.Tiny).Equals(ValueTuple.Create(1, (byte)2)))));

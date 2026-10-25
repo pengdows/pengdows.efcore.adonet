@@ -77,11 +77,30 @@ internal class AdoNetSqlTranslatingExpressionVisitor : RelationalSqlTranslatingE
         return base.VisitMethodCall(methodCallExpression);
     }
 
+    // tuple == other and tuple != other compare the values, as the query's expected results do.
+    protected override Expression VisitBinary(BinaryExpression binaryExpression)
+    {
+        if (_rowValues
+            && (binaryExpression.NodeType is ExpressionType.Equal or ExpressionType.NotEqual)
+            && (TryTranslateTupleComparison(binaryExpression.Left, binaryExpression.Right) is SqlBinaryExpression rowComparison))
+        {
+            return binaryExpression.NodeType == ExpressionType.Equal
+                ? rowComparison
+                : Dependencies.SqlExpressionFactory.Not(rowComparison);
+        }
+
+        return base.VisitBinary(binaryExpression);
+    }
+
     // tuple.Equals(other), both built in the query: (a, b) = (x, y), each pair typed as its own comparison would be.
     private SqlExpression? TryTranslateTupleEquals(MethodCallExpression call)
+        => call is { Method.Name: nameof(Equals), Object: { } instance, Arguments: [var argument] }
+            ? TryTranslateTupleComparison(instance, argument)
+            : null;
+
+    private SqlExpression? TryTranslateTupleComparison(Expression instance, Expression argument)
     {
-        if ((call is not { Method.Name: nameof(Equals), Object: { } instance, Arguments: [var argument] })
-            || !instance.Type.IsAssignableTo(typeof(System.Runtime.CompilerServices.ITuple))
+        if (!instance.Type.IsAssignableTo(typeof(System.Runtime.CompilerServices.ITuple))
             || (RowValueSqlExpression.Elements(instance) is not { } left)
             || (RowValueSqlExpression.Elements(argument) is not { } right)
             || (left.Count != right.Count))
