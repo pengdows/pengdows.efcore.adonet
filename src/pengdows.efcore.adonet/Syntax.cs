@@ -28,7 +28,7 @@ public abstract class PagingSyntax
 
     /// <summary>
     ///     <c>SELECT TOP(m)</c> without an offset, otherwise <c>OFFSET n ROWS FETCH NEXT m ROWS ONLY</c> with
-    ///     <c>ORDER BY (SELECT 1)</c> when the query has no ordering (SQL Server).
+    ///     <c>ORDER BY (SELECT 1)</c> when the query has no ordering, for databases whose OFFSET belongs to ORDER BY.
     /// </summary>
     public static PagingSyntax TopOrOffsetFetch { get; } = new TopOrOffsetFetchPaging();
 
@@ -92,7 +92,7 @@ public abstract class PagingSyntax
             }
         }
 
-        // OFFSET/FETCH is part of ORDER BY on SQL Server.
+        // OFFSET/FETCH is part of ORDER BY here.
         public override void GenerateAfterOrderings(IQuerySqlWriter sql, SelectExpression select)
         {
             if (select is { Orderings.Count: 0, Offset: not null })
@@ -139,13 +139,13 @@ public abstract class BooleanSyntax
     public static BooleanSyntax Native { get; } = new NativeBooleans();
 
     /// <summary>
-    ///     Bools are values only, like SQL Server's BIT: a value used as a predicate becomes <c>x = TRUE</c>, and a condition used
+    ///     Bools are values only, stored as bits: a value used as a predicate becomes <c>x = TRUE</c>, and a condition used
     ///     as a value becomes <c>CASE WHEN ... THEN TRUE ELSE FALSE END</c>, written with the dialect's TRUE/FALSE literals.
     /// </summary>
     public static BooleanSyntax BitValues { get; } = new BitValueBooleans(bitwiseOperators: false);
 
     /// <summary>
-    ///     <see cref="BitValues" />, for a database with bitwise operators on them (SQL Server): a comparison of bool values
+    ///     <see cref="BitValues" />, for a database with bitwise operators on them: a comparison of bool values
     ///     used as a value is <c>a ^ b</c> or <c>~(a ^ b)</c>, and a negated one <c>~a</c>, rather than a <c>CASE</c>.
     /// </summary>
     public static BooleanSyntax BitValuesWithBitwiseOperators { get; } = new BitValueBooleans(bitwiseOperators: true);

@@ -61,7 +61,7 @@ public interface ISqlDialect
 
     /// <summary>
     ///     Where <c>x IN (subquery)</c> over nullable values would need COALESCE and CASE to keep .NET's semantics, write
-    ///     <c>EXISTS</c> instead (as SQL Server's provider does: it costs no more there and reads better).
+    ///     <c>EXISTS</c> instead, for databases where it costs no more and reads better.
     /// </summary>
     bool PreferExistsToIn { get; }
 

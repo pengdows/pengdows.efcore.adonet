@@ -91,6 +91,25 @@ public class DialectContractTests
     }
 
     [Fact]
+    public void Core_source_names_no_database()
+    {
+        var core = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../src/pengdows.efcore.adonet"));
+        string[] names = ["SQL Server", "T-SQL", "PostgreSQL", "Npgsql", "MySQL", "MariaDB", "SQLite", "DuckDB", "Oracle", "SqlClient", "MySqlConnector"];
+
+        var named = Directory.EnumerateFiles(core, "*.cs", SearchOption.AllDirectories)
+            .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+            .SelectMany(f => File.ReadLines(f).Select((line, i) => (File: Path.GetFileName(f), Line: i + 1, Text: line)))
+            // Attribution of code adapted from EF's providers names where it came from.
+            .Where(l => !l.Text.Contains("(MIT, .NET Foundation)", StringComparison.Ordinal))
+            .Where(l => names.Any(n => l.Text.Contains(n, StringComparison.Ordinal)))
+            .Select(l => $"{l.File}:{l.Line}: {l.Text.Trim()}")
+            .ToList();
+
+        Assert.True(Directory.Exists(core), core);
+        Assert.Empty(named);
+    }
+
+    [Fact]
     public void Core_depends_on_no_database_driver()
     {
         var references = typeof(IAdoNetDialect).Assembly.GetReferencedAssemblies().Select(a => a.Name!).ToList();

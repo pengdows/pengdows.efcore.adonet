@@ -103,14 +103,31 @@ public class TranslationTests
     }
 
     [Fact]
-    public void Patterns_from_parameters_and_columns_are_compared_not_matched()
+    public void Patterns_from_parameters_become_escaped_like_parameters_an_index_can_serve()
+    {
+        var p = @"a%b_c\";
+
+        var startsWith = Ansi(c => c.Items.Where(i => i.Name!.StartsWith(p)));
+        Assert.Contains(@"@p_startswith='a\%b\_c\\%'", startsWith);
+        Assert.Contains(@"""i"".""Name"" LIKE @p_startswith ESCAPE '\'", startsWith);
+        Assert.Contains(@"@p_endswith='%a\%b\_c\\'", Ansi(c => c.Items.Where(i => i.Name!.EndsWith(p))));
+        Assert.Contains(@"@p_contains='%a\%b\_c\\%'", Ansi(c => c.Items.Where(i => i.Name!.Contains(p))));
+        Assert.Contains(@"LIKE @p_startswith ESCAPE N'!'", Sql(TestDialects.Functions, c => c.Items.Where(i => i.Name!.StartsWith(p))));
+    }
+
+    [Fact]
+    public void Patterns_from_columns_are_compared_not_matched()
+        => Assert.Contains(@"POSITION(""p"".""Label"" IN ""i"".""Name"") > 0", Ansi(c => c.Items.Where(i => i.Parts.Any(p => i.Name!.Contains(p.Label!)))));
+
+    [Fact]
+    public void Without_an_escape_character_only_wildcard_free_constants_are_matched()
     {
         var p = "ab";
 
-        Assert.Matches(@"SUBSTRING\(""i"".""Name"" FROM 1 FOR CHAR_LENGTH\(@p\w*\)\) = @p", Ansi(c => c.Items.Where(i => i.Name!.StartsWith(p))));
-        Assert.Matches(@"SUBSTRING\(""i"".""Name"" FROM \(CHAR_LENGTH\(""i"".""Name""\) - CHAR_LENGTH\(@p\w*\)\) \+ 1\) = @p", Ansi(c => c.Items.Where(i => i.Name!.EndsWith(p))));
-        Assert.Matches(@"POSITION\(@p\w* IN ""i"".""Name""\) > 0", Ansi(c => c.Items.Where(i => i.Name!.Contains(p))));
-        Assert.Contains(@"POSITION(""p"".""Label"" IN ""i"".""Name"") > 0", Ansi(c => c.Items.Where(i => i.Parts.Any(p => i.Name!.Contains(p.Label!)))));
+        Assert.Contains(@"""i"".""Name"" LIKE 'ab%'", Sql(TestDialects.NoEscape, c => c.Items.Where(i => i.Name!.StartsWith("ab"))));
+        Assert.Contains(@"SUBSTRING(""i"".""Name"" FROM 1 FOR CHAR_LENGTH('a%')) = 'a%'", Sql(TestDialects.NoEscape, c => c.Items.Where(i => i.Name!.StartsWith("a%"))));
+        Assert.Matches(@"SUBSTRING\(""i"".""Name"" FROM 1 FOR CHAR_LENGTH\(@p\w*\)\) = @p", Sql(TestDialects.NoEscape, c => c.Items.Where(i => i.Name!.StartsWith(p))));
+        Assert.Matches(@"POSITION\(@p\w* IN ""i"".""Name""\) > 0", Sql(TestDialects.NoEscape, c => c.Items.Where(i => i.Name!.Contains(p))));
     }
 
     [Fact]
@@ -239,7 +256,7 @@ public sealed class TestFunctions : FunctionSyntax
     public override string Year => "DATEPART(year, {0})";
     public override string OffsetDateTime => "LOCAL({0})";
     public override string? Sqrt => null;
-    public override char LikeEscapeCharacter => '!';
+    public override char? LikeEscapeCharacter => '!';
     public override string LikeSpecialCharacters => "%_[";
 }
 
@@ -259,6 +276,12 @@ public sealed class CastLiteralTypeMappings : AnsiTypeMappings
             byte[] b => "0x" + Convert.ToHexString(b),
             _ => $"CAST({literal} AS {storeType})"
         };
+}
+
+/// <summary>A database whose LIKE has no ESCAPE clause.</summary>
+public sealed class NoEscapeFunctions : FunctionSyntax
+{
+    public override char? LikeEscapeCharacter => null;
 }
 
 /// <summary>A database with none of the functions.</summary>

@@ -36,8 +36,12 @@ public sealed class FlatFileSql : AnsiSqlDialect
     public override FunctionSyntax Functions { get; } = new FlatFileFunctions();
 }
 
-/// <summary>There is no FLOOR; the SECOND field is already whole.</summary>
+/// <summary>
+///     There is no FLOOR; the SECOND field is already whole. LIKE ignores ESCAPE (an escaped pattern never matches), so
+///     patterns that would need escaping are compared by position instead.
+/// </summary>
 public sealed class FlatFileFunctions : FunctionSyntax
 {
+    public override char? LikeEscapeCharacter => null;
     public override string? Second => "EXTRACT(SECOND FROM {0})";
 }

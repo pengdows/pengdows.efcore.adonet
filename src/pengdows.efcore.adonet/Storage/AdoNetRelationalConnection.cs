@@ -64,7 +64,7 @@ public class AdoNetRelationalConnection : RelationalConnection
     }
 
     // DbConnection.Close is documented as safe to call on a closed connection and EF relies on that,
-    // but not every provider honors it (DuckDB.NET throws), so only close what is open.
+    // but not every driver honors it (some throw), so only close what is open.
     protected override void CloseDbConnection()
     {
         if (DbConnection.State != ConnectionState.Closed)

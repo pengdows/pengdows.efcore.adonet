@@ -1,5 +1,4 @@
 using System.Reflection;
-using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Query;
@@ -100,6 +99,8 @@ public class AdoNetStringMethodTranslator(
             ? sqlExpressionFactory.Constant(value + 1, index.TypeMapping)
             : sqlExpressionFactory.Add(index, sqlExpressionFactory.Constant(1));
 
+    // TRIM removes spaces only, so a string of tabs or line breaks isn't white space here as it is in .NET; EF's own
+    // providers translate it the same way.
     private SqlExpression? NullOrWhiteSpace(SqlExpression argument)
     {
         argument = sqlExpressionFactory.ApplyDefaultTypeMapping(argument)!;
@@ -111,31 +112,18 @@ public class AdoNetStringMethodTranslator(
     }
 
     /// <summary>
-    ///     A constant becomes a LIKE pattern, its wildcards escaped. Anything else may itself contain wildcards, so it is
-    ///     compared by position instead.
+    ///     A constant becomes a LIKE pattern, its wildcards escaped (parameters are made patterns by
+    ///     <see cref="AdoNetSqlTranslatingExpressionVisitor" />). Anything else may itself contain wildcards, so it is
+    ///     compared by position instead, as is a constant with wildcards where LIKE has no ESCAPE.
     /// </summary>
     private SqlExpression? Match(SqlExpression instance, SqlExpression value, bool start, bool end)
     {
-        if (value is SqlConstantExpression { Value: string constant })
+        if (value is SqlConstantExpression { Value: string constant } && functions.EscapeLikePattern(constant) is { } pattern)
         {
-            var escape = functions.LikeEscapeCharacter;
-            var pattern = new StringBuilder();
-            var escaped = false;
-            foreach (var c in constant)
-            {
-                if (c == escape || functions.LikeSpecialCharacters.Contains(c))
-                {
-                    pattern.Append(escape);
-                    escaped = true;
-                }
-
-                pattern.Append(c);
-            }
-
             return sqlExpressionFactory.Like(
                 instance,
                 sqlExpressionFactory.Constant((end ? "%" : "") + pattern + (start ? "%" : ""), instance.TypeMapping),
-                escaped ? sqlExpressionFactory.Constant(escape.ToString(), instance.TypeMapping) : null);
+                pattern == constant ? null : sqlExpressionFactory.Constant(functions.LikeEscapeCharacter!.Value.ToString(), instance.TypeMapping));
         }
 
         if (start && end)

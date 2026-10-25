@@ -137,6 +137,14 @@ public class AdoNetOptionsExtension : RelationalOptionsExtension
                 $"Dialect '{dialect.Name}': positional ('?') parameters are not supported; EF Core reuses named parameters within a statement.");
         }
 
+        foreach (var (member, template, arguments) in dialect.Sql.Functions.Templates())
+        {
+            if ((template != null) && (Query.SqlTemplate.Validate(template, arguments) is { } problem))
+            {
+                throw new InvalidOperationException($"Dialect '{dialect.Name}': FunctionSyntax.{member}: {problem}");
+            }
+        }
+
         if (dialect.Sql.Keys is SelectAfterKeyRetrieval && !dialect.Capabilities.SupportsMultipleStatementsPerCommand)
         {
             throw new NotSupportedException(

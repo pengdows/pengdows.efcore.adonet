@@ -35,31 +35,90 @@ public static class SqlTemplate
     }
 
     /// <summary>Writes <paramref name="template" />, visiting each <c>{n}</c> argument where it appears.</summary>
+    /// <exception cref="InvalidOperationException">The template is malformed or names an argument there isn't.</exception>
     public static void Write(string template, IReadOnlyList<Expression> arguments, Action<string> append, Action<Expression> visit)
     {
         var text = new StringBuilder();
-        for (var i = 0; i < template.Length; i++)
+        foreach (var part in Parse(template, arguments.Count))
         {
-            var c = template[i];
-            if ((c == '{' || c == '}') && i + 1 < template.Length && template[i + 1] == c)
+            if (part.Argument is { } argument)
             {
-                text.Append(c);
-                i++;
-            }
-            else if (c == '{')
-            {
-                var end = template.IndexOf('}', i);
                 append(text.ToString());
                 text.Clear();
-                visit(arguments[int.Parse(template.AsSpan(i + 1, end - i - 1))]);
-                i = end;
+                visit(arguments[argument]);
+                continue;
             }
-            else
-            {
-                text.Append(c);
-            }
+
+            text.Append(part.Text);
         }
 
         append(text.ToString());
     }
+
+    /// <summary>Why <paramref name="template" /> can't be written with <paramref name="arguments" /> arguments; null when it can.</summary>
+    internal static string? Validate(string template, int arguments)
+    {
+        try
+        {
+            _ = Parse(template, arguments).Count;
+            return null;
+        }
+        catch (InvalidOperationException e)
+        {
+            return e.Message;
+        }
+    }
+
+    private readonly record struct Part(string? Text, int? Argument);
+
+    // Literal text, {{ and }} as braces, and {n} for 0 <= n < arguments; anything else is an error naming the position.
+    private static List<Part> Parse(string template, int arguments)
+    {
+        var parts = new List<Part>();
+        var i = 0;
+        while (i < template.Length)
+        {
+            var c = template[i];
+            var doubled = (i + 1 < template.Length) && (template[i + 1] == c);
+            if ((c is '{' or '}') && doubled)
+            {
+                parts.Add(new Part(c.ToString(), null));
+                i += 2;
+                continue;
+            }
+
+            if (c == '}')
+            {
+                throw Malformed(template, i, "a '}' that closes nothing; write '}}' for a brace");
+            }
+
+            if (c != '{')
+            {
+                parts.Add(new Part(c.ToString(), null));
+                i++;
+                continue;
+            }
+
+            var end = template.IndexOf('}', i);
+            if (end < 0)
+            {
+                throw Malformed(template, i, "a '{' that is never closed");
+            }
+
+            var index = template.AsSpan(i + 1, end - i - 1);
+            if (!int.TryParse(index, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var argument)
+                || (argument >= arguments))
+            {
+                throw Malformed(template, i, $"'{{{index}}}', which is not an argument from {{0}} to {{{arguments - 1}}}");
+            }
+
+            parts.Add(new Part(null, argument));
+            i = end + 1;
+        }
+
+        return parts;
+    }
+
+    private static InvalidOperationException Malformed(string template, int position, string problem)
+        => new($"The SQL template \"{template}\" has {problem}, at position {position}.");
 }

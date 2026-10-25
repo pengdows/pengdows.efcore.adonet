@@ -5,7 +5,7 @@ namespace pengdows.efcore.adonet.Storage;
 
 /// <summary>
 ///     The data sources the provider creates for a factory and connection string: one per pair, since drivers with their own
-///     (Npgsql, MySqlConnector) pool per data source and one per context would mean a pool per context. A singleton of EF's
+///     data source pool per data source and one per context would mean a pool per context. A singleton of EF's
 ///     internal service provider, which owns it: the data sources, their pools and the connection strings they hold are
 ///     released when that provider is disposed. Data sources the application passes in are the application's.
 /// </summary>

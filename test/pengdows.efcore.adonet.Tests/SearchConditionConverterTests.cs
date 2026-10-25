@@ -56,6 +56,16 @@ public class SearchConditionConverterTests
     }
 
     [Fact]
+    public void A_negated_inequality_becomes_an_equality()
+    {
+        var notEqual = new SqlBinaryExpression(ExpressionType.NotEqual, _a, _b, typeof(bool), _bit);
+
+        var test = Assert.IsType<SqlBinaryExpression>(Test(Value(Not(notEqual))));
+
+        Assert.Equal(ExpressionType.Equal, test.OperatorType);
+    }
+
+    [Fact]
     public void A_negated_comparison_with_a_constant_flips_the_constant_on_either_side()
     {
         var right = Assert.IsType<SqlBinaryExpression>(Test(Value(Not(Equal(_a, True)))));

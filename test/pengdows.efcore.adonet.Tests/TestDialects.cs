@@ -101,6 +101,7 @@ public static class TestDialects
     public static readonly IAdoNetDialect Functions = new PartsDialect(
         "Functions",
         new PartsSql(functions: new TestFunctions(), stringLiteral: v => "N'" + v.Replace("'", "''").Replace(@"\", @"\\") + "'"));
+    public static readonly IAdoNetDialect NoEscape = new PartsDialect("No escape", new PartsSql(functions: new NoEscapeFunctions()));
     public static readonly IAdoNetDialect NoFunctions = new PartsDialect("No functions", new PartsSql(functions: new NoFunctions()));
 
     public static readonly IAdoNetDialect ReverseTranslator = new PartsDialect(

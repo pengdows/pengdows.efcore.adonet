@@ -41,7 +41,7 @@ public class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencies,
         return base.VisitSqlBinary(sqlBinaryExpression);
     }
 
-    // SQL's standard precedence, highest first (T-SQL documents the same order), so only what needs them gets parentheses.
+    // SQL's standard precedence, highest first (vendors document the same order), so only what needs them gets parentheses.
     protected override bool TryGetOperatorInfo(SqlExpression expression, out int precedence, out bool isAssociative)
     {
         (precedence, isAssociative) = expression switch
@@ -52,8 +52,7 @@ public class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencies,
                 ExpressionType.Divide or ExpressionType.Modulo => (900, false),
                 ExpressionType.Add => (700, true),
                 ExpressionType.Subtract => (700, false),
-                ExpressionType.And or ExpressionType.Or or ExpressionType.ExclusiveOr
-                    or ExpressionType.LeftShift or ExpressionType.RightShift => (700, true),
+                ExpressionType.And or ExpressionType.Or or ExpressionType.ExclusiveOr => (700, true),
                 ExpressionType.LessThan or ExpressionType.LessThanOrEqual or ExpressionType.GreaterThan
                     or ExpressionType.GreaterThanOrEqual or ExpressionType.Equal or ExpressionType.NotEqual => (500, false),
                 ExpressionType.AndAlso => (200, true),

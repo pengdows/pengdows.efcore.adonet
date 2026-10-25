@@ -62,9 +62,52 @@ public class FunctionSyntax
     /// </summary>
     public virtual string? OffsetDateTime => "{0}";
 
-    /// <summary>Escapes LIKE wildcards in constant patterns; also written as the pattern's <c>ESCAPE</c> character.</summary>
-    public virtual char LikeEscapeCharacter => '\\';
+    /// <summary>
+    ///     Escapes LIKE wildcards in patterns from constants and parameters; also written as the pattern's <c>ESCAPE</c>
+    ///     character. Null for a LIKE without ESCAPE: patterns that may hold wildcards are then compared by position.
+    /// </summary>
+    public virtual char? LikeEscapeCharacter => '\\';
+
+    /// <summary>A LIKE pattern matching <paramref name="value" /> literally, or null when it needs escaping and can't be.</summary>
+    public string? EscapeLikePattern(string value)
+    {
+        if (!value.Any(c => (c == LikeEscapeCharacter) || LikeSpecialCharacters.Contains(c)))
+        {
+            return value;
+        }
+
+        if (LikeEscapeCharacter is not { } escape)
+        {
+            return null;
+        }
+
+        var pattern = new System.Text.StringBuilder(value.Length * 2);
+        foreach (var c in value)
+        {
+            if ((c == escape) || LikeSpecialCharacters.Contains(c))
+            {
+                pattern.Append(escape);
+            }
+
+            pattern.Append(c);
+        }
+
+        return pattern.ToString();
+    }
 
     /// <summary>Characters LIKE treats specially, besides the escape character.</summary>
     public virtual string LikeSpecialCharacters => "%_";
+
+    /// <summary>Each template, by member name, with the number of arguments it is filled with.</summary>
+    internal IEnumerable<(string Member, string? Template, int Arguments)> Templates()
+        =>
+        [
+            (nameof(Concat), Concat, 2), (nameof(Upper), Upper, 1), (nameof(Lower), Lower, 1), (nameof(Trim), Trim, 1),
+            (nameof(TrimStart), TrimStart, 1), (nameof(TrimEnd), TrimEnd, 1), (nameof(Length), Length, 1),
+            (nameof(Substring), Substring, 3), (nameof(SubstringFrom), SubstringFrom, 2), (nameof(Position), Position, 2),
+            (nameof(Replace), Replace, 3), (nameof(Abs), Abs, 1), (nameof(Floor), Floor, 1), (nameof(Ceiling), Ceiling, 1),
+            (nameof(Round), Round, 1), (nameof(RoundDigits), RoundDigits, 2), (nameof(Power), Power, 2), (nameof(Sqrt), Sqrt, 1),
+            (nameof(Year), Year, 1), (nameof(Month), Month, 1), (nameof(Day), Day, 1), (nameof(Hour), Hour, 1),
+            (nameof(Minute), Minute, 1), (nameof(Second), Second, 1), (nameof(OffsetDateTime), OffsetDateTime, 1)
+        ];
 }

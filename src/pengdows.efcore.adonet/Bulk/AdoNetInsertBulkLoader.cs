@@ -15,7 +15,7 @@ public class AdoNetInsertBulkLoader(
     IRelationalCommandDiagnosticsLogger commandLogger,
     IAdoNetDialect dialect) : IAdoNetBulkLoader
 {
-    /// <summary>The most rows one INSERT names, whatever the parameter limit (SQL Server's VALUES limit).</summary>
+    /// <summary>The most rows one INSERT names, whatever the parameter limit: the smallest VALUES limit among common databases.</summary>
     protected virtual int MaxRowsPerCommand
         => 1000;
 

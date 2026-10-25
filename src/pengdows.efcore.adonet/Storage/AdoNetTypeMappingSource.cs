@@ -53,7 +53,7 @@ public class AdoNetTypeMappingSource : RelationalTypeMappingSource
             _ when clrType == typeof(double) => new AdoNetDoubleTypeMapping(storeType, _typeMappings),
             _ when clrType == typeof(decimal) => DecimalMapping(storeType),
             _ when clrType == typeof(string) => new AdoNetStringTypeMapping(storeType, sql, _typeMappings),
-            // DateTime2 means "no offset" everywhere; Npgsql reads DbType.DateTime as timestamptz.
+            // DateTime2 means "no offset" everywhere; some drivers read DbType.DateTime as a time with a zone.
             _ when clrType == typeof(DateTime) => new AdoNetDateTimeTypeMapping(storeType, _typeMappings),
             _ when clrType == typeof(DateTimeOffset) => new AdoNetDateTimeOffsetTypeMapping(storeType, _typeMappings),
             _ when clrType == typeof(DateOnly) => new AdoNetDateOnlyTypeMapping(storeType, _typeMappings),

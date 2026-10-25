@@ -52,11 +52,17 @@ public class AdoNetSearchConditionConverter(ISqlExpressionFactory sqlExpressionF
     private SqlExpression Constant(bool value)
         => sqlExpressionFactory.ApplyDefaultTypeMapping(sqlExpressionFactory.Constant(value));
 
-    // NOT (a = TRUE) => a = FALSE; NOT (a = b) => a <> b
+    // NOT (a = TRUE) => a = FALSE; NOT (a = b) => a <> b; NOT (a <> b) => a = b
     private SqlExpression SimplifyNegatedBinary(SqlExpression sqlExpression)
     {
-        if (sqlExpression is not SqlUnaryExpression { OperatorType: ExpressionType.Not, Operand: SqlBinaryExpression { OperatorType: ExpressionType.Equal } equal }
-            || sqlExpression.Type != typeof(bool))
+        if (sqlExpression is SqlUnaryExpression { OperatorType: ExpressionType.Not, Operand: SqlBinaryExpression { OperatorType: ExpressionType.NotEqual } notEqual }
+            && (sqlExpression.Type == typeof(bool)))
+        {
+            return sqlExpressionFactory.MakeBinary(ExpressionType.Equal, notEqual.Left, notEqual.Right, notEqual.TypeMapping)!;
+        }
+
+        if ((sqlExpression is not SqlUnaryExpression { OperatorType: ExpressionType.Not, Operand: SqlBinaryExpression { OperatorType: ExpressionType.Equal } equal })
+            || (sqlExpression.Type != typeof(bool)))
         {
             return sqlExpression;
         }
