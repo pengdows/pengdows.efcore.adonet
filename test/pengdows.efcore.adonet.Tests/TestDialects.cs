@@ -63,6 +63,13 @@ public static class TestDialects
     public static readonly IAdoNetDialect Bit = new PartsDialect(
         "Bit", new PartsSql(booleans: BooleanSyntax.BitValues, trueLiteral: "1", falseLiteral: "0", longCountFunction: "COUNT_BIG"));
 
+    public static readonly IAdoNetDialect BitXor = new PartsDialect(
+        "Bit with bitwise operators",
+        new PartsSql(booleans: BooleanSyntax.BitValuesWithBitwiseOperators, trueLiteral: "1", falseLiteral: "0"));
+
+    public static readonly IAdoNetDialect StringParameters4000 = new PartsDialect(
+        "String parameters 4000", typeMappings: new StringParameterSizes());
+
     public static readonly IAdoNetDialect SelectAfter = new PartsDialect(
         "SelectAfter",
         new PartsSql(keys: KeyRetrieval.SelectAfter("last_id()", "row_count()")),
@@ -87,4 +94,11 @@ public static class TestDialects
     public static readonly IAdoNetDialect ReverseTranslator = new PartsDialect(
         "Reverse translator",
         services: s => new EntityFrameworkRelationalServicesBuilder(s).TryAdd<IMethodCallTranslatorPlugin, ReverseTranslatorPlugin>());
+}
+
+/// <summary>Sizes unbounded string parameters as SQL Server's provider does.</summary>
+public sealed class StringParameterSizes : AnsiTypeMappings
+{
+    public override int? StringParameterSize(bool unicode)
+        => unicode ? 4000 : 8000;
 }

@@ -27,6 +27,20 @@ public static class AdoNetDbContextOptionsBuilderExtensions
     }
 
     /// <summary>
+    ///     A factory whose connection string, or connection, is supplied later through
+    ///     <c>Database.SetConnectionString</c> or <c>Database.SetDbConnection</c>.
+    /// </summary>
+    public static DbContextOptionsBuilder UseAdoNet(
+        this DbContextOptionsBuilder optionsBuilder,
+        DbProviderFactory providerFactory,
+        Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
+    {
+        ArgumentNullException.ThrowIfNull(providerFactory);
+
+        return Apply(optionsBuilder, GetOrCreateExtension(optionsBuilder, providerFactory).WithProviderFactory(providerFactory), adoNetOptionsAction);
+    }
+
+    /// <summary>
     ///     The whole database integration in two arguments: the ADO.NET factory and the dialect. Switching databases
     ///     changes only these.
     /// </summary>
@@ -87,6 +101,13 @@ public static class AdoNetDbContextOptionsBuilderExtensions
 
         return Apply(optionsBuilder, (AdoNetOptionsExtension)extension, adoNetOptionsAction);
     }
+
+    public static DbContextOptionsBuilder<TContext> UseAdoNet<TContext>(
+        this DbContextOptionsBuilder<TContext> optionsBuilder,
+        DbProviderFactory providerFactory,
+        Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
+        where TContext : DbContext
+        => (DbContextOptionsBuilder<TContext>)((DbContextOptionsBuilder)optionsBuilder).UseAdoNet(providerFactory, adoNetOptionsAction);
 
     public static DbContextOptionsBuilder<TContext> UseAdoNet<TContext>(
         this DbContextOptionsBuilder<TContext> optionsBuilder,

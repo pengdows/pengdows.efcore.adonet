@@ -1,3 +1,4 @@
+using System.Data.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.SqlClient;
 using pengdows.efcore.adonet.Infrastructure;
@@ -19,6 +20,28 @@ public static class SqlServerDbContextOptionsBuilderExtensions
                 o.UseDialect(SqlServerDialect.Instance);
                 adoNetOptionsAction?.Invoke(o);
             });
+
+    /// <summary>SqlServer over <paramref name="connection" />, which the caller owns unless <paramref name="contextOwnsConnection" />.</summary>
+    public static DbContextOptionsBuilder UseAdoNetSqlServer(
+        this DbContextOptionsBuilder optionsBuilder,
+        DbConnection connection,
+        Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null,
+        bool contextOwnsConnection = false)
+        => optionsBuilder.UseAdoNet(connection, contextOwnsConnection, o =>
+        {
+            o.UseDialect(SqlServerDialect.Instance);
+            adoNetOptionsAction?.Invoke(o);
+        });
+
+    /// <summary>SqlServer, with the connection string or connection set later through <c>Database</c>.</summary>
+    public static DbContextOptionsBuilder UseAdoNetSqlServer(
+        this DbContextOptionsBuilder optionsBuilder,
+        Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
+        => optionsBuilder.UseAdoNet(SqlClientFactory.Instance, o =>
+        {
+            o.UseDialect(SqlServerDialect.Instance);
+            adoNetOptionsAction?.Invoke(o);
+        });
 
     public static DbContextOptionsBuilder<TContext> UseAdoNetSqlServer<TContext>(
         this DbContextOptionsBuilder<TContext> optionsBuilder,

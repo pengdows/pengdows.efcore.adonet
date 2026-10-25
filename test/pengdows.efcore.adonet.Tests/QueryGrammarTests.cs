@@ -14,6 +14,21 @@ public class QueryGrammarTests
     }
 
     [Fact]
+    public void Operators_are_parenthesized_only_where_precedence_needs_it()
+    {
+        string Where(Func<ItemContext, IQueryable> query)
+            => Sql(TestDialects.Ansi, query).Split("WHERE ")[1];
+
+        Assert.Equal(@"""i"".""Version"" % 2 = 0", Where(c => c.Items.Where(i => i.Version % 2 == 0)));
+        Assert.Equal(@"(""i"".""Version"" + 1) * 2 = 4", Where(c => c.Items.Where(i => (i.Version + 1) * 2 == 4)));
+        Assert.Equal(@"CAST(""i"".""Version"" AS BIGINT) - (""i"".""Big"" - 1) = 0", Where(c => c.Items.Where(i => i.Version - (i.Big - 1) == 0)));
+        Assert.Equal(@"COALESCE(""i"".""Name"", '') || 'x' = 'ax'", Where(c => c.Items.Where(i => i.Name + "x" == "ax")));
+        Assert.Equal(@"""i"".""Version"" > 1 AND ""i"".""Big"" IN (1, 2)", Where(c => c.Items.Where(i => i.Version > 1 && (i.Big == 1 || i.Big == 2))));
+        Assert.Equal(@"""i"".""Version"" > 1 AND (""i"".""Big"" = 1 OR ""i"".""Tiny"" = 2)",
+            Where(c => c.Items.Where(i => i.Version > 1 && (i.Big == 1 || i.Tiny == 2))));
+    }
+
+    [Fact]
     public void Offset_fetch_writes_fetch_first_for_a_limit_alone()
     {
         var sql = Sql(TestDialects.Ansi, c => c.Items.OrderBy(i => i.Id).Take(3));
@@ -94,10 +109,28 @@ public class QueryGrammarTests
     public void Bit_values_become_comparisons_where_a_predicate_is_needed()
     {
         Assert.EndsWith("WHERE \"i\".\"Active\" = 1", Sql(TestDialects.Bit, c => c.Items.Where(i => i.Active)));
-        Assert.EndsWith("WHERE NOT (\"i\".\"Active\" = 1)", Sql(TestDialects.Bit, c => c.Items.Where(i => !i.Active)));
+        Assert.EndsWith("WHERE \"i\".\"Active\" = 0", Sql(TestDialects.Bit, c => c.Items.Where(i => !i.Active)));
         Assert.EndsWith(
             "WHERE \"i\".\"Active\" = 1 OR \"i\".\"Flag\" = 1",
             Sql(TestDialects.Bit, c => c.Items.Where(i => i.Active || i.Flag == true)));
+    }
+
+    [Fact]
+    public void Constant_predicates_compare_integers()
+    {
+        Assert.EndsWith("WHERE 0 = 1", Sql(TestDialects.Bit, c => c.Items.Where(i => false)));
+        Assert.EndsWith("WHERE 0 = 1", Sql(TestDialects.BitXor, c => c.Items.Where(i => i.Name == null && i.Name != null)));
+    }
+
+    [Fact]
+    public void Bitwise_operators_compare_and_negate_bit_values_where_the_dialect_has_them()
+    {
+        Assert.Contains("SELECT ~\"i\".\"Active\"", Sql(TestDialects.BitXor, c => c.Items.Select(i => !i.Active)));
+        Assert.Matches(@"SELECT ""i"".""Active"" \^ CASE", Sql(TestDialects.BitXor, c => c.Items.Select(i => i.Active != (i.Price > 5))));
+        Assert.Matches(@"SELECT ~\(""i"".""Active"" \^ CASE", Sql(TestDialects.BitXor, c => c.Items.Select(i => i.Active == (i.Price > 5))));
+
+        // Without them, a negation is a condition written as a value.
+        Assert.Contains("WHEN \"i\".\"Active\" = 0 THEN 1", Sql(TestDialects.Bit, c => c.Items.Select(i => !i.Active)));
     }
 
     [Fact]
@@ -113,7 +146,7 @@ public class QueryGrammarTests
         var ids = new[] { 1, 2 };
         Assert.Matches(@"CASE\n    WHEN ""i"".""Id"" IN \(", Sql(TestDialects.Bit, c => c.Items.Select(i => ids.Contains(i.Id))));
         Assert.Contains(
-            "WHEN (\"i\".\"Name\" LIKE 'a%')",
+            "WHEN \"i\".\"Name\" LIKE 'a%'",
             Sql(TestDialects.Bit, c => c.Items.Select(i => EF.Functions.Like(i.Name!, "a%"))));
     }
 

@@ -38,21 +38,25 @@ public class AdoNetRelationalConnection : RelationalConnection
             throw new InvalidOperationException(
                 "Configure exactly one of: a DbConnection, a DbDataSource, or a DbProviderFactory with a connection string.");
         }
-
-        if (_extension.ProviderFactory != null && string.IsNullOrWhiteSpace(_extension.ConnectionString))
-        {
-            throw new InvalidOperationException("A DbProviderFactory requires a connection string.");
-        }
     }
 
-    // ConnectionString, not the options' value, so Database.SetConnectionString is honored.
+    // ConnectionString, not the options' value, so Database.SetConnectionString is honored; a connection string may
+    // also arrive that way, or a whole connection through SetDbConnection, after the context is built.
     protected override DbConnection CreateDbConnection()
-        => (_extension.DataSource
+    {
+        if (_extension.DataSource == null && string.IsNullOrWhiteSpace(ConnectionString))
+        {
+            throw new InvalidOperationException(
+                "A DbProviderFactory requires a connection string: configure one, or call Database.SetConnectionString or Database.SetDbConnection first.");
+        }
+
+        return (_extension.DataSource
                 ?? DataSources.GetOrAdd(
                         (_extension.ProviderFactory!, ConnectionString!),
                         static key => new Lazy<DbDataSource>(() => key.Factory.CreateDataSource(key.ConnectionString)))
                     .Value)
             .CreateConnection();
+    }
 
     // DbConnection.Close is documented as safe to call on a closed connection and EF relies on that,
     // but not every provider honors it (DuckDB.NET throws), so only close what is open.

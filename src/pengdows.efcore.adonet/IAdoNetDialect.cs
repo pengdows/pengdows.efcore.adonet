@@ -74,9 +74,21 @@ public interface ITypeMappingDialect
 
     /// <summary>
     ///     The store type with a length (strings, binary) or precision and scale (decimals) from the model, e.g. from
-    ///     <c>[MaxLength]</c> or <c>HasPrecision</c>; null when facets don't change it.
+    ///     <c>[MaxLength]</c>, <c>IsFixedLength</c> or <c>HasPrecision</c>; null when facets don't change it.
     /// </summary>
-    string? GetStoreType(Type clrType, int? size, int? precision, int? scale);
+    string? GetStoreType(Type clrType, int? size, int? precision, int? scale, bool fixedLength);
+
+    /// <summary>
+    ///     The CLR types a store type holds without conversion, the default first; empty when the name isn't known.
+    ///     <paramref name="storeTypeBase" /> has no facets: <c>varchar</c>, not <c>varchar(30)</c>.
+    /// </summary>
+    IReadOnlyList<Type> GetClrTypes(string storeTypeBase);
+
+    /// <summary>
+    ///     The size given to a string parameter for an unbounded column when its value fits, so queries don't vary with the
+    ///     values' lengths; null leaves the size to the driver.
+    /// </summary>
+    int? StringParameterSize(bool unicode);
 }
 
 /// <summary>What the driver accepts, as opposed to what the SQL looks like.</summary>

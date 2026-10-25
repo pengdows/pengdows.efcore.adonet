@@ -26,7 +26,14 @@ public sealed class FakeDatabase
         => _parameters;
 
     public ItemContext Context(IAdoNetDialect dialect, Action<AdoNetDbContextOptionsBuilder>? adoNet = null)
-        => new(new DbContextOptionsBuilder<ItemContext>()
+        => ContextOf<ItemContext>(dialect, o => new ItemContext(o), adoNet);
+
+    public TContext ContextOf<TContext>(
+        IAdoNetDialect dialect,
+        Func<DbContextOptions<TContext>, TContext> create,
+        Action<AdoNetDbContextOptionsBuilder>? adoNet = null)
+        where TContext : DbContext
+        => create(new DbContextOptionsBuilder<TContext>()
             .UseAdoNet(Connection, contextOwnsConnection: false, o =>
             {
                 o.UseDialect(dialect);

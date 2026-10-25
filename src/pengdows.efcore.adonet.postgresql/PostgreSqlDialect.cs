@@ -34,8 +34,8 @@ public sealed class PostgreSqlTypeMappings : AnsiTypeMappings
         => clrType == typeof(byte[]) ? "BYTEA" : base.GetStoreType(clrType);
 
     // BYTEA takes no length.
-    public override string? GetStoreType(Type clrType, int? size, int? precision, int? scale)
-        => clrType == typeof(byte[]) ? null : base.GetStoreType(clrType, size, precision, scale);
+    public override string? GetStoreType(Type clrType, int? size, int? precision, int? scale, bool fixedLength)
+        => clrType == typeof(byte[]) ? null : base.GetStoreType(clrType, size, precision, scale, fixedLength);
 }
 
 /// <summary>ROUND with a number of places is only defined for numeric.</summary>

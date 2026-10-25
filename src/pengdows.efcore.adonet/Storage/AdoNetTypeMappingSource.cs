@@ -52,7 +52,7 @@ public class AdoNetTypeMappingSource : RelationalTypeMappingSource
             _ when clrType == typeof(float) => new FloatTypeMapping(storeType),
             _ when clrType == typeof(double) => new DoubleTypeMapping(storeType),
             _ when clrType == typeof(decimal) => new DecimalTypeMapping(storeType),
-            _ when clrType == typeof(string) => new AdoNetStringTypeMapping(storeType, sql),
+            _ when clrType == typeof(string) => new AdoNetStringTypeMapping(storeType, sql, _typeMappings),
             // DateTime2 means "no offset" everywhere; Npgsql reads DbType.DateTime as timestamptz.
             _ when clrType == typeof(DateTime) => new DateTimeTypeMapping(storeType, DbType.DateTime2),
             _ when clrType == typeof(DateTimeOffset) => new DateTimeOffsetTypeMapping(storeType),
@@ -73,6 +73,20 @@ public class AdoNetTypeMappingSource : RelationalTypeMappingSource
             return mapping;
         }
 
+        // A store type the dialect knows decides the CLR type; asked for one it doesn't hold, return nothing, so EF looks
+        // for a value converter to one it does (uint over an "int" column reads an int, not a long).
+        if (mappingInfo.StoreTypeName is { } named
+            && _typeMappings.GetClrTypes(mappingInfo.StoreTypeNameBase ?? named) is { Count: > 0 } held)
+        {
+            var target = mappingInfo.ClrType ?? held[0];
+            if (!held.Contains(target) || !_clrTypeMappings.TryGetValue(target, out mapping))
+            {
+                return null;
+            }
+
+            return mapping.WithTypeMappingInfo(mappingInfo);
+        }
+
         if (mappingInfo.ClrType is { } clrType
             && _clrTypeMappings.TryGetValue(clrType, out mapping))
         {
@@ -81,13 +95,11 @@ public class AdoNetTypeMappingSource : RelationalTypeMappingSource
                 return mapping.WithStoreTypeAndSize(storeTypeName, mappingInfo.Size);
             }
 
-            if (_typeMappings.GetStoreType(clrType, mappingInfo.Size, mappingInfo.Precision, mappingInfo.Scale) is { } sized)
-            {
-                mapping = mapping.WithStoreTypeAndSize(sized, mappingInfo.Size);
-                return mappingInfo.Precision is { } precision ? mapping.WithPrecisionAndScale(precision, mappingInfo.Scale) : mapping;
-            }
-
-            return mapping;
+            mapping = mapping.WithTypeMappingInfo(mappingInfo);
+            return _typeMappings.GetStoreType(
+                    clrType, mappingInfo.Size, mappingInfo.Precision, mappingInfo.Scale, mappingInfo.IsFixedLength == true) is { } sized
+                ? mapping.WithStoreTypeAndSize(sized, mappingInfo.Size)
+                : mapping;
         }
 
         if (mappingInfo.StoreTypeName is { } storeType

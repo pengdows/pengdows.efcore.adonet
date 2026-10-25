@@ -82,6 +82,31 @@ public class AnsiTypeMappings : ITypeMappingDialect
         [typeof(byte[])] = "VARBINARY"
     };
 
+    // ISO SQL type names and their common spellings; each holds these CLR types without conversion, the default first.
+    private static readonly Dictionary<string, Type[]> ClrTypes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["INTEGER"] = [typeof(int)], ["INT"] = [typeof(int)], ["INT4"] = [typeof(int)],
+        ["SMALLINT"] = [typeof(short)], ["INT2"] = [typeof(short)],
+        ["BIGINT"] = [typeof(long)], ["INT8"] = [typeof(long)],
+        ["REAL"] = [typeof(float)], ["FLOAT4"] = [typeof(float)],
+        ["DOUBLE PRECISION"] = [typeof(double)], ["DOUBLE"] = [typeof(double)], ["FLOAT"] = [typeof(double)], ["FLOAT8"] = [typeof(double)],
+        ["DECIMAL"] = [typeof(decimal)], ["NUMERIC"] = [typeof(decimal)], ["DEC"] = [typeof(decimal)],
+        ["BOOLEAN"] = [typeof(bool)], ["BOOL"] = [typeof(bool)],
+        ["CHARACTER"] = [typeof(string)], ["CHAR"] = [typeof(string)], ["CHARACTER VARYING"] = [typeof(string)],
+        ["CHAR VARYING"] = [typeof(string)], ["VARCHAR"] = [typeof(string)], ["NATIONAL CHARACTER"] = [typeof(string)],
+        ["NATIONAL CHAR"] = [typeof(string)], ["NCHAR"] = [typeof(string)], ["NATIONAL CHARACTER VARYING"] = [typeof(string)],
+        ["NATIONAL CHAR VARYING"] = [typeof(string)], ["NCHAR VARYING"] = [typeof(string)], ["NVARCHAR"] = [typeof(string)],
+        ["CHARACTER LARGE OBJECT"] = [typeof(string)], ["CLOB"] = [typeof(string)], ["NCLOB"] = [typeof(string)], ["TEXT"] = [typeof(string)],
+        ["BINARY"] = [typeof(byte[])], ["BINARY VARYING"] = [typeof(byte[])], ["VARBINARY"] = [typeof(byte[])],
+        ["BINARY LARGE OBJECT"] = [typeof(byte[])], ["BLOB"] = [typeof(byte[])],
+        ["TIMESTAMP"] = [typeof(DateTime)], ["TIMESTAMP WITHOUT TIME ZONE"] = [typeof(DateTime)],
+        ["TIMESTAMP WITH TIME ZONE"] = [typeof(DateTimeOffset)],
+        ["DATE"] = [typeof(DateOnly), typeof(DateTime)],
+        ["TIME"] = [typeof(TimeOnly), typeof(TimeSpan)], ["TIME WITHOUT TIME ZONE"] = [typeof(TimeOnly), typeof(TimeSpan)],
+        ["INTERVAL"] = [typeof(TimeSpan)],
+        ["UUID"] = [typeof(Guid)]
+    };
+
     /// <summary>CLR types the provider maps; <see cref="ITypeMappingDialect.GetStoreType" /> supplies each one's store type.</summary>
     public static IReadOnlyCollection<Type> SupportedClrTypes
         => StoreTypes.Keys;
@@ -89,8 +114,14 @@ public class AnsiTypeMappings : ITypeMappingDialect
     public virtual string? GetStoreType(Type clrType)
         => StoreTypes.GetValueOrDefault(clrType);
 
-    public virtual string? GetStoreType(Type clrType, int? size, int? precision, int? scale)
-        => clrType == typeof(string) && size != null ? $"VARCHAR({size})"
+    public virtual int? StringParameterSize(bool unicode)
+        => null;
+
+    public virtual IReadOnlyList<Type> GetClrTypes(string storeTypeBase)
+        => ClrTypes.TryGetValue(storeTypeBase, out var types) ? types : [];
+
+    public virtual string? GetStoreType(Type clrType, int? size, int? precision, int? scale, bool fixedLength)
+        => clrType == typeof(string) && size != null ? fixedLength ? $"CHAR({size})" : $"VARCHAR({size})"
             : clrType == typeof(byte[]) && size != null ? $"VARBINARY({size})"
             : clrType == typeof(decimal) && precision != null ? $"DECIMAL({precision},{scale ?? 0})"
             : null;

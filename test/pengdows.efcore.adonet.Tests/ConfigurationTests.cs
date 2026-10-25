@@ -58,6 +58,29 @@ public class ConfigurationTests
     }
 
     [Fact]
+    public void A_factory_without_a_connection_string_takes_one_later()
+    {
+        var factory = new fakeDbFactory(SupportedDatabase.PostgreSql);
+        using var context = new ItemContext(new DbContextOptionsBuilder<ItemContext>().AllowManyDialects().UseAdoNet(factory).Options);
+
+        context.Database.SetConnectionString("Data Source=later;EmulatedProduct=PostgreSql");
+
+        Assert.Equal("Data Source=later;EmulatedProduct=PostgreSql", context.Database.GetDbConnection().ConnectionString);
+    }
+
+    [Fact]
+    public void A_factory_without_a_connection_string_takes_a_connection_later()
+    {
+        var connection = new fakeDbConnection { ConnectionString = "Data Source=fake;EmulatedProduct=PostgreSql" };
+        using var context = new ItemContext(
+            new DbContextOptionsBuilder<ItemContext>().AllowManyDialects().UseAdoNet(new fakeDbFactory(SupportedDatabase.PostgreSql)).Options);
+
+        context.Database.SetDbConnection(connection);
+
+        Assert.Same(connection, context.Database.GetDbConnection());
+    }
+
+    [Fact]
     public void The_dialect_appears_in_the_log_fragment_and_debug_info()
     {
         var extension = new FakeDatabase().Context(TestDialects.Top).GetService<IDbContextOptions>().FindExtension<AdoNetOptionsExtension>()!;
@@ -94,6 +117,46 @@ public class ConfigurationTests
         Assert.Equal(typeof(long), source.FindMapping("BIGINT")!.ClrType);
         Assert.Equal("DECIMAL(10,4)", source.FindMapping("DECIMAL(10,4)")!.StoreType);
         Assert.Null(source.FindMapping("GEOMETRY"));
+    }
+
+    [Fact]
+    public void Store_type_synonyms_map_to_the_clr_type_they_hold()
+    {
+        using var context = new FakeDatabase().Context(AdoNetDialect.Ansi);
+        var source = context.GetService<IRelationalTypeMappingSource>();
+
+        Assert.Equal(typeof(int), source.FindMapping("int")!.ClrType);
+        Assert.Equal(typeof(decimal), source.FindMapping("NUMERIC(10,2)")!.ClrType);
+        Assert.Equal(typeof(DateOnly), source.FindMapping("DATE")!.ClrType);
+
+        var text = source.FindMapping("national character varying(30)")!;
+        Assert.Equal(typeof(string), text.ClrType);
+        Assert.Equal("national character varying(30)", text.StoreType);
+    }
+
+    [Fact]
+    public void A_store_type_holding_another_clr_type_is_reached_through_a_converter()
+    {
+        using var context = new FakeDatabase().Context(AdoNetDialect.Ansi);
+        var source = context.GetService<IRelationalTypeMappingSource>();
+
+        var unsigned = source.FindMapping(typeof(uint), "int")!;
+        Assert.Equal("int", unsigned.StoreType);
+        Assert.Equal(typeof(int), unsigned.Converter!.ProviderClrType);
+
+        // A store type that holds several CLR types takes each without conversion.
+        Assert.Null(source.FindMapping(typeof(DateTime), "DATE")!.Converter);
+        Assert.Null(source.FindMapping(typeof(DateOnly), "DATE")!.Converter);
+    }
+
+    [Fact]
+    public void A_dialect_adds_its_own_store_type_names()
+    {
+        using var context = new FakeDatabase().Context(MoneyDialect.Instance);
+        var source = context.GetService<IRelationalTypeMappingSource>();
+
+        Assert.Equal(typeof(decimal), source.FindMapping("money")!.ClrType);
+        Assert.Equal("money", source.FindMapping(typeof(decimal), "money")!.StoreType);
     }
 
     [Fact]
@@ -172,5 +235,20 @@ public class ConfigurationTests
             public RelationalTypeMapping? FindMapping(in RelationalTypeMappingInfo mappingInfo)
                 => mappingInfo.ClrType == typeof(string) ? new StringTypeMapping("JSON", System.Data.DbType.String) : null;
         }
+    }
+}
+
+/// <summary>A dialect with a store type ISO doesn't have.</summary>
+public sealed class MoneyDialect : AdoNetDialect
+{
+    public static readonly MoneyDialect Instance = new();
+
+    public override string Name => "Money";
+    public override ITypeMappingDialect TypeMappings { get; } = new MoneyTypeMappings();
+
+    private sealed class MoneyTypeMappings : AnsiTypeMappings
+    {
+        public override IReadOnlyList<Type> GetClrTypes(string storeTypeBase)
+            => string.Equals(storeTypeBase, "money", StringComparison.OrdinalIgnoreCase) ? [typeof(decimal)] : base.GetClrTypes(storeTypeBase);
     }
 }

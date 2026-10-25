@@ -142,7 +142,13 @@ public abstract class BooleanSyntax
     ///     Bools are values only, like SQL Server's BIT: a value used as a predicate becomes <c>x = TRUE</c>, and a condition used
     ///     as a value becomes <c>CASE WHEN ... THEN TRUE ELSE FALSE END</c>, written with the dialect's TRUE/FALSE literals.
     /// </summary>
-    public static BooleanSyntax BitValues { get; } = new BitValueBooleans();
+    public static BooleanSyntax BitValues { get; } = new BitValueBooleans(bitwiseOperators: false);
+
+    /// <summary>
+    ///     <see cref="BitValues" />, for a database with bitwise operators on them (SQL Server): a comparison of bool values
+    ///     used as a value is <c>a ^ b</c> or <c>~(a ^ b)</c>, and a negated one <c>~a</c>, rather than a <c>CASE</c>.
+    /// </summary>
+    public static BooleanSyntax BitValuesWithBitwiseOperators { get; } = new BitValueBooleans(bitwiseOperators: true);
 
     /// <summary>Rewrites the SQL tree (a SELECT, or a bulk UPDATE/DELETE) once null semantics have been applied.</summary>
     public abstract Expression Process(Expression query, ISqlExpressionFactory sqlExpressionFactory);
@@ -153,10 +159,10 @@ public abstract class BooleanSyntax
             => query;
     }
 
-    private sealed class BitValueBooleans : BooleanSyntax
+    private sealed class BitValueBooleans(bool bitwiseOperators) : BooleanSyntax
     {
         public override Expression Process(Expression query, ISqlExpressionFactory sqlExpressionFactory)
-            => new AdoNetSearchConditionConverter(sqlExpressionFactory).Visit(query);
+            => new AdoNetSearchConditionConverter(sqlExpressionFactory, bitwiseOperators).Visit(query);
     }
 }
 

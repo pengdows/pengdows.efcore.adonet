@@ -41,6 +41,44 @@ public class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencies,
         return base.VisitSqlBinary(sqlBinaryExpression);
     }
 
+    // SQL's standard precedence, highest first (T-SQL documents the same order), so only what needs them gets parentheses.
+    protected override bool TryGetOperatorInfo(SqlExpression expression, out int precedence, out bool isAssociative)
+    {
+        (precedence, isAssociative) = expression switch
+        {
+            SqlBinaryExpression binary => binary.OperatorType switch
+            {
+                ExpressionType.Multiply => (900, true),
+                ExpressionType.Divide or ExpressionType.Modulo => (900, false),
+                ExpressionType.Add => (700, true),
+                ExpressionType.Subtract => (700, false),
+                ExpressionType.And or ExpressionType.Or or ExpressionType.ExclusiveOr
+                    or ExpressionType.LeftShift or ExpressionType.RightShift => (700, true),
+                ExpressionType.LessThan or ExpressionType.LessThanOrEqual or ExpressionType.GreaterThan
+                    or ExpressionType.GreaterThanOrEqual or ExpressionType.Equal or ExpressionType.NotEqual => (500, false),
+                ExpressionType.AndAlso => (200, true),
+                ExpressionType.OrElse => (100, true),
+                _ => default
+            },
+            SqlUnaryExpression unary => unary.OperatorType switch
+            {
+                ExpressionType.Convert => (1300, false),
+                ExpressionType.OnesComplement => (1200, false),
+                ExpressionType.Not when unary.Type != typeof(bool) => (1200, false),
+                ExpressionType.Negate => (1100, false),
+                ExpressionType.Equal or ExpressionType.NotEqual => (500, false),
+                ExpressionType.Not => (300, false),
+                _ => default
+            },
+            CollateExpression => (900, false),
+            LikeExpression => (350, false),
+            AtTimeZoneExpression => (1200, false),
+            _ => default
+        };
+
+        return precedence != default;
+    }
+
     protected override void GenerateTop(SelectExpression selectExpression)
         => dialect.Paging.GenerateTop(this, selectExpression);
 
