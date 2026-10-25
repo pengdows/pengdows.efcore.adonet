@@ -221,6 +221,18 @@ public class SqlServerSqlTests
             => "'; DROP TABLE y; --";
     }
 
+    // CHARINDEX('', x) is 0 where .NET's IndexOf("") is 0 (position 1), so an empty pattern is special-cased; a null string is
+    // still null. Covers EF's Select_with_complex_expression_that_can_be_funcletized; runs there on all six databases.
+    [Fact]
+    public void Position_of_an_empty_pattern_in_a_null_string_is_null()
+    {
+        using var context = Context(b => b.UseAdoNetSqlServer("Server=localhost"));
+
+        var sql = context.Blogs.Select(b => b.Name.IndexOf("")).ToQueryString();
+
+        Assert.Contains("CASE WHEN [b].[Name] IS NULL THEN NULL WHEN DATALENGTH(N'') = 0 THEN 1", sql);
+    }
+
     [Fact]
     public void Prefers_exists_to_a_nullable_in()
         => Assert.True(SqlServerDialect.Instance.Sql.PreferExistsToIn);

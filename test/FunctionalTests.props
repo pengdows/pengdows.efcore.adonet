@@ -1,9 +1,9 @@
 <Project>
 
   <!--
-    For a provider's copy of EF's functional tests: the shared suites come from EF's published
-    Microsoft.EntityFrameworkCore.Relational.Specification.Tests package (xunit v2), and the copied provider tests compile
-    as they do upstream, with the namespaces and warnings EF's own build uses.
+    For running EF's specification tests: the suites come from EF's published
+    Microsoft.EntityFrameworkCore.Relational.Specification.Tests package (xunit v2), and compile with the namespaces and
+    warnings EF's own build uses.
   -->
   <PropertyGroup>
     <RootNamespace>Microsoft.EntityFrameworkCore</RootNamespace>
@@ -45,10 +45,6 @@
     <Using Include="Xunit.Abstractions" />
     <Using Include="pengdows.efcore.adonet" />
     <Using Include="pengdows.efcore.adonet.FunctionalTests" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Northwind.sql" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

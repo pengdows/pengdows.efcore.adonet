@@ -23,6 +23,23 @@ public class SqliteLiteralTests
         => Assert.Equal(literal, SqliteDialect.Instance.TypeMappings.FormatLiteral(value, "", "unused"));
 }
 
+/// <summary>
+///     SQLite has no exact decimal: a value cast to DECIMAL or NUMERIC keeps an integer an integer, so 10250 / 11250 is 0. A
+///     decimal cast computes as REAL, as SQLite stores fractional numbers. Covers EF's
+///     Explicit_cast_in_arithmetic_operation_is_preserved, which runs on all six databases.
+/// </summary>
+public class SqliteCastTests
+{
+    [Theory]
+    [InlineData("DECIMAL(18,2)", "REAL")]
+    [InlineData("decimal", "REAL")]
+    [InlineData("NUMERIC(10,4)", "REAL")]
+    [InlineData("INTEGER", "INTEGER")]
+    [InlineData("TEXT", "TEXT")]
+    public void Decimal_casts_compute_as_real(string storeType, string target)
+        => Assert.Equal(target, SqliteDialect.Instance.TypeMappings.CastTarget(storeType));
+}
+
 /// <summary>SQLite has no ALTER COLUMN: the dialect refuses rather than report a migration it didn't apply.</summary>
 public class SqliteMigrationsTests
 {

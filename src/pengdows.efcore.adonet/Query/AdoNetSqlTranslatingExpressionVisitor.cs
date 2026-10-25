@@ -86,6 +86,11 @@ internal class AdoNetSqlTranslatingExpressionVisitor : RelationalSqlTranslatingE
             return QueryCompilationContext.NotTranslatedExpression;
         }
 
+        if (IsDateDifference(binaryExpression))
+        {
+            return QueryCompilationContext.NotTranslatedExpression;
+        }
+
         if (_rowValues
             && (binaryExpression.NodeType is ExpressionType.Equal or ExpressionType.NotEqual)
             && (TryTranslateTupleComparison(binaryExpression.Left, binaryExpression.Right) is SqlBinaryExpression rowComparison))
@@ -102,6 +107,14 @@ internal class AdoNetSqlTranslatingExpressionVisitor : RelationalSqlTranslatingE
         => IsBitwise(unaryExpression.NodeType, unaryExpression.Type) && (_functions.BitwiseNot == null)
             ? QueryCompilationContext.NotTranslatedExpression
             : base.VisitUnary(unaryExpression);
+
+    // date - date is a TimeSpan; the database's own difference of dates (an interval, or a number of days) isn't read back as
+    // one, so it is left to the client, or untranslated in a predicate.
+    private static bool IsDateDifference(BinaryExpression binary)
+        => (binary.NodeType == ExpressionType.Subtract)
+            && ((Nullable.GetUnderlyingType(binary.Type) ?? binary.Type) == typeof(TimeSpan))
+            && ((Nullable.GetUnderlyingType(binary.Left.Type) ?? binary.Left.Type) is var left)
+            && ((left == typeof(DateTime)) || (left == typeof(DateTimeOffset)) || (left == typeof(TimeOnly)));
 
     private static bool IsBitwise(ExpressionType nodeType, Type type)
         => (nodeType is ExpressionType.And or ExpressionType.Or or ExpressionType.ExclusiveOr or ExpressionType.Not or ExpressionType.OnesComplement)

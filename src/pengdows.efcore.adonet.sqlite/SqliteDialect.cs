@@ -87,6 +87,13 @@ internal sealed class SqliteTypeMappings : AnsiTypeMappings
             _ => literal
         };
 
+    // SQLite has no exact decimal; a cast to DECIMAL or NUMERIC keeps integers integers (10250 / 11250 is 0). Fractional
+    // numbers are REAL in SQLite, so a decimal cast computes as one.
+    public override string CastTarget(string storeType)
+        => storeType.StartsWith("DECIMAL", StringComparison.OrdinalIgnoreCase) || storeType.StartsWith("NUMERIC", StringComparison.OrdinalIgnoreCase)
+            ? "REAL"
+            : base.CastTarget(storeType);
+
     private static string Text(IFormattable value, string format)
         => "'" + value.ToString(format, CultureInfo.InvariantCulture) + "'";
 }

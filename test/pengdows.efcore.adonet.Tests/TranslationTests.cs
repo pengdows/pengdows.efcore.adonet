@@ -78,6 +78,22 @@ public class TranslationTests
             Sql(TestDialects.EmulatedExclusiveOr, c => c.Items.Where(i => ((i.Version + 1) ^ 3) == 0)));
     }
 
+    // A difference of dates is a TimeSpan, which ISO's date arithmetic gives as an interval only some databases read back as
+    // one. Left to the client in a projection, as the official SQL Server and SQLite providers do; a predicate needing it
+    // fails to translate rather than compare a date with a time span. Behaviour reference (not copied):
+    // https://github.com/dotnet/efcore/blob/v10.0.11/test/EFCore.SqlServer.FunctionalTests/Query/NorthwindSelectQuerySqlServerTest.cs
+    [Fact]
+    public void Date_differences_are_left_to_the_client()
+    {
+        var projected = Ansi(c => c.Items.Select(i => i.At - new DateTime(2000, 1, 1)));
+
+        Assert.Contains(@"SELECT ""i"".""At""", projected);
+        Assert.DoesNotContain(" - ", projected);
+        Assert.Contains(
+            "could not be translated",
+            Assert.Throws<InvalidOperationException>(() => Ansi(c => c.Items.Where(i => i.At - new DateTime(2000, 1, 1) > TimeSpan.Zero))).Message);
+    }
+
     [Fact]
     public void Hostile_string_literals_stay_one_literal()
     {

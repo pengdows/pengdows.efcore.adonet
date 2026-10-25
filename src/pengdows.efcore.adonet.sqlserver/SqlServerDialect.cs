@@ -88,7 +88,8 @@ internal sealed class SqlServerFunctions : FunctionSyntax
     public override string? Length => "CAST(LEN(REPLACE({0}, ' ', '_')) AS int)";
     public override string? Substring => "SUBSTRING({0}, {1}, {2})";
     public override string? SubstringFrom => "SUBSTRING({0}, {1}, DATALENGTH({0}))";
-    public override string? Position => "CAST(CASE WHEN DATALENGTH({0}) = 0 THEN 1 ELSE CHARINDEX({0}, {1}) END AS int)";
+    // CHARINDEX('', x) is 0, where an empty pattern is at position 1; a null string stays null.
+    public override string? Position => "CAST(CASE WHEN {1} IS NULL THEN NULL WHEN DATALENGTH({0}) = 0 THEN 1 ELSE CHARINDEX({0}, {1}) END AS int)";
     public override string? Round => "ROUND({0}, 0)";
     public override string? Year => "DATEPART(year, {0})";
     public override string? Month => "DATEPART(month, {0})";
