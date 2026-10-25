@@ -150,6 +150,17 @@ public class ConfigurationTests
     }
 
     [Fact]
+    public void A_dialects_default_store_types_are_found_by_name_without_listing_them()
+    {
+        using var context = new FakeDatabase().Context(BlobTextDialect.Instance);
+        var source = context.GetService<IRelationalTypeMappingSource>();
+
+        Assert.Equal(typeof(string), source.FindMapping("TEXTBLOB")!.ClrType);
+        Assert.Equal("NUMBERS", source.FindMapping(typeof(decimal))!.StoreType);
+        Assert.Null(source.FindMapping(typeof(decimal))!.Precision);
+    }
+
+    [Fact]
     public void A_dialect_adds_its_own_store_type_names()
     {
         using var context = new FakeDatabase().Context(MoneyDialect.Instance);
@@ -250,5 +261,20 @@ public sealed class MoneyDialect : AdoNetDialect
     {
         public override IReadOnlyList<Type> GetClrTypes(string storeTypeBase)
             => string.Equals(storeTypeBase, "money", StringComparison.OrdinalIgnoreCase) ? [typeof(decimal)] : base.GetClrTypes(storeTypeBase);
+    }
+}
+
+/// <summary>Store types ISO doesn't name, and doesn't list in GetClrTypes.</summary>
+public sealed class BlobTextDialect : AdoNetDialect
+{
+    public static readonly BlobTextDialect Instance = new();
+
+    public override string Name => "Blob text";
+    public override ITypeMappingDialect TypeMappings { get; } = new BlobTextTypeMappings();
+
+    private sealed class BlobTextTypeMappings : AnsiTypeMappings
+    {
+        public override string? GetStoreType(Type clrType)
+            => clrType == typeof(string) ? "TEXTBLOB" : clrType == typeof(decimal) ? "NUMBERS" : base.GetStoreType(clrType);
     }
 }

@@ -26,6 +26,27 @@ public class QueryGrammarTests
         Assert.Equal(@"""i"".""Version"" > 1 AND ""i"".""Big"" IN (1, 2)", Where(c => c.Items.Where(i => i.Version > 1 && (i.Big == 1 || i.Big == 2))));
         Assert.Equal(@"""i"".""Version"" > 1 AND (""i"".""Big"" = 1 OR ""i"".""Tiny"" = 2)",
             Where(c => c.Items.Where(i => i.Version > 1 && (i.Big == 1 || i.Tiny == 2))));
+        Assert.Equal(@"-(""i"".""Version"" + 1) = 0", Where(c => c.Items.Where(i => -(i.Version + 1) == 0)));
+        Assert.Equal(@"""i"".""Version"" / (""i"".""Version"" / 2) = 1", Where(c => c.Items.Where(i => i.Version / (i.Version / 2) == 1)));
+        Assert.Equal(@"((""i"".""Version"" & 1) | 2) ^ 4 = 0", Where(c => c.Items.Where(i => ((i.Version & 1 | 2) ^ 4) == 0)));
+        Assert.Equal(@"~(""i"".""Version"" + 1) = 0", Where(c => c.Items.Where(i => ~(i.Version + 1) == 0)));
+        Assert.Equal(@"CAST(""i"".""Version"" AS BIGINT) * 2 = 4", Where(c => c.Items.Where(i => (long)i.Version * 2 == 4)));
+        Assert.Equal(@"""i"".""Name"" COLLATE c = 'a'", Where(c => c.Items.Where(i => EF.Functions.Collate(i.Name, "c") == "a")));
+        Assert.Equal(@"NOT (""i"".""Active"") AND ""i"".""Version"" <> 2 AND ""i"".""Name"" IS NULL",
+            Where(c => c.Items.Where(i => !(i.Active || i.Version == 2) && i.Name == null)));
+        Assert.Equal(@"""i"".""Name"" LIKE 'a%' AND ""i"".""Version"" = 1", Where(c => c.Items.Where(i => EF.Functions.Like(i.Name!, "a%") && i.Version == 1)));
+    }
+
+    [Fact]
+    public void A_nullable_in_subquery_can_be_written_as_exists()
+    {
+        var withIn = Sql(TestDialects.Ansi, c => c.Items.Where(i => !i.Parts.Select(p => p.Label).Contains("x")));
+        var withExists = Sql(TestDialects.PreferExists, c => c.Items.Where(i => !i.Parts.Select(p => p.Label).Contains("x")));
+
+        Assert.Contains("COALESCE", withIn);
+        Assert.Contains("'x' IN (", withIn);
+        Assert.Contains("WHERE NOT EXISTS (", withExists);
+        Assert.DoesNotContain("COALESCE", withExists);
     }
 
     [Fact]

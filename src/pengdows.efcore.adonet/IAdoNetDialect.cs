@@ -59,6 +59,12 @@ public interface ISqlDialect
     /// <summary>How <c>ExecuteDelete</c>/<c>ExecuteUpdate</c> are written.</summary>
     DmlSyntax Dml { get; }
 
+    /// <summary>
+    ///     Where <c>x IN (subquery)</c> over nullable values would need COALESCE and CASE to keep .NET's semantics, write
+    ///     <c>EXISTS</c> instead (as SQL Server's provider does: it costs no more there and reads better).
+    /// </summary>
+    bool PreferExistsToIn { get; }
+
     /// <summary>How the functions that .NET members translate to are spelled.</summary>
     FunctionSyntax Functions { get; }
 
@@ -89,6 +95,12 @@ public interface ITypeMappingDialect
     ///     values' lengths; null leaves the size to the driver.
     /// </summary>
     int? StringParameterSize(bool unicode);
+
+    /// <summary>
+    ///     A constant as SQL text. <paramref name="literal" /> is EF's ISO form (<c>TIMESTAMP '...'</c>, <c>X'...'</c>, plain
+    ///     numbers); return it, or the database's own. Strings and booleans come from <see cref="ISqlDialect" /> instead.
+    /// </summary>
+    string FormatLiteral(object value, string storeType, string literal);
 }
 
 /// <summary>What the driver accepts, as opposed to what the SQL looks like.</summary>

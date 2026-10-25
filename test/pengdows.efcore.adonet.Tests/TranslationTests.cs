@@ -39,6 +39,31 @@ public class TranslationTests
     }
 
     [Fact]
+    public void Literals_of_every_type_are_formatted_by_the_dialect()
+    {
+        string Where(IAdoNetDialect dialect, Expression<Func<Item, bool>> predicate)
+            => Sql(dialect, c => c.Items.Where(predicate)).Split("WHERE ")[1];
+
+        Assert.Equal(@"""i"".""Small"" > 20", Where(TestDialects.Ansi, i => i.Small > 20));
+        Assert.Equal(@"""i"".""Small"" > CAST(20 AS SMALLINT)", Where(TestDialects.CastLiterals, i => i.Small > 20));
+        Assert.Equal(@"""i"".""Tiny"" > CAST(2 AS SMALLINT)", Where(TestDialects.CastLiterals, i => i.Tiny > 2));
+        Assert.Equal(@"""i"".""Big"" > CAST(2 AS BIGINT)", Where(TestDialects.CastLiterals, i => i.Big > 2));
+        Assert.Equal(@"""i"".""Double"" > 1.5E0", Where(TestDialects.CastLiterals, i => i.Double > 1.5));
+        Assert.Equal(@"""i"".""Single"" > CAST(1.5 AS REAL)", Where(TestDialects.CastLiterals, i => i.Single > 1.5f));
+        Assert.Equal(@"""i"".""Price"" > CAST(1.5 AS DECIMAL(18,2))", Where(TestDialects.CastLiterals, i => i.Price > 1.5m));
+        Assert.Equal(@"""i"".""Version"" > CAST(2 AS INTEGER)", Where(TestDialects.CastLiterals, i => i.Version > 2));
+        Assert.Equal(@"""i"".""At"" > '2020-01-02T03:04:05'", Where(TestDialects.CastLiterals, i => i.At > new DateTime(2020, 1, 2, 3, 4, 5)));
+        Assert.Equal(@"""i"".""Day"" > {d '2020-01-02'}", Where(TestDialects.CastLiterals, i => i.Day > new DateOnly(2020, 1, 2)));
+        Assert.Equal(@"""i"".""Time"" > {t '03:04:05'}", Where(TestDialects.CastLiterals, i => i.Time > new TimeOnly(3, 4, 5)));
+        Assert.Equal(@"""i"".""Span"" > {t '03:04:05'}", Where(TestDialects.CastLiterals, i => i.Span > new TimeSpan(3, 4, 5)));
+        Assert.Equal(@"""i"".""AtOffset"" > {ts '2020-01-02 03:04:05'}",
+            Where(TestDialects.CastLiterals, i => i.AtOffset > new DateTimeOffset(2020, 1, 2, 3, 4, 5, TimeSpan.Zero)));
+        Assert.Equal(@"""i"".""Uid"" = {guid '00000000-0000-0000-0000-000000000001'}",
+            Where(TestDialects.CastLiterals, i => i.Uid == new Guid("00000000-0000-0000-0000-000000000001")));
+        Assert.Equal(@"""i"".""Data"" = 0x0102", Where(TestDialects.CastLiterals, i => i.Data == new byte[] { 1, 2 }));
+    }
+
+    [Fact]
     public void Case_and_trimming()
     {
         Assert.Contains(@"UPPER(""i"".""Name"")", Ansi(c => c.Items.Select(i => i.Name!.ToUpper())));
@@ -206,6 +231,24 @@ public sealed class TestFunctions : FunctionSyntax
     public override string? Sqrt => null;
     public override char LikeEscapeCharacter => '!';
     public override string LikeSpecialCharacters => "%_[";
+}
+
+/// <summary>Formats every literal its own way, wrapping or replacing EF's.</summary>
+public sealed class CastLiteralTypeMappings : AnsiTypeMappings
+{
+    public override string FormatLiteral(object value, string storeType, string literal)
+        => value switch
+        {
+            double => literal + "E0",
+            DateTime d => $"'{d:yyyy-MM-ddTHH:mm:ss}'",
+            DateOnly d => $"{{d '{d:yyyy-MM-dd}'}}",
+            TimeOnly t => $"{{t '{t:HH\\:mm\\:ss}'}}",
+            TimeSpan t => $"{{t '{t:hh\\:mm\\:ss}'}}",
+            DateTimeOffset d => $"{{ts '{d:yyyy-MM-dd HH:mm:ss}'}}",
+            Guid g => $"{{guid '{g}'}}",
+            byte[] b => "0x" + Convert.ToHexString(b),
+            _ => $"CAST({literal} AS {storeType})"
+        };
 }
 
 /// <summary>A database with none of the functions.</summary>

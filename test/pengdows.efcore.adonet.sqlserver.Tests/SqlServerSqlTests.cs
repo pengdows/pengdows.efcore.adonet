@@ -92,6 +92,57 @@ public class SqlServerSqlTests
         Assert.Equal(8000, mappings.StringParameterSize(unicode: false));
     }
 
+    public static TheoryData<string, object, string> Literals => new()
+    {
+        { "smallint", (short)20, "CAST(20 AS smallint)" },
+        { "tinyint", (byte)2, "CAST(2 AS tinyint)" },
+        { "bigint", 2L, "CAST(2 AS bigint)" },
+        { "real", 1.5f, "CAST(1.5 AS real)" },
+        { "float", 100.0, "100.0E0" },
+        { "float", 1e20, "1E+20" },
+        { "datetime", new DateTime(1998, 1, 2, 3, 4, 5), "'1998-01-02T03:04:05.000'" },
+        { "smalldatetime", new DateTime(1998, 1, 2, 3, 4, 5), "'1998-01-02T03:04:05'" },
+        { "datetime2", new DateTime(1998, 1, 2, 3, 4, 5), "'1998-01-02T03:04:05.0000000'" },
+        { "datetime2(3)", new DateTime(1998, 1, 2, 3, 4, 5), "'1998-01-02T03:04:05.000'" },
+        { "date", new DateTime(1998, 1, 2), "'1998-01-02'" },
+        { "date", new DateOnly(1998, 1, 2), "'1998-01-02'" },
+        { "time", new TimeOnly(3, 4, 5), "'03:04:05'" },
+        { "time", new TimeOnly(3, 4, 5, 6), "'03:04:05.006'" },
+        { "time", new TimeSpan(3, 4, 5), "'03:04:05'" },
+        { "datetimeoffset", new DateTimeOffset(1998, 1, 2, 3, 4, 5, TimeSpan.FromHours(1)), "'1998-01-02T03:04:05.0000000+01:00'" },
+        { "varbinary(max)", new byte[] { 1, 0xAB }, "0x01AB" },
+        { "decimal(18,2)", 1.5m, "1.5" }
+    };
+
+    [Theory]
+    [MemberData(nameof(Literals))]
+    public void Writes_literals_as_the_official_provider_does(string storeType, object value, string literal)
+    {
+        using var context = Context(b => b.UseAdoNetSqlServer("Server=localhost"));
+
+        var mapping = context.GetService<IRelationalTypeMappingSource>().FindMapping(value.GetType(), storeType)!;
+
+        Assert.Equal(literal, mapping.GenerateSqlLiteral(value));
+    }
+
+    [Fact]
+    public void Query_strings_declare_their_parameters_as_runnable_t_sql()
+    {
+        using var context = Context(b => b.UseAdoNetSqlServer("Server=localhost"));
+        var name = "it's";
+        var rating = 2.5m;
+        string? missing = null;
+
+        var sql = context.Blogs.Where(b => b.Name == name && b.Rating > rating && b.Name != missing).ToQueryString().ReplaceLineEndings("\n");
+
+        Assert.StartsWith("DECLARE @name nvarchar(4000) = N'it''s';\nDECLARE @rating decimal(18,2) = 2.5;\n", sql);
+        Assert.Contains("\n\nSELECT [b].[Id]", sql);
+    }
+
+    [Fact]
+    public void Prefers_exists_to_a_nullable_in()
+        => Assert.True(SqlServerDialect.Instance.Sql.PreferExistsToIn);
+
     [Fact]
     public void Takes_an_existing_connection()
     {

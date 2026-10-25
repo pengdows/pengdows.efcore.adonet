@@ -28,6 +28,9 @@ public class AdoNetParameterBasedSqlProcessor(
         return dialect.Booleans.Process(queryExpression, Dependencies.SqlExpressionFactory);
     }
 
+    protected override Expression ProcessSqlNullability(Expression queryExpression, ParametersCacheDecorator decorator)
+        => new AdoNetSqlNullabilityProcessor(Dependencies, Parameters, dialect).Process(queryExpression, decorator);
+
     private sealed class PagingParameterInliner(ParametersCacheDecorator parametersDecorator) : ExpressionVisitor
     {
         protected override Expression VisitExtension(Expression node)
@@ -67,4 +70,15 @@ public class AdoNetParameterBasedSqlProcessorFactory(
 {
     public virtual RelationalParameterBasedSqlProcessor Create(RelationalParameterBasedSqlProcessorParameters parameters)
         => new AdoNetParameterBasedSqlProcessor(dependencies, parameters, dialect);
+}
+
+/// <summary>EF's null semantics, with the dialect's preference between nullable IN and EXISTS.</summary>
+public class AdoNetSqlNullabilityProcessor(
+    RelationalParameterBasedSqlProcessorDependencies dependencies,
+    RelationalParameterBasedSqlProcessorParameters parameters,
+    ISqlDialect dialect)
+    : SqlNullabilityProcessor(dependencies, parameters)
+{
+    protected override bool PreferExistsToInWithCoalesce
+        => dialect.PreferExistsToIn;
 }

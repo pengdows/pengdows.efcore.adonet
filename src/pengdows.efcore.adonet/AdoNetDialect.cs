@@ -52,6 +52,7 @@ public class AnsiSqlDialect : ISqlDialect
     public virtual KeyRetrieval Keys => KeyRetrieval.Returning;
     public virtual DmlSyntax Dml => DmlSyntax.Standard;
     public virtual FunctionSyntax Functions => FunctionSyntax.Iso;
+    public virtual bool PreferExistsToIn => false;
 
     public virtual string HasTablesSql
         => "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'";
@@ -116,6 +117,9 @@ public class AnsiTypeMappings : ITypeMappingDialect
 
     public virtual int? StringParameterSize(bool unicode)
         => null;
+
+    public virtual string FormatLiteral(object value, string storeType, string literal)
+        => literal;
 
     public virtual IReadOnlyList<Type> GetClrTypes(string storeTypeBase)
         => ClrTypes.TryGetValue(storeTypeBase, out var types) ? types : [];

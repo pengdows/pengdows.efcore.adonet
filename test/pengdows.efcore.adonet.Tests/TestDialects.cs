@@ -33,6 +33,7 @@ public sealed class PartsSql(
     bool parameterNameIncludesMarker = true,
     bool supportsSchemas = true,
     FunctionSyntax? functions = null,
+    bool preferExistsToIn = false,
     Func<string, string>? stringLiteral = null) : AnsiSqlDialect
 {
     public override PagingSyntax Paging { get; } = paging ?? PagingSyntax.OffsetFetch;
@@ -46,6 +47,7 @@ public sealed class PartsSql(
     public override bool ParameterNameIncludesMarker => parameterNameIncludesMarker;
     public override bool SupportsSchemas => supportsSchemas;
     public override FunctionSyntax Functions { get; } = functions ?? FunctionSyntax.Iso;
+    public override bool PreferExistsToIn => preferExistsToIn;
 
     public override string StringLiteral(string value)
         => stringLiteral?.Invoke(value) ?? base.StringLiteral(value);
@@ -69,6 +71,10 @@ public static class TestDialects
 
     public static readonly IAdoNetDialect StringParameters4000 = new PartsDialect(
         "String parameters 4000", typeMappings: new StringParameterSizes());
+
+    public static readonly IAdoNetDialect PreferExists = new PartsDialect("Prefer EXISTS", new PartsSql(preferExistsToIn: true));
+
+    public static readonly IAdoNetDialect CastLiterals = new PartsDialect("Cast literals", typeMappings: new CastLiteralTypeMappings());
 
     public static readonly IAdoNetDialect SelectAfter = new PartsDialect(
         "SelectAfter",

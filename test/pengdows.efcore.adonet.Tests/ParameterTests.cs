@@ -27,6 +27,33 @@ public class ParameterTests
     }
 
     [Fact]
+    public void A_decimal_parameter_takes_its_columns_precision_and_scale()
+    {
+        var amount = 2.5m;
+
+        Assert.Equal("@amount='2.5' (Precision = 10) (Scale = 4)", ParametersOf(TestDialects.Ansi, c => c.Coded.Where(x => x.Amount > amount)));
+        Assert.Equal("@amount='2.5' (Precision = 18) (Scale = 2)", ParametersOf(TestDialects.Ansi, c => c.Coded.Where(x => x.Plain > amount)));
+    }
+
+    [Fact]
+    public void Non_unicode_strings_bind_as_ansi()
+    {
+        var value = "ab";
+        var tag = "abc";
+
+        Assert.Equal("@value='ab' (DbType = AnsiString)", ParametersOf(TestDialects.Ansi, c => c.Coded.Where(x => x.Ascii == value)));
+        Assert.Equal("@tag='abc' (Size = 3) (DbType = AnsiStringFixedLength)", ParametersOf(TestDialects.Ansi, c => c.Coded.Where(x => x.AsciiTag == tag)));
+    }
+
+    [Fact]
+    public void A_decimal_parameter_without_a_scale_takes_only_the_precision()
+    {
+        var amount = 2m;
+
+        Assert.Equal("@amount='2' (Precision = 10)", ParametersOf(TestDialects.Ansi, c => c.Coded.Where(x => x.Whole > amount)));
+    }
+
+    [Fact]
     public void A_fixed_length_parameter_stays_fixed_only_when_the_value_fills_it()
     {
         var full = "abcde";
@@ -70,6 +97,19 @@ public class Coded
 
     public string? Tag { get; set; }
     public string? Note { get; set; }
+
+    [Precision(10, 4)]
+    public decimal Amount { get; set; }
+
+    public decimal Plain { get; set; }
+
+    [Precision(10)]
+    public decimal Whole { get; set; }
+
+    [Unicode(false)]
+    public string? Ascii { get; set; }
+
+    public string? AsciiTag { get; set; }
 }
 
 public class FacetContext(DbContextOptions<FacetContext> options) : DbContext(options)
@@ -77,5 +117,8 @@ public class FacetContext(DbContextOptions<FacetContext> options) : DbContext(op
     public DbSet<Coded> Coded => Set<Coded>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
-        => modelBuilder.Entity<Coded>().Property(c => c.Tag).HasMaxLength(5).IsFixedLength();
+    {
+        modelBuilder.Entity<Coded>().Property(c => c.Tag).HasMaxLength(5).IsFixedLength();
+        modelBuilder.Entity<Coded>().Property(c => c.AsciiTag).HasMaxLength(3).IsFixedLength().IsUnicode(false);
+    }
 }

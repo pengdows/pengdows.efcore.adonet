@@ -45,24 +45,37 @@ public class AdoNetTypeMappingSource : RelationalTypeMappingSource
         => clrType switch
         {
             _ when clrType == typeof(bool) => new AdoNetBoolTypeMapping(storeType, sql.TrueLiteral, sql.FalseLiteral),
-            _ when clrType == typeof(byte) => new ByteTypeMapping(storeType),
-            _ when clrType == typeof(short) => new ShortTypeMapping(storeType),
-            _ when clrType == typeof(int) => new IntTypeMapping(storeType),
-            _ when clrType == typeof(long) => new LongTypeMapping(storeType),
-            _ when clrType == typeof(float) => new FloatTypeMapping(storeType),
-            _ when clrType == typeof(double) => new DoubleTypeMapping(storeType),
-            _ when clrType == typeof(decimal) => new DecimalTypeMapping(storeType),
+            _ when clrType == typeof(byte) => new AdoNetByteTypeMapping(storeType, _typeMappings),
+            _ when clrType == typeof(short) => new AdoNetShortTypeMapping(storeType, _typeMappings),
+            _ when clrType == typeof(int) => new AdoNetIntTypeMapping(storeType, _typeMappings),
+            _ when clrType == typeof(long) => new AdoNetLongTypeMapping(storeType, _typeMappings),
+            _ when clrType == typeof(float) => new AdoNetFloatTypeMapping(storeType, _typeMappings),
+            _ when clrType == typeof(double) => new AdoNetDoubleTypeMapping(storeType, _typeMappings),
+            _ when clrType == typeof(decimal) => DecimalMapping(storeType),
             _ when clrType == typeof(string) => new AdoNetStringTypeMapping(storeType, sql, _typeMappings),
             // DateTime2 means "no offset" everywhere; Npgsql reads DbType.DateTime as timestamptz.
-            _ when clrType == typeof(DateTime) => new DateTimeTypeMapping(storeType, DbType.DateTime2),
-            _ when clrType == typeof(DateTimeOffset) => new DateTimeOffsetTypeMapping(storeType),
-            _ when clrType == typeof(DateOnly) => new DateOnlyTypeMapping(storeType),
-            _ when clrType == typeof(TimeOnly) => new TimeOnlyTypeMapping(storeType),
-            _ when clrType == typeof(TimeSpan) => new TimeSpanTypeMapping(storeType),
-            _ when clrType == typeof(Guid) => new GuidTypeMapping(storeType),
-            _ when clrType == typeof(byte[]) => new ByteArrayTypeMapping(storeType),
+            _ when clrType == typeof(DateTime) => new AdoNetDateTimeTypeMapping(storeType, _typeMappings),
+            _ when clrType == typeof(DateTimeOffset) => new AdoNetDateTimeOffsetTypeMapping(storeType, _typeMappings),
+            _ when clrType == typeof(DateOnly) => new AdoNetDateOnlyTypeMapping(storeType, _typeMappings),
+            _ when clrType == typeof(TimeOnly) => new AdoNetTimeOnlyTypeMapping(storeType, _typeMappings),
+            _ when clrType == typeof(TimeSpan) => new AdoNetTimeSpanTypeMapping(storeType, _typeMappings),
+            _ when clrType == typeof(Guid) => new AdoNetGuidTypeMapping(storeType, _typeMappings),
+            _ when clrType == typeof(byte[]) => new AdoNetByteArrayTypeMapping(storeType, _typeMappings),
             _ => throw new NotSupportedException($"No mapping for CLR type '{clrType}'.")
         };
+
+    // The dialect's default store type, e.g. DECIMAL(18,2), carries the precision and scale parameters bind with.
+    private RelationalTypeMapping DecimalMapping(string storeType)
+    {
+        var facets = storeType.IndexOf('(') is > 0 and var open && storeType.EndsWith(')')
+            ? storeType[(open + 1)..^1].Split(',')
+            : [];
+        return new AdoNetDecimalTypeMapping(
+            storeType,
+            _typeMappings,
+            facets.Length > 0 && int.TryParse(facets[0], out var precision) ? precision : null,
+            facets.Length > 1 && int.TryParse(facets[1], out var scale) ? scale : null);
+    }
 
     protected override RelationalTypeMapping? FindMapping(in RelationalTypeMappingInfo mappingInfo)
     {
@@ -95,7 +108,13 @@ public class AdoNetTypeMappingSource : RelationalTypeMappingSource
                 return mapping.WithStoreTypeAndSize(storeTypeName, mappingInfo.Size);
             }
 
+            // A precision without a scale means scale 0, not the default mapping's.
             mapping = mapping.WithTypeMappingInfo(mappingInfo);
+            if (mappingInfo is { Precision: { } precision, Scale: null } && clrType == typeof(decimal))
+            {
+                mapping = mapping.WithPrecisionAndScale(precision, 0);
+            }
+
             return _typeMappings.GetStoreType(
                     clrType, mappingInfo.Size, mappingInfo.Precision, mappingInfo.Scale, mappingInfo.IsFixedLength == true) is { } sized
                 ? mapping.WithStoreTypeAndSize(sized, mappingInfo.Size)
