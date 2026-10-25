@@ -151,10 +151,11 @@ dotnet test test/pengdows.efcore.adonet.Tests   # the core alone: fakeDb and an 
   against the same value saved through a parameter). Write a `ProviderFixture` (factory, connection string,
   dialect, DDL) and a one-line subclass of each suite.
 - **Plugins** (`pengdows.efcore.adonet.<db>.Tests`): their fixture, the suites, their entry points and SQL shapes.
-- **The official providers' own tests**, copied unchanged with only their test-store binding adapted, on a shared
-  harness (`pengdows.efcore.adonet.FunctionalTests.Shared`, `test/FunctionalTests.props`):
-  `pengdows.efcore.adonet.sqlserver.FunctionalTests` (EF Core 10.0.11, Microsoft's SQL baselines; Where: 409 of 409) and
-  `pengdows.efcore.adonet.postgresql.FunctionalTests` (npgsql/efcore.pg 10.0.3; Where: 408 of 408).
+- **EF Core's specification tests** (`pengdows.efcore.adonet.Specification.Tests`), run unchanged on all six databases
+  through one database-neutral test store (harness: `pengdows.efcore.adonet.FunctionalTests.Shared`,
+  `test/FunctionalTests.props`). Results only: no provider's SQL baselines. Where suite: 408 of 408 on SQL Server,
+  PostgreSQL, MySQL, SQLite and DuckDB; 372 of 408 on pengdows.flatfile 0.2.1-preview.8 (engine gaps in
+  [UPSTREAM_ISSUES.md](UPSTREAM_ISSUES.md)).
 
 Public API is declared in each project's `PublicAPI.*.txt` and enforced by PublicApiAnalyzers; why each public type is
 public is in [docs/PUBLIC_API.md](docs/PUBLIC_API.md). Reviews follow [REVIEW_POLICY.md](REVIEW_POLICY.md).
