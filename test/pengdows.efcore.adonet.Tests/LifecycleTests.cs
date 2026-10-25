@@ -65,7 +65,7 @@ public class LifecycleTests
 
         // Sync dispose: fakeDb 2.0.5 counts a DisposeAsync twice.
         using (var context = new ItemContext(
-                   new DbContextOptionsBuilder<ItemContext>().UseAdoNet(connection, contextOwnsConnection: true).AllowManyDialects().Options))
+                   new DbContextOptionsBuilder<ItemContext>().UseAdoNet(connection, contextOwnsConnection: true, o => o.UseDialect(AdoNetDialect.Ansi)).AllowManyDialects().Options))
         {
             await context.Items.ToListAsync(Ct);
         }
@@ -94,7 +94,7 @@ public class LifecycleTests
         var factory = new fakeDbFactory(SupportedDatabase.PostgreSql);
         using var dataSource = factory.CreateDataSource(ConnectionString);
 
-        using (var context = new ItemContext(new DbContextOptionsBuilder<ItemContext>().UseAdoNet(dataSource).AllowManyDialects().Options))
+        using (var context = new ItemContext(new DbContextOptionsBuilder<ItemContext>().UseAdoNet(dataSource, o => o.UseDialect(AdoNetDialect.Ansi)).AllowManyDialects().Options))
         {
             await context.Items.ToListAsync(Ct);
         }

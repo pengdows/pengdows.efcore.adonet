@@ -22,9 +22,9 @@ public class ConfigurationTests
 
         using var nonGeneric = new ItemContext(
             (DbContextOptions<ItemContext>)((DbContextOptionsBuilder)new DbContextOptionsBuilder<ItemContext>().AllowManyDialects())
-            .UseAdoNet("pengdows.efcore.adonet.Tests.fake", ConnectionString).Options);
+            .UseAdoNet("pengdows.efcore.adonet.Tests.fake", ConnectionString, o => o.UseDialect(AdoNetDialect.Ansi)).Options);
         using var generic = new ItemContext(
-            new DbContextOptionsBuilder<ItemContext>().AllowManyDialects().UseAdoNet("pengdows.efcore.adonet.Tests.fake", ConnectionString).Options);
+            new DbContextOptionsBuilder<ItemContext>().AllowManyDialects().UseAdoNet("pengdows.efcore.adonet.Tests.fake", ConnectionString, o => o.UseDialect(AdoNetDialect.Ansi)).Options);
 
         Assert.IsType<fakeDbConnection>(nonGeneric.Database.GetDbConnection());
         Assert.IsType<fakeDbConnection>(generic.Database.GetDbConnection());
@@ -37,8 +37,8 @@ public class ConfigurationTests
         using var dataSource = factory.CreateDataSource(ConnectionString);
         using var connection = new fakeDbConnection { ConnectionString = ConnectionString };
 
-        DbContextOptions<ItemContext> fromDataSource = new DbContextOptionsBuilder<ItemContext>().AllowManyDialects().UseAdoNet(dataSource).Options;
-        DbContextOptions<ItemContext> fromConnection = new DbContextOptionsBuilder<ItemContext>().AllowManyDialects().UseAdoNet(connection).Options;
+        DbContextOptions<ItemContext> fromDataSource = new DbContextOptionsBuilder<ItemContext>().AllowManyDialects().UseAdoNet(dataSource, o => o.UseDialect(AdoNetDialect.Ansi)).Options;
+        DbContextOptions<ItemContext> fromConnection = new DbContextOptionsBuilder<ItemContext>().AllowManyDialects().UseAdoNet(connection, adoNetOptionsAction: o => o.UseDialect(AdoNetDialect.Ansi)).Options;
 
         using var first = new ItemContext(fromDataSource);
         using var second = new ItemContext(fromConnection);
@@ -51,7 +51,7 @@ public class ConfigurationTests
     {
         var builder = new DbContextOptionsBuilder<ItemContext>().AllowManyDialects();
         ((IDbContextOptionsBuilderInfrastructure)builder).AddOrUpdateExtension(
-            new AdoNetOptionsExtension().WithProviderFactory(new fakeDbFactory(SupportedDatabase.PostgreSql)));
+            new AdoNetOptionsExtension().WithProviderFactory(new fakeDbFactory(SupportedDatabase.PostgreSql)).WithDialect(AdoNetDialect.Ansi));
         using var context = new ItemContext(builder.Options);
 
         Assert.Contains("requires a connection string", Assert.Throws<InvalidOperationException>(() => context.Database.GetDbConnection()).Message);
@@ -61,7 +61,7 @@ public class ConfigurationTests
     public void A_factory_without_a_connection_string_takes_one_later()
     {
         var factory = new fakeDbFactory(SupportedDatabase.PostgreSql);
-        using var context = new ItemContext(new DbContextOptionsBuilder<ItemContext>().AllowManyDialects().UseAdoNet(factory).Options);
+        using var context = new ItemContext(new DbContextOptionsBuilder<ItemContext>().AllowManyDialects().UseAdoNet(factory, o => o.UseDialect(AdoNetDialect.Ansi)).Options);
 
         context.Database.SetConnectionString("Data Source=later;EmulatedProduct=PostgreSql");
 
@@ -73,7 +73,7 @@ public class ConfigurationTests
     {
         var connection = new fakeDbConnection { ConnectionString = "Data Source=fake;EmulatedProduct=PostgreSql" };
         using var context = new ItemContext(
-            new DbContextOptionsBuilder<ItemContext>().AllowManyDialects().UseAdoNet(new fakeDbFactory(SupportedDatabase.PostgreSql)).Options);
+            new DbContextOptionsBuilder<ItemContext>().AllowManyDialects().UseAdoNet(new fakeDbFactory(SupportedDatabase.PostgreSql), o => o.UseDialect(AdoNetDialect.Ansi)).Options);
 
         context.Database.SetDbConnection(connection);
 

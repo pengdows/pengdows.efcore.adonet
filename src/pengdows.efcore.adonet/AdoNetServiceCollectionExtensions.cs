@@ -55,6 +55,7 @@ public static class AdoNetServiceCollectionExtensions
                 .TryAddSingleton(dialect.Sql)
                 .TryAddSingleton(dialect.TypeMappings)
                 .TryAddSingleton(dialect.Capabilities)
+                .TryAddSingleton<AdoNetDataSources, AdoNetDataSources>()
                 .TryAddScoped<IAdoNetBulkLoader, AdoNetInsertBulkLoader>())
             .TryAddCoreServices();
 

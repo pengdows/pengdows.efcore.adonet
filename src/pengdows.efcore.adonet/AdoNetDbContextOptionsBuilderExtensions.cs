@@ -9,7 +9,8 @@ public static class AdoNetDbContextOptionsBuilderExtensions
 {
     /// <summary>
     ///     Uses <paramref name="providerFactory" /> to create a connection per context (pooling is the provider's).
-    ///     Without <c>UseDialect</c>, the dialect registered for the factory in <see cref="AdoNetDialects" /> is used.
+    ///     Without <c>UseDialect</c>, the dialect registered for the factory in <see cref="AdoNetDialects" /> is used; with
+    ///     neither, the context refuses to start.
     /// </summary>
     public static DbContextOptionsBuilder UseAdoNet(
         this DbContextOptionsBuilder optionsBuilder,
@@ -20,8 +21,7 @@ public static class AdoNetDbContextOptionsBuilderExtensions
         ArgumentNullException.ThrowIfNull(providerFactory);
         ArgumentException.ThrowIfNullOrWhiteSpace(connectionString);
 
-        var extension = GetOrCreateExtension(optionsBuilder, providerFactory)
-            .WithProviderFactory(providerFactory);
+        var extension = GetOrCreateExtension(optionsBuilder).WithProviderFactory(providerFactory);
 
         return Apply(optionsBuilder, (AdoNetOptionsExtension)extension.WithConnectionString(connectionString), adoNetOptionsAction);
     }
@@ -37,7 +37,7 @@ public static class AdoNetDbContextOptionsBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(providerFactory);
 
-        return Apply(optionsBuilder, GetOrCreateExtension(optionsBuilder, providerFactory).WithProviderFactory(providerFactory), adoNetOptionsAction);
+        return Apply(optionsBuilder, GetOrCreateExtension(optionsBuilder).WithProviderFactory(providerFactory), adoNetOptionsAction);
     }
 
     /// <summary>
@@ -85,7 +85,7 @@ public static class AdoNetDbContextOptionsBuilderExtensions
             factory = DbProviderFactories.GetFactory(probe);
         }
 
-        return Apply(optionsBuilder, GetOrCreateExtension(optionsBuilder, factory).WithDataSource(dataSource), adoNetOptionsAction);
+        return Apply(optionsBuilder, GetOrCreateExtension(optionsBuilder).WithDataSource(dataSource, factory), adoNetOptionsAction);
     }
 
     public static DbContextOptionsBuilder UseAdoNet(
@@ -96,8 +96,7 @@ public static class AdoNetDbContextOptionsBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(connection);
 
-        var extension = GetOrCreateExtension(optionsBuilder, DbProviderFactories.GetFactory(connection))
-            .WithConnection(connection, contextOwnsConnection);
+        var extension = GetOrCreateExtension(optionsBuilder).WithConnection(connection, contextOwnsConnection);
 
         return Apply(optionsBuilder, (AdoNetOptionsExtension)extension, adoNetOptionsAction);
     }
@@ -153,9 +152,8 @@ public static class AdoNetDbContextOptionsBuilderExtensions
         => (DbContextOptionsBuilder<TContext>)((DbContextOptionsBuilder)optionsBuilder).UseAdoNet(
             connection, contextOwnsConnection, adoNetOptionsAction);
 
-    private static AdoNetOptionsExtension GetOrCreateExtension(DbContextOptionsBuilder optionsBuilder, DbProviderFactory? factory)
-        => optionsBuilder.Options.FindExtension<AdoNetOptionsExtension>()
-            ?? new AdoNetOptionsExtension().WithDialect(AdoNetDialects.Find(factory));
+    private static AdoNetOptionsExtension GetOrCreateExtension(DbContextOptionsBuilder optionsBuilder)
+        => optionsBuilder.Options.FindExtension<AdoNetOptionsExtension>() ?? new AdoNetOptionsExtension();
 
     private static DbContextOptionsBuilder Apply(
         DbContextOptionsBuilder optionsBuilder,

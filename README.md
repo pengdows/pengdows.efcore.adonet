@@ -84,7 +84,8 @@ EF builds one internal service provider per distinct dialect, as decided by the 
 Share instances (`SqlServerDialect.Instance`), or give a configurable dialect value equality.
 
 Without `UseDialect`, the dialect is looked up in `AdoNetDialects`, where plugins register through
-`XxxDbContextOptionsBuilderExtensions.RegisterDialect()`; an unregistered factory gets ANSI.
+`XxxDbContextOptionsBuilderExtensions.RegisterDialect()`. A factory with no dialect registered and none chosen is refused
+when the context is created; ISO SQL is chosen like any other dialect, with `UseDialect(AdoNetDialect.Ansi)`.
 
 ## Databases
 

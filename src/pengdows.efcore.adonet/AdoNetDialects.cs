@@ -4,8 +4,8 @@ using System.Data.Common;
 namespace pengdows.efcore.adonet;
 
 /// <summary>
-///     Which dialect to use when only a provider factory is given. Dialect packages register themselves here;
-///     the core knows none, so an unregistered factory gets <see cref="AdoNetDialect.Ansi" />.
+///     Which dialect to use when only a provider factory is given. Dialect packages register themselves here; the core knows
+///     none, so a factory nothing registered for needs <c>UseDialect</c>.
 /// </summary>
 public static class AdoNetDialects
 {
@@ -23,6 +23,7 @@ public static class AdoNetDialects
         Registered[factoryType] = dialect;
     }
 
-    public static IAdoNetDialect Find(DbProviderFactory? factory)
-        => factory != null && Registered.TryGetValue(factory.GetType(), out var dialect) ? dialect : AdoNetDialect.Ansi;
+    /// <summary>The dialect registered for <paramref name="factory" />'s type, or null.</summary>
+    public static IAdoNetDialect? Find(DbProviderFactory? factory)
+        => (factory != null) && Registered.TryGetValue(factory.GetType(), out var dialect) ? dialect : null;
 }

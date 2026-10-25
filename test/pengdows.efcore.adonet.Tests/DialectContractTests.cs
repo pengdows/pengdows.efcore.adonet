@@ -107,7 +107,7 @@ public class DialectContractTests
     public void Detection_only_knows_registered_dialects()
     {
         var factory = new UnknownFactory();
-        Assert.Same(AdoNetDialect.Ansi, AdoNetDialects.Find(factory));
+        Assert.Null(AdoNetDialects.Find(factory));
 
         AdoNetDialects.Register<UnknownFactory>(ComposedDialect.Instance);
 

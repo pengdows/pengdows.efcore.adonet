@@ -11,7 +11,9 @@ public class AdoNetOptionsExtension : RelationalOptionsExtension
     private DbContextOptionsExtensionInfo? _info;
     private DbProviderFactory? _providerFactory;
     private DbDataSource? _dataSource;
-    private IAdoNetDialect _dialect = AdoNetDialect.Ansi;
+    private IAdoNetDialect? _dialect;
+    private IAdoNetDialect? _registeredDialect;
+    private DbProviderFactory? _sourceFactory;
 
     public AdoNetOptionsExtension()
     {
@@ -23,6 +25,8 @@ public class AdoNetOptionsExtension : RelationalOptionsExtension
         _providerFactory = copyFrom._providerFactory;
         _dataSource = copyFrom._dataSource;
         _dialect = copyFrom._dialect;
+        _registeredDialect = copyFrom._registeredDialect;
+        _sourceFactory = copyFrom._sourceFactory;
     }
 
     public override DbContextOptionsExtensionInfo Info
@@ -36,24 +40,53 @@ public class AdoNetOptionsExtension : RelationalOptionsExtension
     public virtual DbDataSource? DataSource
         => _dataSource;
 
+    /// <summary>The dialect from <c>UseDialect</c>, else the one registered for the configured factory.</summary>
     public virtual IAdoNetDialect Dialect
-        => _dialect;
+        => _dialect
+            ?? _registeredDialect
+            ?? throw new InvalidOperationException(
+                $"No dialect is registered for {(_sourceFactory == null ? "this connection's provider" : $"'{_sourceFactory.GetType().Name}'")}. "
+                + "Choose one with UseDialect (AdoNetDialect.Ansi for ISO SQL), or configure through a dialect package's UseAdoNet... method.");
+
+    private IAdoNetDialect? ChosenDialect
+        => _dialect ?? _registeredDialect;
 
     protected override RelationalOptionsExtension Clone()
         => new AdoNetOptionsExtension(this);
 
+    // Each source replaces any other, as configuring a provider again does in EF.
     public virtual AdoNetOptionsExtension WithProviderFactory(DbProviderFactory providerFactory)
     {
-        var clone = (AdoNetOptionsExtension)Clone();
+        var clone = (AdoNetOptionsExtension)base.WithConnection(null);
         clone._providerFactory = providerFactory;
-        return clone;
+        clone._dataSource = null;
+        return clone.WithSourceFactory(providerFactory);
     }
 
-    public virtual AdoNetOptionsExtension WithDataSource(DbDataSource dataSource)
+    public virtual AdoNetOptionsExtension WithDataSource(DbDataSource dataSource, DbProviderFactory? providerFactory)
     {
-        var clone = (AdoNetOptionsExtension)Clone();
+        var clone = (AdoNetOptionsExtension)base.WithConnection(null).WithConnectionString(null);
         clone._dataSource = dataSource;
-        return clone;
+        clone._providerFactory = null;
+        return clone.WithSourceFactory(providerFactory);
+    }
+
+    public override RelationalOptionsExtension WithConnection(DbConnection? connection)
+        => WithConnection(connection, owned: false);
+
+    public override RelationalOptionsExtension WithConnection(DbConnection? connection, bool owned)
+    {
+        var clone = (AdoNetOptionsExtension)base.WithConnection(connection, owned).WithConnectionString(null);
+        clone._providerFactory = null;
+        clone._dataSource = null;
+        return connection == null ? clone : clone.WithSourceFactory(DbProviderFactories.GetFactory(connection));
+    }
+
+    private AdoNetOptionsExtension WithSourceFactory(DbProviderFactory? factory)
+    {
+        _sourceFactory = factory;
+        _registeredDialect = AdoNetDialects.Find(factory);
+        return this;
     }
 
     public virtual AdoNetOptionsExtension WithDialect(IAdoNetDialect dialect)
@@ -64,14 +97,14 @@ public class AdoNetOptionsExtension : RelationalOptionsExtension
     }
 
     public override void ApplyServices(IServiceCollection services)
-        => services.AddEntityFrameworkAdoNet(_dialect);
+        => services.AddEntityFrameworkAdoNet(Dialect);
 
     public override void Validate(IDbContextOptions options)
     {
         base.Validate(options);
 
         // The dialect partitions the service provider, so this runs once per distinct dialect.
-        Validate(_dialect);
+        Validate(Dialect);
     }
 
     /// <summary>Combinations of dialect parts the provider cannot work with.</summary>
@@ -101,16 +134,16 @@ public class AdoNetOptionsExtension : RelationalOptionsExtension
         // The dialect is consumed by singleton services and registers services of its own, so it partitions the internal
         // service provider. Equality is the dialect's: reference equality unless it defines value equality.
         public override int GetServiceProviderHashCode()
-            => Extension._dialect.GetHashCode();
+            => Extension.ChosenDialect?.GetHashCode() ?? 0;
 
         public override bool ShouldUseSameServiceProvider(DbContextOptionsExtensionInfo other)
             => other is ExtensionInfo otherInfo
-                && Extension._dialect.Equals(otherInfo.Extension._dialect);
+                && Equals(Extension.ChosenDialect, otherInfo.Extension.ChosenDialect);
 
         public override string LogFragment
-            => base.LogFragment + "Dialect=" + Extension._dialect.Name + " ";
+            => base.LogFragment + "Dialect=" + (Extension.ChosenDialect?.Name ?? "(none)") + " ";
 
         public override void PopulateDebugInfo(IDictionary<string, string> debugInfo)
-            => debugInfo["AdoNet:Dialect"] = Extension._dialect.GetHashCode().ToString(CultureInfo.InvariantCulture);
+            => debugInfo["AdoNet:Dialect"] = (Extension.ChosenDialect?.GetHashCode() ?? 0).ToString(CultureInfo.InvariantCulture);
     }
 }
