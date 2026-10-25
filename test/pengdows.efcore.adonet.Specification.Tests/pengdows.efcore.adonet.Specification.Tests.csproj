@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The base test suite: EF Core's own specification tests that every upstream provider runs (docs/upstream-baselines/
+    INTERSECTION.md), run against all six databases through one database-neutral test store. Results are compared with
+    EF's expected data; no database's SQL baseline is asserted here (the providers' functional test projects do that).
+  -->
+  <Import Project="..\FunctionalTests.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\pengdows.efcore.adonet.sqlserver\pengdows.efcore.adonet.sqlserver.csproj" />
+    <ProjectReference Include="..\..\src\pengdows.efcore.adonet.postgresql\pengdows.efcore.adonet.postgresql.csproj" />
+    <ProjectReference Include="..\..\src\pengdows.efcore.adonet.mysql\pengdows.efcore.adonet.mysql.csproj" />
+    <ProjectReference Include="..\..\src\pengdows.efcore.adonet.sqlite\pengdows.efcore.adonet.sqlite.csproj" />
+    <ProjectReference Include="..\..\src\pengdows.efcore.adonet.duckdb\pengdows.efcore.adonet.duckdb.csproj" />
+    <ProjectReference Include="..\..\src\pengdows.efcore.adonet.flatfile\pengdows.efcore.adonet.flatfile.csproj" />
+    <PackageReference Include="DuckDB.NET.Data.Full" />
+    <PackageReference Include="Testcontainers.MsSql" />
+    <PackageReference Include="Testcontainers.PostgreSql" />
+    <PackageReference Include="Testcontainers.MySql" />
+  </ItemGroup>
+
+</Project>

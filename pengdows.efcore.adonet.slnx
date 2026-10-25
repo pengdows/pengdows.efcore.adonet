@@ -11,6 +11,7 @@
   </Folder>
   <Folder Name="/test/">
     <Project Path="test/pengdows.efcore.adonet.Tests/pengdows.efcore.adonet.Tests.csproj" />
+    <Project Path="test/pengdows.efcore.adonet.Specification.Tests/pengdows.efcore.adonet.Specification.Tests.csproj" />
     <Project Path="test/pengdows.efcore.adonet.sqlite.Tests/pengdows.efcore.adonet.sqlite.Tests.csproj" />
     <Project Path="test/pengdows.efcore.adonet.duckdb.Tests/pengdows.efcore.adonet.duckdb.Tests.csproj" />
     <Project Path="test/pengdows.efcore.adonet.postgresql.FunctionalTests/pengdows.efcore.adonet.postgresql.FunctionalTests.csproj" />
