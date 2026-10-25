@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-This is a .NET 10 solution (`pengdows.efcore.adonet.slnx`) implementing an EF Core ADO.NET abstraction. Core abstractions, SQL generation, storage, metadata, and diagnostics are in `src/pengdows.efcore.adonet/`. Provider packages live in sibling directories such as `src/pengdows.efcore.adonet.sqlserver/`, with shared conformance helpers in `src/pengdows.efcore.adonet.Testing/`. Unit, provider, specification, and functional tests are in `test/`; provider-neutral documentation and upstream comparison records are in `docs/`.
+This is a .NET 10 solution (`pengdows.efcore.adonet.slnx`) building one shared EF Core library with six providers: MySQL, PostgreSQL, SQL Server, flatfile, SQLite, and DuckDB. Five providers have at least one established EF provider used as a compatibility reference; flatfile is the in-repository provider without that upstream counterpart. Core abstractions, SQL generation, storage, metadata, and diagnostics are in `src/pengdows.efcore.adonet/`. Provider packages live in sibling directories such as `src/pengdows.efcore.adonet.sqlserver/`, with shared conformance helpers in `src/pengdows.efcore.adonet.Testing/`. Unit, provider, specification, and functional tests are in `test/`; provider-neutral documentation and upstream comparison records are in `docs/`.
 
 ## Build, Test, and Development Commands
 
@@ -24,11 +24,11 @@ Use standard C# style: four-space indentation, nullable reference types enabled,
 
 ## Testing Guidelines
 
-Tests use xUnit. Name test classes and methods for the behavior under test (for example, `PostgreSqlSqlTests` and `*Tests`). New providers should add a fixture and conformance-suite subclasses following the existing provider test projects. Record genuine engine limitations as `KnownEngineGaps`; do not hide regressions with broad skips. Server-backed tests need Docker and Testcontainers; core tests use fakeDb and in-memory SQLite.
+Tests use xUnit. Name test classes and methods for the behavior under test (for example, `PostgreSqlSqlTests` and `*Tests`). New providers should add a fixture and conformance-suite subclasses following the existing provider test projects. Test requirements, skips and imports from other EF providers follow `REVIEW_POLICY.md`. Server-backed tests need Docker and Testcontainers; core tests use fakeDb and in-memory SQLite.
 
 ## Commit & Pull Request Guidelines
 
-Recent commits use concise, imperative or descriptive subjects, often naming the suite and provider (for example, `Base Where suite: 408 of 408 on MySQL too`). Keep commits focused. Pull requests should explain the behavior change, list affected providers, include the exact build/test commands and results, call out known gaps or API changes, and link relevant issues or upstream baselines. Do not overwrite unrelated working-tree changes.
+Recent commits use concise, imperative or descriptive subjects, often naming the suite and provider (for example, `Base Where suite: 408 of 408 on MySQL too`). Keep commits focused. What a pull request must show is set by `REVIEW_POLICY.md`. Do not overwrite unrelated working-tree changes.
 
 ## Security & Configuration Tips
 
