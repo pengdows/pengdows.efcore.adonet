@@ -72,6 +72,9 @@ internal sealed class SqlServerSql : AnsiSqlDialect
 /// </summary>
 internal sealed class SqlServerFunctions : FunctionSyntax
 {
+    // The % operator, as the database's EF Core provider writes it.
+    public override string? Modulo => null;
+
     public override string Concat => "{0} + {1}";
     public override string? TrimStart => "LTRIM({0})";
     public override string? TrimEnd => "RTRIM({0})";

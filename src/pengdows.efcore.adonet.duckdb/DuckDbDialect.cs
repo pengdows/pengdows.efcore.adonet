@@ -46,6 +46,9 @@ internal sealed class DuckDbSql : AnsiSqlDialect
 /// </summary>
 internal sealed class DuckDbFunctions : FunctionSyntax
 {
+    // The % operator, as the database's EF Core provider writes it.
+    public override string? Modulo => null;
+
     public override string? OffsetDateTime => "({0} AT TIME ZONE 'UTC')";
 }
 

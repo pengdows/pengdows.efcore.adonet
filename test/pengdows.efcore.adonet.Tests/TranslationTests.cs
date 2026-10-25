@@ -31,6 +31,13 @@ public class TranslationTests
     }
 
     [Fact]
+    public void Remainders_are_isos_mod_or_the_operator_where_the_dialect_keeps_it()
+    {
+        Assert.Contains(@"WHERE MOD(""i"".""Version"" + 1, 2) = 0", Ansi(c => c.Items.Where(i => (i.Version + 1) % 2 == 0)));
+        Assert.Contains(@"WHERE (""i"".""Version"" + 1) % 2 = 0", Sql(TestDialects.Functions, c => c.Items.Where(i => (i.Version + 1) % 2 == 0)));
+    }
+
+    [Fact]
     public void Hostile_string_literals_stay_one_literal()
     {
         var huge = new string('\'', 65_536);
@@ -320,6 +327,7 @@ public sealed class TestFunctions : FunctionSyntax
     public override string Year => "DATEPART(year, {0})";
     public override string OffsetDateTime => "LOCAL({0})";
     public override string? Sqrt => null;
+    public override string? Modulo => null;
     public override char? LikeEscapeCharacter => '!';
     public override string LikeSpecialCharacters => "%_[";
 }

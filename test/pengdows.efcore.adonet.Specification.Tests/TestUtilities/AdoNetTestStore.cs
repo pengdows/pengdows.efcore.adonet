@@ -37,6 +37,19 @@ public class AdoNetTestStore<THost> : RelationalTestStore
         await base.InitializeAsync(createContext, seed, clean);
     }
 
+    // EF's relational store leaves its own connection open after setup. Closed here, as every context's is between uses: a
+    // database with one writer at a time (pengdows.flatfile) would otherwise be locked against the tests themselves.
+    public override async Task<TestStore> InitializeAsync(
+        IServiceProvider? serviceProvider,
+        Func<DbContext>? createContext,
+        Func<DbContext, Task>? seed = null,
+        Func<DbContext, Task>? clean = null)
+    {
+        await base.InitializeAsync(serviceProvider, createContext, seed, clean);
+        CloseConnection();
+        return this;
+    }
+
     // The database starts empty: the schema is the model's, created by the provider.
     public override async Task CleanAsync(DbContext context)
         => await context.GetService<IRelationalDatabaseCreator>().CreateTablesAsync();

@@ -44,6 +44,12 @@ public class FunctionSyntax
     public virtual string? RoundDigits => "ROUND({0}, {1})";
 
     public virtual string? Power => "POWER({0}, {1})";
+
+    /// <summary>
+    ///     The remainder of <c>{0}</c> divided by <c>{1}</c>: ISO's <c>MOD</c>, which has no operator for it. Null keeps
+    ///     EF's <c>%</c> operator.
+    /// </summary>
+    public virtual string? Modulo => "MOD({0}, {1})";
     public virtual string? Sqrt => "SQRT({0})";
 
     public virtual string? Year => "EXTRACT(YEAR FROM {0})";
@@ -106,7 +112,7 @@ public class FunctionSyntax
             (nameof(TrimStart), TrimStart, 1), (nameof(TrimEnd), TrimEnd, 1), (nameof(Length), Length, 1),
             (nameof(Substring), Substring, 3), (nameof(SubstringFrom), SubstringFrom, 2), (nameof(Position), Position, 2),
             (nameof(Replace), Replace, 3), (nameof(Abs), Abs, 1), (nameof(Floor), Floor, 1), (nameof(Ceiling), Ceiling, 1),
-            (nameof(Round), Round, 1), (nameof(RoundDigits), RoundDigits, 2), (nameof(Power), Power, 2), (nameof(Sqrt), Sqrt, 1),
+            (nameof(Round), Round, 1), (nameof(RoundDigits), RoundDigits, 2), (nameof(Power), Power, 2), (nameof(Modulo), Modulo, 2), (nameof(Sqrt), Sqrt, 1),
             (nameof(Year), Year, 1), (nameof(Month), Month, 1), (nameof(Day), Day, 1), (nameof(Hour), Hour, 1),
             (nameof(Minute), Minute, 1), (nameof(Second), Second, 1), (nameof(OffsetDateTime), OffsetDateTime, 1)
         ];

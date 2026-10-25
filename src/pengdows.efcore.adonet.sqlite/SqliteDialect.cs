@@ -93,6 +93,9 @@ internal sealed class SqliteTypeMappings : AnsiTypeMappings
 /// </summary>
 internal sealed class SqliteFunctions : FunctionSyntax
 {
+    // The % operator, as the database's EF Core provider writes it.
+    public override string? Modulo => null;
+
     public override string? OffsetDateTime => "SUBSTR({0}, 1, LENGTH({0}) - 6)";
     public override string? TrimStart => "LTRIM({0})";
     public override string? TrimEnd => "RTRIM({0})";

@@ -19,7 +19,7 @@ public class QueryGrammarTests
         string Where(Func<ItemContext, IQueryable> query)
             => Sql(TestDialects.Ansi, query).Split("WHERE ")[1];
 
-        Assert.Equal(@"""i"".""Version"" % 2 = 0", Where(c => c.Items.Where(i => i.Version % 2 == 0)));
+        Assert.Equal(@"""i"".""Version"" % 2 = 0", Sql(TestDialects.Functions, c => c.Items.Where(i => i.Version % 2 == 0)).Split("WHERE ")[1]);
         Assert.Equal(@"(""i"".""Version"" + 1) * 2 = 4", Where(c => c.Items.Where(i => (i.Version + 1) * 2 == 4)));
         Assert.Equal(@"CAST(""i"".""Version"" AS BIGINT) - (""i"".""Big"" - 1) = 0", Where(c => c.Items.Where(i => i.Version - (i.Big - 1) == 0)));
         Assert.Equal(@"COALESCE(""i"".""Name"", '') || 'x' = 'ax'", Where(c => c.Items.Where(i => i.Name + "x" == "ax")));
@@ -37,7 +37,10 @@ public class QueryGrammarTests
         Assert.Equal(@"""i"".""Name"" LIKE 'a%' AND ""i"".""Version"" = 1", Where(c => c.Items.Where(i => EF.Functions.Like(i.Name!, "a%") && i.Version == 1)));
         // At equal precedence EF keeps parentheses around a non-associative operator, or a different one; an associative
         // operator nested in itself needs none.
-        Assert.Equal(@"""i"".""Version"" % (""i"".""Version"" % 3) = 0", Where(c => c.Items.Where(i => i.Version % (i.Version % 3) == 0)));
+        Assert.Equal(
+            @"""i"".""Version"" % (""i"".""Version"" % 3) = 0",
+            Sql(TestDialects.Functions, c => c.Items.Where(i => i.Version % (i.Version % 3) == 0)).Split("WHERE ")[1]);
+        Assert.Equal(@"MOD(""i"".""Version"", MOD(""i"".""Version"", 3)) = 0", Where(c => c.Items.Where(i => i.Version % (i.Version % 3) == 0)));
         Assert.Equal(@"(""i"".""Version"" - ""i"".""Tiny"") - 1 = 0", Where(c => c.Items.Where(i => i.Version - i.Tiny - 1 == 0)));
         Assert.Equal(@"""i"".""Version"" * ""i"".""Tiny"" * 2 = 0", Where(c => c.Items.Where(i => i.Version * (i.Tiny * 2) == 0)));
         Assert.Equal(@"""i"".""Version"" + ""i"".""Tiny"" + 2 = 0", Where(c => c.Items.Where(i => i.Version + (i.Tiny + 2) == 0)));

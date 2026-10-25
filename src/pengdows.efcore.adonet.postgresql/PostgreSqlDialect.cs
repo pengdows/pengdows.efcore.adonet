@@ -89,6 +89,9 @@ internal sealed class PostgreSqlTypeMappings : AnsiTypeMappings
 /// </summary>
 internal sealed class PostgreSqlFunctions : FunctionSyntax
 {
+    // The % operator, as the database's EF Core provider writes it.
+    public override string? Modulo => null;
+
     public override string? OffsetDateTime => "({0} AT TIME ZONE 'UTC')";
     public override string? RoundDigits => "ROUND(CAST({0} AS numeric), {1})";
 }

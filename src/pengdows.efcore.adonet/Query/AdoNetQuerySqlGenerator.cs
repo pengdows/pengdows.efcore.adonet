@@ -110,6 +110,12 @@ internal class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencie
             return sqlBinaryExpression;
         }
 
+        if (sqlBinaryExpression is { OperatorType: ExpressionType.Modulo } && dialect.Functions.Modulo is { } modulo)
+        {
+            SqlTemplate.Write(modulo, [sqlBinaryExpression.Left, sqlBinaryExpression.Right], s => Sql.Append(s), e => Visit(e));
+            return sqlBinaryExpression;
+        }
+
         return base.VisitSqlBinary(sqlBinaryExpression);
     }
 

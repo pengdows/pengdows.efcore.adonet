@@ -70,6 +70,9 @@ internal sealed class MySqlSql(bool backslashEscapes = true) : AnsiSqlDialect
 /// </summary>
 internal sealed class MySqlFunctions : FunctionSyntax
 {
+    // The % operator, as the database's EF Core provider writes it.
+    public override string? Modulo => null;
+
     public override string? Second => "EXTRACT(SECOND FROM {0})";
     public override string Concat => "CONCAT({0}, {1})";
     public override string? Floor => "(FLOOR({0}) + 0.0)";

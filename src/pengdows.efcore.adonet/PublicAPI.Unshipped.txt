@@ -274,6 +274,7 @@ virtual pengdows.efcore.adonet.FunctionSyntax.LikeEscapeCharacter.get -> char?
 virtual pengdows.efcore.adonet.FunctionSyntax.LikeSpecialCharacters.get -> string!
 virtual pengdows.efcore.adonet.FunctionSyntax.Lower.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.Minute.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.Modulo.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.Month.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.OffsetDateTime.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.Position.get -> string?
