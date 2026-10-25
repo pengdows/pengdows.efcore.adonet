@@ -137,6 +137,10 @@ plain ADO.NET:
   `ALTER TABLE "Authors" RENAME TO "Writers"`, an insert into `Shelves` fails with "Referenced table 'Authors' was not
   found for foreign key 'FK_Shelves_Authors'". Found by `MigrationsConformanceTests.Migrate_applies_records_and_reverts_migrations`
   and `Alter_column_changes_size_nullability_and_default`.
+- A `DELETE` target takes no correlation name: `DELETE FROM "T" AS "t" WHERE "t"."Id" = 1` and `DELETE FROM "T" "t" ...`
+  fail ("Expected token 'EndOfInput' ... but found 'As'"), though `UPDATE "T" AS "t"` and `UPDATE "T" "t"` work. ISO
+  (SQL:2011) allows `DELETE FROM <target table> [ [ AS ] <correlation name> ]`. Found by running `ExecuteDelete` with EF's
+  standard DML. Our work-around: the flatfile dialect keeps `DmlSyntax.UnaliasedTarget`.
 - Errors that are not `DbException`s: the three above surface as `OverflowException`, `ArgumentException` and
   `InvalidOperationException`; provider-agnostic code (EF's `DbUpdateException` wrapping included) catches database errors
   as `DbException`. `DROP TABLE` of a missing table is fixed: it now throws `FlatFileException`, a `DbException`.
