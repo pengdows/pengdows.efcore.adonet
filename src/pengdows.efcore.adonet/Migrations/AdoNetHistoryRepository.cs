@@ -1,3 +1,4 @@
+using System.Runtime.ExceptionServices;
 using System.Data.Common;
 using System.Globalization;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -80,6 +81,9 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
     private NotSupportedException IdempotentScriptsNotSupported()
         => new($"Dialect '{Dialect.Name}': idempotent migration scripts need conditional SQL, which ISO SQL has no statement for.");
 
+    // The lock is a row. A refused insert means another migrator holds it, unless no row is there: then, after one more try
+    // (it may have been released in between), the error is real. A row older than LockTimeout is a migrator that died
+    // holding it, and is taken over.
     public override IMigrationsDatabaseLock AcquireDatabaseLock()
     {
         if (!TableExists(LockTableName))
@@ -88,16 +92,29 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
         }
 
         var deadline = DateTime.UtcNow + LockTimeout;
-        for (var delay = TimeSpan.FromMilliseconds(50); ; delay = NextDelay(delay))
+        var delay = TimeSpan.FromMilliseconds(50);
+        var refusals = new Refusals();
+        while (true)
         {
             try
             {
                 Command(AcquireLockSql()).ExecuteNonQuery(Parameters());
                 return new Lock(this);
             }
-            catch (DbException) when (DateTime.UtcNow < deadline)
+            catch (DbException refused)
             {
+                var holder = Holder(Command(HolderSql()).ExecuteScalar(Parameters()));
+                switch (Next(holder, refused, deadline, refusals))
+                {
+                    case Retry.Now:
+                        continue;
+                    case Retry.TakeOver:
+                        Command(TakeOverSql(holder!)).ExecuteNonQuery(Parameters());
+                        continue;
+                }
+
                 Thread.Sleep(delay);
+                delay = NextDelay(delay);
             }
         }
     }
@@ -110,23 +127,94 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
         }
 
         var deadline = DateTime.UtcNow + LockTimeout;
-        for (var delay = TimeSpan.FromMilliseconds(50); ; delay = NextDelay(delay))
+        var delay = TimeSpan.FromMilliseconds(50);
+        var refusals = new Refusals();
+        while (true)
         {
+            DbException refused;
             try
             {
                 await Command(AcquireLockSql()).ExecuteNonQueryAsync(Parameters(), cancellationToken).ConfigureAwait(false);
                 return new Lock(this);
             }
-            catch (DbException) when (DateTime.UtcNow < deadline)
+            catch (DbException e)
             {
-                await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+                refused = e;
             }
+
+            var holder = Holder(await Command(HolderSql()).ExecuteScalarAsync(Parameters(), cancellationToken).ConfigureAwait(false));
+            switch (Next(holder, refused, deadline, refusals))
+            {
+                case Retry.Now:
+                    continue;
+                case Retry.TakeOver:
+                    await Command(TakeOverSql(holder!)).ExecuteNonQueryAsync(Parameters(), cancellationToken).ConfigureAwait(false);
+                    continue;
+            }
+
+            await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+            delay = NextDelay(delay);
         }
     }
+
+    private enum Retry
+    {
+        Now,
+        TakeOver,
+        AfterDelay
+    }
+
+    private sealed class Refusals
+    {
+        public int Unheld { get; set; }
+        public bool TookOver { get; set; }
+    }
+
+    // Each way out is bounded: a refusal with no holder is retried once, a stale holder is taken over once, and waiting
+    // ends at the deadline.
+    private Retry Next(string? holder, DbException refused, DateTime deadline, Refusals refusals)
+    {
+        if (holder == null)
+        {
+            refusals.Unheld++;
+            if (refusals.Unheld > 1)
+            {
+                ExceptionDispatchInfo.Throw(refused);
+            }
+
+            return Retry.Now;
+        }
+
+        if (DateTime.UtcNow >= deadline)
+        {
+            throw new TimeoutException(
+                $"Timed out after {LockTimeout} waiting for the migrations lock in {LockTable}, held since {holder}.", refused);
+        }
+
+        if (!refusals.TookOver
+            && DateTimeOffset.TryParse(holder, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var since)
+            && (DateTimeOffset.UtcNow - since > LockTimeout))
+        {
+            refusals.TookOver = true;
+            return Retry.TakeOver;
+        }
+
+        return Retry.AfterDelay;
+    }
+
+    private static string? Holder(object? value)
+        => value is null or DBNull ? null : Convert.ToString(value, CultureInfo.InvariantCulture);
 
     protected virtual string AcquireLockSql()
         => $"INSERT INTO {LockTable} ({Column("Id")}, {Column("Timestamp")}) VALUES (1, "
             + Literal(DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture)) + ")";
+
+    protected virtual string HolderSql()
+        => $"SELECT {Column("Timestamp")} FROM {LockTable} WHERE {Column("Id")} = 1";
+
+    // Only the stale holder's row: a migrator that took the lock in the meantime keeps it.
+    protected virtual string TakeOverSql(string holder)
+        => $"DELETE FROM {LockTable} WHERE {Column("Id")} = 1 AND {Column("Timestamp")} = {Literal(holder)}";
 
     protected virtual string ReleaseLockSql()
         => $"DELETE FROM {LockTable} WHERE {Column("Id")} = 1";
@@ -209,15 +297,28 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
     private RelationalCommandParameterObject Parameters()
         => new(Dependencies.Connection, null, null, Dependencies.CurrentContext.Context, Dependencies.CommandLogger, CommandSource.Migrations);
 
+    // EF's migrator begins its transaction before generating a migration's SQL and, if generating throws, releases the lock
+    // before disposing that transaction: a DELETE there would be rolled back with it, leaving the lock held. The transaction
+    // is doomed and the lock is the migrator's only while it owns a transaction, so it is rolled back first.
     private sealed class Lock(AdoNetHistoryRepository repository) : IMigrationsDatabaseLock
     {
         public IHistoryRepository HistoryRepository
             => repository;
 
         public void Dispose()
-            => repository.Command(repository.ReleaseLockSql()).ExecuteNonQuery(repository.Parameters());
+        {
+            repository.Dependencies.Connection.CurrentTransaction?.Rollback();
+            repository.Command(repository.ReleaseLockSql()).ExecuteNonQuery(repository.Parameters());
+        }
 
         public async ValueTask DisposeAsync()
-            => await repository.Command(repository.ReleaseLockSql()).ExecuteNonQueryAsync(repository.Parameters()).ConfigureAwait(false);
+        {
+            if (repository.Dependencies.Connection.CurrentTransaction is { } transaction)
+            {
+                await transaction.RollbackAsync().ConfigureAwait(false);
+            }
+
+            await repository.Command(repository.ReleaseLockSql()).ExecuteNonQueryAsync(repository.Parameters()).ConfigureAwait(false);
+        }
     }
 }

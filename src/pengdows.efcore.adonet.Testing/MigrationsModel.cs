@@ -154,6 +154,17 @@ public class AlterCodeMigration : Migration
             "Code", "Shelves", maxLength: 20, nullable: true, oldMaxLength: 40, oldNullable: false, oldDefaultValue: "none");
 }
 
+/// <summary>A context whose only migration fails while its SQL is generated, after EF has begun its transaction.</summary>
+public class BrokenMigrationsContext(DbContextOptions<BrokenMigrationsContext> options) : DbContext(options);
+
+[DbContext(typeof(BrokenMigrationsContext))]
+[Migration("20260201000000_Broken")]
+public class BrokenMigration : Migration
+{
+    protected override void Up(MigrationBuilder migrationBuilder)
+        => throw new NotSupportedException("This migration can't be generated.");
+}
+
 public static class MigrationsOptions
 {
     /// <summary>The test migrations have no model snapshot, which EF otherwise reports as pending model changes.</summary>

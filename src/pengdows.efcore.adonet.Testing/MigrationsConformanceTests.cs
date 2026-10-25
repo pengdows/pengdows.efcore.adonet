@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -138,6 +139,26 @@ public abstract class MigrationsConformanceTests<TFixture>(TFixture fixture) : I
         await Fixture.ExecuteAsync($"DELETE FROM {shelves}");
         await context.GetService<IMigrator>().MigrateAsync(MigrationIds.Reshape, cancellationToken: Ct);
         Assert.Equal([MigrationIds.Initial, MigrationIds.Reshape], await context.Database.GetAppliedMigrationsAsync(Ct));
+    }
+
+    // EF begins its migration transaction before generating the SQL, and on failure releases the lock before disposing
+    // the transaction: a lock released by a statement would be rolled back with it.
+    [Fact]
+    public async Task A_migration_that_fails_to_generate_leaves_no_lock_behind()
+    {
+        await using (var context = Fixture.CreateContext<BrokenMigrationsContext>(o => new BrokenMigrationsContext(o)))
+        {
+            await Assert.ThrowsAsync<NotSupportedException>(() => context.Database.MigrateAsync(Ct));
+        }
+
+        // The next migrator gets the lock at once and fails the same way, rather than waiting the lock out.
+        var started = Stopwatch.StartNew();
+        await using (var context = Fixture.CreateContext<BrokenMigrationsContext>(o => new BrokenMigrationsContext(o)))
+        {
+            await Assert.ThrowsAsync<NotSupportedException>(() => context.Database.MigrateAsync(Ct));
+        }
+
+        Assert.True(started.Elapsed < TimeSpan.FromSeconds(30), $"The second migration waited {started.Elapsed} for the lock.");
     }
 
     private async Task DropOwnTablesAsync()

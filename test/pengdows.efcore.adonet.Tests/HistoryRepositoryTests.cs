@@ -12,6 +12,11 @@ public class HistoryRepositoryTests
 {
     private const string LockInsert = "INSERT INTO \"__EFMigrationsLock\"";
     private const string LockTableCreate = "CREATE TABLE \"__EFMigrationsLock\"";
+    private const string AppLockInsert = "INSERT INTO \"app\".\"__EFMigrationsLock\"";
+    private const string HolderQuery = "SELECT \"Timestamp\" FROM \"app\".\"__EFMigrationsLock\" WHERE \"Id\" = 1";
+
+    private static string Stamp(DateTimeOffset at)
+        => at.ToString("O", System.Globalization.CultureInfo.InvariantCulture);
 
     private readonly FakeDatabase _db = new();
 
@@ -127,7 +132,7 @@ public class HistoryRepositoryTests
     [Fact]
     public async Task A_held_lock_is_waited_for()
     {
-        var commands = new CommandLog { FailFirst = LockInsert.Replace("\"__", "\"app\".\"__", StringComparison.Ordinal) };
+        var commands = new CommandLog { FailFirst = AppLockInsert, Holder = Stamp(DateTimeOffset.UtcNow) };
         await using var context = Context(configure: b => b.AddInterceptors(commands));
         var history = context.GetService<IHistoryRepository>();
 
@@ -142,21 +147,79 @@ public class HistoryRepositoryTests
         {
         }
 
-        // Each acquisition: one refused insert, then one that succeeds.
+        // Each acquisition: one refused insert, the holder looked up, then one insert that succeeds.
         Assert.Equal(4, commands.NonQueries.Count(c => c.StartsWith("INSERT INTO", StringComparison.Ordinal)));
+        Assert.Equal(2, commands.Scalars.Count(c => c == HolderQuery));
     }
 
     [Fact]
-    public async Task A_lock_that_is_never_released_times_out()
+    public async Task A_lock_that_is_never_released_times_out_naming_its_holder()
     {
-        var commands = new CommandLog { FailAlways = "INSERT INTO" };
+        var since = DateTimeOffset.UtcNow;
+        var commands = new CommandLog { FailAlways = "INSERT INTO", Holder = Stamp(since) };
         await using var context = Context(ShortLockDialect.Instance, b => b.AddInterceptors(commands));
+        var history = context.GetService<IHistoryRepository>();
+
+        _db.Connection.EnqueueScalarResult(1);
+        var timedOut = Assert.Throws<TimeoutException>(() => history.AcquireDatabaseLock());
+        _db.Connection.EnqueueScalarResult(1);
+        await Assert.ThrowsAsync<TimeoutException>(() => history.AcquireDatabaseLockAsync(Ct));
+
+        Assert.Contains(Stamp(since), timedOut.Message);
+        Assert.IsType<LockConflict>(timedOut.InnerException);
+    }
+
+    [Fact]
+    public async Task A_lock_older_than_the_timeout_is_taken_over()
+    {
+        var stale = Stamp(DateTimeOffset.UtcNow - TimeSpan.FromHours(1));
+        var commands = new CommandLog { FailFirst = AppLockInsert, Holder = stale };
+        await using var context = Context(configure: b => b.AddInterceptors(commands));
+        var history = context.GetService<IHistoryRepository>();
+
+        _db.Connection.EnqueueScalarResult(1);
+        await using (await history.AcquireDatabaseLockAsync(Ct))
+        {
+        }
+
+        // Only that holder's row: a migrator that took the lock meanwhile keeps it.
+        Assert.Contains(
+            $"DELETE FROM \"app\".\"__EFMigrationsLock\" WHERE \"Id\" = 1 AND \"Timestamp\" = '{stale}'", commands.NonQueries);
+        Assert.Equal(2, commands.NonQueries.Count(c => c.StartsWith(AppLockInsert, StringComparison.Ordinal)));
+    }
+
+    [Fact]
+    public async Task An_insert_refused_while_no_lock_is_held_is_a_real_error()
+    {
+        var commands = new CommandLog { FailAlways = AppLockInsert, Holder = null };
+        await using var context = Context(configure: b => b.AddInterceptors(commands));
         var history = context.GetService<IHistoryRepository>();
 
         _db.Connection.EnqueueScalarResult(1);
         Assert.Throws<LockConflict>(() => history.AcquireDatabaseLock());
         _db.Connection.EnqueueScalarResult(1);
         await Assert.ThrowsAsync<LockConflict>(() => history.AcquireDatabaseLockAsync(Ct));
+
+        // A second try covers a lock released between the insert and the look-up; then the error stands.
+        Assert.Equal(4, commands.NonQueries.Count(c => c.StartsWith(AppLockInsert, StringComparison.Ordinal)));
+    }
+
+    [Fact]
+    public async Task A_failed_migrations_transaction_is_rolled_back_before_the_lock_is_released()
+    {
+        var events = new List<string>();
+        var commands = new CommandLog { Events = events };
+        await using var context = Context(configure: b => b.AddInterceptors(commands, new TransactionLog(events)));
+        var history = context.GetService<IHistoryRepository>();
+        _db.Connection.EnqueueScalarResult(1);
+
+        // As EF's migrator does: the lock, then a transaction; on failure the lock is disposed before the transaction.
+        var databaseLock = await history.AcquireDatabaseLockAsync(Ct);
+        await using var transaction = await context.Database.BeginTransactionAsync(Ct);
+        await databaseLock.DisposeAsync();
+
+        Assert.Equal(["rollback", "DELETE FROM \"app\".\"__EFMigrationsLock\" WHERE \"Id\" = 1"], events.Skip(1));
+        Assert.Null(context.Database.CurrentTransaction);
     }
 
     [Fact]
@@ -193,14 +256,46 @@ public class HistoryRepositoryTests
 
     private sealed class LockConflict() : DbException("conflict");
 
-    /// <summary>Records non-query SQL; can fail the first, or every, command starting with some text.</summary>
+    private sealed class TransactionLog(List<string> events) : DbTransactionInterceptor
+    {
+        public override Task TransactionRolledBackAsync(DbTransaction transaction, TransactionEndEventData eventData, CancellationToken cancellationToken = default)
+        {
+            events.Add("rollback");
+            return Task.CompletedTask;
+        }
+
+        public override void TransactionRolledBack(DbTransaction transaction, TransactionEndEventData eventData)
+            => events.Add("rollback");
+    }
+
+    /// <summary>
+    ///     Records SQL; can fail the first, or every, non-query starting with some text, and answers the lock-holder query
+    ///     with <see cref="Holder" />.
+    /// </summary>
     private sealed class CommandLog : DbCommandInterceptor
     {
         private bool _failed;
 
         public List<string> NonQueries { get; } = [];
+        public List<string> Scalars { get; } = [];
+        public List<string>? Events { get; init; }
         public string? FailFirst { get; init; }
         public string? FailAlways { get; init; }
+        public string? Holder { get; init; }
+
+        public override InterceptionResult<object> ScalarExecuting(DbCommand command, CommandEventData eventData, InterceptionResult<object> result)
+            => AnswerHolder(command, result);
+
+        public override ValueTask<InterceptionResult<object>> ScalarExecutingAsync(
+            DbCommand command, CommandEventData eventData, InterceptionResult<object> result, CancellationToken cancellationToken = default)
+            => ValueTask.FromResult(AnswerHolder(command, result));
+
+        private InterceptionResult<object> AnswerHolder(DbCommand command, InterceptionResult<object> result)
+        {
+            var sql = command.CommandText.ReplaceLineEndings("\n");
+            Scalars.Add(sql);
+            return sql == HolderQuery ? InterceptionResult<object>.SuppressWithResult(Holder ?? (object)DBNull.Value) : result;
+        }
 
         public void Reset()
             => _failed = false;
@@ -222,6 +317,7 @@ public class HistoryRepositoryTests
         {
             var sql = command.CommandText.ReplaceLineEndings("\n");
             NonQueries.Add(sql);
+            Events?.Add(sql);
             if (FailAlways != null && sql.StartsWith(FailAlways, StringComparison.Ordinal))
             {
                 throw new LockConflict();
