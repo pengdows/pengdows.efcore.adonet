@@ -25,8 +25,15 @@ public class Post
     public Blog Blog { get; set; } = null!;
 }
 
+/// <summary>Nothing but a generated key: an insert has no columns to write.</summary>
+public class Tally
+{
+    public int Id { get; set; }
+}
+
 public class BlogContext(DbContextOptions<BlogContext> options) : DbContext(options)
 {
     public DbSet<Blog> Blogs => Set<Blog>();
     public DbSet<Post> Posts => Set<Post>();
+    public DbSet<Tally> Tallies => Set<Tally>();
 }

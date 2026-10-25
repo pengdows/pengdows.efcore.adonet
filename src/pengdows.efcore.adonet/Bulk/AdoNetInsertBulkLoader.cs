@@ -13,7 +13,7 @@ public class AdoNetInsertBulkLoader(
     ISqlGenerationHelper sqlGenerationHelper,
     IRelationalConnection connection,
     IRelationalCommandDiagnosticsLogger commandLogger,
-    IDatabaseCapabilities capabilities) : IAdoNetBulkLoader
+    IAdoNetDialect dialect) : IAdoNetBulkLoader
 {
     /// <summary>The most rows one INSERT names, whatever the parameter limit (SQL Server's VALUES limit).</summary>
     protected virtual int MaxRowsPerCommand
@@ -44,14 +44,22 @@ public class AdoNetInsertBulkLoader(
         {
             foreach (var _ in load.Rows)
             {
-                yield return ($"INSERT INTO {table} DEFAULT VALUES", []);
+                yield return ($"INSERT INTO {table} {dialect.Sql.DefaultValues}", []);
             }
 
             yield break;
         }
 
+        var maxParameters = dialect.Capabilities.MaxParametersPerCommand;
+        if (load.Columns.Count > maxParameters)
+        {
+            throw new NotSupportedException(
+                $"'{load.Table}' has {load.Columns.Count} columns to write, but the '{dialect.Name}' dialect allows {maxParameters} "
+                + "parameters per command, so not even one row fits in an INSERT.");
+        }
+
         var columns = string.Join(", ", load.Columns.Select(c => sqlGenerationHelper.DelimitIdentifier(c.Name)));
-        var rowsPerCommand = Math.Clamp(capabilities.MaxParametersPerCommand / load.Columns.Count, 1, MaxRowsPerCommand);
+        var rowsPerCommand = Math.Min(maxParameters / load.Columns.Count, MaxRowsPerCommand);
 
         foreach (var chunk in load.Rows.Chunk(rowsPerCommand))
         {
@@ -63,7 +71,7 @@ public class AdoNetInsertBulkLoader(
                 var placeholders = new string[load.Columns.Count];
                 for (var column = 0; column < load.Columns.Count; column++)
                 {
-                    var index = row * load.Columns.Count + column;
+                    var index = (row * load.Columns.Count) + column;
                     var name = "p" + index;
                     placeholders[column] = sqlGenerationHelper.GenerateParameterNamePlaceholder(name);
                     parameters[index] = load.Columns[column].TypeMapping.CreateParameter(

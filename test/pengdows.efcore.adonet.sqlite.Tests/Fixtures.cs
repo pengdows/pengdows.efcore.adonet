@@ -46,7 +46,8 @@ public class SqliteFixture : ProviderFixture
             "Id" INTEGER PRIMARY KEY,
             "BlogId" INTEGER NOT NULL,
             "Title" TEXT NOT NULL)
-        """
+        """,
+        "CREATE TABLE \"Tallies\" (\"Id\" INTEGER PRIMARY KEY)"
     ];
 
     public override async ValueTask DisposeAsync()

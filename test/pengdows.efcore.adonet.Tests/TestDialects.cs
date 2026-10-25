@@ -34,7 +34,8 @@ public sealed class PartsSql(
     bool supportsSchemas = true,
     FunctionSyntax? functions = null,
     bool preferExistsToIn = false,
-    Func<string, string>? stringLiteral = null) : AnsiSqlDialect
+    Func<string, string>? stringLiteral = null,
+    string defaultValues = "DEFAULT VALUES") : AnsiSqlDialect
 {
     public override PagingSyntax Paging { get; } = paging ?? PagingSyntax.OffsetFetch;
     public override BooleanSyntax Booleans { get; } = booleans ?? BooleanSyntax.Native;
@@ -48,6 +49,7 @@ public sealed class PartsSql(
     public override bool SupportsSchemas => supportsSchemas;
     public override FunctionSyntax Functions { get; } = functions ?? FunctionSyntax.Iso;
     public override bool PreferExistsToIn => preferExistsToIn;
+    public override string DefaultValues => defaultValues;
 
     public override string StringLiteral(string value)
         => stringLiteral?.Invoke(value) ?? base.StringLiteral(value);

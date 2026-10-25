@@ -1,4 +1,5 @@
 using System.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -6,18 +7,23 @@ using pengdows.efcore.adonet.Bulk;
 
 namespace pengdows.efcore.adonet.sqlserver;
 
-/// <summary><see cref="SqlBulkCopy" /> for Microsoft.Data.SqlClient connections; multi-row INSERT for any other driver.</summary>
+/// <summary>
+///     <see cref="SqlBulkCopy" /> for Microsoft.Data.SqlClient connections; multi-row INSERT for any other driver. Like an
+///     INSERT, the copy checks constraints and fires triggers, and it is bounded by the context's command timeout.
+/// </summary>
 public class SqlServerBulkLoader(
     IRawSqlCommandBuilder rawSqlCommandBuilder,
     ISqlGenerationHelper sqlGenerationHelper,
     IRelationalConnection connection,
     IRelationalCommandDiagnosticsLogger commandLogger,
-    IDatabaseCapabilities capabilities)
-    : AdoNetInsertBulkLoader(rawSqlCommandBuilder, sqlGenerationHelper, connection, commandLogger, capabilities)
+    IAdoNetDialect dialect)
+    : AdoNetInsertBulkLoader(rawSqlCommandBuilder, sqlGenerationHelper, connection, commandLogger, dialect)
 {
+    private readonly ISqlGenerationHelper _sqlGenerationHelper = sqlGenerationHelper;
+
     public override void Load(BulkLoad load)
     {
-        if (load.Connection is not SqlConnection)
+        if (load.Connection is not SqlConnection || load.Columns.Count == 0)
         {
             base.Load(load);
             return;
@@ -29,7 +35,7 @@ public class SqlServerBulkLoader(
 
     public override async Task LoadAsync(BulkLoad load, CancellationToken cancellationToken = default)
     {
-        if (load.Connection is not SqlConnection)
+        if (load.Connection is not SqlConnection || load.Columns.Count == 0)
         {
             await base.LoadAsync(load, cancellationToken).ConfigureAwait(false);
             return;
@@ -39,12 +45,14 @@ public class SqlServerBulkLoader(
         await copy.WriteToServerAsync(Rows(load), cancellationToken).ConfigureAwait(false);
     }
 
-    private static SqlBulkCopy Create(BulkLoad load)
+    private SqlBulkCopy Create(BulkLoad load)
     {
-        var copy = new SqlBulkCopy((SqlConnection)load.Connection, SqlBulkCopyOptions.Default, (SqlTransaction)load.Transaction)
+        var connection = (SqlConnection)load.Connection;
+        var copy = new SqlBulkCopy(
+            connection, SqlBulkCopyOptions.CheckConstraints | SqlBulkCopyOptions.FireTriggers, (SqlTransaction)load.Transaction)
         {
-            DestinationTableName = load.Schema == null ? Bracket(load.Table) : Bracket(load.Schema) + "." + Bracket(load.Table),
-            BulkCopyTimeout = 0
+            DestinationTableName = _sqlGenerationHelper.DelimitIdentifier(load.Table, load.Schema),
+            BulkCopyTimeout = load.Context.Database.GetCommandTimeout() ?? connection.CommandTimeout
         };
 
         foreach (var column in load.Columns)
@@ -71,7 +79,4 @@ public class SqlServerBulkLoader(
 
         return table;
     }
-
-    private static string Bracket(string name)
-        => "[" + name.Replace("]", "]]", StringComparison.Ordinal) + "]";
 }

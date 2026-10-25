@@ -34,7 +34,8 @@ public sealed class MySqlFixture : ContainerFixture
             `Id` INT AUTO_INCREMENT PRIMARY KEY,
             `BlogId` INT NOT NULL,
             `Title` LONGTEXT NOT NULL)
-        """
+        """,
+        "CREATE TABLE `Tallies` (`Id` INT AUTO_INCREMENT PRIMARY KEY)"
     ];
 }
 

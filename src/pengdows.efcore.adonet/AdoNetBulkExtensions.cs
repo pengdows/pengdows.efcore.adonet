@@ -12,8 +12,9 @@ public static class AdoNetBulkExtensions
     /// <summary>
     ///     Inserts <paramref name="entities" /> without tracking them, through the dialect's <see cref="IAdoNetBulkLoader" />.
     ///     Keys the database generates are not read back, except those drawn from a sequence before the load
-    ///     (<see cref="SequenceKeyRetrieval" />), which are set on the entities. Database defaults don't apply: every mapped
-    ///     column is written. Joins the current transaction, or loads all-or-nothing in one of its own.
+    ///     (<see cref="SequenceKeyRetrieval" />), which are set on the entities that have none: one round trip per key. If the
+    ///     load fails they are reset. Database defaults don't apply: every mapped column is written. Joins the current
+    ///     transaction, or loads all-or-nothing in one of its own.
     /// </summary>
     /// <returns>The number of rows loaded.</returns>
     public static long BulkInsert<TEntity>(this DbContext context, IEnumerable<TEntity> entities)
@@ -29,16 +30,26 @@ public static class AdoNetBulkExtensions
             using var own = database.CurrentTransaction == null ? database.BeginTransaction() : null;
             var transaction = database.CurrentTransaction!.GetDbTransaction();
             var connection = database.GetDbConnection();
-            if (plan.SequenceKey is { } sequenceKey)
+            var drawn = new List<TEntity>();
+            try
             {
-                foreach (var entity in list)
+                if (plan.SequenceKey is { } sequenceKey)
                 {
-                    sequenceKey.Set(entity, NextValue(connection, transaction, sequenceKey));
+                    foreach (var entity in list.Where(sequenceKey.IsUnset))
+                    {
+                        sequenceKey.Set(entity, NextValue(connection, transaction, sequenceKey));
+                        drawn.Add(entity);
+                    }
                 }
-            }
 
-            context.GetService<IAdoNetBulkLoader>().Load(plan.Load(context, list, connection, transaction));
-            own?.Commit();
+                context.GetService<IAdoNetBulkLoader>().Load(plan.Load(context, list, connection, transaction));
+                own?.Commit();
+            }
+            catch
+            {
+                plan.SequenceKey?.Unset(drawn);
+                throw;
+            }
         }
         finally
         {
@@ -67,21 +78,31 @@ public static class AdoNetBulkExtensions
                 : null;
             var transaction = database.CurrentTransaction!.GetDbTransaction();
             var connection = database.GetDbConnection();
-            if (plan.SequenceKey is { } sequenceKey)
+            var drawn = new List<TEntity>();
+            try
             {
-                foreach (var entity in list)
+                if (plan.SequenceKey is { } sequenceKey)
                 {
-                    sequenceKey.Set(entity, await NextValueAsync(connection, transaction, sequenceKey, cancellationToken).ConfigureAwait(false));
+                    foreach (var entity in list.Where(sequenceKey.IsUnset))
+                    {
+                        sequenceKey.Set(entity, await NextValueAsync(connection, transaction, sequenceKey, cancellationToken).ConfigureAwait(false));
+                        drawn.Add(entity);
+                    }
+                }
+
+                await context.GetService<IAdoNetBulkLoader>()
+                    .LoadAsync(plan.Load(context, list, connection, transaction), cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (own != null)
+                {
+                    await own.CommitAsync(cancellationToken).ConfigureAwait(false);
                 }
             }
-
-            await context.GetService<IAdoNetBulkLoader>()
-                .LoadAsync(plan.Load(context, list, connection, transaction), cancellationToken)
-                .ConfigureAwait(false);
-
-            if (own != null)
+            catch
             {
-                await own.CommitAsync(cancellationToken).ConfigureAwait(false);
+                plan.SequenceKey?.Unset(drawn);
+                throw;
             }
         }
         finally
@@ -126,6 +147,7 @@ public static class AdoNetBulkExtensions
         var designEntityType = context.GetService<IDesignTimeModel>().Model.FindEntityType(entityType.Name)!;
         var table = StoreObjectIdentifier.Table(entityType.GetTableName()!, entityType.GetSchema());
         var helper = context.GetService<ISqlGenerationHelper>();
+        var typeMappingSource = context.GetService<IRelationalTypeMappingSource>();
         var columns = new List<(IProperty Property, BulkColumn Column)>();
         SequenceKey? sequenceKey = null;
 
@@ -134,6 +156,13 @@ public static class AdoNetBulkExtensions
             if (property.GetComputedColumnSql(table) != null)
             {
                 continue;
+            }
+
+            if (property.IsShadowProperty() && property != entityType.FindDiscriminatorProperty())
+            {
+                throw new NotSupportedException(
+                    $"BulkInsert reads values from the entities, but '{entityType.DisplayName()}.{property.Name}' is a shadow property "
+                    + "with no value on them. Map it to a CLR property.");
             }
 
             if (designEntityType.FindProperty(property.Name)!.FindAnnotation(AdoNetAnnotationNames.Identity)?.Value is true)
@@ -147,10 +176,26 @@ public static class AdoNetBulkExtensions
                 sequenceKey = new SequenceKey(property, keys.GetNextValueSql(sequence));
             }
 
-            columns.Add((property, new BulkColumn(property.GetColumnName(table)!, property.GetRelationalTypeMapping())));
+            columns.Add((property, new BulkColumn(property.GetColumnName(table)!, ProviderTypeMapping(property, typeMappingSource))));
         }
 
         return new BulkPlan(entityType, table, columns, sequenceKey);
+    }
+
+    // Rows hold provider values, so they bind through the mapping of the provider type: binding them through the property's
+    // own mapping would run its converter a second time.
+    private static RelationalTypeMapping ProviderTypeMapping(IProperty property, IRelationalTypeMappingSource typeMappingSource)
+    {
+        var mapping = property.GetRelationalTypeMapping();
+        if (mapping.Converter is not { } converter)
+        {
+            return mapping;
+        }
+
+        return typeMappingSource.FindMapping(converter.ProviderClrType, mapping.StoreType)
+            ?? throw new NotSupportedException(
+                $"BulkInsert found no mapping for '{converter.ProviderClrType.Name}' values in a '{mapping.StoreType}' column, "
+                + $"which '{property.DeclaringType.DisplayName()}.{property.Name}' converts to.");
     }
 
     private sealed record BulkPlan(
@@ -177,11 +222,12 @@ public static class AdoNetBulkExtensions
             var row = new object?[Columns.Count];
             for (var i = 0; i < Columns.Count; i++)
             {
-                var (property, column) = Columns[i];
+                var property = Columns[i].Property;
                 var value = property.IsShadowProperty()
-                    ? property == EntityType.FindDiscriminatorProperty() ? EntityType.GetDiscriminatorValue() : null
+                    ? EntityType.GetDiscriminatorValue()
                     : property.GetGetter().GetClrValueUsingContainingEntity(entity);
-                row[i] = value != null && column.TypeMapping.Converter is { } converter ? converter.ConvertToProvider(value) : value;
+                var converter = property.GetRelationalTypeMapping().Converter;
+                row[i] = (value != null) && (converter != null) ? converter.ConvertToProvider(value) : value;
             }
 
             return row;
@@ -198,9 +244,24 @@ public static class AdoNetBulkExtensions
             return command;
         }
 
-        public void Set(object entity, object? value)
+        /// <summary>Whether the entity still has the key's sentinel, so the database is to supply it; a key set by hand is kept.</summary>
+        public bool IsUnset(object entity)
+            => Property.GetGetter().HasSentinelValueUsingContainingEntity(entity);
+
+        /// <summary>Puts the sentinel back on entities whose drawn keys were never saved.</summary>
+        public void Unset(IEnumerable<object> entities)
         {
-            var key = Convert.ChangeType(value, Nullable.GetUnderlyingType(Property.ClrType) ?? Property.ClrType, System.Globalization.CultureInfo.InvariantCulture);
+            foreach (var entity in entities)
+            {
+                Write(entity, Property.Sentinel);
+            }
+        }
+
+        public void Set(object entity, object? value)
+            => Write(entity, Convert.ChangeType(value, Nullable.GetUnderlyingType(Property.ClrType) ?? Property.ClrType, System.Globalization.CultureInfo.InvariantCulture));
+
+        private void Write(object entity, object? key)
+        {
             if (Property.PropertyInfo is { CanWrite: true } propertyInfo)
             {
                 propertyInfo.SetValue(entity, key);

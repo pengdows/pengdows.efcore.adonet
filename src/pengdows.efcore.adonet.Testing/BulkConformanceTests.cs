@@ -80,6 +80,20 @@ public abstract class BulkConformanceTests<TFixture>(TFixture fixture) : IClassF
     }
 
     [Fact]
+    public async Task Bulk_insert_loads_rows_with_no_columns_to_write()
+    {
+        await using (var context = Fixture.CreateContext())
+        {
+            Assert.Equal(3, await context.BulkInsertAsync([new Tally(), new Tally(), new Tally()], Ct));
+        }
+
+        await using (var context = Fixture.CreateContext())
+        {
+            Assert.Equal(3, await context.Tallies.Select(t => t.Id).Distinct().CountAsync(Ct));
+        }
+    }
+
+    [Fact]
     public void Bulk_insert_works_synchronously_too()
     {
         using (var context = Fixture.CreateContext())

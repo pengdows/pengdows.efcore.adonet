@@ -56,6 +56,7 @@ public sealed class FlatFileFixture : ProviderFixture
     [
         "CREATE SEQUENCE \"Blogs_Id_seq\"",
         "CREATE SEQUENCE \"Posts_Id_seq\"",
+        "CREATE SEQUENCE \"Tallies_Id_seq\"",
         """
         CREATE TABLE "Blogs" (
             "Id" INTEGER NOT NULL,
@@ -72,7 +73,8 @@ public sealed class FlatFileFixture : ProviderFixture
             "BlogId" INTEGER NOT NULL,
             "Title" VARCHAR NOT NULL,
             CONSTRAINT "PK_Posts" PRIMARY KEY ("Id"))
-        """
+        """,
+        "CREATE TABLE \"Tallies\" (\"Id\" INTEGER NOT NULL, CONSTRAINT \"PK_Tallies\" PRIMARY KEY (\"Id\"))"
     ];
 
     public override async ValueTask DisposeAsync()

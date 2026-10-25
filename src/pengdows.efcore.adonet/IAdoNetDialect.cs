@@ -68,6 +68,9 @@ public interface ISqlDialect
     /// <summary>How the functions that .NET members translate to are spelled.</summary>
     FunctionSyntax Functions { get; }
 
+    /// <summary>What follows <c>INSERT INTO t</c> for a row with no columns to write: ISO's <c>DEFAULT VALUES</c>.</summary>
+    string DefaultValues { get; }
+
     /// <summary>Returns the number of user tables in the current database or schema.</summary>
     string HasTablesSql { get; }
 }

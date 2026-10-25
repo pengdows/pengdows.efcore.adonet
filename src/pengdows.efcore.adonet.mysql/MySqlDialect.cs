@@ -32,6 +32,7 @@ public sealed class MySqlSql : AnsiSqlDialect
     public override KeyRetrieval Keys { get; } = KeyRetrieval.SelectAfter("LAST_INSERT_ID()", "ROW_COUNT()");
     public override DmlSyntax Dml => DmlSyntax.MultiTable;
     public override FunctionSyntax Functions { get; } = new MySqlFunctions();
+    public override string DefaultValues => "() VALUES ()";
 
     // Backslash is an escape character in MySQL string literals (unless NO_BACKSLASH_ESCAPES is set).
     public override string StringLiteral(string value)

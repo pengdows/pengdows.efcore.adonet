@@ -34,6 +34,7 @@ public sealed class DuckDbFixture : ProviderFixture
     [
         "CREATE SEQUENCE \"BlogIds\"",
         "CREATE SEQUENCE \"PostIds\"",
+        "CREATE SEQUENCE \"TallyIds\"",
         """
         CREATE TABLE "Blogs" (
             "Id" INTEGER PRIMARY KEY DEFAULT nextval('BlogIds'),
@@ -48,7 +49,8 @@ public sealed class DuckDbFixture : ProviderFixture
             "Id" INTEGER PRIMARY KEY DEFAULT nextval('PostIds'),
             "BlogId" INTEGER NOT NULL,
             "Title" VARCHAR NOT NULL)
-        """
+        """,
+        "CREATE TABLE \"Tallies\" (\"Id\" INTEGER PRIMARY KEY DEFAULT nextval('TallyIds'))"
     ];
 
     public override async ValueTask DisposeAsync()

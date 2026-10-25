@@ -96,6 +96,17 @@ public class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependencie
         return ResultSetMapping.NoResults;
     }
 
+    protected override void AppendValuesHeader(StringBuilder commandStringBuilder, IReadOnlyList<IColumnModification> operations)
+    {
+        if (operations.Count > 0)
+        {
+            base.AppendValuesHeader(commandStringBuilder, operations);
+            return;
+        }
+
+        commandStringBuilder.AppendLine().Append(dialect.Sql.DefaultValues);
+    }
+
     protected override void AppendIdentityWhereCondition(StringBuilder commandStringBuilder, IColumnModification columnModification)
     {
         SqlGenerationHelper.DelimitIdentifier(commandStringBuilder, columnModification.ColumnName);

@@ -60,6 +60,19 @@ public abstract class ProviderConformanceTests<TFixture>(TFixture fixture) : ICl
     }
 
     [Fact]
+    public async Task Insert_of_a_row_with_no_columns_to_write_reads_back_its_key()
+    {
+        await using var context = Fixture.CreateContext();
+        var tallies = new[] { new Tally(), new Tally() };
+
+        context.AddRange(tallies);
+        await context.SaveChangesAsync(Ct);
+
+        Assert.Equal(2, tallies.Select(t => t.Id).Distinct().Count());
+        Assert.DoesNotContain(0, tallies.Select(t => t.Id));
+    }
+
+    [Fact]
     public async Task Round_trips_every_mapped_type()
     {
         var expected = NewBlog("types", rating: 12.34m, active: true);

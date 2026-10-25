@@ -72,6 +72,7 @@ public abstract class ProviderFixture : IAsyncLifetime
 
     public async Task ResetAsync()
     {
+        await ExecuteAsync($"DELETE FROM {Quote("Tallies")}");
         await ExecuteAsync($"DELETE FROM {Quote("Posts")}");
         await ExecuteAsync($"DELETE FROM {Quote("Blogs")}");
     }

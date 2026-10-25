@@ -40,7 +40,8 @@ public sealed class SqlServerFixture : ContainerFixture
             "Id" INT IDENTITY PRIMARY KEY,
             "BlogId" INT NOT NULL,
             "Title" NVARCHAR(MAX) NOT NULL)
-        """
+        """,
+        "CREATE TABLE \"Tallies\" (\"Id\" INT IDENTITY PRIMARY KEY)"
     ];
 }
 
