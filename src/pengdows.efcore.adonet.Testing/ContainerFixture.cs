@@ -3,7 +3,10 @@ using DotNet.Testcontainers.Containers;
 
 namespace pengdows.efcore.adonet.Testing;
 
-/// <summary>A server database started in Docker through Testcontainers. Without Docker the suite is skipped.</summary>
+/// <summary>
+///     A server database started in Docker through Testcontainers. Without Docker the suite fails: a missing environment is
+///     not a missing database feature, and a run that skipped it would look green with no integration coverage.
+/// </summary>
 public abstract class ContainerFixture : ProviderFixture
 {
     private IDatabaseContainer? _container;
@@ -16,16 +19,8 @@ public abstract class ContainerFixture : ProviderFixture
 
     public override async ValueTask InitializeAsync()
     {
-        try
-        {
-            _container = CreateContainer();
-            await _container.StartAsync();
-        }
-        catch (DockerUnavailableException e)
-        {
-            SkipReason = $"Docker is not available: {e.Message}";
-            return;
-        }
+        _container = CreateContainer();
+        await _container.StartAsync();
 
         _connectionString = _container.GetConnectionString();
         await base.InitializeAsync();

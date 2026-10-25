@@ -23,8 +23,8 @@ public class SqliteFixture : ProviderFixture
 
     public override IReadOnlyDictionary<string, string> KnownEngineGaps { get; } = new Dictionary<string, string>
     {
-        // Not the engine's fault alone: SQLite has no ALTER COLUMN, and EF's own provider rebuilds the table instead.
-        ["Alter_column_changes_size_nullability_and_default"] = "SQLite has no ALTER COLUMN; the sqlite dialect doesn't rebuild tables yet"
+        // EF's own SQLite provider rebuilds the table instead; this dialect refuses rather than pretend.
+        ["Alter_column_changes_size_nullability_and_default"] = "SQLite has no ALTER COLUMN"
     };
 
     protected override void UseProvider(DbContextOptionsBuilder builder)

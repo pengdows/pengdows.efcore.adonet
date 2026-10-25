@@ -237,16 +237,18 @@ public abstract class ProviderConformanceTests<TFixture>(TFixture fixture) : ICl
     }
 
     [Fact]
-    public async Task Savepoints_follow_the_ado_net_transaction()
+    public async Task Savepoints_undo_part_of_a_transaction()
     {
         await using (var context = Fixture.CreateContext())
         {
             await using var transaction = await context.Database.BeginTransactionAsync(Ct);
 
-            Assert.Equal(transaction.GetDbTransaction().SupportsSavepoints, transaction.SupportsSavepoints);
+            Assert.Equal(
+                transaction.GetDbTransaction().SupportsSavepoints || (Fixture.ExpectedDialect.Sql.Savepoints != null),
+                transaction.SupportsSavepoints);
             if (!transaction.SupportsSavepoints)
             {
-                return;
+                Fixture.SkipFor("no savepoints");
             }
 
             context.Add(NewBlog("kept"));

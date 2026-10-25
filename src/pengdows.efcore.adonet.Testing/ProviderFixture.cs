@@ -20,8 +20,9 @@ public abstract class ProviderFixture : IAsyncLifetime
     protected abstract IEnumerable<string> Ddl { get; }
 
     /// <summary>
-    ///     Conformance tests that fail because of a bug or gap in the database engine itself (not in the dialect),
-    ///     keyed by test method name. They are reported as skipped with the reason instead of silently passing.
+    ///     Conformance tests the database can't pass because it lacks the feature under test (or has a bug in it), keyed by
+    ///     test method name: never a gap in the dialect. They are reported as skipped, attributed
+    ///     <c>[SKIP:&lt;dialect name&gt;]</c>, with the reason.
     /// </summary>
     public virtual IReadOnlyDictionary<string, string> KnownEngineGaps { get; } = new Dictionary<string, string>();
 
@@ -32,8 +33,6 @@ public abstract class ProviderFixture : IAsyncLifetime
     /// <summary>Sequences the dialect creates for the migrations tests' tables, dropped between tests.</summary>
     public virtual IReadOnlyList<string> ModelSequences { get; } = [];
 
-    /// <summary>Set when the database can't be reached (e.g. no Docker); every test is then reported as skipped.</summary>
-    public string? SkipReason { get; protected set; }
 
     public DbContextOptions<BlogContext> Options
     {
@@ -66,19 +65,19 @@ public abstract class ProviderFixture : IAsyncLifetime
         return create(builder.ForTestMigrations().Options);
     }
 
-    /// <summary>Skips the calling test when the database can't be reached, or when it is one of <see cref="KnownEngineGaps" />.</summary>
+    /// <summary>Skips the calling test when it is one of <see cref="KnownEngineGaps" />.</summary>
     public void SkipIfNotRunnable()
     {
-        if (SkipReason is { } skipReason)
-        {
-            Assert.Skip(skipReason);
-        }
-
         if (KnownEngineGaps.TryGetValue(TestContext.Current.Test!.TestCase.TestMethodName ?? "", out var reason))
         {
-            Assert.Skip(reason);
+            SkipFor(reason);
         }
     }
+
+    /// <summary>Skips the calling test because the database lacks what it tests: <c>[SKIP:&lt;dialect name&gt;] reason</c>.</summary>
+    [System.Diagnostics.CodeAnalysis.DoesNotReturn]
+    public void SkipFor(string reason)
+        => Assert.Skip($"[SKIP:{ExpectedDialect.Name}] {reason}");
 
     /// <summary>Creates <typeparamref name="TContext" />'s tables, through the dialect's own DDL, the first time it is asked.</summary>
     public async Task CreateTablesOnceAsync<TContext>(Func<DbContextOptions<TContext>, TContext> create)

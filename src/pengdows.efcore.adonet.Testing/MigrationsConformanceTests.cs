@@ -1,3 +1,4 @@
+using System.Data.Common;
 using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -25,12 +26,7 @@ public abstract class MigrationsConformanceTests<TFixture>(TFixture fixture) : I
     }
 
     public async ValueTask DisposeAsync()
-    {
-        if (Fixture.SkipReason is null)
-        {
-            await DropOwnTablesAsync();
-        }
-    }
+        => await DropOwnTablesAsync();
 
     [Fact]
     public async Task Create_tables_builds_the_schema_from_the_model()
@@ -169,9 +165,10 @@ public abstract class MigrationsConformanceTests<TFixture>(TFixture fixture) : I
             {
                 await Fixture.ExecuteAsync($"DROP TABLE {Fixture.Quote(table)}");
             }
-            catch (Exception)
+            catch (Exception e) when (e is DbException or InvalidOperationException)
             {
-                // Not there.
+                // Expected when the table or sequence isn't there: dropping is how this finds out, portably. pengdows.flatfile
+                // reports a missing table as an InvalidOperationException rather than a DbException.
             }
         }
 
@@ -181,9 +178,10 @@ public abstract class MigrationsConformanceTests<TFixture>(TFixture fixture) : I
             {
                 await Fixture.ExecuteAsync($"DROP SEQUENCE {Fixture.Quote(sequence)}");
             }
-            catch (Exception)
+            catch (Exception e) when (e is DbException or InvalidOperationException)
             {
-                // Not there.
+                // Expected when the table or sequence isn't there: dropping is how this finds out, portably. pengdows.flatfile
+                // reports a missing table as an InvalidOperationException rather than a DbException.
             }
         }
     }

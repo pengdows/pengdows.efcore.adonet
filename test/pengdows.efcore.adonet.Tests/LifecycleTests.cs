@@ -146,13 +146,14 @@ public class LifecycleTests
         var db = new FakeDatabase();
         using var context = new ItemContext(
             new DbContextOptionsBuilder<ItemContext>()
-                .UseAdoNet(db.Connection, contextOwnsConnection: false, o => o.UseDialect(AdoNetDialect.Ansi))
+                .UseAdoNet(db.Connection, contextOwnsConnection: false, o => o.UseDialect(TestDialects.NoSavepoints))
                 .AddInterceptors(failures)
                 .AllowManyDialects()
                 .Options);
         using var transaction = context.Database.BeginTransaction();
 
-        // fakeDb reports no savepoint support: Save and Rollback(name) throw, Release is DbTransaction's no-op.
+        // fakeDb reports no savepoint support and the dialect has no SQL for them: Save and Rollback(name) throw, Release is
+        // DbTransaction's no-op.
         Assert.False(transaction.SupportsSavepoints);
         Assert.Throws<NotSupportedException>(() => transaction.CreateSavepoint("s1"));
         Assert.Throws<NotSupportedException>(() => transaction.RollbackToSavepoint("s1"));
@@ -165,12 +166,44 @@ public class LifecycleTests
     public async Task Savepoints_work_asynchronously_too()
     {
         var db = new FakeDatabase();
-        await using var context = db.Context(AdoNetDialect.Ansi);
+        await using var context = db.Context(TestDialects.NoSavepoints);
         await using var transaction = await context.Database.BeginTransactionAsync(Ct);
 
         await Assert.ThrowsAsync<NotSupportedException>(() => transaction.CreateSavepointAsync("s1", Ct));
         await Assert.ThrowsAsync<NotSupportedException>(() => transaction.RollbackToSavepointAsync("s1", Ct));
         await transaction.ReleaseSavepointAsync("s1", Ct);
+    }
+
+    [Fact]
+    public async Task Savepoints_the_driver_lacks_are_written_by_the_dialect()
+    {
+        var db = new FakeDatabase();
+        await using var context = db.Context(AdoNetDialect.Ansi);
+        await using var transaction = await context.Database.BeginTransactionAsync(Ct);
+
+        Assert.True(transaction.SupportsSavepoints);
+        transaction.CreateSavepoint("s1");
+        await transaction.RollbackToSavepointAsync("s1", Ct);
+        await transaction.ReleaseSavepointAsync("s1", Ct);
+        transaction.ReleaseSavepoint("s1");
+
+        Assert.Equal(
+            ["SAVEPOINT \"s1\"", "ROLLBACK TO SAVEPOINT \"s1\"", "RELEASE SAVEPOINT \"s1\"", "RELEASE SAVEPOINT \"s1\""],
+            db.Commands);
+    }
+
+    [Fact]
+    public async Task A_dialect_whose_savepoints_end_with_the_transaction_releases_nothing()
+    {
+        var db = new FakeDatabase();
+        await using var context = db.Context(TestDialects.TransactionSavepoints);
+        await using var transaction = await context.Database.BeginTransactionAsync(Ct);
+
+        await transaction.CreateSavepointAsync("s1", Ct);
+        transaction.RollbackToSavepoint("s1");
+        transaction.ReleaseSavepoint("s1");
+
+        Assert.Equal(["SAVE TRANSACTION \"s1\"", "ROLLBACK TRANSACTION \"s1\""], db.Commands);
     }
 
     [Fact]

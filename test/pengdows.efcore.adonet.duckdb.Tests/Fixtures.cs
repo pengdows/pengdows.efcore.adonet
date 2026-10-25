@@ -17,7 +17,7 @@ public sealed class DuckDbFixture : ProviderFixture
         => builder.UseAdoNetDuckDb(ConnectionString);
 
     // DuckDB refuses ALTER TABLE on a table with indexes or foreign keys ("Cannot alter entry ... because there are entries
-    // that depend on it"). Working around it means dropping and recreating them around every alteration; not done yet.
+    // that depend on it"). A dialect could drop and recreate them around every alteration; this one refuses rather than pretend.
     public override IReadOnlyDictionary<string, string> KnownEngineGaps { get; } = new Dictionary<string, string>
     {
         ["Migrate_applies_records_and_reverts_migrations"] = DependentAlter,
@@ -25,7 +25,7 @@ public sealed class DuckDbFixture : ProviderFixture
         ["Alter_column_changes_size_nullability_and_default"] = DependentAlter
     };
 
-    private const string DependentAlter = "DuckDB 1.5 can't ALTER a table that has indexes or foreign keys; the duckdb dialect doesn't rebuild them yet";
+    private const string DependentAlter = "DuckDB 1.5 can't ALTER a table that has indexes or foreign keys";
 
     public override IReadOnlyList<string> ModelSequences { get; } =
         ["SchemaAuthors_Id_seq", "SchemaBooks_Id_seq", "Authors_Id_seq", "Shelves_Id_seq"];

@@ -119,7 +119,7 @@ public abstract class LiteralConformanceTests<TFixture>(TFixture fixture) : ICla
     {
         if (Fixture.ExpectedDialect.TypeMappings.GetStoreType(clrType) == null)
         {
-            Assert.Skip($"[SKIP:{Fixture.ExpectedDialect.Name}] {reason}");
+            Fixture.SkipFor(reason);
         }
     }
 

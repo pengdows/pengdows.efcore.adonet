@@ -32,8 +32,8 @@ public sealed class FlatFileFixture : ProviderFixture
         ["Execute_delete_filters_through_a_navigation"] =
             "pengdows.flatfile 0.2.1-preview.8 resolves \"b\".\"IsActive\" against Posts inside a joined IN subquery",
 
-        // Not the engine: without a target alias, strict ISO SQL has no form for an UPDATE whose rows come from a join.
-        ["Execute_update_filters_through_a_navigation"] = "DmlSyntax.UnaliasedTarget cannot write an UPDATE through a join",
+        // Strict ISO SQL, which pengdows.flatfile implements, has no UPDATE ... FROM: an UPDATE whose rows come from a join.
+        ["Execute_update_filters_through_a_navigation"] = "strict ISO SQL has no UPDATE ... FROM",
 
         // Renaming a table renames its key sequence: ALTER SEQUENCE "Authors_Id_seq" RENAME TO "Writers_Id_seq".
         ["Migrate_applies_records_and_reverts_migrations"] = "pengdows.flatfile 0.2.1-preview.8 has no ALTER SEQUENCE ... RENAME TO",

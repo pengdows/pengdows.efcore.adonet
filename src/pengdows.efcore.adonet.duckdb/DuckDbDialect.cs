@@ -26,6 +26,9 @@ public sealed class DuckDbSql : AnsiSqlDialect
     public override PagingSyntax Paging { get; } = PagingSyntax.LimitOffset();
     public override FunctionSyntax Functions { get; } = new DuckDbFunctions();
     public override string CurrentSchema => "current_schema()";
+
+    // DuckDB has no savepoints.
+    public override SavepointSyntax? Savepoints => null;
 }
 
 /// <summary>

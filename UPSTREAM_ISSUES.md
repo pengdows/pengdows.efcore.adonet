@@ -36,6 +36,29 @@ noted so they can be removed once the fix ships.
   Server's `sp_getapplock` session lock likely is not. A fix: dispose the transaction before the lock.
 - **Our fix:** `AdoNetHistoryRepository`'s lock rolls back an open transaction before releasing.
 
+## dotnet/SqlClient (Microsoft.Data.SqlClient 7.1.1)
+
+### `SqlTransaction.SupportsSavepoints` is false although it has savepoints
+
+- **Defect:** `SqlTransaction` implements `Save(string)` and `Rollback(string)` (SQL Server's `SAVE TRANSACTION`), but
+  reports `DbTransaction.SupportsSavepoints == false`, so provider-agnostic code (EF's relational savepoints included) skips
+  them.
+- **Confirmed:** `ProviderConformanceTests.Savepoints_undo_part_of_a_transaction` against SQL Server 2022 read
+  `GetDbTransaction().SupportsSavepoints == false`.
+- **Before filing:** check whether `Save`/`Rollback(string)` override the `DbTransaction` virtuals (or only hide them) and
+  `Release` (SQL Server has no release; it should be a no-op).
+- **Our work-around:** `SqlServerSql.Savepoints` writes `SAVE TRANSACTION` / `ROLLBACK TRANSACTION` as SQL.
+
+## mysql-net/MySqlConnector (2.6.2)
+
+### `MySqlTransaction.SupportsSavepoints` reads false in our runs
+
+- **Defect (suspected):** MySQL has `SAVEPOINT`, `ROLLBACK TO SAVEPOINT` and `RELEASE SAVEPOINT`, but
+  `GetDbTransaction().SupportsSavepoints` was false in the same conformance test against MySQL 8.4.
+- **Before filing:** confirm on a bare `MySqlTransaction` (outside EF) and read MySqlConnector's source; it may be
+  deliberate or configuration-dependent. Unverified as a bug.
+- **Our work-around:** the core's ISO `SavepointSyntax` applies to MySQL.
+
 ## pengdows.flatfile (0.2.1-preview.8)
 
 Recorded as skips in `test/pengdows.efcore.adonet.flatfile.Tests/Fixtures.cs`, each probed directly:
@@ -50,3 +73,5 @@ Recorded as skips in `test/pengdows.efcore.adonet.flatfile.Tests/Fixtures.cs`, e
   `ALTER COLUMN`.
 - `VARBINARY` is rejected as a vendor type (it is in SQL:2016; `BLOB` is accepted). Arguable, not a clear bug.
 - No `INTERVAL` type.
+- `DROP TABLE` of a missing table throws `InvalidOperationException`, not a `DbException`: provider-agnostic code catching
+  `DbException` for database errors misses it.

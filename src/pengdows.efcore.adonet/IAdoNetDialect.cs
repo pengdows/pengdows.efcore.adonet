@@ -77,6 +77,9 @@ public interface ISqlDialect
     /// </summary>
     string? CurrentSchema { get; }
 
+    /// <summary>Savepoints as SQL, where the driver's transactions have none; null when the database has none.</summary>
+    SavepointSyntax? Savepoints { get; }
+
     /// <summary>Returns the number of user tables in the current database or schema.</summary>
     string HasTablesSql { get; }
 }

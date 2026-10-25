@@ -36,7 +36,9 @@ public sealed class PartsSql(
     bool preferExistsToIn = false,
     Func<string, string>? stringLiteral = null,
     string defaultValues = "DEFAULT VALUES",
-    string? currentSchema = null) : AnsiSqlDialect
+    string? currentSchema = null,
+    SavepointSyntax? savepoints = null,
+    bool noSavepoints = false) : AnsiSqlDialect
 {
     public override PagingSyntax Paging { get; } = paging ?? PagingSyntax.OffsetFetch;
     public override BooleanSyntax Booleans { get; } = booleans ?? BooleanSyntax.Native;
@@ -52,6 +54,7 @@ public sealed class PartsSql(
     public override bool PreferExistsToIn => preferExistsToIn;
     public override string DefaultValues => defaultValues;
     public override string? CurrentSchema => currentSchema;
+    public override SavepointSyntax? Savepoints => noSavepoints ? null : savepoints ?? SavepointSyntax.Iso;
 
     public override string StringLiteral(string value)
         => stringLiteral?.Invoke(value) ?? base.StringLiteral(value);
@@ -101,6 +104,9 @@ public static class TestDialects
     public static readonly IAdoNetDialect Functions = new PartsDialect(
         "Functions",
         new PartsSql(functions: new TestFunctions(), stringLiteral: v => "N'" + v.Replace("'", "''").Replace(@"\", @"\\") + "'"));
+    public static readonly IAdoNetDialect NoSavepoints = new PartsDialect("No savepoints", new PartsSql(noSavepoints: true));
+    public static readonly IAdoNetDialect TransactionSavepoints = new PartsDialect(
+        "Transaction savepoints", new PartsSql(savepoints: new SavepointSyntax("SAVE TRANSACTION {0}", "ROLLBACK TRANSACTION {0}", release: null)));
     public static readonly IAdoNetDialect NoEscape = new PartsDialect("No escape", new PartsSql(functions: new NoEscapeFunctions()));
     public static readonly IAdoNetDialect NoFunctions = new PartsDialect("No functions", new PartsSql(functions: new NoFunctions()));
 

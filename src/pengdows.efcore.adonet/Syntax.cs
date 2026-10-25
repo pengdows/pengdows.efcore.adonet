@@ -167,6 +167,23 @@ public abstract class BooleanSyntax
 }
 
 /// <summary>
+///     Savepoints as SQL, for drivers whose transactions don't offer them (<see cref="System.Data.Common.DbTransaction.SupportsSavepoints" />
+///     false). <c>{0}</c> is the delimited savepoint name.
+/// </summary>
+/// <param name="create">Sets a savepoint.</param>
+/// <param name="rollbackTo">Undoes the work since it.</param>
+/// <param name="release">Forgets it; null where savepoints last until the transaction ends.</param>
+public sealed class SavepointSyntax(string create, string rollbackTo, string? release)
+{
+    /// <summary><c>SAVEPOINT</c>, <c>ROLLBACK TO SAVEPOINT</c>, <c>RELEASE SAVEPOINT</c> (SQL:1999).</summary>
+    public static SavepointSyntax Iso { get; } = new("SAVEPOINT {0}", "ROLLBACK TO SAVEPOINT {0}", "RELEASE SAVEPOINT {0}");
+
+    public string Create { get; } = create;
+    public string RollbackTo { get; } = rollbackTo;
+    public string? Release { get; } = release;
+}
+
+/// <summary>
 ///     How <c>ExecuteDelete</c> and <c>ExecuteUpdate</c> are written. Variants are named for their shape, not for a database.
 /// </summary>
 public abstract class DmlSyntax

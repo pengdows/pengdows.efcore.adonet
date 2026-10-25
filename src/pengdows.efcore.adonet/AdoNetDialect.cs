@@ -55,6 +55,7 @@ public class AnsiSqlDialect : ISqlDialect
     public virtual bool PreferExistsToIn => false;
     public virtual string DefaultValues => "DEFAULT VALUES";
     public virtual string? CurrentSchema => null;
+    public virtual SavepointSyntax? Savepoints => SavepointSyntax.Iso;
 
     public virtual string HasTablesSql
         => "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'";

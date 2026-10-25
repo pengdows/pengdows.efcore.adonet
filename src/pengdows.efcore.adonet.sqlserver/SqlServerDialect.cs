@@ -45,6 +45,9 @@ public sealed class SqlServerSql : AnsiSqlDialect
     public override bool PreferExistsToIn => true;
     public override string CurrentSchema => "SCHEMA_NAME()";
 
+    // SqlClient's SqlTransaction has Save and Rollback(name) but reports no savepoints; they last until the transaction ends.
+    public override SavepointSyntax Savepoints { get; } = new("SAVE TRANSACTION {0}", "ROLLBACK TRANSACTION {0}", release: null);
+
     public override string StringLiteral(string value)
         => "N" + base.StringLiteral(value);
 }
