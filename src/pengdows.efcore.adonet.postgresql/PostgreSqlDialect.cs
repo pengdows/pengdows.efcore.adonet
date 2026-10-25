@@ -24,7 +24,10 @@ public sealed class PostgreSqlDialect : AdoNetDialect
         DefaultMaxBatchSize = 128,
         MaxParametersPerCommand = 65535,
         // NAMEDATALEN - 1; longer names are truncated by the server, which can make two names one.
-        MaxIdentifierLength = 63
+        MaxIdentifierLength = 63,
+        // The driver enlists in a TransactionScope. Behaviour reference (not copied):
+        // https://github.com/npgsql/efcore.pg/blob/v10.0.3/src/EFCore.PG/Storage/Internal/NpgsqlRelationalConnection.cs
+        SupportsAmbientTransactions = true
     };
 
     public override void ConfigureServices(IServiceCollection services)

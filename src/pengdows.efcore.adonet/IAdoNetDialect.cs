@@ -164,4 +164,10 @@ public interface IDatabaseCapabilities
     ///     shortened to fit, uniquely.
     /// </summary>
     int MaxIdentifierLength { get; }
+
+    /// <summary>
+    ///     Whether the driver's connections enlist in an ambient <c>System.Transactions</c> transaction (a
+    ///     <c>TransactionScope</c>). Where they don't, EF warns that one is active.
+    /// </summary>
+    bool SupportsAmbientTransactions { get; }
 }

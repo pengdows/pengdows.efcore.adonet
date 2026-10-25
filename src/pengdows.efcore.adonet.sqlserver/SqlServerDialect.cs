@@ -27,7 +27,10 @@ public sealed class SqlServerDialect : AdoNetDialect
     {
         SupportsMultipleStatementsPerCommand = true,
         DefaultMaxBatchSize = 42,
-        MaxParametersPerCommand = 2000
+        MaxParametersPerCommand = 2000,
+        // The driver enlists in a TransactionScope. Behaviour reference (not copied):
+        // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.SqlServer/Storage/Internal/SqlServerConnection.cs
+        SupportsAmbientTransactions = true
     };
 
     public override void ConfigureServices(IServiceCollection services)

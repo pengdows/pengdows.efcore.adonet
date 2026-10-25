@@ -15,11 +15,16 @@ internal class AdoNetRelationalConnection : RelationalConnection
 {
     private readonly AdoNetOptionsExtension _extension;
     private readonly AdoNetDataSources _dataSources;
+    private readonly IDatabaseCapabilities _capabilities;
 
-    public AdoNetRelationalConnection(RelationalConnectionDependencies dependencies, AdoNetDataSources dataSources)
+    public AdoNetRelationalConnection(
+        RelationalConnectionDependencies dependencies,
+        AdoNetDataSources dataSources,
+        IDatabaseCapabilities capabilities)
         : base(dependencies)
     {
         _dataSources = dataSources;
+        _capabilities = capabilities;
         _extension = dependencies.ContextOptions.FindExtension<AdoNetOptionsExtension>()
             ?? throw new InvalidOperationException($"{nameof(AdoNetOptionsExtension)} is not configured.");
 
@@ -35,6 +40,9 @@ internal class AdoNetRelationalConnection : RelationalConnection
                 "Configure exactly one of: a DbConnection, a DbDataSource, or a DbProviderFactory with a connection string.");
         }
     }
+
+    protected override bool SupportsAmbientTransactions
+        => _capabilities.SupportsAmbientTransactions;
 
     // ConnectionString, not the options' value, so Database.SetConnectionString is honored; a connection string may
     // also arrive that way, or a whole connection through SetDbConnection, after the context is built.

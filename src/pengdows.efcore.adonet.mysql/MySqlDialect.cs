@@ -31,7 +31,10 @@ public sealed class MySqlDialect : AdoNetDialect
         DefaultMaxBatchSize = 128,
         MaxParametersPerCommand = 65535,
         // MySQL's limit for table, column, index and constraint names.
-        MaxIdentifierLength = 64
+        MaxIdentifierLength = 64,
+        // The driver enlists in a TransactionScope. Behaviour reference (not copied):
+        // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Storage/Internal/MySqlRelationalConnection.cs
+        SupportsAmbientTransactions = true
     };
 
     public override void ConfigureServices(IServiceCollection services)

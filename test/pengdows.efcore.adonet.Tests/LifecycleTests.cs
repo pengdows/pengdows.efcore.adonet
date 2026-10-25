@@ -24,6 +24,30 @@ public class LifecycleTests
         return new ItemContext(builder.Options);
     }
 
+    // EF warns when a TransactionScope is active and the provider's connections don't enlist in it; where the database's
+    // driver enlists (System.Transactions), EF asks it to. fakeDb has no enlistment (DbConnection.EnlistTransaction throws
+    // NotSupportedException: UPSTREAM_ISSUES), so its refusal is the evidence EF asked; the enlistment itself is covered by
+    // EF's Transaction specification suite on the server databases.
+    [Theory]
+    [InlineData(false, typeof(InvalidOperationException))]
+    [InlineData(true, typeof(NotSupportedException))]
+    public async Task An_ambient_transaction_is_enlisted_in_only_where_the_driver_can(bool enlists, Type outcome)
+    {
+        var dialect = new PartsDialect($"Ambient {enlists}", capabilities: new DatabaseCapabilities { SupportsAmbientTransactions = enlists });
+        var factory = new fakeDbFactory(SupportedDatabase.PostgreSql);
+        await using var context = new ItemContext(new DbContextOptionsBuilder<ItemContext>()
+            .UseAdoNet(factory, ConnectionString, dialect)
+            .ConfigureWarnings(w => w.Throw(RelationalEventId.AmbientTransactionWarning))
+            .AllowManyDialects()
+            .Options);
+        using var scope = new System.Transactions.TransactionScope(System.Transactions.TransactionScopeAsyncFlowOption.Enabled);
+
+        var error = await Record.ExceptionAsync(() => context.Database.OpenConnectionAsync(Ct));
+
+        Assert.IsType(outcome, error);
+        Assert.Equal(enlists, error.StackTrace!.Contains("EnlistTransaction", StringComparison.Ordinal));
+    }
+
     [Fact]
     public async Task A_factory_connection_is_opened_per_operation_and_disposed_with_the_context()
     {

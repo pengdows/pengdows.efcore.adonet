@@ -114,6 +114,9 @@ Gaps that keep core paths out of reach of fakeDb tests (REVIEW_POLICY: a gap is 
 - No savepoints: `fakeDbTransaction.SupportsSavepoints` is false and `Save`/`Rollback(name)` throw, so the core's use of a
   driver's own savepoints is only covered by the integration suites (SQLite, PostgreSQL, flatfile). A switch to emulate
   them would cover it.
+- No `System.Transactions` enlistment: `fakeDbConnection` doesn't override `DbConnection.EnlistTransaction`, so a context
+  inside a `TransactionScope` on a dialect whose driver enlists fails with `NotSupportedException`. Ambient transactions
+  are only covered by EF's Transaction specification suite on the server databases.
 - 2.0.5 always reports `RecordsAffected = 0` for a batch's reader, so a successful plain-statement write (sequence-key
   dialects) can't be scripted; 2.0.6's `RecordsAffectedOverride` should allow it once published.
 

@@ -186,4 +186,7 @@ public record DatabaseCapabilities : IDatabaseCapabilities
 
     /// <summary>128, SQL:2003's limit for an identifier.</summary>
     public virtual int MaxIdentifierLength { get; init; } = 128;
+
+    /// <summary>False: enlisting in a <c>TransactionScope</c> is the driver's, which says so in its own dialect.</summary>
+    public virtual bool SupportsAmbientTransactions { get; init; }
 }
