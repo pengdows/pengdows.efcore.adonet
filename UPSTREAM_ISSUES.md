@@ -119,22 +119,27 @@ Gaps that keep core paths out of reach of fakeDb tests (REVIEW_POLICY: a gap is 
 
 ## pengdows.flatfile (0.2.1-preview.9)
 
-Open, recorded as skips in `test/pengdows.efcore.adonet.flatfile.Tests/Fixtures.cs`, each probed against preview.9:
+Open, recorded as skips in `test/pengdows.efcore.adonet.flatfile.Tests/Fixtures.cs`, each probed against preview.9 with
+plain ADO.NET:
 
-- An approximate numeric literal with an exponent (`4.9406564584124654E-324`, `1.7976931348623157E+308`) is parsed as a
-  decimal and throws `OverflowException` from `BoundPredicateEvaluator.EvaluateValue`. ISO: a literal with an exponent is
-  an approximate numeric (floating-point) literal. Found by
+- Comparing a `DOUBLE PRECISION` value with a numeric literal goes through `decimal`: `WHERE "D" = 0E0` throws
+  `OverflowException` when any row holds a double beyond decimal's range (1E+29, 1.7976931348623157E+308), and a literal
+  beyond it (`"D" < 1.7976931348623157E+308`) throws for every row. ISO: an approximate numeric literal (one with an
+  exponent) is a floating-point value, and comparing approximate with exact numerics is done as approximate. Found by
   `LiteralConformanceTests.Floating_point_constants_at_the_edges_of_their_types`.
 - No `POWER` ("Unsupported scalar function 'POWER'"). Found by `TranslationConformanceTests.Math_on_doubles`.
 - Interval literals take one field and no precision (`SqlParser.ParseIntervalLiteral`): ISO's
-  `INTERVAL '0 01:02:03.5' DAY TO SECOND` and `DAY(8) TO SECOND(7)` are rejected. Found by
-  `LiteralConformanceTests.Time_span_constants`.
+  `INTERVAL '0 01:02:03.5' DAY TO SECOND`, `INTERVAL '01:02:03' HOUR TO SECOND` and `DAY(8) TO SECOND` are rejected.
+  And a one-field literal can't be compared with an `INTERVAL` column: `WHERE "S" = INTERVAL '3723' SECOND` throws
+  `ArgumentException: Object must be of type TimeSpan` (the literal is an `IntervalValue`, the column a `TimeSpan`).
+  Found by `LiteralConformanceTests.Time_span_constants`.
 - Renaming a table leaves foreign keys that reference it naming the old table: after
   `ALTER TABLE "Authors" RENAME TO "Writers"`, an insert into `Shelves` fails with "Referenced table 'Authors' was not
   found for foreign key 'FK_Shelves_Authors'". Found by `MigrationsConformanceTests.Migrate_applies_records_and_reverts_migrations`
   and `Alter_column_changes_size_nullability_and_default`.
-- Not re-probed on preview.9: `DROP TABLE` of a missing table threw `InvalidOperationException`, not a `DbException`, on
-  preview.8.
+- Errors that are not `DbException`s: the three above surface as `OverflowException`, `ArgumentException` and
+  `InvalidOperationException`; provider-agnostic code (EF's `DbUpdateException` wrapping included) catches database errors
+  as `DbException`. `DROP TABLE` of a missing table is fixed: it now throws `FlatFileException`, a `DbException`.
 
 Fixed in preview.9 (our work-arounds removed, each by its test): `LIKE ... ESCAPE`; directional `TRIM`; `REPLACE`,
 `FLOOR`, `CEILING`, `ROUND`; zoned timestamp literals; `FETCH FIRST`/`OFFSET` in derived tables and `EXISTS`; parameters
