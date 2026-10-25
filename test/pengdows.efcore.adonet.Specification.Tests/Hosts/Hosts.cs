@@ -55,7 +55,14 @@ public sealed class SqlServerHost : ServerHost
     public override DbConnection CreateConnection(string connectionString) => new SqlConnection(connectionString);
 
     public override DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, string connectionString, Action<AdoNetDbContextOptionsBuilder> configure)
-        => builder.UseAdoNetSqlServer(connectionString, configure);
+        => builder.UseAdoNetSqlServer(
+                connectionString,
+                o =>
+                {
+                    configure(o);
+                    o.MaxBatchSize(1);
+                })
+            .AddInterceptors(SqlServerIdentityInsert.Instance);
 }
 
 public sealed class PostgreSqlHost : ServerHost

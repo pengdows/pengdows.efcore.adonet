@@ -28,7 +28,7 @@ public sealed class DuckDbFixture : ProviderFixture
     private const string DependentAlter = "DuckDB 1.5 can't ALTER a table that has indexes or foreign keys";
 
     public override IReadOnlyList<string> ModelSequences { get; } =
-        ["SchemaAuthors_Id_seq", "SchemaBooks_Id_seq", "Authors_Id_seq", "Shelves_Id_seq"];
+        ["SchemaAuthors_Id_seq", "SchemaBooks_Id_seq", "SchemaCategories_Id_seq", "Authors_Id_seq", "Shelves_Id_seq"];
 
     protected override IEnumerable<string> Ddl =>
     [

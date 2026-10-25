@@ -11,7 +11,7 @@ namespace pengdows.efcore.adonet.Testing;
 public abstract class MigrationsConformanceTests<TFixture>(TFixture fixture) : IClassFixture<TFixture>, IAsyncLifetime
     where TFixture : ProviderFixture
 {
-    private static readonly string[] OwnTables = ["SchemaBooks", "SchemaAuthors", "Shelves", "Writers", "Authors", "__EFMigrationsHistory", "__EFMigrationsLock"];
+    private static readonly string[] OwnTables = ["SchemaCategories", "SchemaBooks", "SchemaAuthors", "Shelves", "Writers", "Authors", "__EFMigrationsHistory", "__EFMigrationsLock"];
 
     protected TFixture Fixture { get; } = fixture;
 
@@ -57,6 +57,33 @@ public abstract class MigrationsConformanceTests<TFixture>(TFixture fixture) : I
 
             // The unique index on Title.
             context.Add(new Book { Title = "The Dispossessed", AuthorId = book.AuthorId, Isbn = Guid.NewGuid() });
+            await Assert.ThrowsAsync<DbUpdateException>(() => context.SaveChangesAsync(Ct));
+        }
+    }
+
+    [Fact]
+    public async Task Create_tables_builds_a_table_that_references_itself()
+    {
+        await using (var context = Fixture.CreateContext<SchemaContext>(o => new SchemaContext(o)))
+        {
+            await context.GetService<IRelationalDatabaseCreator>().CreateTablesAsync(Ct);
+        }
+
+        await using (var context = Fixture.CreateContext<SchemaContext>(o => new SchemaContext(o)))
+        {
+            context.Add(new Category { Name = "Fiction", Children = { new Category { Name = "Science fiction" } } });
+            await context.SaveChangesAsync(Ct);
+        }
+
+        await using (var context = Fixture.CreateContext<SchemaContext>(o => new SchemaContext(o)))
+        {
+            // Schema, not joins: the rows are read without joining the table to itself.
+            var categories = await context.Categories.OrderBy(c => c.Name).ToListAsync(Ct);
+            Assert.Equal(["Fiction", "Science fiction"], categories.Select(c => c.Name));
+            Assert.Equal(categories[0].Id, categories[1].ParentId);
+
+            // The foreign key holds.
+            context.Add(new Category { Name = "Orphan", ParentId = -1 });
             await Assert.ThrowsAsync<DbUpdateException>(() => context.SaveChangesAsync(Ct));
         }
     }

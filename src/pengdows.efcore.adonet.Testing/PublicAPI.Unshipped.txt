@@ -83,6 +83,18 @@ pengdows.efcore.adonet.Testing.BulkConformanceTests<TFixture>.Bulk_insert_works_
 pengdows.efcore.adonet.Testing.BulkConformanceTests<TFixture>.DisposeAsync() -> System.Threading.Tasks.ValueTask
 pengdows.efcore.adonet.Testing.BulkConformanceTests<TFixture>.Fixture.get -> TFixture!
 pengdows.efcore.adonet.Testing.BulkConformanceTests<TFixture>.InitializeAsync() -> System.Threading.Tasks.ValueTask
+pengdows.efcore.adonet.Testing.Category
+pengdows.efcore.adonet.Testing.Category.Category() -> void
+pengdows.efcore.adonet.Testing.Category.Children.get -> System.Collections.Generic.List<pengdows.efcore.adonet.Testing.Category!>!
+pengdows.efcore.adonet.Testing.Category.Children.set -> void
+pengdows.efcore.adonet.Testing.Category.Id.get -> int
+pengdows.efcore.adonet.Testing.Category.Id.set -> void
+pengdows.efcore.adonet.Testing.Category.Name.get -> string!
+pengdows.efcore.adonet.Testing.Category.Name.set -> void
+pengdows.efcore.adonet.Testing.Category.Parent.get -> pengdows.efcore.adonet.Testing.Category?
+pengdows.efcore.adonet.Testing.Category.Parent.set -> void
+pengdows.efcore.adonet.Testing.Category.ParentId.get -> int?
+pengdows.efcore.adonet.Testing.Category.ParentId.set -> void
 pengdows.efcore.adonet.Testing.ContainerFixture
 pengdows.efcore.adonet.Testing.ContainerFixture.ContainerFixture() -> void
 pengdows.efcore.adonet.Testing.InitialMigration
@@ -99,6 +111,7 @@ pengdows.efcore.adonet.Testing.MigrationIds
 pengdows.efcore.adonet.Testing.MigrationsConformanceTests<TFixture>
 pengdows.efcore.adonet.Testing.MigrationsConformanceTests<TFixture>.Alter_column_changes_size_nullability_and_default() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.MigrationsConformanceTests<TFixture>.A_migration_that_fails_to_generate_leaves_no_lock_behind() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.MigrationsConformanceTests<TFixture>.Create_tables_builds_a_table_that_references_itself() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.MigrationsConformanceTests<TFixture>.Create_tables_builds_the_schema_from_the_model() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.MigrationsConformanceTests<TFixture>.DisposeAsync() -> System.Threading.Tasks.ValueTask
 pengdows.efcore.adonet.Testing.MigrationsConformanceTests<TFixture>.Fixture.get -> TFixture!
@@ -205,6 +218,7 @@ pengdows.efcore.adonet.Testing.SampleContext.Samples.get -> Microsoft.EntityFram
 pengdows.efcore.adonet.Testing.SchemaContext
 pengdows.efcore.adonet.Testing.SchemaContext.Authors.get -> Microsoft.EntityFrameworkCore.DbSet<pengdows.efcore.adonet.Testing.Author!>!
 pengdows.efcore.adonet.Testing.SchemaContext.Books.get -> Microsoft.EntityFrameworkCore.DbSet<pengdows.efcore.adonet.Testing.Book!>!
+pengdows.efcore.adonet.Testing.SchemaContext.Categories.get -> Microsoft.EntityFrameworkCore.DbSet<pengdows.efcore.adonet.Testing.Category!>!
 pengdows.efcore.adonet.Testing.SchemaContext.SchemaContext(Microsoft.EntityFrameworkCore.DbContextOptions<pengdows.efcore.adonet.Testing.SchemaContext!>! options) -> void
 pengdows.efcore.adonet.Testing.SpanSample
 pengdows.efcore.adonet.Testing.SpanSample.Id.get -> int

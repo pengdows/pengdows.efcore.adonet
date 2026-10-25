@@ -1,3 +1,7 @@
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.Extensions.DependencyInjection;
+
 namespace pengdows.efcore.adonet.flatfile;
 
 /// <summary>
@@ -16,6 +20,9 @@ public sealed class FlatFileDialect : AdoNetDialect
     public override ISqlDialect Sql { get; } = new FlatFileSql();
     public override IDatabaseCapabilities Capabilities { get; } = new DatabaseCapabilities(SupportsMultipleStatementsPerCommand: true, DefaultMaxBatchSize: 1);
     public override ITypeMappingDialect TypeMappings { get; } = new FlatFileTypeMappings();
+
+    public override void ConfigureServices(IServiceCollection services)
+        => new EntityFrameworkRelationalServicesBuilder(services).TryAdd<IMigrationsSqlGenerator, FlatFileMigrationsSqlGenerator>();
 }
 
 /// <summary>Binary data is a BLOB, of no declared length; there is no INTERVAL type, so no <see cref="TimeSpan" />.</summary>

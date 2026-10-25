@@ -51,7 +51,7 @@ public sealed class FlatFileFixture : ProviderFixture
     };
 
     public override IReadOnlyList<string> ModelSequences { get; } =
-        ["SchemaAuthors_Id_seq", "SchemaBooks_Id_seq", "Authors_Id_seq", "Writers_Id_seq", "Shelves_Id_seq"];
+        ["SchemaAuthors_Id_seq", "SchemaBooks_Id_seq", "SchemaCategories_Id_seq", "Authors_Id_seq", "Writers_Id_seq", "Shelves_Id_seq"];
 
     // No identity columns: keys come from the "{table}_{column}_seq" sequences the dialect expects.
     protected override IEnumerable<string> Ddl =>

@@ -108,3 +108,14 @@ Recorded as skips in `test/pengdows.efcore.adonet.flatfile.Tests/Fixtures.cs`, e
 - No `INTERVAL` type.
 - `DROP TABLE` of a missing table throws `InvalidOperationException`, not a `DbException`: provider-agnostic code catching
   `DbException` for database errors misses it.
+- A table can't reference itself in `CREATE TABLE`: `ForeignKeyEvaluator.ValidateDefinition` (called from
+  `DefaultFlatFileQueryExecutor` at the CREATE TABLE path) looks the referenced table up in the catalog before the new
+  table is in it, and throws "Referenced table 'X' was not found for foreign key ... on table 'X'". Valid ISO (a tree,
+  EF's Northwind `Employees.ReportsTo`). Fix: resolve a reference to the table being created to its own definition.
+  Found by `MigrationsConformanceTests.Create_tables_builds_a_table_that_references_itself`. Our work-around:
+  `FlatFileMigrationsSqlGenerator` adds such keys with `ALTER TABLE ... ADD CONSTRAINT` after the table.
+- A table joined to itself returns wrong rows. Probed directly on a two-row tree (`C(Id, Name, ParentId)`, rows
+  `(1, 'Fiction', NULL)` and `(2, 'SF', 1)`): `SELECT c.Id, c0.Name FROM C AS c LEFT JOIN C AS c0 ON c.ParentId = c0.Id`
+  returns two rows of NULLs (expected `1|NULL`, `2|Fiction`), and the same `INNER JOIN` returns no rows (expected
+  `2|Fiction`). Likely the two aliases of one table resolve to the same row source. No work-around: a provider can't
+  rewrite every self-join.

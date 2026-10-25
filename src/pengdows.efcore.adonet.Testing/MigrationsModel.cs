@@ -32,15 +32,30 @@ public class Book
     public string? Notes { get; set; }
 }
 
+/// <summary>A table whose foreign key references the table itself: a tree.</summary>
+public class Category
+{
+    public int Id { get; set; }
+
+    [MaxLength(100)]
+    public string Name { get; set; } = "";
+
+    public int? ParentId { get; set; }
+    public Category? Parent { get; set; }
+    public List<Category> Children { get; set; } = [];
+}
+
 /// <summary>Schema built by EF from the model (CreateTables) rather than by hand-written DDL.</summary>
 public class SchemaContext(DbContextOptions<SchemaContext> options) : DbContext(options)
 {
     public DbSet<Author> Authors => Set<Author>();
     public DbSet<Book> Books => Set<Book>();
+    public DbSet<Category> Categories => Set<Category>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Author>().ToTable("SchemaAuthors");
+        modelBuilder.Entity<Category>().ToTable("SchemaCategories");
         modelBuilder.Entity<Book>(b =>
         {
             b.ToTable("SchemaBooks");

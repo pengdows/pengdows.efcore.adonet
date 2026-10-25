@@ -1,5 +1,6 @@
 #nullable enable
 override pengdows.efcore.adonet.flatfile.FlatFileDialect.Capabilities.get -> pengdows.efcore.adonet.IDatabaseCapabilities!
+override pengdows.efcore.adonet.flatfile.FlatFileDialect.ConfigureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> void
 override pengdows.efcore.adonet.flatfile.FlatFileDialect.Name.get -> string!
 override pengdows.efcore.adonet.flatfile.FlatFileDialect.Sql.get -> pengdows.efcore.adonet.ISqlDialect!
 override pengdows.efcore.adonet.flatfile.FlatFileDialect.TypeMappings.get -> pengdows.efcore.adonet.ITypeMappingDialect!
