@@ -15,8 +15,27 @@ public class SqlServerMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies 
     protected override void Generate(RenameColumnOperation operation, IModel? model, MigrationCommandListBuilder builder)
         => Rename(builder, ObjectName(operation.Schema, operation.Table, operation.Name), operation.NewName, "COLUMN");
 
+    // Another schema is ALTER SCHEMA ... TRANSFER (a null schema is the default, dbo); a new name, sp_rename after it.
     protected override void Generate(RenameTableOperation operation, IModel? model, MigrationCommandListBuilder builder)
-        => Rename(builder, ObjectName(operation.Schema, operation.Name), operation.NewName ?? operation.Name, null);
+    {
+        var schema = operation.Schema;
+        if (operation.NewSchema != operation.Schema)
+        {
+            schema = operation.NewSchema ?? "dbo";
+            builder
+                .Append("ALTER SCHEMA ")
+                .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(schema))
+                .Append(" TRANSFER ")
+                .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Name, operation.Schema))
+                .AppendLine(";");
+            EndStatement(builder);
+        }
+
+        if ((operation.NewName != null) && (operation.NewName != operation.Name))
+        {
+            Rename(builder, ObjectName(schema, operation.Name), operation.NewName, null);
+        }
+    }
 
     protected override void Generate(RenameIndexOperation operation, IModel? model, MigrationCommandListBuilder builder)
         => Rename(builder, ObjectName(operation.Schema, operation.Table!, operation.Name), operation.NewName, "INDEX");
@@ -107,8 +126,8 @@ public class SqlServerMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies 
         EndStatement(builder);
     }
 
-    private static string ObjectName(string? schema, params string[] parts)
-        => string.Join(".", (schema == null ? parts : [schema, .. parts]).Select(p => "[" + p.Replace("]", "]]", StringComparison.Ordinal) + "]"));
+    private string ObjectName(string? schema, params string[] parts)
+        => string.Join(".", (schema == null ? parts : [schema, .. parts]).Select(Dependencies.SqlGenerationHelper.DelimitIdentifier));
 
     private static string Literal(string value)
         => "N'" + value.Replace("'", "''", StringComparison.Ordinal) + "'";

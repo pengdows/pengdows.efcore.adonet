@@ -36,7 +36,12 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
     {
         var sql = "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = "
             + Literal(table);
-        return schema == null || !Dialect.Sql.SupportsSchemas ? sql : sql + " AND TABLE_SCHEMA = " + Literal(schema);
+        if ((schema != null) && Dialect.Sql.SupportsSchemas)
+        {
+            return sql + " AND TABLE_SCHEMA = " + Literal(schema);
+        }
+
+        return Dialect.Sql.CurrentSchema is { } current ? sql + " AND TABLE_SCHEMA = " + current : sql;
     }
 
     protected override bool InterpretExistsResult(object? value)

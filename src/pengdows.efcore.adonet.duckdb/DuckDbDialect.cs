@@ -25,6 +25,7 @@ public sealed class DuckDbSql : AnsiSqlDialect
     public override bool ParameterNameIncludesMarker => false;
     public override PagingSyntax Paging { get; } = PagingSyntax.LimitOffset();
     public override FunctionSyntax Functions { get; } = new DuckDbFunctions();
+    public override string CurrentSchema => "current_schema()";
 }
 
 /// <summary>

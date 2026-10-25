@@ -1,4 +1,26 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations.Operations;
+using pengdows.efcore.adonet.Testing;
+
 namespace pengdows.efcore.adonet.duckdb.Tests;
+
+public class DuckDbMigrationsTests
+{
+    [Fact]
+    public void A_key_sequence_default_names_the_sequence_delimited_and_in_its_schema()
+    {
+        using var context = new BlogContext(new DbContextOptionsBuilder<BlogContext>().UseAdoNetDuckDb("Data Source=:memory:").Options);
+        var id = new AddColumnOperation { Name = "Id", Table = "O'Brien", Schema = "s", ClrType = typeof(int) };
+        id.AddAnnotation(AdoNetAnnotationNames.Identity, true);
+        var create = new CreateTableOperation { Name = "O'Brien", Schema = "s", Columns = { id } };
+
+        var sql = string.Join("", context.GetService<IMigrationsSqlGenerator>().Generate([create]).Select(c => c.CommandText));
+
+        Assert.Contains("DEFAULT nextval('\"s\".\"O''Brien_Id_seq\"')", sql);
+    }
+}
 
 public class DuckDbLiteralTests
 {

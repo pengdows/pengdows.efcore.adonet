@@ -42,6 +42,7 @@ public static class AdoNetServiceCollectionExtensions
             .TryAdd<IHistoryRepository, AdoNetHistoryRepository>()
             .TryAdd<IMigrationsSqlGenerator, AdoNetMigrationsSqlGenerator>()
             .TryAdd<IRelationalAnnotationProvider, AdoNetAnnotationProvider>()
+            .TryAdd<IMigrationsAnnotationProvider, AdoNetMigrationsAnnotationProvider>()
             .TryAdd<IQuerySqlGeneratorFactory, AdoNetQuerySqlGeneratorFactory>()
             .TryAdd<IMethodCallTranslatorProvider, AdoNetMethodCallTranslatorProvider>()
             .TryAdd<IMemberTranslatorProvider, AdoNetMemberTranslatorProvider>()

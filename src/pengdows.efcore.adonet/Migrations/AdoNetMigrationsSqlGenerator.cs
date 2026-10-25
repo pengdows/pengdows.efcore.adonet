@@ -110,10 +110,14 @@ public class AdoNetMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dep
         }
     }
 
-    /// <summary>One <c>ALTER COLUMN</c> statement per changed aspect: type, nullability, default.</summary>
+    /// <summary>
+    ///     One <c>ALTER COLUMN</c> statement per changed aspect: type, nullability, default. ISO SQL has no statement for a
+    ///     change of collation, computed expression or identity, so those are refused rather than skipped.
+    /// </summary>
     protected override void Generate(AlterColumnOperation operation, IModel? model, MigrationCommandListBuilder builder)
     {
         var oldColumn = operation.OldColumn;
+        RefuseUnalterable(operation, oldColumn);
 
         // The old type from the operation's own facets: the model, when there is one, only knows the new column.
         var type = operation.ColumnType ?? GetColumnType(operation.Schema, operation.Table, operation.Name, operation, model);
@@ -147,6 +151,20 @@ public class AdoNetMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dep
 
             builder.AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
             EndStatement(builder);
+        }
+    }
+
+    private void RefuseUnalterable(AlterColumnOperation operation, ColumnOperation oldColumn)
+    {
+        var change = operation.Collation != oldColumn.Collation ? "collation"
+            : (operation.ComputedColumnSql != oldColumn.ComputedColumnSql) || (operation.IsStored != oldColumn.IsStored) ? "computed expression"
+            : IsIdentity(operation) != IsIdentity(oldColumn) ? "identity"
+            : null;
+        if (change != null)
+        {
+            throw new NotSupportedException(
+                $"Dialect '{Dialect.Name}': '{operation.Table}.{operation.Name}' changes its {change}, which ISO SQL can't alter in "
+                + "place. Rebuild the column in the migration (add, copy, drop, rename).");
         }
     }
 

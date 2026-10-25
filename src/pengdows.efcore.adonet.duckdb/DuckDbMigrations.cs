@@ -55,8 +55,12 @@ public class DuckDbMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dep
         EndStatement(builder);
     }
 
+    // nextval takes the sequence's name as a string: delimited and qualified as in DDL, then quoted as a literal.
     protected override void IdentityDefinition(string? schema, string table, string name, ColumnOperation operation, MigrationCommandListBuilder builder)
-        => builder.Append(" DEFAULT nextval('").Append(SequenceName(table, name)).Append("')");
+        => builder
+            .Append(" DEFAULT nextval('")
+            .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(SequenceName(table, name), schema).Replace("'", "''", StringComparison.Ordinal))
+            .Append("')");
 
     protected override void Generate(DropTableOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
     {

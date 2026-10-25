@@ -53,6 +53,24 @@ public class HistoryRepositoryTests
     }
 
     [Fact]
+    public void Without_a_schema_the_check_is_in_the_dialects_current_schema()
+    {
+        var log = new List<string>();
+        var dialect = new PartsDialect("Current schema", new PartsSql(currentSchema: "CURRENT_SCHEMA"));
+        using var context = new ItemContext(new DbContextOptionsBuilder<ItemContext>()
+            .UseAdoNet(_db.Connection, contextOwnsConnection: false, o => o.UseDialect(dialect))
+            .LogTo(log.Add, [RelationalEventId.CommandExecuted])
+            .AllowManyDialects()
+            .Options);
+
+        _db.Connection.EnqueueScalarResult(0);
+        context.GetService<IHistoryRepository>().Exists();
+
+        Assert.Contains(
+            "WHERE TABLE_NAME = '__EFMigrationsHistory' AND TABLE_SCHEMA = CURRENT_SCHEMA", log[0]);
+    }
+
+    [Fact]
     public void Dialects_without_schemas_check_the_name_only()
     {
         var log = new List<string>();

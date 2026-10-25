@@ -141,6 +141,40 @@ public class MigrationsSqlTests
     }
 
     [Fact]
+    public void Alter_column_refuses_changes_it_has_no_statement_for()
+    {
+        AlterColumnOperation Alter(Action<AlterColumnOperation> change)
+        {
+            var operation = new AlterColumnOperation
+            {
+                Table = "T", Name = "C", ClrType = typeof(int), IsNullable = false,
+                OldColumn = new AddColumnOperation { Table = "T", Name = "C", ClrType = typeof(int), IsNullable = false }
+            };
+            change(operation);
+            return operation;
+        }
+
+        Assert.Contains("collation", Assert.Throws<NotSupportedException>(() => Sql(AdoNetDialect.Ansi, Alter(o => o.Collation = "C"))).Message);
+        Assert.Contains("computed", Assert.Throws<NotSupportedException>(() => Sql(AdoNetDialect.Ansi, Alter(o => o.ComputedColumnSql = "1"))).Message);
+        Assert.Contains("computed", Assert.Throws<NotSupportedException>(() => Sql(AdoNetDialect.Ansi, Alter(o => o.IsStored = true))).Message);
+        Assert.Contains("identity", Assert.Throws<NotSupportedException>(
+            () => Sql(AdoNetDialect.Ansi, Alter(o => o.AddAnnotation(AdoNetAnnotationNames.Identity, true)))).Message);
+    }
+
+    [Fact]
+    public void The_differ_records_identity_columns_of_dropped_and_renamed_tables()
+    {
+        using var context = new FakeDatabase().Context(TestDialects.Sequence);
+        var items = context.GetService<IDesignTimeModel>().Model.GetRelationalModel();
+
+        var drop = context.GetService<IMigrationsModelDiffer>().GetDifferences(items, null).OfType<DropTableOperation>().Single(o => o.Name == "Items");
+        var rename = context.GetService<IMigrationsAnnotationProvider>().ForRename(items.FindTable("Items", null)!);
+
+        Assert.Equal(["Id"], (string[])drop[AdoNetAnnotationNames.IdentityColumns]!);
+        Assert.Equal(["Id"], (string[])rename.Single(a => a.Name == AdoNetAnnotationNames.IdentityColumns).Value!);
+    }
+
+    [Fact]
     public void Renames_use_iso_alter_statements()
     {
         Assert.Equal(

@@ -71,6 +71,12 @@ public interface ISqlDialect
     /// <summary>What follows <c>INSERT INTO t</c> for a row with no columns to write: ISO's <c>DEFAULT VALUES</c>.</summary>
     string DefaultValues { get; }
 
+    /// <summary>
+    ///     An expression for the schema unqualified names resolve to (<c>CURRENT_SCHEMA</c>), so a lookup by name alone stays
+    ///     there; null when the database can't say, and the name is then looked up in every schema.
+    /// </summary>
+    string? CurrentSchema { get; }
+
     /// <summary>Returns the number of user tables in the current database or schema.</summary>
     string HasTablesSql { get; }
 }

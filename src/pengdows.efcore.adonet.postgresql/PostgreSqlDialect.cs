@@ -22,6 +22,7 @@ public sealed class PostgreSqlSql : AnsiSqlDialect
 {
     public override PagingSyntax Paging { get; } = PagingSyntax.LimitOffset();
     public override FunctionSyntax Functions { get; } = new PostgreSqlFunctions();
+    public override string CurrentSchema => "CURRENT_SCHEMA";
 
     // INFORMATION_SCHEMA.TABLES also lists the system catalogs.
     public override string HasTablesSql

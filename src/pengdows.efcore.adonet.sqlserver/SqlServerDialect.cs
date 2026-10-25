@@ -43,6 +43,7 @@ public sealed class SqlServerSql : AnsiSqlDialect
     public override DmlSyntax Dml => DmlSyntax.TargetAliasFrom;
     public override FunctionSyntax Functions { get; } = new SqlServerFunctions();
     public override bool PreferExistsToIn => true;
+    public override string CurrentSchema => "SCHEMA_NAME()";
 
     public override string StringLiteral(string value)
         => "N" + base.StringLiteral(value);
