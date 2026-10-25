@@ -1,11 +1,12 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace pengdows.efcore.adonet.Query;
 
 /// <summary>EF's relational SQL, with paging, functions, <c>LongCount</c> and bulk DML as the dialect writes them.</summary>
-internal class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencies, ISqlDialect dialect)
+internal class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencies, ISqlDialect dialect, ITypeMappingDialect typeMappings)
     : QuerySqlGenerator(dependencies), IQuerySqlWriter
 {
     private TableExpression? _qualifyWithTableName;
@@ -49,6 +50,55 @@ internal class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencie
 
         Sql.Append(")");
         return rowValue;
+    }
+
+    // A paged subquery under IN, where the database can't page there, is read through a derived table, which can.
+    protected override void GenerateIn(InExpression inExpression, bool negated)
+    {
+        if (dialect.LimitInPredicateSubqueries
+            || (inExpression.Subquery is not { } subquery)
+            || ((subquery.Limit == null) && (subquery.Offset == null)))
+        {
+            base.GenerateIn(inExpression, negated);
+            return;
+        }
+
+        const string Alias = "limited";
+        Visit(inExpression.Item);
+        Sql.Append(negated ? " NOT IN (SELECT " : " IN (SELECT ")
+            .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(subquery.Projection[0].Alias, Alias))
+            .AppendLine(" FROM (");
+        using (Sql.Indent())
+        {
+            Visit(subquery);
+        }
+
+        Sql.AppendLine().Append(") AS ").Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(Alias)).Append(")");
+    }
+
+    // CAST names the dialect's target for the store type, which in ISO SQL is the store type itself.
+    protected override Expression VisitSqlUnary(SqlUnaryExpression sqlUnaryExpression)
+    {
+        if ((sqlUnaryExpression.OperatorType != ExpressionType.Convert) || (sqlUnaryExpression.TypeMapping is not { } typeMapping))
+        {
+            return base.VisitSqlUnary(sqlUnaryExpression);
+        }
+
+        Sql.Append("CAST(");
+        var parenthesize = RequiresParentheses(sqlUnaryExpression, sqlUnaryExpression.Operand);
+        if (parenthesize)
+        {
+            Sql.Append("(");
+        }
+
+        Visit(sqlUnaryExpression.Operand);
+        if (parenthesize)
+        {
+            Sql.Append(")");
+        }
+
+        Sql.Append(" AS ").Append(typeMappings.CastTarget(typeMapping.StoreType)).Append(")");
+        return sqlUnaryExpression;
     }
 
     protected override Expression VisitSqlBinary(SqlBinaryExpression sqlBinaryExpression)
@@ -172,9 +222,9 @@ internal class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencie
     }
 }
 
-internal class AdoNetQuerySqlGeneratorFactory(QuerySqlGeneratorDependencies dependencies, ISqlDialect dialect)
+internal class AdoNetQuerySqlGeneratorFactory(QuerySqlGeneratorDependencies dependencies, ISqlDialect dialect, ITypeMappingDialect typeMappings)
     : IQuerySqlGeneratorFactory
 {
     public virtual QuerySqlGenerator Create()
-        => new AdoNetQuerySqlGenerator(dependencies, dialect);
+        => new AdoNetQuerySqlGenerator(dependencies, dialect, typeMappings);
 }

@@ -40,6 +40,7 @@ public sealed class PartsSql(
     SavepointSyntax? savepoints = null,
     bool noSavepoints = false,
     bool rowValues = true,
+    bool limitInPredicateSubqueries = true,
     Func<string, bool>? requiresQuoting = null) : AnsiSqlDialect
 {
     public override PagingSyntax Paging { get; } = paging ?? PagingSyntax.OffsetFetch;
@@ -58,6 +59,7 @@ public sealed class PartsSql(
     public override string? CurrentSchema => currentSchema;
     public override SavepointSyntax? Savepoints => noSavepoints ? null : savepoints ?? SavepointSyntax.Iso;
     public override bool RowValues => rowValues;
+    public override bool LimitInPredicateSubqueries => limitInPredicateSubqueries;
 
     public override bool RequiresQuoting(string identifier)
         => requiresQuoting?.Invoke(identifier) ?? base.RequiresQuoting(identifier);
@@ -89,6 +91,8 @@ public static class TestDialects
 
     public static readonly IAdoNetDialect PreferExists = new PartsDialect("Prefer EXISTS", new PartsSql(preferExistsToIn: true));
 
+    public static readonly IAdoNetDialect CastTargets = new PartsDialect("Cast targets", typeMappings: new CastTargetTypeMappings());
+
     public static readonly IAdoNetDialect CastLiterals = new PartsDialect("Cast literals", typeMappings: new CastLiteralTypeMappings());
 
     public static readonly IAdoNetDialect SelectAfter = new PartsDialect(
@@ -116,6 +120,8 @@ public static class TestDialects
     public static readonly IAdoNetDialect NoSubstrings = new PartsDialect("No substrings", new PartsSql(functions: new NoSubstringFunctions()));
     public static readonly IAdoNetDialect LowerCaseUnquoted = new PartsDialect(
         "Lower case unquoted", new PartsSql(requiresQuoting: i => i.Any(c => !char.IsLower(c))));
+    public static readonly IAdoNetDialect NoLimitInSubqueryPredicates = new PartsDialect(
+        "No LIMIT in IN subqueries", new PartsSql(limitInPredicateSubqueries: false));
     public static readonly IAdoNetDialect NoRowValues = new PartsDialect("No row values", new PartsSql(rowValues: false));
     public static readonly IAdoNetDialect NoEscape = new PartsDialect("No escape", new PartsSql(functions: new NoEscapeFunctions()));
     public static readonly IAdoNetDialect NoFunctions = new PartsDialect("No functions", new PartsSql(functions: new NoFunctions()));

@@ -201,6 +201,13 @@ public class TranslationTests
     }
 
     [Fact]
+    public void Casts_name_the_dialects_cast_target()
+    {
+        Assert.Contains(@"CAST(""i"".""Version"" AS SIGNED) * 2 = 4", Sql(TestDialects.CastTargets, c => c.Items.Where(i => (long)i.Version * 2 == 4)));
+        Assert.Contains(@"CAST(""i"".""Version"" AS BIGINT) * 2 = 4", Ansi(c => c.Items.Where(i => (long)i.Version * 2 == 4)));
+    }
+
+    [Fact]
     public void A_dialect_respells_a_function()
     {
         Assert.Contains(@"LEN(""i"".""Name"")", Sql(TestDialects.Functions, c => c.Items.Select(i => i.Name!.Length)));
@@ -315,6 +322,13 @@ public sealed class TestFunctions : FunctionSyntax
     public override string? Sqrt => null;
     public override char? LikeEscapeCharacter => '!';
     public override string LikeSpecialCharacters => "%_[";
+}
+
+/// <summary>A database whose CAST takes its own target names rather than column types.</summary>
+public sealed class CastTargetTypeMappings : AnsiTypeMappings
+{
+    public override string CastTarget(string storeType)
+        => storeType == "BIGINT" ? "SIGNED" : storeType;
 }
 
 /// <summary>Formats every literal its own way, wrapping or replacing EF's.</summary>

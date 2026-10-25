@@ -86,6 +86,12 @@ public interface ISqlDialect
     /// <summary>Whether tuple comparisons can be written as ISO row values, <c>(a, b) = (x, y)</c>.</summary>
     bool RowValues { get; }
 
+    /// <summary>
+    ///     Whether an <c>IN (subquery)</c> may page its subquery. Where it can't, the subquery is read through a derived
+    ///     table, which may page: <c>x IN (SELECT t.c FROM (subquery) AS t)</c> (an uncorrelated subquery only).
+    /// </summary>
+    bool LimitInPredicateSubqueries { get; }
+
     /// <summary>Returns the number of user tables in the current database or schema.</summary>
     string HasTablesSql { get; }
 }
@@ -119,6 +125,12 @@ public interface ITypeMappingDialect
     ///     numbers); return it, or the database's own. Strings and booleans come from <see cref="ISqlDialect" /> instead.
     /// </summary>
     string FormatLiteral(object value, string storeType, string literal);
+
+    /// <summary>
+    ///     What <c>CAST(x AS ...)</c> names for a value of <paramref name="storeType" />: the store type itself in ISO SQL; a
+    ///     database whose CAST takes only its own target names (SIGNED, CHAR...) maps to them.
+    /// </summary>
+    string CastTarget(string storeType);
 }
 
 /// <summary>The facets of a property that can change its store type.</summary>

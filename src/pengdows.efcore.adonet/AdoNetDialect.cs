@@ -60,6 +60,7 @@ public class AnsiSqlDialect : ISqlDialect
     public virtual string? CurrentSchema => null;
     public virtual SavepointSyntax? Savepoints => SavepointSyntax.Iso;
     public virtual bool RowValues => true;
+    public virtual bool LimitInPredicateSubqueries => true;
 
     public virtual string HasTablesSql
         => "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'";
@@ -127,6 +128,9 @@ public class AnsiTypeMappings : ITypeMappingDialect
 
     public virtual string FormatLiteral(object value, string storeType, string literal)
         => literal;
+
+    public virtual string CastTarget(string storeType)
+        => storeType;
 
     public virtual IReadOnlyList<Type> GetClrTypes(string storeTypeBase)
         => ClrTypes.TryGetValue(storeTypeBase, out var types) ? types : [];

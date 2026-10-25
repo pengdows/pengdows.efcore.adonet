@@ -117,6 +117,7 @@ pengdows.efcore.adonet.ISqlDialect.HasTablesSql.get -> string!
 pengdows.efcore.adonet.ISqlDialect.IdentifierQuotePrefix.get -> string!
 pengdows.efcore.adonet.ISqlDialect.IdentifierQuoteSuffix.get -> string!
 pengdows.efcore.adonet.ISqlDialect.Keys.get -> pengdows.efcore.adonet.KeyRetrieval!
+pengdows.efcore.adonet.ISqlDialect.LimitInPredicateSubqueries.get -> bool
 pengdows.efcore.adonet.ISqlDialect.LongCountFunction.get -> string!
 pengdows.efcore.adonet.ISqlDialect.Paging.get -> pengdows.efcore.adonet.PagingSyntax!
 pengdows.efcore.adonet.ISqlDialect.ParameterMarker.get -> string!
@@ -129,6 +130,7 @@ pengdows.efcore.adonet.ISqlDialect.StringLiteral(string! value) -> string!
 pengdows.efcore.adonet.ISqlDialect.SupportsSchemas.get -> bool
 pengdows.efcore.adonet.ISqlDialect.TrueLiteral.get -> string!
 pengdows.efcore.adonet.ITypeMappingDialect
+pengdows.efcore.adonet.ITypeMappingDialect.CastTarget(string! storeType) -> string!
 pengdows.efcore.adonet.ITypeMappingDialect.FormatLiteral(object! value, string! storeType, string! literal) -> string!
 pengdows.efcore.adonet.ITypeMappingDialect.GetClrTypes(string! storeTypeBase) -> System.Collections.Generic.IReadOnlyList<System.Type!>!
 pengdows.efcore.adonet.ITypeMappingDialect.GetStoreType(System.Type! clrType) -> string?
@@ -235,6 +237,7 @@ virtual pengdows.efcore.adonet.AnsiSqlDialect.HasTablesSql.get -> string!
 virtual pengdows.efcore.adonet.AnsiSqlDialect.IdentifierQuotePrefix.get -> string!
 virtual pengdows.efcore.adonet.AnsiSqlDialect.IdentifierQuoteSuffix.get -> string!
 virtual pengdows.efcore.adonet.AnsiSqlDialect.Keys.get -> pengdows.efcore.adonet.KeyRetrieval!
+virtual pengdows.efcore.adonet.AnsiSqlDialect.LimitInPredicateSubqueries.get -> bool
 virtual pengdows.efcore.adonet.AnsiSqlDialect.LongCountFunction.get -> string!
 virtual pengdows.efcore.adonet.AnsiSqlDialect.Paging.get -> pengdows.efcore.adonet.PagingSyntax!
 virtual pengdows.efcore.adonet.AnsiSqlDialect.ParameterMarker.get -> string!
@@ -246,6 +249,7 @@ virtual pengdows.efcore.adonet.AnsiSqlDialect.Savepoints.get -> pengdows.efcore.
 virtual pengdows.efcore.adonet.AnsiSqlDialect.StringLiteral(string! value) -> string!
 virtual pengdows.efcore.adonet.AnsiSqlDialect.SupportsSchemas.get -> bool
 virtual pengdows.efcore.adonet.AnsiSqlDialect.TrueLiteral.get -> string!
+virtual pengdows.efcore.adonet.AnsiTypeMappings.CastTarget(string! storeType) -> string!
 virtual pengdows.efcore.adonet.AnsiTypeMappings.FormatLiteral(object! value, string! storeType, string! literal) -> string!
 virtual pengdows.efcore.adonet.AnsiTypeMappings.GetClrTypes(string! storeTypeBase) -> System.Collections.Generic.IReadOnlyList<System.Type!>!
 virtual pengdows.efcore.adonet.AnsiTypeMappings.GetStoreType(System.Type! clrType) -> string?

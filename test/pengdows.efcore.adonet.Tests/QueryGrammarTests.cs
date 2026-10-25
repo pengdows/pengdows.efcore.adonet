@@ -46,6 +46,17 @@ public class QueryGrammarTests
     }
 
     [Fact]
+    public void A_limited_in_subquery_goes_through_a_derived_table_where_the_dialect_needs_it()
+    {
+        IQueryable Query(ItemContext c)
+            => c.Items.Where(i => c.Items.OrderBy(x => x.Id).Take(2).Select(x => x.Id).Contains(i.Id));
+
+        var wrapped = Sql(TestDialects.NoLimitInSubqueryPredicates, Query).ReplaceLineEndings("\n");
+        Assert.Matches(@"""i""\.""Id"" IN \(SELECT ""limited""\.""Id"" FROM \(\s*SELECT ""i0""\.""Id""[\s\S]*\) AS ""limited""\)", wrapped);
+        Assert.DoesNotContain("limited", Sql(TestDialects.Ansi, Query));
+    }
+
+    [Fact]
     public void A_nullable_in_subquery_can_be_written_as_exists()
     {
         var withIn = Sql(TestDialects.Ansi, c => c.Items.Where(i => !i.Parts.Select(p => p.Label).Contains("x")));

@@ -80,29 +80,20 @@ WHERE c."City" <> 'Sao Paulo' OR c."City" IS NULL OR c."Country" <> 'Brazil' OR 
 """);
     }
 
-    public override async Task Where_compare_tuple_create_constructed_equal(bool async)
-    {
-        //  Anonymous type to constant comparison. Issue #14672.
-        await AssertTranslationFailed(() => base.Where_compare_tuple_create_constructed_equal(async));
+    // pengdows: the official provider can't translate Tuple.Create comparisons (Issue #14672); this provider writes them
+    // as row values, so the base test runs and its results are compared.
+    public override Task Where_compare_tuple_create_constructed_equal(bool async)
+        => base.Where_compare_tuple_create_constructed_equal(async);
 
-        AssertSql();
-    }
+    // pengdows: the official provider can't translate Tuple.Create comparisons (Issue #14672); this provider writes them
+    // as row values, so the base test runs and its results are compared.
+    public override Task Where_compare_tuple_create_constructed_multi_value_equal(bool async)
+        => base.Where_compare_tuple_create_constructed_multi_value_equal(async);
 
-    public override async Task Where_compare_tuple_create_constructed_multi_value_equal(bool async)
-    {
-        //  Anonymous type to constant comparison. Issue #14672.
-        await AssertTranslationFailed(() => base.Where_compare_tuple_create_constructed_multi_value_equal(async));
-
-        AssertSql();
-    }
-
-    public override async Task Where_compare_tuple_create_constructed_multi_value_not_equal(bool async)
-    {
-        //  Anonymous type to constant comparison. Issue #14672.
-        await AssertTranslationFailed(() => base.Where_compare_tuple_create_constructed_multi_value_not_equal(async));
-
-        AssertSql();
-    }
+    // pengdows: the official provider can't translate Tuple.Create comparisons (Issue #14672); this provider writes them
+    // as row values, so the base test runs and its results are compared.
+    public override Task Where_compare_tuple_create_constructed_multi_value_not_equal(bool async)
+        => base.Where_compare_tuple_create_constructed_multi_value_not_equal(async);
 
     // pengdows: the "Row values" region is not copied. Its tests call the official provider's own EF.Functions row-value
     // comparisons (NpgsqlDbFunctionsExtensions) and resource strings, which this provider doesn't have yet.

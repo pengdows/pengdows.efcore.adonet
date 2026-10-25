@@ -66,3 +66,30 @@ public class MySqlBackslashTests(MySqlFixture fixture) : IClassFixture<MySqlFixt
             context.Blogs, b => b.Name == Microsoft.EntityFrameworkCore.EF.Constant(@"a\b"), TestContext.Current.CancellationToken));
     }
 }
+
+/// <summary>MySQL's CAST takes only its own targets (SIGNED, UNSIGNED, CHAR, DECIMAL, DOUBLE...), not column types.</summary>
+public class MySqlCastTests
+{
+    [Theory]
+    [InlineData("BIGINT", "SIGNED")]
+    [InlineData("INT", "SIGNED")]
+    [InlineData("INTEGER", "SIGNED")]
+    [InlineData("SMALLINT", "SIGNED")]
+    [InlineData("TINYINT(1)", "SIGNED")]
+    [InlineData("TINYINT UNSIGNED", "UNSIGNED")]
+    [InlineData("BIGINT UNSIGNED", "UNSIGNED")]
+    [InlineData("DECIMAL(18,2)", "DECIMAL(18,2)")]
+    [InlineData("DOUBLE", "DOUBLE")]
+    [InlineData("FLOAT", "FLOAT")]
+    [InlineData("LONGTEXT", "CHAR")]
+    [InlineData("VARCHAR(50)", "CHAR(50)")]
+    [InlineData("CHAR(36)", "CHAR(36)")]
+    [InlineData("DATETIME(6)", "DATETIME(6)")]
+    [InlineData("DATE", "DATE")]
+    [InlineData("TIME(6)", "TIME(6)")]
+    [InlineData("LONGBLOB", "BINARY")]
+    [InlineData("VARBINARY(16)", "BINARY(16)")]
+    [InlineData("JSON", "JSON")]
+    public void Casts_name_mysqls_targets(string storeType, string target)
+        => Assert.Equal(target, MySqlDialect.Instance.TypeMappings.CastTarget(storeType));
+}

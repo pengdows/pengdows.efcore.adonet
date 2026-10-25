@@ -45,6 +45,9 @@ internal sealed class MySqlSql(bool backslashEscapes = true) : AnsiSqlDialect
     public override string DefaultValues => "() VALUES ()";
     public override string CurrentSchema => "DATABASE()";
 
+    // "This version of MySQL doesn't yet support 'LIMIT & IN/ALL/ANY/SOME subquery'"; a derived table may be paged.
+    public override bool LimitInPredicateSubqueries => false;
+
     // Backslash is an escape character in MySQL string literals, unless the server's sql_mode has NO_BACKSLASH_ESCAPES.
     public override string StringLiteral(string value)
         => base.StringLiteral(backslashEscapes ? value.Replace(@"\", @"\\") : value);
@@ -102,6 +105,26 @@ internal sealed class MySqlTypeMappings : AnsiTypeMappings
         return "TIME '" + (span < TimeSpan.Zero ? "-" : "")
             + ((long)magnitude.TotalHours).ToString("00", CultureInfo.InvariantCulture)
             + magnitude.ToString(@"\:mm\:ss", CultureInfo.InvariantCulture) + fraction + "'";
+    }
+
+    // CAST takes MySQL's own targets: integers as SIGNED or UNSIGNED, text as CHAR, binary as BINARY (with a length where
+    // the column has one); DECIMAL, DOUBLE, FLOAT, DATE, DATETIME, TIME and JSON as they are.
+    public override string CastTarget(string storeType)
+    {
+        var open = storeType.IndexOf('(', StringComparison.Ordinal);
+        var name = (open < 0 ? storeType : storeType[..open]).Trim().ToUpperInvariant();
+        var length = open < 0 ? "" : storeType[open..storeType.IndexOf(')', open)] + ")";
+        var unsigned = storeType.Contains("UNSIGNED", StringComparison.OrdinalIgnoreCase);
+        return name.Replace(" UNSIGNED", "", StringComparison.Ordinal) switch
+        {
+            "TINYINT" or "SMALLINT" or "MEDIUMINT" or "INT" or "INTEGER" or "BIGINT" or "BIT" or "BOOL" or "BOOLEAN" or "YEAR"
+                => unsigned ? "UNSIGNED" : "SIGNED",
+            "CHAR" or "VARCHAR" => "CHAR" + length,
+            "TINYTEXT" or "TEXT" or "MEDIUMTEXT" or "LONGTEXT" or "ENUM" or "SET" => "CHAR",
+            "BINARY" or "VARBINARY" => "BINARY" + length,
+            "TINYBLOB" or "BLOB" or "MEDIUMBLOB" or "LONGBLOB" => "BINARY",
+            _ => storeType
+        };
     }
 
     // No time-zone-aware type.
