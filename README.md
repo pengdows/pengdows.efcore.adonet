@@ -47,10 +47,15 @@ its database does differently. Grammar comes in parts a dialect picks, named for
 | `BooleanSyntax` | `Native`, `BitValues` (values aren't predicates: `x = TRUE` / `CASE WHEN`) |
 | `KeyRetrieval` | `Returning`, `SelectAfter(identityFunction, rowsAffectedFunction)`, `Sequence(...)` |
 | `DmlSyntax` (`ExecuteUpdate`/`ExecuteDelete`) | `Standard`, `UnaliasedTarget`, `TargetAliasFrom`, `MultiTable` |
-| `FunctionSyntax` | SQL templates (`"CHAR_LENGTH({0})"`) for what .NET members translate to; ISO by default, `null` = unsupported |
+| `FunctionSyntax` | SQL templates (`"CHAR_LENGTH({0})"`) for what .NET members translate to; ISO by default, `null` = unsupported; checked when the dialect is configured |
+| `SavepointSyntax` | savepoints as SQL where the driver's transactions have none: ISO `SAVEPOINT` by default, SQL Server's `SAVE TRANSACTION`, `null` = none |
 
 Each part is an abstract class: a database with its own form (Firebird's `FIRST`/`SKIP`, Oracle's `ROWNUM`) subclasses it.
-String constants go through `ISqlDialect.StringLiteral` (SQL Server prefixes `N`, MySQL doubles backslashes).
+String constants go through `ISqlDialect.StringLiteral` (SQL Server prefixes `N`, MySQL doubles backslashes unless the
+server has `NO_BACKSLASH_ESCAPES`: `MySqlDialect.NoBackslashEscapes`); other constants through
+`ITypeMappingDialect.FormatLiteral`, which must write what a parameter of the same value would store. A few single
+words too: `DefaultValues` (an INSERT with no columns: MySQL's `() VALUES ()`) and `CurrentSchema`. Store types come
+from `GetStoreType(clrType, StoreTypeFacets)`: size, precision, scale, fixed length, Unicode.
 
 ### Translations
 
@@ -62,10 +67,10 @@ uses, e.g. SQL Server's `"DATEPART(year, {0})"` for `EXTRACT(YEAR FROM {0})`:
 | `a + b` on strings | `{0} \|\| {1}` |
 | `ToUpper`, `ToLower`, `Trim`, `TrimStart`, `TrimEnd` | `UPPER`, `LOWER`, `TRIM`, `TRIM(LEADING FROM ...)`, `TRIM(TRAILING FROM ...)` |
 | `Length`, `Substring`, `IndexOf`, `Replace` | `CHAR_LENGTH`, `SUBSTRING(... FROM ... FOR ...)`, `POSITION(... IN ...)`, `REPLACE` |
-| `StartsWith`, `EndsWith`, `Contains` | constants: `LIKE` with wildcards escaped; otherwise compared by position |
+| `StartsWith`, `EndsWith`, `Contains` | constants and parameters: `LIKE` with wildcards escaped (a parameter's pattern is computed at run time, so an index serves it); columns, or anything where LIKE has no `ESCAPE`: compared by position |
 | `string.IsNullOrWhiteSpace` | `x IS NULL OR TRIM(x) = ''` |
 | `Math.Abs`, `Floor`, `Ceiling`, `Round`, `Pow`, `Sqrt` | `ABS`, `FLOOR`, `CEILING`, `ROUND`, `POWER`, `SQRT` |
-| `Year` ... `Second` of `DateTime`, `DateTimeOffset`, `DateOnly` | `EXTRACT(YEAR FROM ...)` ... |
+| `Year` ... `Second` of `DateTime`, `DateTimeOffset`, `DateOnly` | `EXTRACT(YEAR FROM ...)` ... (whole seconds); a `DateTimeOffset` first through `OffsetDateTime`, so parts are those of the value as it reads back |
 
 Anything else a plugin translates registers EF's own `IMethodCallTranslatorPlugin`/`IMemberTranslatorPlugin` in
 `ConfigureServices`; `SqlTemplate.Call` builds a templated function for them too.
@@ -92,13 +97,15 @@ when the context is created; ISO SQL is chosen like any other dialect, with `Use
 | Plugin | Driver | Queries, saves, bulk DML, bulk insert | Migrations | Known gaps |
 |---|---|---|---|---|
 | `postgresql` | Npgsql | ✅ (bulk insert: binary `COPY`) | ✅ | — |
-| `sqlserver` | Microsoft.Data.SqlClient | ✅ (bulk insert: `SqlBulkCopy`) | ✅ | — |
+| `sqlserver` | Microsoft.Data.SqlClient | ✅ (bulk insert: `SqlBulkCopy`, checking constraints and firing triggers) | ✅ | — |
 | `mysql` | MySqlConnector | ✅ | ✅ | — |
 | `sqlite` (+ pre-3.35) | Microsoft.Data.Sqlite | ✅ | ✅ except `ALTER COLUMN` | Needs a table rebuild, not implemented |
-| `duckdb` | DuckDB.NET | ✅ | `CreateTables` only | DuckDB can't `ALTER` a table with indexes or foreign keys |
-| `flatfile` | pengdows.flatfile | ✅ except below | `CreateTables` only | Engine (0.2.1-preview.8): `FETCH FIRST` in derived tables, `NOT` as an UPDATE value, joined `IN` subqueries, `ALTER SEQUENCE ... RENAME`, `ALTER COLUMN`, `LIKE ... ESCAPE`, `TRIM(LEADING/TRAILING ...)` (trims both ends), no `REPLACE`/`FLOOR`/`CEILING`/`ROUND`; dialect: no `UPDATE` through a join without a target alias |
+| `duckdb` | DuckDB.NET | ✅ (no savepoints) | `CreateTables` only | DuckDB can't `ALTER` a table with indexes or foreign keys |
+| `flatfile` | pengdows.flatfile | ✅ except below | `CreateTables` only | Engine (0.2.1-preview.8): `FETCH FIRST` in derived tables, `NOT` as an UPDATE value, joined `IN` subqueries, `ALTER SEQUENCE ... RENAME`, `ALTER COLUMN`, `TRIM(LEADING/TRAILING ...)` (trims both ends), no `REPLACE`/`FLOOR`/`CEILING`/`ROUND`/`INTERVAL`, offset timestamp literals; strict ISO has no `UPDATE ... FROM`. `LIKE ... ESCAPE` is ignored, so patterns needing it are compared by position |
 
-Gaps are recorded per fixture in `KnownEngineGaps` and reported as skipped tests with the reason.
+Gaps are only what a database lacks, recorded per fixture in `KnownEngineGaps` and reported as skipped tests,
+attributed `[SKIP:<dialect>]`. Defects found in EF Core, drivers and engines while building this are listed in
+[UPSTREAM_ISSUES.md](UPSTREAM_ISSUES.md) for issues and pull requests.
 
 `BulkInsert` doesn't read back keys the database generates (sequence keys are drawn first and set on the entities),
 writes every mapped column (database defaults don't apply), and doesn't support owned or complex types.
@@ -109,46 +116,54 @@ Code lines (no blanks or comments) and Release DLL size, against the official pr
 
 | Package | Lines | DLL |
 |---|---|---|
-| core | 2,220 | 103 KB |
-| sqlserver | 238 | 18 KB |
-| postgresql | 124 | 13 KB |
-| mysql | 126 | 11 KB |
-| sqlite | 90 | 10 KB |
-| duckdb | 135 | 11 KB |
-| flatfile | 44 | 7 KB |
+| core | 3,477 | 148 KB |
+| sqlserver | 476 | 28 KB |
+| postgresql | 182 | 16 KB |
+| mysql | 195 | 14 KB |
+| sqlite | 160 | 13 KB |
+| duckdb | 189 | 13 KB |
+| flatfile | 96 | 9 KB |
 | Microsoft.EntityFrameworkCore.SqlServer 10.0.11 | 23,474 | 627 KB |
 | Microsoft.EntityFrameworkCore.Sqlite.Core 10.0.11 | 8,677 | 304 KB |
 | Npgsql.EntityFrameworkCore.PostgreSQL 10.0.3 | — | 663 KB |
 
 Not a feature-for-feature comparison: the official providers also scaffold, translate hundreds of LINQ methods, and
 support spatial, JSON, temporal tables and more. The number to watch is how large a plugin grows as it reaches parity
-on what it needs, while the core stays put.
+on what it needs, while the core stays put. About 45 lines of each plugin are its `UseAdoNetXxx` entry points (a
+connection string, a connection, a data source, or one set later, each also generic).
 
 ## Tests
 
 ```bash
-dotnet test     # every project; server databases run in Docker (Testcontainers) and are skipped without it
+dotnet test     # every project; server databases run in Docker (Testcontainers), and fail without it
 dotnet test test/pengdows.efcore.adonet.Tests   # the core alone: fakeDb and an in-memory SQLite connection, no servers
 ```
 
 - **Core** (`pengdows.efcore.adonet.Tests`): every grammar part, key strategy, DML form, DDL form, the history lock,
   bulk loading, connection lifecycle and failure paths, against dialects composed from parts the way an outside plugin
-  would, on `pengdows.crud.fakeDb`. SQL is read from EF's own command log. 99% line, 92% branch coverage of the core
+  would, on `pengdows.crud.fakeDb`. SQL is read from EF's own command log. 99.2% line, 91.8% branch coverage of the core
   from these tests alone.
 - **Testing package** (`pengdows.efcore.adonet.Testing`): the conformance suites a plugin runs —
   `ProviderConformanceTests`, `MigrationsConformanceTests`, `BulkConformanceTests`, `TranslationConformanceTests` (each
-  translated member run on the server and compared with .NET). Write a `ProviderFixture` (factory, connection string,
+  translated member run on the server and compared with .NET), `LiteralConformanceTests` (each type's constant matched
+  against the same value saved through a parameter). Write a `ProviderFixture` (factory, connection string,
   dialect, DDL) and a one-line subclass of each suite.
-- **Plugins** (`pengdows.efcore.adonet.<db>.Tests`): their fixture, the three suites, and their SQL shapes.
+- **Plugins** (`pengdows.efcore.adonet.<db>.Tests`): their fixture, the suites, their entry points and SQL shapes.
+- **EF Core's own SQL Server tests** (`pengdows.efcore.adonet.sqlserver.FunctionalTests`): suites copied unchanged from
+  EF Core 10.0.11 against Microsoft's SQL baselines; the Where suite passes 409 of 409.
+
+Public API is declared in each project's `PublicAPI.*.txt` and enforced by PublicApiAnalyzers; why each public type is
+public is in [docs/PUBLIC_API.md](docs/PUBLIC_API.md). Reviews follow [REVIEW_POLICY.md](REVIEW_POLICY.md).
 
 ## Writing a plugin
 
 1. Reference `pengdows.efcore.adonet` (and your driver, if you use its APIs).
 2. Subclass `AdoNetDialect`; override `Sql`, `TypeMappings`, `Capabilities` with what differs from ISO.
 3. Add a `UseAdoNetXxx` extension and a `RegisterDialect()`.
-4. In a test project, reference `pengdows.efcore.adonet.Testing`, write a fixture, subclass the four suites.
+4. In a test project, reference `pengdows.efcore.adonet.Testing`, write a fixture, subclass the five suites.
 5. Where a suite fails, override a grammar part or register a service in `ConfigureServices` (migrations,
    history, bulk loader, translators); record what the engine itself can't do in `KnownEngineGaps`.
 
 The SQL Server plugin is the fullest example: words, `TopOrOffsetFetch`, `BitValues`, `SelectAfter`,
-`TargetAliasFrom`, a migrations generator and a native bulk loader, in 238 lines.
+`TargetAliasFrom`, savepoint SQL, a migrations generator, a native bulk loader and a `ToQueryString` that writes
+runnable T-SQL, in 476 lines.
