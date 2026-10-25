@@ -71,7 +71,10 @@ public static class AdoNetDbContextOptionsBuilderExtensions
         Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
         => optionsBuilder.UseAdoNet(DbProviderFactories.GetFactory(providerInvariantName), connectionString, adoNetOptionsAction);
 
-    /// <summary>Connections come from <paramref name="dataSource" />, which the caller owns and disposes.</summary>
+    /// <summary>
+    ///     Connections come from <paramref name="dataSource" />, which the caller owns and disposes. Without <c>UseDialect</c>,
+    ///     one connection is created, not opened, to find the dialect registered for its provider.
+    /// </summary>
     public static DbContextOptionsBuilder UseAdoNet(
         this DbContextOptionsBuilder optionsBuilder,
         DbDataSource dataSource,
@@ -79,13 +82,25 @@ public static class AdoNetDbContextOptionsBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(dataSource);
 
-        DbProviderFactory? factory;
-        using (var probe = dataSource.CreateConnection())
-        {
-            factory = DbProviderFactories.GetFactory(probe);
-        }
+        return Apply(optionsBuilder, GetOrCreateExtension(optionsBuilder).WithDataSource(dataSource), adoNetOptionsAction);
+    }
 
-        return Apply(optionsBuilder, GetOrCreateExtension(optionsBuilder).WithDataSource(dataSource, factory), adoNetOptionsAction);
+    /// <summary>Connections come from <paramref name="dataSource" />, which the caller owns and disposes, in <paramref name="dialect" />.</summary>
+    public static DbContextOptionsBuilder UseAdoNet(
+        this DbContextOptionsBuilder optionsBuilder,
+        DbDataSource dataSource,
+        IAdoNetDialect dialect,
+        Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
+    {
+        ArgumentNullException.ThrowIfNull(dialect);
+
+        return optionsBuilder.UseAdoNet(
+            dataSource,
+            o =>
+            {
+                o.UseDialect(dialect);
+                adoNetOptionsAction?.Invoke(o);
+            });
     }
 
     public static DbContextOptionsBuilder UseAdoNet(
@@ -142,6 +157,14 @@ public static class AdoNetDbContextOptionsBuilderExtensions
         Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
         where TContext : DbContext
         => (DbContextOptionsBuilder<TContext>)((DbContextOptionsBuilder)optionsBuilder).UseAdoNet(dataSource, adoNetOptionsAction);
+
+    public static DbContextOptionsBuilder<TContext> UseAdoNet<TContext>(
+        this DbContextOptionsBuilder<TContext> optionsBuilder,
+        DbDataSource dataSource,
+        IAdoNetDialect dialect,
+        Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
+        where TContext : DbContext
+        => (DbContextOptionsBuilder<TContext>)((DbContextOptionsBuilder)optionsBuilder).UseAdoNet(dataSource, dialect, adoNetOptionsAction);
 
     public static DbContextOptionsBuilder<TContext> UseAdoNet<TContext>(
         this DbContextOptionsBuilder<TContext> optionsBuilder,

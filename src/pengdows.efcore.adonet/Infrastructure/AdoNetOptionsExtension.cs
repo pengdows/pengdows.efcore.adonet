@@ -14,6 +14,7 @@ public class AdoNetOptionsExtension : RelationalOptionsExtension
     private IAdoNetDialect? _dialect;
     private IAdoNetDialect? _registeredDialect;
     private DbProviderFactory? _sourceFactory;
+    private bool _dataSourceProbed;
 
     public AdoNetOptionsExtension()
     {
@@ -27,6 +28,7 @@ public class AdoNetOptionsExtension : RelationalOptionsExtension
         _dialect = copyFrom._dialect;
         _registeredDialect = copyFrom._registeredDialect;
         _sourceFactory = copyFrom._sourceFactory;
+        _dataSourceProbed = copyFrom._dataSourceProbed;
     }
 
     public override DbContextOptionsExtensionInfo Info
@@ -42,14 +44,30 @@ public class AdoNetOptionsExtension : RelationalOptionsExtension
 
     /// <summary>The dialect from <c>UseDialect</c>, else the one registered for the configured factory.</summary>
     public virtual IAdoNetDialect Dialect
-        => _dialect
-            ?? _registeredDialect
+        => ChosenDialect
             ?? throw new InvalidOperationException(
                 $"No dialect is registered for {(_sourceFactory == null ? "this connection's provider" : $"'{_sourceFactory.GetType().Name}'")}. "
                 + "Choose one with UseDialect (AdoNetDialect.Ansi for ISO SQL), or configure through a dialect package's UseAdoNet... method.");
 
     private IAdoNetDialect? ChosenDialect
-        => _dialect ?? _registeredDialect;
+        => _dialect ?? _registeredDialect ?? DataSourceDialect();
+
+    // A data source names no provider: only when no dialect was chosen is one connection created (not opened) to ask.
+    private IAdoNetDialect? DataSourceDialect()
+    {
+        if ((_dataSource == null) || _dataSourceProbed)
+        {
+            return _registeredDialect;
+        }
+
+        using (var probe = _dataSource.CreateConnection())
+        {
+            WithSourceFactory(DbProviderFactories.GetFactory(probe));
+        }
+
+        _dataSourceProbed = true;
+        return _registeredDialect;
+    }
 
     protected override RelationalOptionsExtension Clone()
         => new AdoNetOptionsExtension(this);
@@ -63,12 +81,15 @@ public class AdoNetOptionsExtension : RelationalOptionsExtension
         return clone.WithSourceFactory(providerFactory);
     }
 
-    public virtual AdoNetOptionsExtension WithDataSource(DbDataSource dataSource, DbProviderFactory? providerFactory)
+    public virtual AdoNetOptionsExtension WithDataSource(DbDataSource dataSource)
     {
         var clone = (AdoNetOptionsExtension)base.WithConnection(null).WithConnectionString(null);
         clone._dataSource = dataSource;
         clone._providerFactory = null;
-        return clone.WithSourceFactory(providerFactory);
+        clone._sourceFactory = null;
+        clone._registeredDialect = null;
+        clone._dataSourceProbed = false;
+        return clone;
     }
 
     public override RelationalOptionsExtension WithConnection(DbConnection? connection)

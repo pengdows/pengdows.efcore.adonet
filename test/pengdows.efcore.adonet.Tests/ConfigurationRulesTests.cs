@@ -86,6 +86,75 @@ public class ConfigurationRulesTests
         Assert.True(factory.Created.Single().IsDisposed);
     }
 
+    [Fact]
+    public void A_data_source_with_a_known_dialect_is_not_probed_for_its_provider()
+    {
+        var factory = new fakeDbFactory(SupportedDatabase.PostgreSql);
+        using var dataSource = new CountingDataSource(factory.CreateDataSource(ConnectionString));
+
+        using (var context = Context(b => b.UseAdoNet(dataSource, AdoNetDialect.Ansi)))
+        {
+            Assert.Same(AdoNetDialect.Ansi, context.GetService<IAdoNetDialect>());
+        }
+
+        using (var context = Context(b => b.UseAdoNet(dataSource, o => o.UseDialect(AdoNetDialect.Ansi))))
+        {
+            Assert.Same(AdoNetDialect.Ansi, context.GetService<IAdoNetDialect>());
+        }
+
+        Assert.Equal(0, dataSource.ConnectionsCreated);
+    }
+
+    [Fact]
+    public void A_data_source_whose_provider_is_unknown_is_probed_only_once()
+    {
+        using var dataSource = new CountingDataSource(new UnregisteredFactory().CreateDataSource(ConnectionString));
+
+        Assert.Throws<InvalidOperationException>(() => Context(b => b.UseAdoNet(dataSource)));
+
+        Assert.Equal(1, dataSource.ConnectionsCreated);
+    }
+
+    [Fact]
+    public void A_data_source_without_a_dialect_is_probed_once_for_a_registered_one()
+    {
+        AdoNetDialects.Register<ProbedFactory>(TestDialects.Limit);
+        using var dataSource = new CountingDataSource(new ProbedFactory().CreateDataSource(ConnectionString));
+
+        using var context = Context(b => b.UseAdoNet(dataSource));
+
+        Assert.Same(TestDialects.Limit, context.GetService<IAdoNetDialect>());
+        Assert.Equal(1, dataSource.ConnectionsCreated);
+    }
+
+    /// <summary>Counts the connections a real (fakeDb) data source hands out.</summary>
+    private sealed class CountingDataSource(DbDataSource inner) : DbDataSource
+    {
+        public int ConnectionsCreated { get; private set; }
+
+        public override string ConnectionString
+            => inner.ConnectionString;
+
+        protected override DbConnection CreateDbConnection()
+        {
+            ConnectionsCreated++;
+            return inner.CreateConnection();
+        }
+    }
+
+    /// <summary>A fakeDb factory of its own type, so registering a dialect for it touches no other test.</summary>
+    private sealed class ProbedFactory : DbProviderFactory
+    {
+        public override DbConnection CreateConnection()
+            => new ProbedConnection();
+    }
+
+    private sealed class ProbedConnection : fakeDbConnection
+    {
+        protected override DbProviderFactory DbProviderFactory
+            => new ProbedFactory();
+    }
+
     private sealed class UnregisteredFactory : DbProviderFactory
     {
         public override DbConnection CreateConnection()
