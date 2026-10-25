@@ -16,7 +16,14 @@ public class SqliteDialect : AdoNetDialect
     public override string Name => "SQLite";
     public override ISqlDialect Sql { get; } = new SqliteSql();
     public override ITypeMappingDialect TypeMappings { get; } = new SqliteTypeMappings();
-    public override IDatabaseCapabilities Capabilities { get; } = new DatabaseCapabilities(SupportsMultipleStatementsPerCommand: true, DefaultMaxBatchSize: 128, MaxParametersPerCommand: 32766);
+    public override IDatabaseCapabilities Capabilities { get; } = new DatabaseCapabilities
+    {
+        SupportsMultipleStatementsPerCommand = true,
+        DefaultMaxBatchSize = 128,
+        MaxParametersPerCommand = 32766,
+        // SQLite has no limit; names are left whole, as Microsoft's SQLite provider leaves them.
+        MaxIdentifierLength = int.MaxValue
+    };
 
     public override void ConfigureServices(IServiceCollection services)
         => new EntityFrameworkRelationalServicesBuilder(services)

@@ -18,7 +18,11 @@ public sealed class FlatFileDialect : AdoNetDialect
 
     public override string Name => "pengdows.flatfile";
     public override ISqlDialect Sql { get; } = new FlatFileSql();
-    public override IDatabaseCapabilities Capabilities { get; } = new DatabaseCapabilities(SupportsMultipleStatementsPerCommand: true, DefaultMaxBatchSize: 1);
+    public override IDatabaseCapabilities Capabilities { get; } = new DatabaseCapabilities
+    {
+        SupportsMultipleStatementsPerCommand = true,
+        DefaultMaxBatchSize = 1
+    };
     public override ITypeMappingDialect TypeMappings { get; } = new FlatFileTypeMappings();
 
     public override void ConfigureServices(IServiceCollection services)

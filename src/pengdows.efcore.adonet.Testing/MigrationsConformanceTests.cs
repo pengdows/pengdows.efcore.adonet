@@ -11,7 +11,7 @@ namespace pengdows.efcore.adonet.Testing;
 public abstract class MigrationsConformanceTests<TFixture>(TFixture fixture) : IClassFixture<TFixture>, IAsyncLifetime
     where TFixture : ProviderFixture
 {
-    private static readonly string[] OwnTables = ["SchemaCategories", "SchemaBooks", "SchemaAuthors", "Shelves", "Writers", "Authors", "__EFMigrationsHistory", "__EFMigrationsLock"];
+    private static readonly string[] OwnTables = ["LongNames", "SchemaCategories", "SchemaBooks", "SchemaAuthors", "Shelves", "Writers", "Authors", "__EFMigrationsHistory", "__EFMigrationsLock"];
 
     protected TFixture Fixture { get; } = fixture;
 
@@ -85,6 +85,30 @@ public abstract class MigrationsConformanceTests<TFixture>(TFixture fixture) : I
             // The foreign key holds.
             context.Add(new Category { Name = "Orphan", ParentId = -1 });
             await Assert.ThrowsAsync<DbUpdateException>(() => context.SaveChangesAsync(Ct));
+        }
+    }
+
+    [Fact]
+    public async Task Names_longer_than_the_database_takes_are_shortened_and_stay_distinct()
+    {
+        await using (var context = Fixture.CreateContext<LongNamesContext>(o => new LongNamesContext(o)))
+        {
+            await context.GetService<IRelationalDatabaseCreator>().CreateTablesAsync(Ct);
+            context.Add(new LongNamed
+            {
+                TheReferenceNumberThatTheWarehouseAssignsWhenAParcelArrivesAtTheDockOne = 1,
+                TheReferenceNumberThatTheWarehouseAssignsWhenAParcelArrivesAtTheDockTwo = 2
+            });
+            await context.SaveChangesAsync(Ct);
+        }
+
+        await using (var context = Fixture.CreateContext<LongNamesContext>(o => new LongNamesContext(o)))
+        {
+            var row = await context.LongNames.SingleAsync(Ct);
+            Assert.Equal(
+                (1, 2),
+                (row.TheReferenceNumberThatTheWarehouseAssignsWhenAParcelArrivesAtTheDockOne,
+                    row.TheReferenceNumberThatTheWarehouseAssignsWhenAParcelArrivesAtTheDockTwo));
         }
     }
 

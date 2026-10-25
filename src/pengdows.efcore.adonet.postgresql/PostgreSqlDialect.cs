@@ -18,7 +18,14 @@ public sealed class PostgreSqlDialect : AdoNetDialect
     public override string Name => "PostgreSQL";
     public override ISqlDialect Sql { get; } = new PostgreSqlSql();
     public override ITypeMappingDialect TypeMappings { get; } = new PostgreSqlTypeMappings();
-    public override IDatabaseCapabilities Capabilities { get; } = new DatabaseCapabilities(SupportsMultipleStatementsPerCommand: true, DefaultMaxBatchSize: 128, MaxParametersPerCommand: 65535);
+    public override IDatabaseCapabilities Capabilities { get; } = new DatabaseCapabilities
+    {
+        SupportsMultipleStatementsPerCommand = true,
+        DefaultMaxBatchSize = 128,
+        MaxParametersPerCommand = 65535,
+        // NAMEDATALEN - 1; longer names are truncated by the server, which can make two names one.
+        MaxIdentifierLength = 63
+    };
 
     public override void ConfigureServices(IServiceCollection services)
         => services.TryAddScoped<IAdoNetBulkLoader, PostgreSqlBulkLoader>();

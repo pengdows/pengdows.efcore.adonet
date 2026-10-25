@@ -15,6 +15,7 @@ override pengdows.efcore.adonet.Testing.ContainerFixture.DisposeAsync() -> Syste
 override pengdows.efcore.adonet.Testing.ContainerFixture.InitializeAsync() -> System.Threading.Tasks.ValueTask
 override pengdows.efcore.adonet.Testing.InitialMigration.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder! migrationBuilder) -> void
 override pengdows.efcore.adonet.Testing.InitialMigration.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder! migrationBuilder) -> void
+override pengdows.efcore.adonet.Testing.LongNamesContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder! modelBuilder) -> void
 override pengdows.efcore.adonet.Testing.MigrationsContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder! modelBuilder) -> void
 override pengdows.efcore.adonet.Testing.ReshapeMigration.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder! migrationBuilder) -> void
 override pengdows.efcore.adonet.Testing.ReshapeMigration.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder! migrationBuilder) -> void
@@ -107,6 +108,17 @@ pengdows.efcore.adonet.Testing.LiteralConformanceTests<TFixture>.Fixture.get -> 
 pengdows.efcore.adonet.Testing.LiteralConformanceTests<TFixture>.InitializeAsync() -> System.Threading.Tasks.ValueTask
 pengdows.efcore.adonet.Testing.LiteralConformanceTests<TFixture>.LiteralConformanceTests(TFixture! fixture) -> void
 pengdows.efcore.adonet.Testing.LiteralConformanceTests<TFixture>.Time_span_constants() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.LongNamed
+pengdows.efcore.adonet.Testing.LongNamed.Id.get -> int
+pengdows.efcore.adonet.Testing.LongNamed.Id.set -> void
+pengdows.efcore.adonet.Testing.LongNamed.LongNamed() -> void
+pengdows.efcore.adonet.Testing.LongNamed.TheReferenceNumberThatTheWarehouseAssignsWhenAParcelArrivesAtTheDockOne.get -> int
+pengdows.efcore.adonet.Testing.LongNamed.TheReferenceNumberThatTheWarehouseAssignsWhenAParcelArrivesAtTheDockOne.set -> void
+pengdows.efcore.adonet.Testing.LongNamed.TheReferenceNumberThatTheWarehouseAssignsWhenAParcelArrivesAtTheDockTwo.get -> int
+pengdows.efcore.adonet.Testing.LongNamed.TheReferenceNumberThatTheWarehouseAssignsWhenAParcelArrivesAtTheDockTwo.set -> void
+pengdows.efcore.adonet.Testing.LongNamesContext
+pengdows.efcore.adonet.Testing.LongNamesContext.LongNames.get -> Microsoft.EntityFrameworkCore.DbSet<pengdows.efcore.adonet.Testing.LongNamed!>!
+pengdows.efcore.adonet.Testing.LongNamesContext.LongNamesContext(Microsoft.EntityFrameworkCore.DbContextOptions<pengdows.efcore.adonet.Testing.LongNamesContext!>! options) -> void
 pengdows.efcore.adonet.Testing.MigrationIds
 pengdows.efcore.adonet.Testing.MigrationsConformanceTests<TFixture>
 pengdows.efcore.adonet.Testing.MigrationsConformanceTests<TFixture>.Alter_column_changes_size_nullability_and_default() -> System.Threading.Tasks.Task!
@@ -119,6 +131,7 @@ pengdows.efcore.adonet.Testing.MigrationsConformanceTests<TFixture>.InitializeAs
 pengdows.efcore.adonet.Testing.MigrationsConformanceTests<TFixture>.Migrate_applies_records_and_reverts_migrations() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.MigrationsConformanceTests<TFixture>.MigrationsConformanceTests(TFixture! fixture) -> void
 pengdows.efcore.adonet.Testing.MigrationsConformanceTests<TFixture>.Migrations_apply_synchronously_too() -> void
+pengdows.efcore.adonet.Testing.MigrationsConformanceTests<TFixture>.Names_longer_than_the_database_takes_are_shortened_and_stay_distinct() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.MigrationsContext
 pengdows.efcore.adonet.Testing.MigrationsContext.Authors.get -> Microsoft.EntityFrameworkCore.DbSet<pengdows.efcore.adonet.Testing.Author!>!
 pengdows.efcore.adonet.Testing.MigrationsContext.MigrationsContext(Microsoft.EntityFrameworkCore.DbContextOptions<pengdows.efcore.adonet.Testing.MigrationsContext!>! options) -> void

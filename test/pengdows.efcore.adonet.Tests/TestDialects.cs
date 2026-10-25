@@ -98,12 +98,12 @@ public static class TestDialects
     public static readonly IAdoNetDialect SelectAfter = new PartsDialect(
         "SelectAfter",
         new PartsSql(keys: KeyRetrieval.SelectAfter("last_id()", "row_count()")),
-        new DatabaseCapabilities(SupportsMultipleStatementsPerCommand: true, DefaultMaxBatchSize: 10));
+        new DatabaseCapabilities { SupportsMultipleStatementsPerCommand = true, DefaultMaxBatchSize = 10 });
 
     public static readonly IAdoNetDialect Sequence = new PartsDialect("Sequence", new PartsSql(keys: KeyRetrieval.Sequence()));
 
     public static readonly IAdoNetDialect BatchesOfTwo = new PartsDialect(
-        "Batches of two", capabilities: new DatabaseCapabilities(SupportsMultipleStatementsPerCommand: true, DefaultMaxBatchSize: 2));
+        "Batches of two", capabilities: new DatabaseCapabilities { SupportsMultipleStatementsPerCommand = true, DefaultMaxBatchSize = 2 });
 
     public static readonly IAdoNetDialect ColonParameters = new PartsDialect(
         "Colon", new PartsSql(parameterMarker: ":", parameterNameIncludesMarker: false, supportsSchemas: false));

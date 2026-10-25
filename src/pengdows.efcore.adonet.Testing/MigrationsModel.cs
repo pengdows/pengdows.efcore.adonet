@@ -65,6 +65,29 @@ public class SchemaContext(DbContextOptions<SchemaContext> options) : DbContext(
     }
 }
 
+/// <summary>
+///     Names longer than any database's identifier limit, alike for their first 70 characters: the column and index names
+///     EF makes from them must be shortened to fit and still differ.
+/// </summary>
+public class LongNamed
+{
+    public int Id { get; set; }
+    public int TheReferenceNumberThatTheWarehouseAssignsWhenAParcelArrivesAtTheDockOne { get; set; }
+    public int TheReferenceNumberThatTheWarehouseAssignsWhenAParcelArrivesAtTheDockTwo { get; set; }
+}
+
+public class LongNamesContext(DbContextOptions<LongNamesContext> options) : DbContext(options)
+{
+    public DbSet<LongNamed> LongNames => Set<LongNamed>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+        => modelBuilder.Entity<LongNamed>(b =>
+        {
+            b.HasIndex(x => x.TheReferenceNumberThatTheWarehouseAssignsWhenAParcelArrivesAtTheDockOne);
+            b.HasIndex(x => x.TheReferenceNumberThatTheWarehouseAssignsWhenAParcelArrivesAtTheDockTwo);
+        });
+}
+
 /// <summary>Schema built by applying the migrations below.</summary>
 public class MigrationsContext(DbContextOptions<MigrationsContext> options) : DbContext(options)
 {

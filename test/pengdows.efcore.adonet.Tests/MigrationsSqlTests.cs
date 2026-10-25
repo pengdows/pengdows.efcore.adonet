@@ -244,6 +244,27 @@ public class MigrationsSqlTests
     }
 
     [Fact]
+    public void Names_are_shortened_to_the_databases_identifier_length()
+    {
+        var shortNames = new PartsDialect("Ten-character identifiers", capabilities: new DatabaseCapabilities { MaxIdentifierLength = 10 });
+        using var context = new FakeDatabase().Context(shortNames);
+        var model = context.GetService<IDesignTimeModel>().Model.GetRelationalModel();
+
+        var names = model.Tables.SelectMany(
+            t => t.Columns.Select(c => c.Name)
+                .Concat(t.UniqueConstraints.Select(u => u.Name))
+                .Concat(t.ForeignKeyConstraints.Select(f => f.Name))
+                .Concat(t.Indexes.Select(i => i.Name))
+                .Append(t.Name)).ToList();
+        Assert.Contains(names, n => n.StartsWith("FK_", StringComparison.Ordinal));
+        Assert.All(names, n => Assert.True(n.Length <= 10, n));
+    }
+
+    [Fact]
+    public void Iso_identifiers_are_up_to_128_characters()
+        => Assert.Equal(128, DatabaseCapabilities.Default.MaxIdentifierLength);
+
+    [Fact]
     public void Keys_with_a_configured_default_are_not_identity()
     {
         using var context = new KeyDefaultsContext(

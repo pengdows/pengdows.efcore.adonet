@@ -73,13 +73,6 @@ pengdows.efcore.adonet.Bulk.IAdoNetBulkLoader
 pengdows.efcore.adonet.Bulk.IAdoNetBulkLoader.Load(pengdows.efcore.adonet.Bulk.BulkLoad! load) -> void
 pengdows.efcore.adonet.Bulk.IAdoNetBulkLoader.LoadAsync(pengdows.efcore.adonet.Bulk.BulkLoad! load, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.DatabaseCapabilities
-pengdows.efcore.adonet.DatabaseCapabilities.DatabaseCapabilities(bool SupportsMultipleStatementsPerCommand = false, int DefaultMaxBatchSize = 1, int MaxParametersPerCommand = 999) -> void
-pengdows.efcore.adonet.DatabaseCapabilities.DefaultMaxBatchSize.get -> int
-pengdows.efcore.adonet.DatabaseCapabilities.DefaultMaxBatchSize.init -> void
-pengdows.efcore.adonet.DatabaseCapabilities.MaxParametersPerCommand.get -> int
-pengdows.efcore.adonet.DatabaseCapabilities.MaxParametersPerCommand.init -> void
-pengdows.efcore.adonet.DatabaseCapabilities.SupportsMultipleStatementsPerCommand.get -> bool
-pengdows.efcore.adonet.DatabaseCapabilities.SupportsMultipleStatementsPerCommand.init -> void
 pengdows.efcore.adonet.DmlSyntax
 pengdows.efcore.adonet.DmlSyntax.DmlSyntax() -> void
 pengdows.efcore.adonet.FunctionSyntax
@@ -93,6 +86,7 @@ pengdows.efcore.adonet.IAdoNetDialect.Sql.get -> pengdows.efcore.adonet.ISqlDial
 pengdows.efcore.adonet.IAdoNetDialect.TypeMappings.get -> pengdows.efcore.adonet.ITypeMappingDialect!
 pengdows.efcore.adonet.IDatabaseCapabilities
 pengdows.efcore.adonet.IDatabaseCapabilities.DefaultMaxBatchSize.get -> int
+pengdows.efcore.adonet.IDatabaseCapabilities.MaxIdentifierLength.get -> int
 pengdows.efcore.adonet.IDatabaseCapabilities.MaxParametersPerCommand.get -> int
 pengdows.efcore.adonet.IDatabaseCapabilities.SupportsMultipleStatementsPerCommand.get -> bool
 pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder
@@ -258,6 +252,14 @@ virtual pengdows.efcore.adonet.AnsiTypeMappings.StringParameterSize(bool unicode
 virtual pengdows.efcore.adonet.Bulk.AdoNetInsertBulkLoader.Load(pengdows.efcore.adonet.Bulk.BulkLoad! load) -> void
 virtual pengdows.efcore.adonet.Bulk.AdoNetInsertBulkLoader.LoadAsync(pengdows.efcore.adonet.Bulk.BulkLoad! load, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 virtual pengdows.efcore.adonet.Bulk.AdoNetInsertBulkLoader.MaxRowsPerCommand.get -> int
+virtual pengdows.efcore.adonet.DatabaseCapabilities.DefaultMaxBatchSize.get -> int
+virtual pengdows.efcore.adonet.DatabaseCapabilities.DefaultMaxBatchSize.init -> void
+virtual pengdows.efcore.adonet.DatabaseCapabilities.MaxIdentifierLength.get -> int
+virtual pengdows.efcore.adonet.DatabaseCapabilities.MaxIdentifierLength.init -> void
+virtual pengdows.efcore.adonet.DatabaseCapabilities.MaxParametersPerCommand.get -> int
+virtual pengdows.efcore.adonet.DatabaseCapabilities.MaxParametersPerCommand.init -> void
+virtual pengdows.efcore.adonet.DatabaseCapabilities.SupportsMultipleStatementsPerCommand.get -> bool
+virtual pengdows.efcore.adonet.DatabaseCapabilities.SupportsMultipleStatementsPerCommand.init -> void
 virtual pengdows.efcore.adonet.DmlSyntax.CanDeleteDirectly(Microsoft.EntityFrameworkCore.Query.SqlExpressions.SelectExpression! select) -> bool?
 virtual pengdows.efcore.adonet.DmlSyntax.TryGenerateDelete(pengdows.efcore.adonet.IQuerySqlWriter! sql, Microsoft.EntityFrameworkCore.Query.SqlExpressions.DeleteExpression! delete) -> bool
 virtual pengdows.efcore.adonet.DmlSyntax.TryGenerateUpdate(pengdows.efcore.adonet.IQuerySqlWriter! sql, Microsoft.EntityFrameworkCore.Query.SqlExpressions.UpdateExpression! update) -> bool

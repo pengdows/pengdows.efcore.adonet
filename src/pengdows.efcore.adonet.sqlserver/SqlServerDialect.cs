@@ -23,7 +23,12 @@ public sealed class SqlServerDialect : AdoNetDialect
     public override string Name => "SQL Server";
     public override ISqlDialect Sql { get; } = new SqlServerSql();
     public override ITypeMappingDialect TypeMappings { get; } = new SqlServerTypeMappings();
-    public override IDatabaseCapabilities Capabilities { get; } = new DatabaseCapabilities(SupportsMultipleStatementsPerCommand: true, DefaultMaxBatchSize: 42, MaxParametersPerCommand: 2000);
+    public override IDatabaseCapabilities Capabilities { get; } = new DatabaseCapabilities
+    {
+        SupportsMultipleStatementsPerCommand = true,
+        DefaultMaxBatchSize = 42,
+        MaxParametersPerCommand = 2000
+    };
 
     public override void ConfigureServices(IServiceCollection services)
     {

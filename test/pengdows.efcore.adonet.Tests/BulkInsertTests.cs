@@ -11,10 +11,10 @@ namespace pengdows.efcore.adonet.Tests;
 public class BulkInsertTests
 {
     private static readonly IAdoNetDialect TwoRowsPerInsert = new PartsDialect(
-        "Two rows per insert", capabilities: new DatabaseCapabilities(MaxParametersPerCommand: 4));
+        "Two rows per insert", capabilities: new DatabaseCapabilities { MaxParametersPerCommand = 4 });
 
     private static readonly IAdoNetDialect OneParameterPerInsert = new PartsDialect(
-        "One parameter per insert", capabilities: new DatabaseCapabilities(MaxParametersPerCommand: 1));
+        "One parameter per insert", capabilities: new DatabaseCapabilities { MaxParametersPerCommand = 1 });
 
     private static readonly IAdoNetDialect EmptyRowInsert = new PartsDialect("Empty row insert", new PartsSql(defaultValues: "() VALUES ()"));
 

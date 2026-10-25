@@ -152,4 +152,10 @@ public interface IDatabaseCapabilities
 
     /// <summary>The most parameters one command may carry (bulk loads size their INSERTs by it).</summary>
     int MaxParametersPerCommand { get; }
+
+    /// <summary>
+    ///     The longest identifier the database takes. Names EF makes up (constraints, indexes, columns of owned types) are
+    ///     shortened to fit, uniquely.
+    /// </summary>
+    int MaxIdentifierLength { get; }
 }

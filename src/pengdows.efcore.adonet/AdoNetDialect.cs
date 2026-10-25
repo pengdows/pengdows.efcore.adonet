@@ -145,12 +145,19 @@ public class AnsiTypeMappings : ITypeMappingDialect
         };
 }
 
-public sealed record DatabaseCapabilities(
-    bool SupportsMultipleStatementsPerCommand = false,
-    int DefaultMaxBatchSize = 1,
-    int MaxParametersPerCommand = 999)
-    : IDatabaseCapabilities
+/// <summary>
+///     ISO SQL's answers to <see cref="IDatabaseCapabilities" />. A dialect sets what its database does differently, in an
+///     initializer or by overriding in a subclass.
+/// </summary>
+public record DatabaseCapabilities : IDatabaseCapabilities
 {
-    /// <summary>One statement per command.</summary>
+    /// <summary>ISO SQL, one statement per command.</summary>
     public static readonly DatabaseCapabilities Default = new();
+
+    public virtual bool SupportsMultipleStatementsPerCommand { get; init; }
+    public virtual int DefaultMaxBatchSize { get; init; } = 1;
+    public virtual int MaxParametersPerCommand { get; init; } = 999;
+
+    /// <summary>128, SQL:2003's limit for an identifier.</summary>
+    public virtual int MaxIdentifierLength { get; init; } = 128;
 }
