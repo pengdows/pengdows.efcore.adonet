@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace pengdows.efcore.adonet.Tests;
@@ -29,7 +31,9 @@ public sealed class PartsSql(
     string longCountFunction = "COUNT",
     string parameterMarker = "@",
     bool parameterNameIncludesMarker = true,
-    bool supportsSchemas = true) : AnsiSqlDialect
+    bool supportsSchemas = true,
+    FunctionSyntax? functions = null,
+    Func<string, string>? stringLiteral = null) : AnsiSqlDialect
 {
     public override PagingSyntax Paging { get; } = paging ?? PagingSyntax.OffsetFetch;
     public override BooleanSyntax Booleans { get; } = booleans ?? BooleanSyntax.Native;
@@ -41,6 +45,10 @@ public sealed class PartsSql(
     public override string ParameterMarker => parameterMarker;
     public override bool ParameterNameIncludesMarker => parameterNameIncludesMarker;
     public override bool SupportsSchemas => supportsSchemas;
+    public override FunctionSyntax Functions { get; } = functions ?? FunctionSyntax.Iso;
+
+    public override string StringLiteral(string value)
+        => stringLiteral?.Invoke(value) ?? base.StringLiteral(value);
 }
 
 /// <summary>Shared instances: each distinct dialect gets its own EF service provider, so tests reuse these.</summary>
@@ -71,4 +79,12 @@ public static class TestDialects
     public static readonly IAdoNetDialect UnaliasedTarget = new PartsDialect("Unaliased", new PartsSql(dml: DmlSyntax.UnaliasedTarget));
     public static readonly IAdoNetDialect TargetAliasFrom = new PartsDialect("Alias FROM", new PartsSql(dml: DmlSyntax.TargetAliasFrom));
     public static readonly IAdoNetDialect MultiTable = new PartsDialect("Multi-table", new PartsSql(dml: DmlSyntax.MultiTable));
+    public static readonly IAdoNetDialect Functions = new PartsDialect(
+        "Functions",
+        new PartsSql(functions: new TestFunctions(), stringLiteral: v => "N'" + v.Replace("'", "''").Replace(@"\", @"\\") + "'"));
+    public static readonly IAdoNetDialect NoFunctions = new PartsDialect("No functions", new PartsSql(functions: new NoFunctions()));
+
+    public static readonly IAdoNetDialect ReverseTranslator = new PartsDialect(
+        "Reverse translator",
+        services: s => new EntityFrameworkRelationalServicesBuilder(s).TryAdd<IMethodCallTranslatorPlugin, ReverseTranslatorPlugin>());
 }

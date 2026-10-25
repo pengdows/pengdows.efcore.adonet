@@ -38,7 +38,14 @@ public sealed class FlatFileFixture : ProviderFixture
         // Renaming a table renames its key sequence: ALTER SEQUENCE "Authors_Id_seq" RENAME TO "Writers_Id_seq".
         ["Migrate_applies_records_and_reverts_migrations"] = "pengdows.flatfile 0.2.1-preview.8 has no ALTER SEQUENCE ... RENAME TO",
         ["Migrations_apply_synchronously_too"] = "pengdows.flatfile 0.2.1-preview.8 has no ALTER SEQUENCE ... RENAME TO",
-        ["Alter_column_changes_size_nullability_and_default"] = "pengdows.flatfile 0.2.1-preview.8 has no ALTER COLUMN (nor ALTER SEQUENCE)"
+        ["Alter_column_changes_size_nullability_and_default"] = "pengdows.flatfile 0.2.1-preview.8 has no ALTER COLUMN (nor ALTER SEQUENCE)",
+
+        // Probed directly: '  Ab%_c\d  ' LIKE '  Ab\%%' ESCAPE '\' is false; LIKE without ESCAPE works.
+        ["Constant_patterns_match_wildcards_literally"] = "pengdows.flatfile 0.2.1-preview.8 ignores LIKE ... ESCAPE: an escaped pattern never matches",
+        ["Trimming"] = "pengdows.flatfile 0.2.1-preview.8 trims both ends for TRIM(LEADING FROM x) and TRIM(TRAILING FROM x)",
+        ["Replace"] = "pengdows.flatfile 0.2.1-preview.8 has no REPLACE",
+        ["Math_on_decimals"] = "pengdows.flatfile 0.2.1-preview.8 has no FLOOR, CEILING or ROUND",
+        ["Math_on_doubles"] = "pengdows.flatfile 0.2.1-preview.8 has no FLOOR, CEILING or ROUND"
     };
 
     public override IReadOnlyList<string> ModelSequences { get; } =
@@ -82,3 +89,5 @@ public class FlatFileConformanceTests(FlatFileFixture fixture) : ProviderConform
 public class FlatFileMigrationsConformanceTests(FlatFileFixture fixture) : MigrationsConformanceTests<FlatFileFixture>(fixture);
 
 public class FlatFileBulkConformanceTests(FlatFileFixture fixture) : BulkConformanceTests<FlatFileFixture>(fixture);
+
+public class FlatFileTranslationConformanceTests(FlatFileFixture fixture) : TranslationConformanceTests<FlatFileFixture>(fixture);

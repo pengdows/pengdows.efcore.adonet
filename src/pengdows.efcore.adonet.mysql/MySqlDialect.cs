@@ -31,10 +31,23 @@ public sealed class MySqlSql : AnsiSqlDialect
     public override PagingSyntax Paging { get; } = PagingSyntax.LimitOffset(noLimitValue: "18446744073709551615");
     public override KeyRetrieval Keys { get; } = KeyRetrieval.SelectAfter("LAST_INSERT_ID()", "ROW_COUNT()");
     public override DmlSyntax Dml => DmlSyntax.MultiTable;
+    public override FunctionSyntax Functions { get; } = new MySqlFunctions();
+
+    // Backslash is an escape character in MySQL string literals (unless NO_BACKSLASH_ESCAPES is set).
+    public override string StringLiteral(string value)
+        => base.StringLiteral(value.Replace(@"\", @"\\"));
 
     // INFORMATION_SCHEMA.TABLES spans every database on the server.
     public override string HasTablesSql
         => "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_SCHEMA = DATABASE()";
+}
+
+/// <summary><c>||</c> means OR. FLOOR and CEILING of a DECIMAL return BIGINT; adding 0.0 keeps the result a decimal.</summary>
+public sealed class MySqlFunctions : FunctionSyntax
+{
+    public override string Concat => "CONCAT({0}, {1})";
+    public override string? Floor => "(FLOOR({0}) + 0.0)";
+    public override string? Ceiling => "(CEILING({0}) + 0.0)";
 }
 
 public sealed class MySqlTypeMappings : AnsiTypeMappings

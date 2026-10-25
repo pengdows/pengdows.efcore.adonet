@@ -43,6 +43,9 @@ public interface ISqlDialect
     /// <summary>Whether <see cref="System.Data.Common.DbParameter.ParameterName" /> includes <see cref="ParameterMarker" />.</summary>
     bool ParameterNameIncludesMarker { get; }
 
+    /// <summary>A string constant as SQL text, quotes and any other characters the database treats specially escaped.</summary>
+    string StringLiteral(string value);
+
     string TrueLiteral { get; }
     string FalseLiteral { get; }
 
@@ -55,6 +58,9 @@ public interface ISqlDialect
 
     /// <summary>How <c>ExecuteDelete</c>/<c>ExecuteUpdate</c> are written.</summary>
     DmlSyntax Dml { get; }
+
+    /// <summary>How the functions that .NET members translate to are spelled.</summary>
+    FunctionSyntax Functions { get; }
 
     /// <summary>Returns the number of user tables in the current database or schema.</summary>
     string HasTablesSql { get; }

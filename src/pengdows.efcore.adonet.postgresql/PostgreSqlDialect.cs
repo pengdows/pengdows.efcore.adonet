@@ -20,6 +20,7 @@ public sealed class PostgreSqlDialect : AdoNetDialect
 public sealed class PostgreSqlSql : AnsiSqlDialect
 {
     public override PagingSyntax Paging { get; } = PagingSyntax.LimitOffset();
+    public override FunctionSyntax Functions { get; } = new PostgreSqlFunctions();
 
     // INFORMATION_SCHEMA.TABLES also lists the system catalogs.
     public override string HasTablesSql
@@ -35,4 +36,10 @@ public sealed class PostgreSqlTypeMappings : AnsiTypeMappings
     // BYTEA takes no length.
     public override string? GetStoreType(Type clrType, int? size, int? precision, int? scale)
         => clrType == typeof(byte[]) ? null : base.GetStoreType(clrType, size, precision, scale);
+}
+
+/// <summary>ROUND with a number of places is only defined for numeric.</summary>
+public sealed class PostgreSqlFunctions : FunctionSyntax
+{
+    public override string? RoundDigits => "ROUND(CAST({0} AS numeric), {1})";
 }

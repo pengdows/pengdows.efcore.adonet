@@ -41,6 +41,9 @@ public class AnsiSqlDialect : ISqlDialect
     public virtual bool SupportsSchemas => true;
     public virtual string ParameterMarker => "@";
     public virtual bool ParameterNameIncludesMarker => true;
+    public virtual string StringLiteral(string value)
+        => "'" + value.Replace("'", "''") + "'";
+
     public virtual string TrueLiteral => "TRUE";
     public virtual string FalseLiteral => "FALSE";
     public virtual string LongCountFunction => "COUNT";
@@ -48,6 +51,7 @@ public class AnsiSqlDialect : ISqlDialect
     public virtual BooleanSyntax Booleans => BooleanSyntax.Native;
     public virtual KeyRetrieval Keys => KeyRetrieval.Returning;
     public virtual DmlSyntax Dml => DmlSyntax.Standard;
+    public virtual FunctionSyntax Functions => FunctionSyntax.Iso;
 
     public virtual string HasTablesSql
         => "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'";

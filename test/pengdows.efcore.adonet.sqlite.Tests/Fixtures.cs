@@ -74,4 +74,8 @@ public class LegacySqliteMigrationsConformanceTests(LegacySqliteFixture fixture)
 
 public class SqliteBulkConformanceTests(SqliteFixture fixture) : BulkConformanceTests<SqliteFixture>(fixture);
 
+public class SqliteTranslationConformanceTests(SqliteFixture fixture) : TranslationConformanceTests<SqliteFixture>(fixture);
+
 public class LegacySqliteBulkConformanceTests(LegacySqliteFixture fixture) : BulkConformanceTests<LegacySqliteFixture>(fixture);
+
+public class LegacySqliteTranslationConformanceTests(LegacySqliteFixture fixture) : TranslationConformanceTests<LegacySqliteFixture>(fixture);

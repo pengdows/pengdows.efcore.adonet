@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 
 namespace pengdows.efcore.adonet.Query;
 
-/// <summary>EF's relational SQL, with paging, <c>LongCount</c> and bulk DML as the dialect writes them.</summary>
+/// <summary>EF's relational SQL, with paging, functions, <c>LongCount</c> and bulk DML as the dialect writes them.</summary>
 public class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencies, ISqlDialect dialect)
     : QuerySqlGenerator(dependencies), IQuerySqlWriter
 {
@@ -29,6 +29,18 @@ public class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencies,
         return base.VisitColumn(columnExpression);
     }
 
+    protected override Expression VisitSqlBinary(SqlBinaryExpression sqlBinaryExpression)
+    {
+        if (sqlBinaryExpression is { OperatorType: ExpressionType.Add } && sqlBinaryExpression.Type == typeof(string))
+        {
+            SqlTemplate.Write(
+                dialect.Functions.Concat, [sqlBinaryExpression.Left, sqlBinaryExpression.Right], s => Sql.Append(s), e => Visit(e));
+            return sqlBinaryExpression;
+        }
+
+        return base.VisitSqlBinary(sqlBinaryExpression);
+    }
+
     protected override void GenerateTop(SelectExpression selectExpression)
         => dialect.Paging.GenerateTop(this, selectExpression);
 
@@ -43,6 +55,12 @@ public class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencies,
 
     protected override Expression VisitSqlFunction(SqlFunctionExpression sqlFunctionExpression)
     {
+        if (SqlTemplate.TryGetTemplate(sqlFunctionExpression, out var template))
+        {
+            SqlTemplate.Write(template, sqlFunctionExpression.Arguments!, s => Sql.Append(s), e => Visit(e));
+            return sqlFunctionExpression;
+        }
+
         // EF's COUNT always has exactly one argument: * or an expression.
         if (sqlFunctionExpression is { IsBuiltIn: true, Name: "COUNT", Instance: null, Arguments: [var argument] }
             && sqlFunctionExpression.Type == typeof(long)

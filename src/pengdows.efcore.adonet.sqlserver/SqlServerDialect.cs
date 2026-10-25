@@ -36,6 +36,33 @@ public sealed class SqlServerSql : AnsiSqlDialect
     public override BooleanSyntax Booleans => BooleanSyntax.BitValues;
     public override KeyRetrieval Keys { get; } = KeyRetrieval.SelectAfter("SCOPE_IDENTITY()", "@@ROWCOUNT");
     public override DmlSyntax Dml => DmlSyntax.TargetAliasFrom;
+    public override FunctionSyntax Functions { get; } = new SqlServerFunctions();
+
+    public override string StringLiteral(string value)
+        => "N" + base.StringLiteral(value);
+}
+
+/// <summary>
+///     LEN ignores trailing spaces and returns bigint for MAX types, so lengths are taken of the value plus one character.
+///     CHARINDEX finds an empty string nowhere; .NET finds it at 0.
+/// </summary>
+public sealed class SqlServerFunctions : FunctionSyntax
+{
+    public override string Concat => "{0} + {1}";
+    public override string? TrimStart => "LTRIM({0})";
+    public override string? TrimEnd => "RTRIM({0})";
+    public override string? Length => "CAST(LEN({0} + N'x') - 1 AS int)";
+    public override string? Substring => "SUBSTRING({0}, {1}, {2})";
+    public override string? SubstringFrom => "SUBSTRING({0}, {1}, LEN({0} + N'x'))";
+    public override string? Position => "CAST(CASE WHEN DATALENGTH({0}) = 0 THEN 1 ELSE CHARINDEX({0}, {1}) END AS int)";
+    public override string? Round => "ROUND({0}, 0)";
+    public override string? Year => "DATEPART(year, {0})";
+    public override string? Month => "DATEPART(month, {0})";
+    public override string? Day => "DATEPART(day, {0})";
+    public override string? Hour => "DATEPART(hour, {0})";
+    public override string? Minute => "DATEPART(minute, {0})";
+    public override string? Second => "DATEPART(second, {0})";
+    public override string LikeSpecialCharacters => "%_[";
 }
 
 public sealed class SqlServerTypeMappings : AnsiTypeMappings

@@ -43,6 +43,8 @@ public static class AdoNetServiceCollectionExtensions
             .TryAdd<IMigrationsSqlGenerator, AdoNetMigrationsSqlGenerator>()
             .TryAdd<IRelationalAnnotationProvider, AdoNetAnnotationProvider>()
             .TryAdd<IQuerySqlGeneratorFactory, AdoNetQuerySqlGeneratorFactory>()
+            .TryAdd<IMethodCallTranslatorProvider, AdoNetMethodCallTranslatorProvider>()
+            .TryAdd<IMemberTranslatorProvider, AdoNetMemberTranslatorProvider>()
             .TryAdd<IQueryableMethodTranslatingExpressionVisitorFactory, AdoNetQueryableMethodTranslatingExpressionVisitorFactory>()
             .TryAdd<IUpdateSqlGenerator, AdoNetUpdateSqlGenerator>()
             .TryAdd<IModificationCommandBatchFactory, AdoNetModificationCommandBatchFactory>()

@@ -43,3 +43,5 @@ public class PostgreSqlConformanceTests(PostgreSqlFixture fixture) : ProviderCon
 public class PostgreSqlMigrationsConformanceTests(PostgreSqlFixture fixture) : MigrationsConformanceTests<PostgreSqlFixture>(fixture);
 
 public class PostgreSqlBulkConformanceTests(PostgreSqlFixture fixture) : BulkConformanceTests<PostgreSqlFixture>(fixture);
+
+public class PostgreSqlTranslationConformanceTests(PostgreSqlFixture fixture) : TranslationConformanceTests<PostgreSqlFixture>(fixture);

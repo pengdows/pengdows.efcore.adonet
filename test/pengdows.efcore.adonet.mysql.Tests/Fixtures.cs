@@ -43,3 +43,5 @@ public class MySqlConformanceTests(MySqlFixture fixture) : ProviderConformanceTe
 public class MySqlMigrationsConformanceTests(MySqlFixture fixture) : MigrationsConformanceTests<MySqlFixture>(fixture);
 
 public class MySqlBulkConformanceTests(MySqlFixture fixture) : BulkConformanceTests<MySqlFixture>(fixture);
+
+public class MySqlTranslationConformanceTests(MySqlFixture fixture) : TranslationConformanceTests<MySqlFixture>(fixture);
