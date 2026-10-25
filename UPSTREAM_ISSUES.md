@@ -119,3 +119,18 @@ Recorded as skips in `test/pengdows.efcore.adonet.flatfile.Tests/Fixtures.cs`, e
   returns two rows of NULLs (expected `1|NULL`, `2|Fiction`), and the same `INNER JOIN` returns no rows (expected
   `2|Fiction`). Likely the two aliases of one table resolve to the same row source. No work-around: a provider can't
   rewrite every self-join.
+- Found by EF's Where specification suite (`NorthwindWhereQueryFlatFileTest`, 36 of 408 failing on preview.8), each
+  statement taken from the failing command:
+  - `OFFSET`/`FETCH FIRST` is rejected inside an `EXISTS` subquery as well as a derived table
+    (`WHERE EXISTS (SELECT 1 FROM "Orders" AS "o" WHERE ... OFFSET 3 ROWS)`).
+  - A parameter is rejected as the left operand of a comparison: `WHERE :intPrm = "e"."ReportsTo"` ("Parameter markers
+    cannot be used as the left operand of a predicate"). Valid ISO: its type comes from the other operand.
+  - A parameter is rejected as a whole search condition: `WHERE :prm`. Arguable (ISO leaves an untyped parameter's
+    type to context; here the context is boolean, and PostgreSQL accepts it).
+  - A CASE of boolean results is rejected as a search condition: `WHERE CASE WHEN x >= 20 THEN TRUE ELSE FALSE END`
+    ("Unsupported predicate expression 'BoundCaseExpression'"). Valid ISO: a boolean value expression.
+  - A predicate is rejected as a value: `COALESCE('ALFKI' IN (SELECT ...), FALSE)` ("Expected token 'RightParen' ...
+    but found 'In'"). Valid ISO (SQL:1999 BOOLEAN).
+  - An outer reference two subqueries down fails: `WHERE EXISTS (SELECT 1 FROM "Customers" AS "c" WHERE "o"."OrderID"
+    IN (SELECT "o0"."OrderID" FROM "Orders" AS "o0" WHERE "c"."CustomerID" = "o0"."CustomerID"))` throws "No row is
+    available for table 'Customers'".
