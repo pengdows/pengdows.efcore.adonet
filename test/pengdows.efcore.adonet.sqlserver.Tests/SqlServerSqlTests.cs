@@ -1,6 +1,7 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.Storage;
 using pengdows.efcore.adonet.Bulk;
 using pengdows.efcore.adonet.Testing;
@@ -183,6 +184,37 @@ public class SqlServerSqlTests
         var sql = context.Blogs.Where(b => b.Name == name).ToQueryString();
 
         Assert.StartsWith("DECLARE @name nvarchar(max) = N'xxx", sql);
+    }
+
+    [Fact]
+    public void Query_strings_declare_a_null_with_the_type_of_its_parameter()
+    {
+        using var context = Context(b => b.UseAdoNetSqlServer("Server=localhost"));
+        using var command = new SqlCommand("SELECT @name, @when");
+        command.Parameters.Add(new SqlParameter("@name", System.Data.SqlDbType.VarChar, 30) { Value = DBNull.Value });
+        command.Parameters.Add(new SqlParameter("@when", System.Data.SqlDbType.DateTimeOffset) { Value = DBNull.Value });
+
+        Assert.StartsWith(
+            "DECLARE @name varchar(30) = NULL;\nDECLARE @when datetimeoffset = NULL;\n",
+            context.GetService<IRelationalQueryStringFactory>().Create(command).ReplaceLineEndings("\n"));
+    }
+
+    [Fact]
+    public void Query_strings_refuse_a_value_with_no_sql_literal_rather_than_write_its_text()
+    {
+        using var context = Context(b => b.UseAdoNetSqlServer("Server=localhost"));
+        using var command = new SqlCommand("SELECT @value");
+        command.Parameters.Add(new SqlParameter("@value", System.Data.SqlDbType.NVarChar) { Value = new Unmapped() });
+
+        var error = Assert.Throws<NotSupportedException>(() => context.GetService<IRelationalQueryStringFactory>().Create(command));
+
+        Assert.Contains("@value", error.Message);
+    }
+
+    private sealed class Unmapped
+    {
+        public override string ToString()
+            => "'; DROP TABLE y; --";
     }
 
     [Fact]
