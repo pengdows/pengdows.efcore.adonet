@@ -92,6 +92,12 @@ public interface ISqlDialect
     /// </summary>
     bool LimitInPredicateSubqueries { get; }
 
+    /// <summary>
+    ///     How a correlated subquery is joined to the rows before it; null where the database has no lateral join, and a query
+    ///     needing one fails to translate.
+    /// </summary>
+    LateralJoinSyntax? LateralJoins { get; }
+
     /// <summary>Returns the number of user tables in the current database or schema.</summary>
     string HasTablesSql { get; }
 }

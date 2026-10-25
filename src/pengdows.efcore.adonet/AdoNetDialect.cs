@@ -62,6 +62,7 @@ public class AnsiSqlDialect : ISqlDialect
     public virtual SavepointSyntax? Savepoints => SavepointSyntax.Iso;
     public virtual bool RowValues => true;
     public virtual bool LimitInPredicateSubqueries => true;
+    public virtual LateralJoinSyntax? LateralJoins => LateralJoinSyntax.Iso;
 
     public virtual string HasTablesSql
         => "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'";

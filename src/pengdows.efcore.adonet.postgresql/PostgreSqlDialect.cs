@@ -89,6 +89,13 @@ internal sealed class PostgreSqlTypeMappings : AnsiTypeMappings
 /// </summary>
 internal sealed class PostgreSqlFunctions : FunctionSyntax
 {
+    // ^ is exponentiation in PostgreSQL; # is exclusive or. Behaviour reference (not copied):
+    // https://github.com/npgsql/efcore.pg/blob/v10.0.3/src/EFCore.PG/Query/Internal/NpgsqlQuerySqlGenerator.cs
+    public override string? BitwiseAnd => "{0} & {1}";
+    public override string? BitwiseOr => "{0} | {1}";
+    public override string? BitwiseNot => "~{0}";
+    public override string? ExclusiveOr => "{0} # {1}";
+
     // The % operator, as the database's EF Core provider writes it.
     public override string? Modulo => null;
 

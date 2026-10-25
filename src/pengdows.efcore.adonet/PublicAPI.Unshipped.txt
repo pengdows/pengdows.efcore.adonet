@@ -111,6 +111,7 @@ pengdows.efcore.adonet.ISqlDialect.HasTablesSql.get -> string!
 pengdows.efcore.adonet.ISqlDialect.IdentifierQuotePrefix.get -> string!
 pengdows.efcore.adonet.ISqlDialect.IdentifierQuoteSuffix.get -> string!
 pengdows.efcore.adonet.ISqlDialect.Keys.get -> pengdows.efcore.adonet.KeyRetrieval!
+pengdows.efcore.adonet.ISqlDialect.LateralJoins.get -> pengdows.efcore.adonet.LateralJoinSyntax?
 pengdows.efcore.adonet.ISqlDialect.LimitInPredicateSubqueries.get -> bool
 pengdows.efcore.adonet.ISqlDialect.LongCountFunction.get -> string!
 pengdows.efcore.adonet.ISqlDialect.Paging.get -> pengdows.efcore.adonet.PagingSyntax!
@@ -131,6 +132,12 @@ pengdows.efcore.adonet.ITypeMappingDialect.GetStoreType(System.Type! clrType) ->
 pengdows.efcore.adonet.ITypeMappingDialect.GetStoreType(System.Type! clrType, pengdows.efcore.adonet.StoreTypeFacets! facets) -> string?
 pengdows.efcore.adonet.ITypeMappingDialect.StringParameterSize(bool unicode) -> int?
 pengdows.efcore.adonet.KeyRetrieval
+pengdows.efcore.adonet.LateralJoinSyntax
+pengdows.efcore.adonet.LateralJoinSyntax.CrossJoin.get -> string!
+pengdows.efcore.adonet.LateralJoinSyntax.Lateral.get -> string!
+pengdows.efcore.adonet.LateralJoinSyntax.LateralJoinSyntax(string! crossJoin, string! outerJoin, string! lateral, string? outerJoinCondition) -> void
+pengdows.efcore.adonet.LateralJoinSyntax.OuterJoin.get -> string!
+pengdows.efcore.adonet.LateralJoinSyntax.OuterJoinCondition.get -> string?
 pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository
 pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.AdoNetHistoryRepository(Microsoft.EntityFrameworkCore.Migrations.HistoryRepositoryDependencies! dependencies, pengdows.efcore.adonet.IAdoNetDialect! dialect) -> void
 pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.Dialect.get -> pengdows.efcore.adonet.IAdoNetDialect!
@@ -206,6 +213,8 @@ static pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.Validate(pen
 static pengdows.efcore.adonet.KeyRetrieval.Returning.get -> pengdows.efcore.adonet.ReturningKeyRetrieval!
 static pengdows.efcore.adonet.KeyRetrieval.SelectAfter(string! identityFunction, string! rowsAffectedFunction) -> pengdows.efcore.adonet.SelectAfterKeyRetrieval!
 static pengdows.efcore.adonet.KeyRetrieval.Sequence(System.Func<string!, string!, string!>? sequenceName = null, System.Func<string!, string!>? nextValueSql = null) -> pengdows.efcore.adonet.SequenceKeyRetrieval!
+static pengdows.efcore.adonet.LateralJoinSyntax.Apply.get -> pengdows.efcore.adonet.LateralJoinSyntax!
+static pengdows.efcore.adonet.LateralJoinSyntax.Iso.get -> pengdows.efcore.adonet.LateralJoinSyntax!
 static pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.IsIdentity(Microsoft.EntityFrameworkCore.Migrations.Operations.ColumnOperation! column) -> bool
 static pengdows.efcore.adonet.PagingSyntax.LimitOffset(string? noLimitValue = null) -> pengdows.efcore.adonet.PagingSyntax!
 static pengdows.efcore.adonet.PagingSyntax.OffsetFetch.get -> pengdows.efcore.adonet.PagingSyntax!
@@ -231,6 +240,7 @@ virtual pengdows.efcore.adonet.AnsiSqlDialect.HasTablesSql.get -> string!
 virtual pengdows.efcore.adonet.AnsiSqlDialect.IdentifierQuotePrefix.get -> string!
 virtual pengdows.efcore.adonet.AnsiSqlDialect.IdentifierQuoteSuffix.get -> string!
 virtual pengdows.efcore.adonet.AnsiSqlDialect.Keys.get -> pengdows.efcore.adonet.KeyRetrieval!
+virtual pengdows.efcore.adonet.AnsiSqlDialect.LateralJoins.get -> pengdows.efcore.adonet.LateralJoinSyntax?
 virtual pengdows.efcore.adonet.AnsiSqlDialect.LimitInPredicateSubqueries.get -> bool
 virtual pengdows.efcore.adonet.AnsiSqlDialect.LongCountFunction.get -> string!
 virtual pengdows.efcore.adonet.AnsiSqlDialect.Paging.get -> pengdows.efcore.adonet.PagingSyntax!
@@ -264,9 +274,13 @@ virtual pengdows.efcore.adonet.DmlSyntax.CanDeleteDirectly(Microsoft.EntityFrame
 virtual pengdows.efcore.adonet.DmlSyntax.TryGenerateDelete(pengdows.efcore.adonet.IQuerySqlWriter! sql, Microsoft.EntityFrameworkCore.Query.SqlExpressions.DeleteExpression! delete) -> bool
 virtual pengdows.efcore.adonet.DmlSyntax.TryGenerateUpdate(pengdows.efcore.adonet.IQuerySqlWriter! sql, Microsoft.EntityFrameworkCore.Query.SqlExpressions.UpdateExpression! update) -> bool
 virtual pengdows.efcore.adonet.FunctionSyntax.Abs.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.BitwiseAnd.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.BitwiseNot.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.BitwiseOr.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.Ceiling.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.Concat.get -> string!
 virtual pengdows.efcore.adonet.FunctionSyntax.Day.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.ExclusiveOr.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.Floor.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.Hour.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.Length.get -> string?

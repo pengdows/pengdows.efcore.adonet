@@ -46,6 +46,13 @@ internal sealed class DuckDbSql : AnsiSqlDialect
 /// </summary>
 internal sealed class DuckDbFunctions : FunctionSyntax
 {
+    // ^ is exponentiation in DuckDB; xor() is exclusive or. Behaviour reference (not copied):
+    // https://github.com/skuirrels/DuckDB.EFCoreProvider/blob/f49a8c3e25f28055ad139383d25e09cede39c6f8/src/DuckDB.EFCoreProvider/Query/Internal/DuckDBSqlTranslatingExpressionVisitor.cs
+    public override string? BitwiseAnd => "{0} & {1}";
+    public override string? BitwiseOr => "{0} | {1}";
+    public override string? BitwiseNot => "~{0}";
+    public override string? ExclusiveOr => "xor({0}, {1})";
+
     // The % operator, as the database's EF Core provider writes it.
     public override string? Modulo => null;
 

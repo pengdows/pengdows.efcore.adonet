@@ -52,6 +52,35 @@ internal class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencie
         return rowValue;
     }
 
+    protected override Expression VisitCrossApply(CrossApplyExpression crossApplyExpression)
+    {
+        Sql.Append(LateralJoins.CrossJoin);
+        VisitLateral(crossApplyExpression.Table);
+        return crossApplyExpression;
+    }
+
+    protected override Expression VisitOuterApply(OuterApplyExpression outerApplyExpression)
+    {
+        Sql.Append(LateralJoins.OuterJoin);
+        VisitLateral(outerApplyExpression.Table);
+        Sql.Append(LateralJoins.OuterJoinCondition ?? "");
+        return outerApplyExpression;
+    }
+
+    private void VisitLateral(TableExpressionBase table)
+    {
+        if (table is not TableExpression)
+        {
+            Sql.Append(dialect.LateralJoins?.Lateral ?? throw new InvalidOperationException("A lateral join was not refused at translation."));
+        }
+
+        Visit(table);
+    }
+
+    // Without lateral joins, only a plain table is applied (a subquery has failed to translate): an ordinary ISO join.
+    private LateralJoinSyntax LateralJoins
+        => dialect.LateralJoins ?? LateralJoinSyntax.Iso;
+
     // A paged subquery under IN, where the database can't page there, is read through a derived table, which can.
     protected override void GenerateIn(InExpression inExpression, bool negated)
     {
@@ -79,6 +108,14 @@ internal class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencie
     // CAST names the dialect's target for the store type, which in ISO SQL is the store type itself.
     protected override Expression VisitSqlUnary(SqlUnaryExpression sqlUnaryExpression)
     {
+        if ((sqlUnaryExpression.OperatorType is ExpressionType.OnesComplement or ExpressionType.Not)
+            && (sqlUnaryExpression.Type != typeof(bool))
+            && (dialect.Functions.BitwiseNot is { } bitwiseNot))
+        {
+            SqlTemplate.Write(bitwiseNot, [sqlUnaryExpression.Operand], s => Sql.Append(s), VisitOperand);
+            return sqlUnaryExpression;
+        }
+
         if ((sqlUnaryExpression.OperatorType != ExpressionType.Convert) || (sqlUnaryExpression.TypeMapping is not { } typeMapping))
         {
             return base.VisitSqlUnary(sqlUnaryExpression);
@@ -116,7 +153,37 @@ internal class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencie
             return sqlBinaryExpression;
         }
 
+        var bitwise = sqlBinaryExpression.Type == typeof(bool)
+            ? null
+            : sqlBinaryExpression.OperatorType switch
+            {
+                ExpressionType.And => dialect.Functions.BitwiseAnd,
+                ExpressionType.Or => dialect.Functions.BitwiseOr,
+                ExpressionType.ExclusiveOr => dialect.Functions.ExclusiveOr,
+                _ => null
+            };
+        if (bitwise != null)
+        {
+            SqlTemplate.Write(bitwise, [sqlBinaryExpression.Left, sqlBinaryExpression.Right], s => Sql.Append(s), VisitOperand);
+            return sqlBinaryExpression;
+        }
+
         return base.VisitSqlBinary(sqlBinaryExpression);
+    }
+
+    // An operand written into an operator template is parenthesized when it is an operation itself: databases order bitwise
+    // operators differently (in some & binds tighter than |, in others they are equal).
+    private void VisitOperand(Expression operand)
+    {
+        if (operand is SqlBinaryExpression or SqlUnaryExpression { OperatorType: not ExpressionType.Convert })
+        {
+            Sql.Append("(");
+            Visit(operand);
+            Sql.Append(")");
+            return;
+        }
+
+        Visit(operand);
     }
 
     // SQL's standard precedence, highest first (vendors document the same order), so only what needs them gets parentheses.

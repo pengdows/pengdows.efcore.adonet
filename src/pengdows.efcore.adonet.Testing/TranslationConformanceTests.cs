@@ -4,8 +4,9 @@ using Microsoft.EntityFrameworkCore;
 namespace pengdows.efcore.adonet.Testing;
 
 /// <summary>
-///     Each .NET member the core translates, run on the server and compared with what .NET computes. Projections go through
-///     <c>Distinct</c>, which EF can't evaluate on the client, so an untranslated member fails instead of quietly passing.
+///     Each .NET member the core translates, run on the server and compared with what .NET computes. Each is also compared in a
+///     <c>WHERE</c>, which EF can't evaluate on the client, so an untranslated member fails instead of quietly passing
+///     (a projection, even through <c>Distinct</c>, may be finished on the client).
 /// </summary>
 public abstract class TranslationConformanceTests<TFixture>(TFixture fixture) : IClassFixture<TFixture>, IAsyncLifetime
     where TFixture : ProviderFixture
@@ -49,10 +50,15 @@ public abstract class TranslationConformanceTests<TFixture>(TFixture fixture) : 
     private async Task Server<T>(Expression<Func<Blog, T>> selector)
     {
         await using var context = Fixture.CreateContext();
+        var expected = selector.Compile()(Seeded);
 
         var actual = await context.Blogs.Select(selector).Distinct().SingleAsync(Ct);
+        Assert.Equal(expected, actual);
 
-        Assert.Equal(selector.Compile()(Seeded), actual);
+        // The server computed it: a predicate is never finished on the client.
+        var computedOnServer = Expression.Lambda<Func<Blog, bool>>(
+            Expression.Equal(selector.Body, Expression.Constant(actual, typeof(T))), selector.Parameters);
+        Assert.Equal(1, await context.Blogs.CountAsync(computedOnServer, Ct));
     }
 
     private async Task Matches(Expression<Func<Blog, bool>> predicate)
@@ -144,6 +150,26 @@ public abstract class TranslationConformanceTests<TFixture>(TFixture fixture) : 
         await Server(b => Math.Ceiling(b.Rating));
         await Server(b => Math.Round(b.Rating));
         await Server(b => Math.Round(b.Rating, 1));
+    }
+
+    /// <summary>
+    ///     Bitwise operators on integers, as .NET computes them, negatives and the smallest int included. Covers EF's base
+    ///     Northwind tests mixing them in projections (<c>Projection_when_arithmetic_mixed_subqueries</c>).
+    /// </summary>
+    [Fact]
+    public async Task Bitwise_operators()
+    {
+        if (Fixture.ExpectedDialect.Sql.Functions.BitwiseAnd == null)
+        {
+            Fixture.SkipFor("no bitwise operators (ISO SQL has none)");
+        }
+
+        await Server(b => (int)b.Rating ^ 10);
+        await Server(b => -(int)b.Rating ^ 5);
+        await Server(b => ((int)b.Rating + 1) ^ 3);
+        await Server(b => (int)b.Rating ^ int.MinValue);
+        await Server(b => ((int)b.Rating & 6) | 1);
+        await Server(b => ~(int)b.Rating);
     }
 
     [Fact]

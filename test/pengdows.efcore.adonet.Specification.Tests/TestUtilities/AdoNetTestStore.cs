@@ -50,6 +50,14 @@ public class AdoNetTestStore<THost> : RelationalTestStore
         return this;
     }
 
+    // EF's raw-SQL tests write [name]; each database quotes it its own way. EF's default, ", is a string, not a name, in
+    // MySQL unless the server runs with ANSI_QUOTES.
+    protected override string OpenDelimiter
+        => Host.Dialect.Sql.IdentifierQuotePrefix;
+
+    protected override string CloseDelimiter
+        => Host.Dialect.Sql.IdentifierQuoteSuffix;
+
     // The database starts empty: the schema is the model's, created by the provider.
     public override async Task CleanAsync(DbContext context)
         => await context.GetService<IRelationalDatabaseCreator>().CreateTablesAsync();

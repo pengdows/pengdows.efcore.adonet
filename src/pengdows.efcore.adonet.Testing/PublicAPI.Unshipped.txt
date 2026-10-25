@@ -260,6 +260,7 @@ pengdows.efcore.adonet.Testing.Tally.Id.get -> int
 pengdows.efcore.adonet.Testing.Tally.Id.set -> void
 pengdows.efcore.adonet.Testing.Tally.Tally() -> void
 pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>
+pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Bitwise_operators() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Case() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Concatenation() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Constant_patterns_match_wildcards_literally() -> System.Threading.Tasks.Task!

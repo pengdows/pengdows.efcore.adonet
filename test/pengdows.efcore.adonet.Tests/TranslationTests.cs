@@ -70,6 +70,15 @@ public class TranslationTests
     }
 
     [Fact]
+    public void Exclusive_or_is_written_as_the_dialect_spells_it()
+    {
+        Assert.Contains(@"WHERE (""i"".""Version"" + 1) ^ 3 = 0", Sql(TestDialects.Functions, c => c.Items.Where(i => ((i.Version + 1) ^ 3) == 0)));
+        Assert.Contains(
+            @"WHERE (((""i"".""Version"" + 1) | 3) - ((""i"".""Version"" + 1) & 3)) = 0",
+            Sql(TestDialects.EmulatedExclusiveOr, c => c.Items.Where(i => ((i.Version + 1) ^ 3) == 0)));
+    }
+
+    [Fact]
     public void Hostile_string_literals_stay_one_literal()
     {
         var huge = new string('\'', 65_536);
@@ -302,7 +311,11 @@ public class TranslationTests
         { "IsNullOrWhiteSpace", i => string.IsNullOrWhiteSpace(i.Name) },
         { "Abs", i => System.Math.Abs(i.Price) > 1 },
         { "Year", i => i.At.Year > 1 },
-        { "Hour of an offset", i => i.AtOffset.Hour > 1 }
+        { "Hour of an offset", i => i.AtOffset.Hour > 1 },
+        { "Bitwise and", i => (i.Version & 1) == 0 },
+        { "Bitwise or", i => (i.Version | 1) == 1 },
+        { "Exclusive or", i => (i.Version ^ 1) == 0 },
+        { "Bitwise not", i => ~i.Version == 0 }
     };
 
     [Theory]
@@ -360,6 +373,10 @@ public sealed class TestFunctions : FunctionSyntax
     public override string OffsetDateTime => "LOCAL({0})";
     public override string? Sqrt => null;
     public override string? Modulo => null;
+    public override string BitwiseAnd => "{0} & {1}";
+    public override string BitwiseOr => "{0} | {1}";
+    public override string BitwiseNot => "~{0}";
+    public override string ExclusiveOr => "{0} ^ {1}";
     public override char? LikeEscapeCharacter => '!';
     public override string LikeSpecialCharacters => "%_[";
 }
@@ -434,4 +451,13 @@ public sealed class ReverseTranslatorPlugin(ISqlExpressionFactory sqlExpressionF
         => method.DeclaringType == typeof(PluginFunctions)
             ? sqlExpressionFactory.Function("REVERSE", arguments, nullable: true, [true], typeof(string), arguments[0].TypeMapping)
             : null;
+}
+
+/// <summary>Bitwise operators, and exclusive or written with them: (a | b) - (a &amp; b).</summary>
+public sealed class EmulatedExclusiveOrFunctions : FunctionSyntax
+{
+    public override string BitwiseAnd => "{0} & {1}";
+    public override string BitwiseOr => "{0} | {1}";
+    public override string BitwiseNot => "~{0}";
+    public override string ExclusiveOr => "(({0} | {1}) - ({0} & {1}))";
 }

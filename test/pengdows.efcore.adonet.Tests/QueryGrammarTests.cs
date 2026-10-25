@@ -13,6 +13,59 @@ public class QueryGrammarTests
         return query(context).ToQueryString().ReplaceLineEndings("\n");
     }
 
+    // A paged subquery correlated by more than equality, joined per row: EF can't make it a plain join, so it is EF's CROSS
+    // APPLY and OUTER APPLY.
+    private static IQueryable FirstPartPerItem(ItemContext c)
+        => c.Items.SelectMany(i => c.Parts.Where(p => p.Id > i.Id).OrderBy(p => p.Id).Take(1), (i, p) => new { i.Id, p.Label });
+
+    private static IQueryable FirstPartPerItemOrNone(ItemContext c)
+        => c.Items.SelectMany(
+            i => c.Parts.Where(p => p.Id > i.Id).OrderBy(p => p.Id).Take(1).DefaultIfEmpty(), (i, p) => new { i.Id, p!.Label });
+
+    [Fact]
+    public void Correlated_joins_are_iso_lateral_joins()
+    {
+        Assert.Contains("CROSS JOIN LATERAL (", Sql(TestDialects.Ansi, FirstPartPerItem));
+        Assert.Matches(@"LEFT JOIN LATERAL \([^;]*\) AS ""p0"" ON TRUE", Sql(TestDialects.Ansi, FirstPartPerItemOrNone));
+        Assert.DoesNotContain("APPLY", Sql(TestDialects.Ansi, FirstPartPerItemOrNone));
+    }
+
+    [Fact]
+    public void Correlated_joins_are_apply_where_the_dialect_says_so()
+    {
+        Assert.Contains("CROSS APPLY (", Sql(TestDialects.ApplyJoins, FirstPartPerItem));
+        var outer = Sql(TestDialects.ApplyJoins, FirstPartPerItemOrNone);
+        Assert.Contains("OUTER APPLY (", outer);
+        Assert.DoesNotContain("ON TRUE", outer);
+    }
+
+    // Every item's collection is all parts, in a reversed order: EF applies the plain table, with nothing to correlate.
+    private static IQueryable AllPartsPerItem(ItemContext c)
+        => c.Items.OrderBy(i => i.Id).Select(i => c.Parts.OrderBy(p => p.Label).ThenByDescending(p => p.Id).Reverse().ToList());
+
+    [Fact]
+    public void A_plain_table_is_joined_without_lateral()
+    {
+        var sql = Sql(TestDialects.Ansi, AllPartsPerItem);
+
+        Assert.Contains(@"LEFT JOIN ""Parts"" AS ""p"" ON TRUE", sql);
+        Assert.DoesNotContain("LATERAL", sql);
+        Assert.Contains(@"OUTER APPLY ""Parts"" AS ""p""", Sql(TestDialects.ApplyJoins, AllPartsPerItem));
+    }
+
+    [Fact]
+    public void A_plain_table_is_joined_even_without_lateral_joins()
+        => Assert.Contains(@"LEFT JOIN ""Parts"" AS ""p"" ON TRUE", Sql(TestDialects.NoLateralJoins, AllPartsPerItem));
+
+    [Fact]
+    public void Correlated_joins_fail_to_translate_without_lateral_joins()
+    {
+        var error = Assert.Throws<InvalidOperationException>(() => Sql(TestDialects.NoLateralJoins, FirstPartPerItem));
+
+        Assert.Contains("lateral join", error.Message);
+        Assert.Contains("No lateral joins", error.Message);
+    }
+
     [Fact]
     public void Operators_are_parenthesized_only_where_precedence_needs_it()
     {
@@ -28,8 +81,10 @@ public class QueryGrammarTests
             Where(c => c.Items.Where(i => i.Version > 1 && (i.Big == 1 || i.Tiny == 2))));
         Assert.Equal(@"-(""i"".""Version"" + 1) = 0", Where(c => c.Items.Where(i => -(i.Version + 1) == 0)));
         Assert.Equal(@"""i"".""Version"" / (""i"".""Version"" / 2) = 1", Where(c => c.Items.Where(i => i.Version / (i.Version / 2) == 1)));
-        Assert.Equal(@"((""i"".""Version"" & 1) | 2) ^ 4 = 0", Where(c => c.Items.Where(i => ((i.Version & 1 | 2) ^ 4) == 0)));
-        Assert.Equal(@"~(""i"".""Version"" + 1) = 0", Where(c => c.Items.Where(i => ~(i.Version + 1) == 0)));
+        Assert.Equal(
+            @"((""i"".""Version"" & 1) | 2) ^ 4 = 0",
+            Sql(TestDialects.Functions, c => c.Items.Where(i => ((i.Version & 1 | 2) ^ 4) == 0)).Split("WHERE ")[1]);
+        Assert.Equal(@"~(""i"".""Version"" + 1) = 0", Sql(TestDialects.Functions, c => c.Items.Where(i => ~(i.Version + 1) == 0)).Split("WHERE ")[1]);
         Assert.Equal(@"CAST(""i"".""Version"" AS BIGINT) * 2 = 4", Where(c => c.Items.Where(i => (long)i.Version * 2 == 4)));
         Assert.Equal(@"""i"".""Name"" COLLATE c = 'a'", Where(c => c.Items.Where(i => EF.Functions.Collate(i.Name, "c") == "a")));
         Assert.Equal(@"NOT (""i"".""Active"") AND ""i"".""Version"" <> 2 AND ""i"".""Name"" IS NULL",

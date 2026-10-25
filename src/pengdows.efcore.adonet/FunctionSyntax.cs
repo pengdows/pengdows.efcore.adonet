@@ -50,6 +50,24 @@ public class FunctionSyntax
     ///     EF's <c>%</c> operator.
     /// </summary>
     public virtual string? Modulo => "MOD({0}, {1})";
+
+    /// <summary>
+    ///     Integer <c>{0} &amp; {1}</c>. ISO SQL has no bitwise operators: null, the ISO default, leaves them untranslated,
+    ///     as for every member here; a database with them names its own.
+    /// </summary>
+    public virtual string? BitwiseAnd => null;
+
+    /// <summary>Integer <c>{0} | {1}</c>; null where the database has no such operator.</summary>
+    public virtual string? BitwiseOr => null;
+
+    /// <summary>Integer <c>~{0}</c>; null where the database has no such operator.</summary>
+    public virtual string? BitwiseNot => null;
+
+    /// <summary>
+    ///     Integer <c>{0} ^ {1}</c>; null where the database has no such operator. A database with <c>|</c> and <c>&amp;</c>
+    ///     but no exclusive or can write <c>(({0} | {1}) - ({0} &amp; {1}))</c>, which equals it for integers.
+    /// </summary>
+    public virtual string? ExclusiveOr => null;
     public virtual string? Sqrt => "SQRT({0})";
 
     public virtual string? Year => "EXTRACT(YEAR FROM {0})";
@@ -112,7 +130,8 @@ public class FunctionSyntax
             (nameof(TrimStart), TrimStart, 1), (nameof(TrimEnd), TrimEnd, 1), (nameof(Length), Length, 1),
             (nameof(Substring), Substring, 3), (nameof(SubstringFrom), SubstringFrom, 2), (nameof(Position), Position, 2),
             (nameof(Replace), Replace, 3), (nameof(Abs), Abs, 1), (nameof(Floor), Floor, 1), (nameof(Ceiling), Ceiling, 1),
-            (nameof(Round), Round, 1), (nameof(RoundDigits), RoundDigits, 2), (nameof(Power), Power, 2), (nameof(Modulo), Modulo, 2), (nameof(Sqrt), Sqrt, 1),
+            (nameof(Round), Round, 1), (nameof(RoundDigits), RoundDigits, 2), (nameof(Power), Power, 2), (nameof(Modulo), Modulo, 2), (nameof(BitwiseAnd), BitwiseAnd, 2), (nameof(BitwiseOr), BitwiseOr, 2),
+            (nameof(BitwiseNot), BitwiseNot, 1), (nameof(ExclusiveOr), ExclusiveOr, 2), (nameof(Sqrt), Sqrt, 1),
             (nameof(Year), Year, 1), (nameof(Month), Month, 1), (nameof(Day), Day, 1), (nameof(Hour), Hour, 1),
             (nameof(Minute), Minute, 1), (nameof(Second), Second, 1), (nameof(OffsetDateTime), OffsetDateTime, 1)
         ];

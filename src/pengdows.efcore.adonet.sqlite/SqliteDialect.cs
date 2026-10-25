@@ -47,6 +47,10 @@ public sealed class LegacySqliteDialect : SqliteDialect
 internal class SqliteSql : AnsiSqlDialect
 {
     public override bool SupportsSchemas => false;
+
+    // SQLite has no lateral join; a query needing one fails to translate, as with the official provider. Behaviour reference
+    // (not copied): https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.Core/Query/Internal/SqliteQueryTranslationPostprocessor.cs
+    public override LateralJoinSyntax? LateralJoins => null;
     public override PagingSyntax Paging { get; } = PagingSyntax.LimitOffset(noLimitValue: "-1");
     public override FunctionSyntax Functions { get; } = new SqliteFunctions();
 
@@ -93,6 +97,14 @@ internal sealed class SqliteTypeMappings : AnsiTypeMappings
 /// </summary>
 internal sealed class SqliteFunctions : FunctionSyntax
 {
+    public override string? BitwiseAnd => "{0} & {1}";
+    public override string? BitwiseOr => "{0} | {1}";
+    public override string? BitwiseNot => "~{0}";
+
+    // No exclusive or operator: (a | b) - (a & b), which equals it for integers. Behaviour reference (not copied):
+    // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.Core/Query/Internal/SqliteSqlTranslatingExpressionVisitor.cs
+    public override string? ExclusiveOr => "(({0} | {1}) - ({0} & {1}))";
+
     // The % operator, as the database's EF Core provider writes it.
     public override string? Modulo => null;
 

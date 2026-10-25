@@ -43,6 +43,7 @@ internal sealed class SqlServerSql : AnsiSqlDialect
 {
     public override string IdentifierQuotePrefix => "[";
     public override string IdentifierQuoteSuffix => "]";
+    public override LateralJoinSyntax? LateralJoins => LateralJoinSyntax.Apply;
     public override string TrueLiteral => "CAST(1 AS bit)";
     public override string FalseLiteral => "CAST(0 AS bit)";
     public override string LongCountFunction => "COUNT_BIG";
@@ -72,6 +73,12 @@ internal sealed class SqlServerSql : AnsiSqlDialect
 /// </summary>
 internal sealed class SqlServerFunctions : FunctionSyntax
 {
+    // T-SQL's bitwise operators.
+    public override string? BitwiseAnd => "{0} & {1}";
+    public override string? BitwiseOr => "{0} | {1}";
+    public override string? BitwiseNot => "~{0}";
+    public override string? ExclusiveOr => "{0} ^ {1}";
+
     // The % operator, as the database's EF Core provider writes it.
     public override string? Modulo => null;
 

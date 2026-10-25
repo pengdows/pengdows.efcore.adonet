@@ -77,9 +77,15 @@ internal class AdoNetSqlTranslatingExpressionVisitor : RelationalSqlTranslatingE
         return base.VisitMethodCall(methodCallExpression);
     }
 
-    // tuple == other and tuple != other compare the values, as the query's expected results do.
+    // tuple == other and tuple != other compare the values, as the query's expected results do. A bitwise operator the
+    // database doesn't have is left untranslated.
     protected override Expression VisitBinary(BinaryExpression binaryExpression)
     {
+        if (IsBitwise(binaryExpression.NodeType, binaryExpression.Type) && (BitwiseTemplate(binaryExpression.NodeType) == null))
+        {
+            return QueryCompilationContext.NotTranslatedExpression;
+        }
+
         if (_rowValues
             && (binaryExpression.NodeType is ExpressionType.Equal or ExpressionType.NotEqual)
             && (TryTranslateTupleComparison(binaryExpression.Left, binaryExpression.Right) is SqlBinaryExpression rowComparison))
@@ -91,6 +97,23 @@ internal class AdoNetSqlTranslatingExpressionVisitor : RelationalSqlTranslatingE
 
         return base.VisitBinary(binaryExpression);
     }
+
+    protected override Expression VisitUnary(UnaryExpression unaryExpression)
+        => IsBitwise(unaryExpression.NodeType, unaryExpression.Type) && (_functions.BitwiseNot == null)
+            ? QueryCompilationContext.NotTranslatedExpression
+            : base.VisitUnary(unaryExpression);
+
+    private static bool IsBitwise(ExpressionType nodeType, Type type)
+        => (nodeType is ExpressionType.And or ExpressionType.Or or ExpressionType.ExclusiveOr or ExpressionType.Not or ExpressionType.OnesComplement)
+            && ((Nullable.GetUnderlyingType(type) ?? type) != typeof(bool));
+
+    private string? BitwiseTemplate(ExpressionType nodeType)
+        => nodeType switch
+        {
+            ExpressionType.And => _functions.BitwiseAnd,
+            ExpressionType.Or => _functions.BitwiseOr,
+            _ => _functions.ExclusiveOr
+        };
 
     // tuple.Equals(other), both built in the query: (a, b) = (x, y), each pair typed as its own comparison would be.
     private SqlExpression? TryTranslateTupleEquals(MethodCallExpression call)

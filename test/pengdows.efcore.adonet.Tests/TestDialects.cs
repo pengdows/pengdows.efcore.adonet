@@ -41,7 +41,9 @@ public sealed class PartsSql(
     bool noSavepoints = false,
     bool rowValues = true,
     bool limitInPredicateSubqueries = true,
-    Func<string, bool>? requiresQuoting = null) : AnsiSqlDialect
+    Func<string, bool>? requiresQuoting = null,
+    LateralJoinSyntax? lateralJoins = null,
+    bool noLateralJoins = false) : AnsiSqlDialect
 {
     public override PagingSyntax Paging { get; } = paging ?? PagingSyntax.OffsetFetch;
     public override BooleanSyntax Booleans { get; } = booleans ?? BooleanSyntax.Native;
@@ -60,6 +62,7 @@ public sealed class PartsSql(
     public override SavepointSyntax? Savepoints => noSavepoints ? null : savepoints ?? SavepointSyntax.Iso;
     public override bool RowValues => rowValues;
     public override bool LimitInPredicateSubqueries => limitInPredicateSubqueries;
+    public override LateralJoinSyntax? LateralJoins => noLateralJoins ? null : lateralJoins ?? LateralJoinSyntax.Iso;
 
     public override bool RequiresQuoting(string identifier)
         => requiresQuoting?.Invoke(identifier) ?? base.RequiresQuoting(identifier);
@@ -123,8 +126,12 @@ public static class TestDialects
     public static readonly IAdoNetDialect NoLimitInSubqueryPredicates = new PartsDialect(
         "No LIMIT in IN subqueries", new PartsSql(limitInPredicateSubqueries: false));
     public static readonly IAdoNetDialect NoRowValues = new PartsDialect("No row values", new PartsSql(rowValues: false));
+    public static readonly IAdoNetDialect ApplyJoins = new PartsDialect("APPLY joins", new PartsSql(lateralJoins: LateralJoinSyntax.Apply));
+    public static readonly IAdoNetDialect NoLateralJoins = new PartsDialect("No lateral joins", new PartsSql(noLateralJoins: true));
     public static readonly IAdoNetDialect NoEscape = new PartsDialect("No escape", new PartsSql(functions: new NoEscapeFunctions()));
     public static readonly IAdoNetDialect NoFunctions = new PartsDialect("No functions", new PartsSql(functions: new NoFunctions()));
+    public static readonly IAdoNetDialect EmulatedExclusiveOr = new PartsDialect(
+        "Emulated exclusive or", new PartsSql(functions: new EmulatedExclusiveOrFunctions()));
 
     public static readonly IAdoNetDialect ReverseTranslator = new PartsDialect(
         "Reverse translator",

@@ -184,6 +184,30 @@ public sealed class SavepointSyntax(string create, string rollbackTo, string? re
 }
 
 /// <summary>
+///     How a subquery correlated with the rows before it is joined: what EF calls <c>CROSS APPLY</c> and <c>OUTER APPLY</c>.
+/// </summary>
+/// <param name="crossJoin">Written before the joined table when every row needs a match.</param>
+/// <param name="outerJoin">Written before the joined table when a row without a match is kept.</param>
+/// <param name="lateral">
+///     Written after the join before a subquery or table function, which may then refer to the rows before it; a plain table
+///     can't, and takes none.
+/// </param>
+/// <param name="outerJoinCondition">Written after the outer join's table, where the join needs a condition.</param>
+public sealed class LateralJoinSyntax(string crossJoin, string outerJoin, string lateral, string? outerJoinCondition)
+{
+    /// <summary><c>CROSS JOIN LATERAL</c>, <c>LEFT JOIN LATERAL ... ON TRUE</c> (SQL:1999).</summary>
+    public static LateralJoinSyntax Iso { get; } = new("CROSS JOIN ", "LEFT JOIN ", "LATERAL ", " ON TRUE");
+
+    /// <summary><c>CROSS APPLY</c>, <c>OUTER APPLY</c>.</summary>
+    public static LateralJoinSyntax Apply { get; } = new("CROSS APPLY ", "OUTER APPLY ", "", null);
+
+    public string CrossJoin { get; } = crossJoin;
+    public string OuterJoin { get; } = outerJoin;
+    public string Lateral { get; } = lateral;
+    public string? OuterJoinCondition { get; } = outerJoinCondition;
+}
+
+/// <summary>
 ///     How <c>ExecuteDelete</c> and <c>ExecuteUpdate</c> are written. Variants are named for their shape, not for a database.
 /// </summary>
 public abstract class DmlSyntax
