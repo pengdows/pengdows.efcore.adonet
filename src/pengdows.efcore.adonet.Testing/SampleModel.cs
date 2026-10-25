@@ -30,6 +30,18 @@ public class OffsetSample
     public DateTimeOffset At { get; set; }
 }
 
+public class FloatSample
+{
+    public int Id { get; set; }
+    public double Double { get; set; }
+    public float Single { get; set; }
+}
+
+public class FloatSampleContext(DbContextOptions<FloatSampleContext> options) : DbContext(options)
+{
+    public DbSet<FloatSample> FloatSamples => Set<FloatSample>();
+}
+
 public class SpanSample
 {
     public int Id { get; set; }

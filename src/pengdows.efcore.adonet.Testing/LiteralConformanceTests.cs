@@ -77,6 +77,41 @@ public abstract class LiteralConformanceTests<TFixture>(TFixture fixture) : ICla
     }
 
     [Fact]
+    public async Task Floating_point_constants_at_the_edges_of_their_types()
+    {
+        (double Double, float Single)[] edges =
+        [
+            (double.Epsilon, float.Epsilon),
+            (double.MaxValue, Fixture.LargestStorableFloat),
+            (-double.MaxValue, -Fixture.LargestStorableFloat),
+            (2.2250738585072019E-308, 1.17549449E-38f),
+            (0.1, 0.1f)
+        ];
+        await Fixture.CreateTablesOnceAsync<FloatSampleContext>(o => new(o));
+        var mismatches = new List<string>();
+
+        foreach (var (d, f) in edges)
+        {
+            await using var context = Fixture.CreateContext<FloatSampleContext>(o => new(o));
+            await context.FloatSamples.ExecuteDeleteAsync(Ct);
+            context.Add(new FloatSample { Double = d, Single = f });
+            await context.SaveChangesAsync(Ct);
+
+            if (await context.FloatSamples.CountAsync(s => s.Double == EF.Constant(d), Ct) != 1)
+            {
+                mismatches.Add($"double {d:R}");
+            }
+
+            if (await context.FloatSamples.CountAsync(s => s.Single == EF.Constant(f), Ct) != 1)
+            {
+                mismatches.Add($"float {f:R}");
+            }
+        }
+
+        Assert.True(mismatches.Count == 0, string.Join(Environment.NewLine, mismatches));
+    }
+
+    [Fact]
     public async Task Time_span_constants()
     {
         SkipUnlessMapped(typeof(TimeSpan), "no interval type");

@@ -98,6 +98,17 @@ pengdows.efcore.adonet.Testing.Category.ParentId.get -> int?
 pengdows.efcore.adonet.Testing.Category.ParentId.set -> void
 pengdows.efcore.adonet.Testing.ContainerFixture
 pengdows.efcore.adonet.Testing.ContainerFixture.ContainerFixture() -> void
+pengdows.efcore.adonet.Testing.FloatSample
+pengdows.efcore.adonet.Testing.FloatSample.Double.get -> double
+pengdows.efcore.adonet.Testing.FloatSample.Double.set -> void
+pengdows.efcore.adonet.Testing.FloatSample.FloatSample() -> void
+pengdows.efcore.adonet.Testing.FloatSample.Id.get -> int
+pengdows.efcore.adonet.Testing.FloatSample.Id.set -> void
+pengdows.efcore.adonet.Testing.FloatSample.Single.get -> float
+pengdows.efcore.adonet.Testing.FloatSample.Single.set -> void
+pengdows.efcore.adonet.Testing.FloatSampleContext
+pengdows.efcore.adonet.Testing.FloatSampleContext.FloatSampleContext(Microsoft.EntityFrameworkCore.DbContextOptions<pengdows.efcore.adonet.Testing.FloatSampleContext!>! options) -> void
+pengdows.efcore.adonet.Testing.FloatSampleContext.FloatSamples.get -> Microsoft.EntityFrameworkCore.DbSet<pengdows.efcore.adonet.Testing.FloatSample!>!
 pengdows.efcore.adonet.Testing.InitialMigration
 pengdows.efcore.adonet.Testing.InitialMigration.InitialMigration() -> void
 pengdows.efcore.adonet.Testing.LiteralConformanceTests<TFixture>
@@ -105,6 +116,7 @@ pengdows.efcore.adonet.Testing.LiteralConformanceTests<TFixture>.Constants_match
 pengdows.efcore.adonet.Testing.LiteralConformanceTests<TFixture>.Date_offset_constants_and_parts() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.LiteralConformanceTests<TFixture>.DisposeAsync() -> System.Threading.Tasks.ValueTask
 pengdows.efcore.adonet.Testing.LiteralConformanceTests<TFixture>.Fixture.get -> TFixture!
+pengdows.efcore.adonet.Testing.LiteralConformanceTests<TFixture>.Floating_point_constants_at_the_edges_of_their_types() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.LiteralConformanceTests<TFixture>.InitializeAsync() -> System.Threading.Tasks.ValueTask
 pengdows.efcore.adonet.Testing.LiteralConformanceTests<TFixture>.LiteralConformanceTests(TFixture! fixture) -> void
 pengdows.efcore.adonet.Testing.LiteralConformanceTests<TFixture>.Time_span_constants() -> System.Threading.Tasks.Task!
@@ -270,6 +282,7 @@ static pengdows.efcore.adonet.Testing.ProviderConformanceTests<TFixture>.NewBlog
 virtual pengdows.efcore.adonet.Testing.ProviderFixture.DisposeAsync() -> System.Threading.Tasks.ValueTask
 virtual pengdows.efcore.adonet.Testing.ProviderFixture.InitializeAsync() -> System.Threading.Tasks.ValueTask
 virtual pengdows.efcore.adonet.Testing.ProviderFixture.KnownEngineGaps.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
+virtual pengdows.efcore.adonet.Testing.ProviderFixture.LargestStorableFloat.get -> float
 virtual pengdows.efcore.adonet.Testing.ProviderFixture.ModelSequences.get -> System.Collections.Generic.IReadOnlyList<string!>!
 virtual pengdows.efcore.adonet.Testing.ProviderFixture.StorableOffset.get -> System.TimeSpan
 virtual pengdows.efcore.adonet.Testing.ProviderFixture.UseProvider(Microsoft.EntityFrameworkCore.DbContextOptionsBuilder! builder) -> void

@@ -30,6 +30,10 @@ public abstract class ProviderFixture : IAsyncLifetime
     public virtual TimeSpan StorableOffset
         => TimeSpan.FromHours(2);
 
+    /// <summary>The largest float the database stores: <see cref="float.MaxValue" />, unless its single-precision type stops short.</summary>
+    public virtual float LargestStorableFloat
+        => float.MaxValue;
+
     /// <summary>Sequences the dialect creates for the migrations tests' tables, dropped between tests.</summary>
     public virtual IReadOnlyList<string> ModelSequences { get; } = [];
 

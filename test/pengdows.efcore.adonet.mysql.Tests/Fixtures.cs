@@ -15,6 +15,10 @@ public sealed class MySqlFixture : ContainerFixture
     protected override void UseProvider(DbContextOptionsBuilder builder)
         => builder.UseAdoNetMySql(ConnectionString);
 
+    // MySQL's FLOAT stops at 3.402823466E+38, just below float.MaxValue (3.4028234663852886E+38).
+    public override float LargestStorableFloat
+        => MathF.BitDecrement(float.MaxValue);
+
     protected override IDatabaseContainer CreateContainer()
         => new MySqlBuilder("mysql:8.4").Build();
 

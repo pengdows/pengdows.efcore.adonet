@@ -142,7 +142,8 @@ internal sealed class SqlServerTypeMappings : AnsiTypeMappings
         => value switch
         {
             short or byte or long or float => $"CAST({literal} AS {storeType})",
-            double d => (literal.Contains('E') || literal.Contains('e') || double.IsNaN(d) || double.IsInfinity(d)) ? literal : literal + "E0",
+            double d when double.IsSubnormal(d) => SubnormalLiteral(d),
+            double => FloatLiteral(literal),
             DateTime dateTime => Format(dateTime, BaseName(storeType) switch
             {
                 "date" => "yyyy-MM-dd",
@@ -159,6 +160,15 @@ internal sealed class SqlServerTypeMappings : AnsiTypeMappings
         };
 
     // time holds a time of day: a span outside [0, 24h) has no time literal, and writing its hours alone would change it.
+    // A float literal has an exponent, so it isn't read as a decimal.
+    private static string FloatLiteral(string literal)
+        => literal.Contains('E', StringComparison.OrdinalIgnoreCase) || !char.IsDigit(literal[^1]) ? literal : literal + "E0";
+
+    // SQL Server reads a literal below 2.2250738585072014E-308 as 0, though its arithmetic keeps such values: the value is
+    // written times 2^52, which is exact and normal, and divided back.
+    private static string SubnormalLiteral(double value)
+        => $"({FloatLiteral((value * 4503599627370496d).ToString("R", CultureInfo.InvariantCulture))} / 4503599627370496E0)";
+
     private static string TimeLiteral(TimeSpan span, string storeType)
     {
         if ((span < TimeSpan.Zero) || (span >= TimeSpan.FromDays(1)))

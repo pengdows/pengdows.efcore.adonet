@@ -47,7 +47,11 @@ public sealed class FlatFileFixture : ProviderFixture
 
         // ISO: a timestamp literal with a zone displacement is a TIMESTAMP WITH TIME ZONE. Probed: the engine reads it as a
         // plain timestamp, then compares a DateTimeOffset with a DateTime and throws.
-        ["Date_offset_constants_and_parts"] = "pengdows.flatfile 0.2.1-preview.8 types TIMESTAMP '...+02:00' without its time zone"
+        ["Date_offset_constants_and_parts"] = "pengdows.flatfile 0.2.1-preview.8 types TIMESTAMP '...+02:00' without its time zone",
+
+        // WHERE "Double" = 4.9406564584124654E-324: an approximate numeric literal (ISO), read as a decimal, which overflows.
+        ["Floating_point_constants_at_the_edges_of_their_types"] =
+            "pengdows.flatfile 0.2.1-preview.8 parses a literal with an exponent as a decimal and overflows"
     };
 
     public override IReadOnlyList<string> ModelSequences { get; } =

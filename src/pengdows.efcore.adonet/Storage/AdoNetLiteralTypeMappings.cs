@@ -1,4 +1,5 @@
 using System.Data.Common;
+using System.Globalization;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace pengdows.efcore.adonet.Storage;
@@ -96,8 +97,10 @@ internal class AdoNetFloatTypeMapping : FloatTypeMapping
     protected override RelationalTypeMapping Clone(RelationalTypeMappingParameters parameters)
         => new AdoNetFloatTypeMapping(parameters, _dialect);
 
+    // The float's exact value as a double: a database compares a REAL column with a numeric literal as a double (or keeps
+    // floats in 8 bytes), and 0.1f is 0.10000000149011612 there, not 0.1.
     protected override string GenerateNonNullSqlLiteral(object value)
-        => _dialect.FormatLiteral(value, StoreType, base.GenerateNonNullSqlLiteral(value));
+        => _dialect.FormatLiteral(value, StoreType, ((double)(float)value).ToString("R", CultureInfo.InvariantCulture));
 }
 
 internal class AdoNetDoubleTypeMapping : DoubleTypeMapping

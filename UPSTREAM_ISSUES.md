@@ -59,6 +59,31 @@ noted so they can be removed once the fix ships.
 - **Confirmed:** by reading the source (found during the provider API inventory); not yet reproduced in a test.
 - **Before filing:** check main for a fix; a one-line PR with a test asserting the option's value.
 
+### SQL Server: double constants below 2.2250738585072014E-308 become 0
+
+- **Where:** `src/EFCore.SqlServer/Storage/Internal/SqlServerDoubleTypeMapping.cs` at v10.0.11,
+  `GenerateNonNullSqlLiteral`: a subnormal double is written as its round-trip text, e.g. `4.9406564584124654E-324`.
+- **Defect:** SQL Server parses a float literal below its documented range (2.23E-308) as 0, silently, though its
+  arithmetic and parameters keep subnormal values. `EF.Constant(double.Epsilon)` (or any inlined subnormal constant)
+  compares with 0: wrong rows, no error.
+- **Confirmed:** on SQL Server 2022, `SELECT CAST(4.9406564584124654E-324 AS float)` returns 0 and `SELECT
+  CAST(2.2250738585072014E-308 AS float) / CAST(4503599627370496 AS float)` returns 4.94E-324;
+  `LiteralConformanceTests.Floating_point_constants_at_the_edges_of_their_types` failed on `double.Epsilon` with the
+  same literal.
+- **Before filing:** reproduce with Microsoft's provider (`EF.Constant(double.Epsilon)` against a row saved through a
+  parameter).
+- **Our fix:** `SqlServerTypeMappings` writes a subnormal as `(value * 2^52 / 4503599627370496E0)`, both exact.
+
+### SQLite (suspected): float constants don't match the floats SQLite stored
+
+- **Where:** `src/EFCore.Sqlite.Core/Storage/Internal/SqliteTypeMappingSource.cs` at v10.0.11 maps `float` to EF's base
+  `FloatTypeMapping`, whose literal is the float's shortest text (`0.1f` → `0.1`).
+- **Defect (suspected):** SQLite keeps a REAL in 8 bytes, so a float saved through a parameter is stored as
+  `0.10000000149011612`; the literal `0.1` never equals it. `EF.Constant(0.1f)` finds nothing.
+- **Confirmed:** only in this provider before its fix (the same base literal failed on SQLite, PostgreSQL and DuckDB);
+  not yet run against Microsoft's SQLite provider.
+- **Our fix:** the core writes a float constant as its exact double value.
+
 ## dotnet/SqlClient (Microsoft.Data.SqlClient 7.1.1)
 
 ### `SqlTransaction.SupportsSavepoints` is false although it has savepoints
@@ -106,6 +131,9 @@ Recorded as skips in `test/pengdows.efcore.adonet.flatfile.Tests/Fixtures.cs`, e
   `ALTER COLUMN`.
 - `VARBINARY` is rejected as a vendor type (it is in SQL:2016; `BLOB` is accepted). Arguable, not a clear bug.
 - No `INTERVAL` type.
+- An approximate numeric literal with an exponent (`4.9406564584124654E-324`, `1.7976931348623157E+308`) is parsed
+  as a decimal and throws `OverflowException` from `BoundPredicateEvaluator.EvaluateValue`. ISO: a literal with an
+  exponent is an approximate numeric (floating-point) literal.
 - `DROP TABLE` of a missing table throws `InvalidOperationException`, not a `DbException`: provider-agnostic code catching
   `DbException` for database errors misses it.
 - A table can't reference itself in `CREATE TABLE`: `ForeignKeyEvaluator.ValidateDefinition` (called from

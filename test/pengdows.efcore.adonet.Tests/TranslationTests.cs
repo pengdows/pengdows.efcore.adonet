@@ -37,6 +37,21 @@ public class TranslationTests
         Assert.Contains(@"WHERE (""i"".""Version"" + 1) % 2 = 0", Sql(TestDialects.Functions, c => c.Items.Where(i => (i.Version + 1) % 2 == 0)));
     }
 
+    [Theory]
+    [InlineData(0.1f, "0.10000000149011612")]
+    [InlineData(float.Epsilon, "1.401298464324817E-45")]
+    [InlineData(float.MaxValue, "3.4028234663852886E+38")]
+    [InlineData(-1.5f, "-1.5")]
+    public void Float_constants_are_written_as_their_exact_double_value(float value, string literal)
+        => Assert.Equal(literal, LiteralOf(value));
+
+    private string LiteralOf<T>(T value)
+    {
+        using var context = _db.Context(TestDialects.Ansi);
+        return context.GetService<Microsoft.EntityFrameworkCore.Storage.IRelationalTypeMappingSource>()
+            .FindMapping(typeof(T))!.GenerateSqlLiteral(value);
+    }
+
     [Fact]
     public void Hostile_string_literals_stay_one_literal()
     {
