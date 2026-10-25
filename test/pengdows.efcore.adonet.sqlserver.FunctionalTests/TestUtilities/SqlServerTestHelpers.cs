@@ -21,7 +21,5 @@ public class SqlServerTestHelpers : RelationalTestHelpers
         => optionsBuilder.UseAdoNetSqlServer(new SqlConnection("Database=DummyDatabase"));
 
     // pengdows: the provider's definitions are internal; they come from its services.
-    public override LoggingDefinitions LoggingDefinitions { get; }
-        = new ServiceCollection().AddEntityFrameworkAdoNet(SqlServerDialect.Instance).BuildServiceProvider()
-            .GetRequiredService<LoggingDefinitions>();
+    public override LoggingDefinitions LoggingDefinitions { get; } = ProviderServices.LoggingDefinitions(SqlServerDialect.Instance);
 }

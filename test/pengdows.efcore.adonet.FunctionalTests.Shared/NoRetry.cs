@@ -1,6 +1,6 @@
-namespace Microsoft.EntityFrameworkCore.TestUtilities;
+namespace pengdows.efcore.adonet.FunctionalTests;
 
-/// <summary>pengdows: stands in for TestSqlServerRetryingExecutionStrategy until the plugin's retrying strategy is ported.</summary>
+/// <summary>Stands in for the official providers' test retrying strategies until a plugin ports its retrying strategy.</summary>
 public sealed class NoRetry
 {
     public static readonly NoRetry Instance = new();

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- What every provider's copy of EF's functional tests needs to run on this provider, whatever the database. -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\pengdows.efcore.adonet\pengdows.efcore.adonet.csproj" />
+    <PackageReference Include="Testcontainers" />
+  </ItemGroup>
+
+</Project>
