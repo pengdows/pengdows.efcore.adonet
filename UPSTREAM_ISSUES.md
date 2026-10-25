@@ -36,6 +36,19 @@ noted so they can be removed once the fix ships.
   Server's `sp_getapplock` session lock likely is not. A fix: dispose the transaction before the lock.
 - **Our fix:** `AdoNetHistoryRepository`'s lock rolls back an open transaction before releasing.
 
+### RelationalTypeMappingSource.FindCollectionMapping null-forgives the JSON string mapping
+
+- **Where:** `src/EFCore.Relational/Storage/RelationalTypeMappingSource.cs` at v10.0.11, `FindCollectionMapping`:
+  `FindMapping(info.WithConverter(new ValueConverterInfo(modelType, typeof(string), ...)))!.WithComposedConverter(...)`.
+- **Defect:** when the provider has no string mapping for the column's store type, the `!` turns a "no mapping" result into a
+  `NullReferenceException` during model building. A string property with `HasColumnType("INTEGER")` triggers it: `string`
+  is an `IEnumerable<char>`, so EF tries it as a JSON collection.
+- **Confirmed:** `ConfigurationTests.A_column_type_that_cannot_hold_the_property_is_reported_not_crashed_on` threw the NRE from
+  inside `FindCollectionMapping` before our guard.
+- **Before filing:** reproduce with an EF provider whose `FindMapping` returns null for a CLR type its store type doesn't
+  hold (EF's own providers may return a mismatched mapping instead, hiding it).
+- **Our fix:** `AdoNetTypeMappingSource.FindCollectionMapping` returns null when that string mapping doesn't exist.
+
 ## dotnet/SqlClient (Microsoft.Data.SqlClient 7.1.1)
 
 ### `SqlTransaction.SupportsSavepoints` is false although it has savepoints
@@ -58,6 +71,16 @@ noted so they can be removed once the fix ships.
 - **Before filing:** confirm on a bare `MySqlTransaction` (outside EF) and read MySqlConnector's source; it may be
   deliberate or configuration-dependent. Unverified as a bug.
 - **Our work-around:** the core's ISO `SavepointSyntax` applies to MySQL.
+
+## pengdows.crud.fakeDb (2.0.5; source at 2.0.6)
+
+Gaps that keep core paths out of reach of fakeDb tests (REVIEW_POLICY: a gap is added to fakeDb, never mocked around):
+
+- No savepoints: `fakeDbTransaction.SupportsSavepoints` is false and `Save`/`Rollback(name)` throw, so the core's use of a
+  driver's own savepoints is only covered by the integration suites (SQLite, PostgreSQL, flatfile). A switch to emulate
+  them would cover it.
+- 2.0.5 always reports `RecordsAffected = 0` for a batch's reader, so a successful plain-statement write (sequence-key
+  dialects) can't be scripted; 2.0.6's `RecordsAffectedOverride` should allow it once published.
 
 ## pengdows.flatfile (0.2.1-preview.8)
 

@@ -182,6 +182,28 @@ public class ConfigurationTests
     }
 
     [Fact]
+    public void A_column_type_that_cannot_hold_the_property_is_reported_not_crashed_on()
+    {
+        using var context = new FakeDatabase().ContextOf<MismatchedContext>(AdoNetDialect.Ansi, o => new MismatchedContext(o));
+
+        var refused = Assert.Throws<InvalidOperationException>(() => context.Model);
+
+        Assert.Contains("Code", refused.Message);
+    }
+
+    public class Mismatched
+    {
+        public int Id { get; set; }
+        public string Code { get; set; } = "";
+    }
+
+    public class MismatchedContext(DbContextOptions<MismatchedContext> options) : DbContext(options)
+    {
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+            => modelBuilder.Entity<Mismatched>().Property(m => m.Code).HasColumnType("INTEGER");
+    }
+
+    [Fact]
     public void Mapping_plugins_win()
     {
         using var context = new FakeDatabase().Context(PluginDialect.Instance);

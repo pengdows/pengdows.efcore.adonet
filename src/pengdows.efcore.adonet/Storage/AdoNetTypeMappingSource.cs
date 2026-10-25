@@ -1,5 +1,6 @@
 using System.Data;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace pengdows.efcore.adonet.Storage;
 
@@ -81,6 +82,21 @@ internal class AdoNetTypeMappingSource : RelationalTypeMappingSource
         int? scale = (facets.Length > 1) && int.TryParse(facets[1], out var s) ? s : null;
         return (precision, precision == null ? null : (scale ?? 0));
     }
+
+    // EF maps a collection as JSON in a string of the store type, and assumes that string mapping exists (it null-forgives
+    // the lookup): a property whose column type holds no string, such as a string over INTEGER, crashed model building
+    // with a NullReferenceException instead of EF's own "no mapping" error. EF1001: the method is EF's provider-facing
+    // extension point, marked internal like the rest of its provider infrastructure.
+#pragma warning disable EF1001
+    protected override RelationalTypeMapping? FindCollectionMapping(
+        RelationalTypeMappingInfo info,
+        Type modelType,
+        Type? providerType,
+        CoreTypeMapping? elementMapping)
+        => FindMapping(info.WithConverter(new ValueConverterInfo(modelType, typeof(string), _ => null!))) == null
+            ? null
+            : base.FindCollectionMapping(info, modelType, providerType, elementMapping);
+#pragma warning restore EF1001
 
     protected override RelationalTypeMapping? FindMapping(in RelationalTypeMappingInfo mappingInfo)
     {

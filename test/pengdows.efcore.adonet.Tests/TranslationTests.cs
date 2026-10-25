@@ -31,6 +31,17 @@ public class TranslationTests
     }
 
     [Fact]
+    public void Hostile_string_literals_stay_one_literal()
+    {
+        var huge = new string('\'', 65_536);
+
+        Assert.Equal("'a\0b'", AnsiSqlDialect.Instance.StringLiteral("a\0b"));
+        Assert.Equal("'\ud83d\ude00 ''x'' -- ;'", AnsiSqlDialect.Instance.StringLiteral("\ud83d\ude00 'x' -- ;"));
+        Assert.Equal("'" + new string('\'', 131_072) + "'", AnsiSqlDialect.Instance.StringLiteral(huge));
+        Assert.Contains(@"= '@p0 '' OR 1=1 --'", Ansi(c => c.Items.Where(i => i.Name == EF.Constant("@p0 ' OR 1=1 --"))));
+    }
+
+    [Fact]
     public void String_literals_are_written_by_the_dialect()
     {
         Assert.Contains(@"= 'it''s\'", Ansi(c => c.Items.Where(i => i.Name == @"it's\")));
@@ -116,6 +127,28 @@ public class TranslationTests
     }
 
     [Fact]
+    public void A_null_pattern_parameter_is_a_null_pattern_that_matches_nothing()
+    {
+        string? p = null;
+        _db.Returns();
+        using var context = _db.Context(TestDialects.Ansi);
+
+        _ = context.Items.Where(i => i.Name!.StartsWith(p!)).ToList();
+
+        // EF folds LIKE NULL to FALSE before the pattern parameter would be computed.
+        Assert.Equal("FALSE", _db.Commands.Last().Split("WHERE ")[1]);
+    }
+
+    [Fact]
+    public void Column_patterns_are_untranslated_where_the_dialect_has_no_substring()
+    {
+        Assert.Contains("could not be translated", Assert.Throws<InvalidOperationException>(
+            () => Sql(TestDialects.NoSubstrings, c => c.Items.Where(i => i.Parts.Any(p => i.Name!.StartsWith(p.Label!))))).Message);
+        Assert.Contains("could not be translated", Assert.Throws<InvalidOperationException>(
+            () => Sql(TestDialects.NoSubstrings, c => c.Items.Where(i => i.Parts.Any(p => i.Name!.EndsWith(p.Label!))))).Message);
+    }
+
+    [Fact]
     public void Patterns_from_columns_are_compared_not_matched()
         => Assert.Contains(@"POSITION(""p"".""Label"" IN ""i"".""Name"") > 0", Ansi(c => c.Items.Where(i => i.Parts.Any(p => i.Name!.Contains(p.Label!)))));
 
@@ -173,6 +206,30 @@ public class TranslationTests
         Assert.Contains(@"LEN(""i"".""Name"")", Sql(TestDialects.Functions, c => c.Items.Select(i => i.Name!.Length)));
         Assert.Contains(@"DATEPART(year, ""i"".""At"")", Sql(TestDialects.Functions, c => c.Items.Select(i => i.At.Year)));
         Assert.Contains(@"CHARINDEX(N'a', ""i"".""Name"") - 1", Sql(TestDialects.Functions, c => c.Items.Select(i => i.Name!.IndexOf("a"))));
+    }
+
+    [Fact]
+    public void A_mapped_database_function_is_written_by_name_not_as_a_template()
+    {
+        using var context = _db.ContextOf<FunctionContext>(TestDialects.Ansi, o => new FunctionContext(o));
+
+        var sql = context.Items.Where(i => FunctionContext.Shout(i.Name!) == "A").ToQueryString();
+
+        Assert.Contains(@"""shout""(""i"".""Name"") = 'A'", sql);
+    }
+
+    public class FunctionContext(DbContextOptions<FunctionContext> options) : DbContext(options)
+    {
+        public DbSet<Item> Items => Set<Item>();
+
+        public static string Shout(string value)
+            => throw new InvalidOperationException("Only in queries.");
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.HasDbFunction(typeof(FunctionContext).GetMethod(nameof(Shout))!).HasName("shout");
+            modelBuilder.Entity<Item>().Ignore(i => i.Parts);
+        }
     }
 
     [Fact]
@@ -276,6 +333,13 @@ public sealed class CastLiteralTypeMappings : AnsiTypeMappings
             byte[] b => "0x" + Convert.ToHexString(b),
             _ => $"CAST({literal} AS {storeType})"
         };
+}
+
+/// <summary>A database with no SUBSTRING.</summary>
+public sealed class NoSubstringFunctions : FunctionSyntax
+{
+    public override string? Substring => null;
+    public override string? SubstringFrom => null;
 }
 
 /// <summary>A database whose LIKE has no ESCAPE clause.</summary>

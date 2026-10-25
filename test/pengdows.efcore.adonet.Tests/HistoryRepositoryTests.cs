@@ -200,10 +200,16 @@ public class HistoryRepositoryTests
         {
         }
 
+        commands.Reset();
+        _db.Connection.EnqueueScalarResult(1);
+        using (history.AcquireDatabaseLock())
+        {
+        }
+
         // Only that holder's row: a migrator that took the lock meanwhile keeps it.
-        Assert.Contains(
-            $"DELETE FROM \"app\".\"__EFMigrationsLock\" WHERE \"Id\" = 1 AND \"Timestamp\" = '{stale}'", commands.NonQueries);
-        Assert.Equal(2, commands.NonQueries.Count(c => c.StartsWith(AppLockInsert, StringComparison.Ordinal)));
+        Assert.Equal(2, commands.NonQueries.Count(
+            c => c == $"DELETE FROM \"app\".\"__EFMigrationsLock\" WHERE \"Id\" = 1 AND \"Timestamp\" = '{stale}'"));
+        Assert.Equal(4, commands.NonQueries.Count(c => c.StartsWith(AppLockInsert, StringComparison.Ordinal)));
     }
 
     [Fact]
@@ -220,6 +226,65 @@ public class HistoryRepositoryTests
 
         // A second try covers a lock released between the insert and the look-up; then the error stands.
         Assert.Equal(4, commands.NonQueries.Count(c => c.StartsWith(AppLockInsert, StringComparison.Ordinal)));
+    }
+
+    [Fact]
+    public void A_failed_migrations_transaction_is_rolled_back_before_a_synchronous_release_too()
+    {
+        var events = new List<string>();
+        var commands = new CommandLog { Events = events };
+        using var context = Context(configure: b => b.AddInterceptors(commands, new TransactionLog(events)));
+        var history = context.GetService<IHistoryRepository>();
+        _db.Connection.EnqueueScalarResult(1);
+
+        var databaseLock = history.AcquireDatabaseLock();
+        using var transaction = context.Database.BeginTransaction();
+        databaseLock.Dispose();
+
+        Assert.Equal(["rollback", "DELETE FROM \"app\".\"__EFMigrationsLock\" WHERE \"Id\" = 1"], events.Skip(1));
+        Assert.Null(context.Database.CurrentTransaction);
+    }
+
+    [Fact]
+    public async Task A_lock_that_cannot_be_released_says_so()
+    {
+        await using var context = Context();
+        var history = context.GetService<IHistoryRepository>();
+        _db.Connection.EnqueueScalarResult(1);
+        var databaseLock = history.AcquireDatabaseLock();
+        _db.Connection.SetCommandFailure("DELETE FROM \"app\".\"__EFMigrationsLock\" WHERE \"Id\" = 1", new LockConflict());
+
+        // Not swallowed: a lock left behind blocks every later migration until it goes stale.
+        Assert.Throws<LockConflict>(() => databaseLock.Dispose());
+        await Assert.ThrowsAsync<LockConflict>(() => databaseLock.DisposeAsync().AsTask());
+    }
+
+    [Fact]
+    public async Task A_rollback_that_fails_before_the_release_surfaces()
+    {
+        await using var context = Context();
+        var history = context.GetService<IHistoryRepository>();
+        _db.Connection.EnqueueScalarResult(1);
+        var databaseLock = await history.AcquireDatabaseLockAsync(Ct);
+        _db.Connection.SetTransactionRollbackException(new LockConflict());
+        await using var transaction = await context.Database.BeginTransactionAsync(Ct);
+
+        await Assert.ThrowsAsync<LockConflict>(() => databaseLock.DisposeAsync().AsTask());
+    }
+
+    [Fact]
+    public async Task A_holder_that_cannot_be_looked_up_surfaces_without_retrying()
+    {
+        var commands = new CommandLog { FailAlways = AppLockInsert, HolderFails = true };
+        await using var context = Context(configure: b => b.AddInterceptors(commands));
+        var history = context.GetService<IHistoryRepository>();
+
+        _db.Connection.EnqueueScalarResult(1);
+        Assert.Throws<HolderUnavailable>(() => history.AcquireDatabaseLock());
+        _db.Connection.EnqueueScalarResult(1);
+        await Assert.ThrowsAsync<HolderUnavailable>(() => history.AcquireDatabaseLockAsync(Ct));
+
+        Assert.Equal(2, commands.NonQueries.Count(c => c.StartsWith(AppLockInsert, StringComparison.Ordinal)));
     }
 
     [Fact]
@@ -274,6 +339,8 @@ public class HistoryRepositoryTests
 
     private sealed class LockConflict() : DbException("conflict");
 
+    private sealed class HolderUnavailable() : DbException("holder unavailable");
+
     private sealed class TransactionLog(List<string> events) : DbTransactionInterceptor
     {
         public override Task TransactionRolledBackAsync(DbTransaction transaction, TransactionEndEventData eventData, CancellationToken cancellationToken = default)
@@ -300,6 +367,7 @@ public class HistoryRepositoryTests
         public string? FailFirst { get; init; }
         public string? FailAlways { get; init; }
         public string? Holder { get; init; }
+        public bool HolderFails { get; init; }
 
         public override InterceptionResult<object> ScalarExecuting(DbCommand command, CommandEventData eventData, InterceptionResult<object> result)
             => AnswerHolder(command, result);
@@ -312,6 +380,11 @@ public class HistoryRepositoryTests
         {
             var sql = command.CommandText.ReplaceLineEndings("\n");
             Scalars.Add(sql);
+            if (HolderFails && (sql == HolderQuery))
+            {
+                throw new HolderUnavailable();
+            }
+
             return sql == HolderQuery ? InterceptionResult<object>.SuppressWithResult(Holder ?? (object)DBNull.Value) : result;
         }
 

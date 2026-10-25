@@ -35,6 +35,14 @@ public class QueryGrammarTests
         Assert.Equal(@"NOT (""i"".""Active"") AND ""i"".""Version"" <> 2 AND ""i"".""Name"" IS NULL",
             Where(c => c.Items.Where(i => !(i.Active || i.Version == 2) && i.Name == null)));
         Assert.Equal(@"""i"".""Name"" LIKE 'a%' AND ""i"".""Version"" = 1", Where(c => c.Items.Where(i => EF.Functions.Like(i.Name!, "a%") && i.Version == 1)));
+        // At equal precedence EF keeps parentheses around a non-associative operator, or a different one; an associative
+        // operator nested in itself needs none.
+        Assert.Equal(@"""i"".""Version"" % (""i"".""Version"" % 3) = 0", Where(c => c.Items.Where(i => i.Version % (i.Version % 3) == 0)));
+        Assert.Equal(@"(""i"".""Version"" - ""i"".""Tiny"") - 1 = 0", Where(c => c.Items.Where(i => i.Version - i.Tiny - 1 == 0)));
+        Assert.Equal(@"""i"".""Version"" * ""i"".""Tiny"" * 2 = 0", Where(c => c.Items.Where(i => i.Version * (i.Tiny * 2) == 0)));
+        Assert.Equal(@"""i"".""Version"" + ""i"".""Tiny"" + 2 = 0", Where(c => c.Items.Where(i => i.Version + (i.Tiny + 2) == 0)));
+        Assert.Equal(@"(""i"".""Version"" / 2) * 3 = 0", Where(c => c.Items.Where(i => i.Version / 2 * 3 == 0)));
+        Assert.Equal(@"""i"".""Name"" IS NOT NULL OR ""i"".""Flag"" IS NULL", Where(c => c.Items.Where(i => i.Name != null || i.Flag == null)));
     }
 
     [Fact]
@@ -134,6 +142,21 @@ public class QueryGrammarTests
         Assert.EndsWith(
             "WHERE \"i\".\"Active\" = 1 OR \"i\".\"Flag\" = 1",
             Sql(TestDialects.Bit, c => c.Items.Where(i => i.Active || i.Flag == true)));
+    }
+
+    [Fact]
+    public void Every_comparison_used_as_a_bit_value_becomes_a_case()
+    {
+        string Projected(System.Linq.Expressions.Expression<Func<Item, bool>> comparison)
+            => System.Text.RegularExpressions.Regex.Replace(Sql(TestDialects.Bit, c => c.Items.Select(comparison)).Split("FROM")[0], @"\s+", " ");
+
+        Assert.Contains("CASE WHEN \"i\".\"Version\" > 1 THEN 1 ELSE 0 END", Projected(i => i.Version > 1));
+        Assert.Contains("CASE WHEN \"i\".\"Version\" >= 1 THEN 1 ELSE 0 END", Projected(i => i.Version >= 1));
+        Assert.Contains("CASE WHEN \"i\".\"Version\" < 1 THEN 1 ELSE 0 END", Projected(i => i.Version < 1));
+        Assert.Contains("CASE WHEN \"i\".\"Version\" <= 1 THEN 1 ELSE 0 END", Projected(i => i.Version <= 1));
+        Assert.Contains("CASE WHEN \"i\".\"Version\" <> 1 THEN 1 ELSE 0 END", Projected(i => i.Version != 1));
+        Assert.Contains("CASE WHEN \"i\".\"Name\" IS NOT NULL THEN 1 ELSE 0 END", Projected(i => i.Name != null));
+        Assert.Contains("CASE WHEN \"i\".\"Active\" = 1 AND \"i\".\"Version\" = 1 THEN 1 ELSE 0 END", Projected(i => i.Active && i.Version == 1));
     }
 
     [Fact]

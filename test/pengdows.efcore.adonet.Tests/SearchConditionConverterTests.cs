@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using pengdows.efcore.adonet.Query;
 
 namespace pengdows.efcore.adonet.Tests;
@@ -53,6 +54,34 @@ public class SearchConditionConverterTests
         var test = Assert.IsType<SqlBinaryExpression>(Test(Value(Not(Equal(_a, _b)))));
 
         Assert.Equal(ExpressionType.NotEqual, test.OperatorType);
+    }
+
+    [Fact]
+    public void Comparing_integers_as_a_value_with_bitwise_operators_converts_the_xor_to_bool()
+    {
+        var integer = new IntTypeMapping("int");
+        var x = new ColumnExpression("X", "t", typeof(int), integer, nullable: false);
+        var y = new ColumnExpression("Y", "t", typeof(int), integer, nullable: false);
+
+        var value = Value(new SqlBinaryExpression(ExpressionType.NotEqual, x, y, typeof(bool), _bit), bitwise: true);
+
+        var converted = Assert.IsType<SqlUnaryExpression>(value);
+        Assert.Equal(ExpressionType.Convert, converted.OperatorType);
+        Assert.Equal(ExpressionType.ExclusiveOr, Assert.IsType<SqlBinaryExpression>(converted.Operand).OperatorType);
+    }
+
+    [Fact]
+    public void Bools_stored_through_a_converter_are_bit_values_too()
+    {
+        var zeroOne = new BoolTypeMapping("int").WithComposedConverter(new BoolToZeroOneConverter<int>());
+        var stored = new ColumnExpression("S", "t", typeof(bool), (RelationalTypeMapping)zeroOne, nullable: false);
+        var other = new ColumnExpression("O", "t", typeof(bool), (RelationalTypeMapping)zeroOne, nullable: false);
+
+        Assert.Equal(ExpressionType.OnesComplement, Assert.IsType<SqlUnaryExpression>(Value(Not(stored), bitwise: true)).OperatorType);
+        Assert.Equal(
+            ExpressionType.ExclusiveOr,
+            Assert.IsType<SqlBinaryExpression>(Value(new SqlBinaryExpression(ExpressionType.NotEqual, stored, other, typeof(bool), _bit), bitwise: true))
+                .OperatorType);
     }
 
     [Fact]

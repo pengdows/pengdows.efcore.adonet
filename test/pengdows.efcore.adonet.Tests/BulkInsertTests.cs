@@ -318,6 +318,7 @@ public class BulkInsertTests
                 e.Property(x => x.Size).HasConversion<string>();
             });
             modelBuilder.Entity<Thread>().ToTable("Threads");
+
             modelBuilder.Entity<Comment>().ToTable("Comments");
             modelBuilder.Entity<Stamped>(e =>
             {

@@ -175,6 +175,21 @@ public class MigrationsSqlTests
     }
 
     [Fact]
+    public void Hostile_identifiers_are_delimited_in_ddl()
+    {
+        var create = new CreateTableOperation
+        {
+            Name = "Order\"; DROP TABLE x; --",
+            Schema = "select",
+            Columns = { new AddColumnOperation { Name = "a\"b", Table = "Order", ClrType = typeof(int) } }
+        };
+
+        Assert.StartsWith(
+            "CREATE TABLE \"select\".\"Order\"\"; DROP TABLE x; --\" (\n    \"a\"\"b\" INTEGER NOT NULL",
+            Sql(AdoNetDialect.Ansi, create));
+    }
+
+    [Fact]
     public void Renames_use_iso_alter_statements()
     {
         Assert.Equal(

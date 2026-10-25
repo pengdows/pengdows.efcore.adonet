@@ -71,6 +71,17 @@ public class ConfigurationRulesTests
     }
 
     [Fact]
+    public void Options_with_no_connection_source_are_refused()
+    {
+        var builder = new DbContextOptionsBuilder<ItemContext>().AllowManyDialects();
+        ((IDbContextOptionsBuilderInfrastructure)builder).AddOrUpdateExtension(
+            new pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension().WithDialect(AdoNetDialect.Ansi));
+        using var context = new ItemContext(builder.Options);
+
+        Assert.Contains("Configure exactly one", Assert.Throws<InvalidOperationException>(() => context.Database.GetDbConnection()).Message);
+    }
+
+    [Fact]
     public void Data_sources_the_provider_creates_are_disposed_with_its_service_provider()
     {
         var factory = new TrackingFactory();

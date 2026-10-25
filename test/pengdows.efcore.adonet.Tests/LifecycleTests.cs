@@ -193,6 +193,30 @@ public class LifecycleTests
     }
 
     [Fact]
+    public async Task A_savepoint_statement_that_fails_surfaces_and_is_logged()
+    {
+        var failures = new TransactionFailures();
+        var db = new FakeDatabase();
+        await using var context = new ItemContext(
+            new DbContextOptionsBuilder<ItemContext>()
+                .UseAdoNet(db.Connection, contextOwnsConnection: false, o => o.UseDialect(AdoNetDialect.Ansi))
+                .AddInterceptors(failures)
+                .AllowManyDialects()
+                .Options);
+        await using var transaction = await context.Database.BeginTransactionAsync(Ct);
+        db.Connection.SetCommandFailure("SAVEPOINT \"s1\"", new SavepointRefused());
+        db.Connection.SetCommandFailure("ROLLBACK TO SAVEPOINT \"s1\"", new SavepointRefused());
+        db.Connection.SetCommandFailure("RELEASE SAVEPOINT \"s1\"", new SavepointRefused());
+
+        Assert.Throws<SavepointRefused>(() => transaction.CreateSavepoint("s1"));
+        await Assert.ThrowsAsync<SavepointRefused>(() => transaction.RollbackToSavepointAsync("s1", Ct));
+        await Assert.ThrowsAsync<SavepointRefused>(() => transaction.ReleaseSavepointAsync("s1", Ct));
+
+        Assert.Equal(["CreateSavepoint", "RollbackToSavepoint", "ReleaseSavepoint"], failures.Actions);
+        Assert.Same(transaction, context.Database.CurrentTransaction);
+    }
+
+    [Fact]
     public async Task A_dialect_whose_savepoints_end_with_the_transaction_releases_nothing()
     {
         var db = new FakeDatabase();
@@ -267,11 +291,20 @@ public class LifecycleTests
 
     private sealed class UnreachableException() : DbException("unreachable");
 
+    private sealed class SavepointRefused() : DbException("savepoint refused");
+
     private sealed class TransactionFailures : DbTransactionInterceptor
     {
         public List<string> Actions { get; } = [];
 
         public override void TransactionFailed(DbTransaction transaction, TransactionErrorEventData eventData)
             => Actions.Add(eventData.Action);
+
+        public override Task TransactionFailedAsync(
+            DbTransaction transaction, TransactionErrorEventData eventData, CancellationToken cancellationToken = default)
+        {
+            Actions.Add(eventData.Action);
+            return Task.CompletedTask;
+        }
     }
 }

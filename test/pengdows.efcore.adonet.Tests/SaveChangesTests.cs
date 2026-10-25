@@ -92,6 +92,42 @@ public class SaveChangesTests
     }
 
     [Fact]
+    public void Keys_a_sequence_cannot_supply_are_generated_on_the_client()
+    {
+        using var context = _db.ContextOf<GuidKeyedContext>(TestDialects.Sequence, o => new GuidKeyedContext(o));
+        var keyed = new GuidKeyed();
+
+        context.Add(keyed);
+
+        Assert.NotEqual(Guid.Empty, keyed.Id);
+        Assert.Empty(_db.Commands);
+    }
+
+    public class GuidKeyed
+    {
+        public Guid Id { get; set; }
+    }
+
+    public class GuidKeyedContext(DbContextOptions<GuidKeyedContext> options) : DbContext(options)
+    {
+        public DbSet<GuidKeyed> Keyed => Set<GuidKeyed>();
+    }
+
+    [Fact]
+    public void A_dialect_names_its_key_sequences_and_how_to_draw_from_them()
+    {
+        var dialect = new PartsDialect(
+            "Named sequences",
+            new PartsSql(keys: KeyRetrieval.Sequence((table, column) => $"seq_{table}_{column}", sequence => $"SELECT nextval({sequence})")));
+        using var context = _db.Context(dialect);
+        _db.Connection.EnqueueScalarResult(7);
+
+        context.Add(NewItem());
+
+        Assert.Equal("SELECT nextval(\"seq_Items_Id\")", _db.Commands[0]);
+    }
+
+    [Fact]
     public async Task Sequence_draws_the_key_before_a_plain_insert()
     {
         await using var context = _db.Context(TestDialects.Sequence);

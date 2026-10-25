@@ -27,6 +27,21 @@ public class ParameterTests
     }
 
     [Fact]
+    public void A_null_string_parameter_keeps_its_columns_size()
+    {
+        using var context = _db.ContextOf<FacetContext>(TestDialects.Ansi, o => new FacetContext(o));
+        _db.Returns(FakeDatabase.Row("Id", 1));
+
+        context.Add(new Coded { Code = null });
+        context.SaveChanges();
+
+        // The INSERT's columns name the parameters in order: find Code's.
+        var columns = _db.Commands.Last().Split('(')[1].Split(')')[0].Split(", ").ToList();
+        var code = $"@p{columns.IndexOf("\"Code\"")}=";
+        Assert.Equal(code + "NULL (Size = 10)", _db.Parameters.Last().Split(", ").Single(p => p.StartsWith(code, StringComparison.Ordinal)));
+    }
+
+    [Fact]
     public void A_decimal_parameter_takes_its_columns_precision_and_scale()
     {
         var amount = 2.5m;
@@ -89,6 +104,8 @@ public class ParameterTests
 
         Assert.Equal("@note='x'", ParametersOf(TestDialects.Ansi, c => c.Coded.Where(x => x.Note == note)));
         Assert.Equal("@note='x' (Size = 4000)", ParametersOf(TestDialects.StringParameters4000, c => c.Coded.Where(x => x.Note == note)));
+        // A column's own size wins over the dialect's.
+        Assert.Equal("@note='x' (Size = 10)", ParametersOf(TestDialects.StringParameters4000, c => c.Coded.Where(x => x.Code == note)));
         Assert.DoesNotContain("Size = 4000", ParametersOf(TestDialects.StringParameters4000, c => c.Coded.Where(x => x.Note == huge)));
     }
 }

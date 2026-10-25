@@ -107,6 +107,7 @@ public static class TestDialects
     public static readonly IAdoNetDialect NoSavepoints = new PartsDialect("No savepoints", new PartsSql(noSavepoints: true));
     public static readonly IAdoNetDialect TransactionSavepoints = new PartsDialect(
         "Transaction savepoints", new PartsSql(savepoints: new SavepointSyntax("SAVE TRANSACTION {0}", "ROLLBACK TRANSACTION {0}", release: null)));
+    public static readonly IAdoNetDialect NoSubstrings = new PartsDialect("No substrings", new PartsSql(functions: new NoSubstringFunctions()));
     public static readonly IAdoNetDialect NoEscape = new PartsDialect("No escape", new PartsSql(functions: new NoEscapeFunctions()));
     public static readonly IAdoNetDialect NoFunctions = new PartsDialect("No functions", new PartsSql(functions: new NoFunctions()));
 
