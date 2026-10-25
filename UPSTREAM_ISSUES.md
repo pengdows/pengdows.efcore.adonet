@@ -49,6 +49,16 @@ noted so they can be removed once the fix ships.
   hold (EF's own providers may return a mismatched mapping instead, hiding it).
 - **Our fix:** `AdoNetTypeMappingSource.FindCollectionMapping` returns null when that string mapping doesn't exist.
 
+### SQL Server: `AzureSynapseDbContextOptionsBuilder.UseCompatibilityLevel` is ignored
+
+- **Where:** `src/EFCore.SqlServer/Infrastructure/Internal/SqlServerOptionsExtension.cs` at v10.0.11, line 226,
+  `WithAzureSynapseCompatibilityLevel`: `clone._azureSynapseCompatibilityLevel = _azureSynapseCompatibilityLevel;`
+  assigns the extension's old value instead of the `azureSynapseCompatibilityLevel` parameter.
+- **Defect:** the compatibility level set through `UseAzureSynapse(..., b => b.UseCompatibilityLevel(n))` never takes
+  effect.
+- **Confirmed:** by reading the source (found during the provider API inventory); not yet reproduced in a test.
+- **Before filing:** check main for a fix; a one-line PR with a test asserting the option's value.
+
 ## dotnet/SqlClient (Microsoft.Data.SqlClient 7.1.1)
 
 ### `SqlTransaction.SupportsSavepoints` is false although it has savepoints
