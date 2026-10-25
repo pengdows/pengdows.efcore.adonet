@@ -119,6 +119,17 @@ public abstract class ProviderFixture : IAsyncLifetime
     public string Quote(string identifier)
         => ExpectedDialect.Sql.IdentifierQuotePrefix + identifier + ExpectedDialect.Sql.IdentifierQuoteSuffix;
 
+    /// <summary>The first value <paramref name="sql" /> returns, through plain ADO.NET like <see cref="ExecuteAsync" />.</summary>
+    public async Task<object?> ExecuteScalarAsync(string sql)
+    {
+        await using var connection = Factory.CreateConnection()!;
+        connection.ConnectionString = ConnectionString;
+        await connection.OpenAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        return await command.ExecuteScalarAsync();
+    }
+
     /// <summary>Plain ADO.NET, bypassing EF, through the same factory.</summary>
     public async Task<int> ExecuteAsync(string sql)
     {

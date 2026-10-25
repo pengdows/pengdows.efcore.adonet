@@ -136,10 +136,9 @@ public abstract class MigrationsConformanceTests<TFixture>(TFixture fixture) : I
             await context.SaveChangesAsync(Ct);
             Assert.True(writer.Id > 0);
 
-            await Fixture.ExecuteAsync(
-                $"INSERT INTO {Fixture.Quote("Shelves")} ({Fixture.Quote("AuthorId")}, {Fixture.Quote("Label")}) VALUES ({writer.Id}, 'a')");
-            await Assert.ThrowsAnyAsync<Exception>(() => Fixture.ExecuteAsync(
-                $"INSERT INTO {Fixture.Quote("Shelves")} ({Fixture.Quote("AuthorId")}, {Fixture.Quote("Label")}) VALUES ({writer.Id}, 'a')"));
+            var authorAndLabel = $"{Fixture.Quote("AuthorId")}, {Fixture.Quote("Label")}";
+            await InsertShelfAsync(authorAndLabel, $"{writer.Id}, 'a'");
+            await Assert.ThrowsAnyAsync<Exception>(() => InsertShelfAsync(authorAndLabel, $"{writer.Id}, 'a'"));
         }
 
         await using (var context = Fixture.CreateContext<MigrationsContext>(o => new MigrationsContext(o)))
@@ -177,10 +176,9 @@ public abstract class MigrationsConformanceTests<TFixture>(TFixture fixture) : I
         // unique index.
         var shelves = Fixture.Quote("Shelves");
         var (authorId, label, code) = (Fixture.Quote("AuthorId"), Fixture.Quote("Label"), Fixture.Quote("Code"));
-        await Fixture.ExecuteAsync($"INSERT INTO {shelves} ({authorId}, {label}) VALUES ({writer.Id}, 'a')");
-        await Fixture.ExecuteAsync($"INSERT INTO {shelves} ({authorId}, {label}, {code}) VALUES ({writer.Id}, 'b', '{new string('x', 40)}')");
-        await Assert.ThrowsAnyAsync<Exception>(() => Fixture.ExecuteAsync(
-            $"INSERT INTO {shelves} ({authorId}, {label}, {code}) VALUES ({writer.Id}, 'c', NULL)"));
+        await InsertShelfAsync($"{authorId}, {label}", $"{writer.Id}, 'a'");
+        await InsertShelfAsync($"{authorId}, {label}, {code}", $"{writer.Id}, 'b', '{new string('x', 40)}'");
+        await Assert.ThrowsAnyAsync<Exception>(() => InsertShelfAsync($"{authorId}, {label}, {code}", $"{writer.Id}, 'c', NULL"));
 
         // Narrowing back to 20 characters needs the long value gone.
         await Fixture.ExecuteAsync($"DELETE FROM {shelves}");
@@ -206,6 +204,21 @@ public abstract class MigrationsConformanceTests<TFixture>(TFixture fixture) : I
         }
 
         Assert.True(started.Elapsed < TimeSpan.FromSeconds(30), $"The second migration waited {started.Elapsed} for the lock.");
+    }
+
+    // A hand-written insert into Shelves. Where keys come from a sequence, the key is drawn from it first, as the dialect's
+    // own inserts draw it; elsewhere the database generates it.
+    private async Task InsertShelfAsync(string columns, string values)
+    {
+        var shelves = Fixture.Quote("Shelves");
+        if (Fixture.ExpectedDialect.Sql.Keys is not SequenceKeyRetrieval keys)
+        {
+            await Fixture.ExecuteAsync($"INSERT INTO {shelves} ({columns}) VALUES ({values})");
+            return;
+        }
+
+        var id = await Fixture.ExecuteScalarAsync(keys.GetNextValueSql(Fixture.Quote(keys.GetSequenceName("Shelves", "Id"))));
+        await Fixture.ExecuteAsync($"INSERT INTO {shelves} ({Fixture.Quote("Id")}, {columns}) VALUES ({id}, {values})");
     }
 
     private async Task DropOwnTablesAsync()

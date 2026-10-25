@@ -45,6 +45,23 @@ public class TranslationTests
     public void Float_constants_are_written_as_their_exact_double_value(float value, string literal)
         => Assert.Equal(literal, LiteralOf(value));
 
+    public static TheoryData<TimeSpan, string> IntervalLiterals => new()
+    {
+        { new TimeSpan(0, 1, 2, 3, 500), "INTERVAL '0 01:02:03.5' DAY TO SECOND" },
+        { new TimeSpan(-1, -1, -2, -3), "INTERVAL '-1 01:02:03' DAY TO SECOND" },
+        { new TimeSpan(99, 0, 0, 0, 0, 999), "INTERVAL '99 00:00:00.000999' DAY TO SECOND" },
+        { new TimeSpan(100, 0, 0, 0), "INTERVAL '100 00:00:00' DAY(8) TO SECOND" },
+        { new TimeSpan(1), "INTERVAL '0 00:00:00.0000001' DAY TO SECOND(7)" },
+        { TimeSpan.Zero, "INTERVAL '0 00:00:00' DAY TO SECOND" },
+        { TimeSpan.MaxValue, "INTERVAL '10675199 02:48:05.4775807' DAY(8) TO SECOND(7)" },
+        { TimeSpan.MinValue, "INTERVAL '-10675199 02:48:05.4775808' DAY(8) TO SECOND(7)" }
+    };
+
+    [Theory]
+    [MemberData(nameof(IntervalLiterals))]
+    public void Time_spans_are_iso_day_to_second_interval_literals(TimeSpan value, string literal)
+        => Assert.Equal(literal, LiteralOf(value));
+
     private string LiteralOf<T>(T value)
     {
         using var context = _db.Context(TestDialects.Ansi);

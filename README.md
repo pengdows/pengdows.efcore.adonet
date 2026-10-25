@@ -103,7 +103,7 @@ when the context is created; ISO SQL is chosen like any other dialect, with `Use
 | `mysql` | MySqlConnector | ✅ | ✅ | — |
 | `sqlite` (+ pre-3.35) | Microsoft.Data.Sqlite | ✅ | ✅ except `ALTER COLUMN` | Needs a table rebuild, not implemented |
 | `duckdb` | DuckDB.NET | ✅ (no savepoints) | `CreateTables` only | DuckDB can't `ALTER` a table with indexes or foreign keys |
-| `flatfile` | pengdows.flatfile | ✅ except below | `CreateTables` only | Engine (0.2.1-preview.8): `FETCH FIRST` in derived tables, `NOT` as an UPDATE value, joined `IN` subqueries, `ALTER SEQUENCE ... RENAME`, `ALTER COLUMN`, `TRIM(LEADING/TRAILING ...)` (trims both ends), no `REPLACE`/`FLOOR`/`CEILING`/`ROUND`/`INTERVAL`, offset timestamp literals; strict ISO has no `UPDATE ... FROM`. `LIKE ... ESCAPE` is ignored, so patterns needing it are compared by position |
+| `flatfile` | pengdows.flatfile | ✅ except below | ✅ except below | Engine (0.2.1-preview.9): literals with an exponent, no `POWER`, interval literals of one field only, renaming a table leaves foreign keys naming the old one; strict ISO has no `UPDATE ... FROM` |
 
 Gaps are only what a database lacks, recorded per fixture in `KnownEngineGaps` and reported as skipped tests,
 attributed `[SKIP:<dialect>]`. Defects found in EF Core, drivers and engines while building this are listed in
@@ -153,9 +153,8 @@ dotnet test test/pengdows.efcore.adonet.Tests   # the core alone: fakeDb and an 
 - **Plugins** (`pengdows.efcore.adonet.<db>.Tests`): their fixture, the suites, their entry points and SQL shapes.
 - **EF Core's specification tests** (`pengdows.efcore.adonet.Specification.Tests`), run unchanged on all six databases
   through one database-neutral test store (harness: `pengdows.efcore.adonet.FunctionalTests.Shared`,
-  `test/FunctionalTests.props`). Results only: no provider's SQL baselines. Where suite: 408 of 408 on SQL Server,
-  PostgreSQL, MySQL, SQLite and DuckDB; 372 of 408 on pengdows.flatfile 0.2.1-preview.8 (engine gaps in
-  [UPSTREAM_ISSUES.md](UPSTREAM_ISSUES.md)).
+  `test/FunctionalTests.props`). Results only: no provider's SQL baselines. Where suite: 408 of 408 on all six (SQL Server,
+  PostgreSQL, MySQL, SQLite, DuckDB and pengdows.flatfile 0.2.1-preview.9).
 
 Public API is declared in each project's `PublicAPI.*.txt` and enforced by PublicApiAnalyzers; why each public type is
 public is in [docs/PUBLIC_API.md](docs/PUBLIC_API.md). Reviews follow [REVIEW_POLICY.md](REVIEW_POLICY.md).

@@ -19,13 +19,13 @@ public class FlatFileSqlTests
     }
 
     [Fact]
-    public void Uses_colon_parameters_and_literal_paging()
+    public void Uses_colon_parameters_for_values_and_paging()
     {
         using var context = Context(b => b.UseAdoNetFlatFile("path=/nonexistent"));
 
         var sql = PagedQuery(context);
 
         Assert.Contains("= :name", sql);
-        Assert.Contains("OFFSET 5 ROWS FETCH NEXT 10 ROWS ONLY", sql);
+        Assert.Matches(@"OFFSET :p\w* ROWS FETCH NEXT :p\w* ROWS ONLY", sql);
     }
 }

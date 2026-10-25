@@ -199,6 +199,7 @@ pengdows.efcore.adonet.Testing.ProviderFixture.CreateContext() -> pengdows.efcor
 pengdows.efcore.adonet.Testing.ProviderFixture.CreateContext<TContext>(System.Func<Microsoft.EntityFrameworkCore.DbContextOptions<TContext!>!, TContext!>! create) -> TContext!
 pengdows.efcore.adonet.Testing.ProviderFixture.CreateTablesOnceAsync<TContext>(System.Func<Microsoft.EntityFrameworkCore.DbContextOptions<TContext!>!, TContext!>! create) -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.ProviderFixture.ExecuteAsync(string! sql) -> System.Threading.Tasks.Task<int>!
+pengdows.efcore.adonet.Testing.ProviderFixture.ExecuteScalarAsync(string! sql) -> System.Threading.Tasks.Task<object?>!
 pengdows.efcore.adonet.Testing.ProviderFixture.Options.get -> Microsoft.EntityFrameworkCore.DbContextOptions<pengdows.efcore.adonet.Testing.BlogContext!>!
 pengdows.efcore.adonet.Testing.ProviderFixture.ProviderFixture() -> void
 pengdows.efcore.adonet.Testing.ProviderFixture.Quote(string! identifier) -> string!

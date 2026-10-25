@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace pengdows.efcore.adonet;
@@ -127,7 +128,31 @@ public class AnsiTypeMappings : ITypeMappingDialect
         => null;
 
     public virtual string FormatLiteral(object value, string storeType, string literal)
-        => literal;
+        => value is TimeSpan span ? IntervalLiteral(span) : literal;
+
+    // ISO's day-time interval. Its defaults hold 2 digits of days and 6 of fractional seconds; a value needing more names
+    // DAY(8) (TimeSpan's largest day count) or SECOND(7) (its 100-nanosecond ticks). The magnitude is unsigned, as
+    // TimeSpan.MinValue has no positive counterpart.
+    private static string IntervalLiteral(TimeSpan span)
+    {
+        var magnitude = span.Ticks < 0 ? (ulong)(-(span.Ticks + 1)) + 1 : (ulong)span.Ticks;
+        var days = magnitude / TimeSpan.TicksPerDay;
+        var time = magnitude % TimeSpan.TicksPerDay;
+        var seconds = time / TimeSpan.TicksPerSecond;
+        var fraction = time % TimeSpan.TicksPerSecond;
+        var text = string.Create(
+            CultureInfo.InvariantCulture,
+            $"{(span.Ticks < 0 ? "-" : "")}{days} {seconds / 3600:00}:{(seconds / 60) % 60:00}:{seconds % 60:00}");
+        var fractionDigits = fraction.ToString("0000000", CultureInfo.InvariantCulture).TrimEnd('0');
+        if (fractionDigits.Length > 0)
+        {
+            text += "." + fractionDigits;
+        }
+
+        var day = days > 99 ? "DAY(8)" : "DAY";
+        var second = fractionDigits.Length > 6 ? "SECOND(7)" : "SECOND";
+        return $"INTERVAL '{text}' {day} TO {second}";
+    }
 
     public virtual string CastTarget(string storeType)
         => storeType;

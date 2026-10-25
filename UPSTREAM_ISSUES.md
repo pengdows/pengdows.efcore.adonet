@@ -117,48 +117,28 @@ Gaps that keep core paths out of reach of fakeDb tests (REVIEW_POLICY: a gap is 
 - 2.0.5 always reports `RecordsAffected = 0` for a batch's reader, so a successful plain-statement write (sequence-key
   dialects) can't be scripted; 2.0.6's `RecordsAffectedOverride` should allow it once published.
 
-## pengdows.flatfile (0.2.1-preview.8)
+## pengdows.flatfile (0.2.1-preview.9)
 
-Recorded as skips in `test/pengdows.efcore.adonet.flatfile.Tests/Fixtures.cs`, each probed directly:
+Open, recorded as skips in `test/pengdows.efcore.adonet.flatfile.Tests/Fixtures.cs`, each probed against preview.9:
 
-- `LIKE ... ESCAPE` is ignored: an escaped pattern never matches.
-- `TRIM(LEADING FROM x)` and `TRIM(TRAILING FROM x)` trim both ends.
-- No `REPLACE`, `FLOOR`, `CEILING` or `ROUND`.
-- `TIMESTAMP '... +02:00'` (ISO: a TIMESTAMP WITH TIME ZONE literal) is typed without its zone, then compared with a
-  `DateTimeOffset` value, which throws.
-- `FETCH FIRST` is rejected inside a derived table; a boolean expression is rejected as an `UPDATE` value; a column of an
-  outer table is resolved against the wrong table inside a joined `IN` subquery; no `ALTER SEQUENCE ... RENAME TO`; no
-  `ALTER COLUMN`.
-- `VARBINARY` is rejected as a vendor type (it is in SQL:2016; `BLOB` is accepted). Arguable, not a clear bug.
-- No `INTERVAL` type.
-- An approximate numeric literal with an exponent (`4.9406564584124654E-324`, `1.7976931348623157E+308`) is parsed
-  as a decimal and throws `OverflowException` from `BoundPredicateEvaluator.EvaluateValue`. ISO: a literal with an
-  exponent is an approximate numeric (floating-point) literal.
-- `DROP TABLE` of a missing table throws `InvalidOperationException`, not a `DbException`: provider-agnostic code catching
-  `DbException` for database errors misses it.
-- A table can't reference itself in `CREATE TABLE`: `ForeignKeyEvaluator.ValidateDefinition` (called from
-  `DefaultFlatFileQueryExecutor` at the CREATE TABLE path) looks the referenced table up in the catalog before the new
-  table is in it, and throws "Referenced table 'X' was not found for foreign key ... on table 'X'". Valid ISO (a tree,
-  EF's Northwind `Employees.ReportsTo`). Fix: resolve a reference to the table being created to its own definition.
-  Found by `MigrationsConformanceTests.Create_tables_builds_a_table_that_references_itself`. Our work-around:
-  `FlatFileMigrationsSqlGenerator` adds such keys with `ALTER TABLE ... ADD CONSTRAINT` after the table.
-- A table joined to itself returns wrong rows. Probed directly on a two-row tree (`C(Id, Name, ParentId)`, rows
-  `(1, 'Fiction', NULL)` and `(2, 'SF', 1)`): `SELECT c.Id, c0.Name FROM C AS c LEFT JOIN C AS c0 ON c.ParentId = c0.Id`
-  returns two rows of NULLs (expected `1|NULL`, `2|Fiction`), and the same `INNER JOIN` returns no rows (expected
-  `2|Fiction`). Likely the two aliases of one table resolve to the same row source. No work-around: a provider can't
-  rewrite every self-join.
-- Found by EF's Where specification suite (`NorthwindWhereQueryFlatFileTest`, 36 of 408 failing on preview.8), each
-  statement taken from the failing command:
-  - `OFFSET`/`FETCH FIRST` is rejected inside an `EXISTS` subquery as well as a derived table
-    (`WHERE EXISTS (SELECT 1 FROM "Orders" AS "o" WHERE ... OFFSET 3 ROWS)`).
-  - A parameter is rejected as the left operand of a comparison: `WHERE :intPrm = "e"."ReportsTo"` ("Parameter markers
-    cannot be used as the left operand of a predicate"). Valid ISO: its type comes from the other operand.
-  - A parameter is rejected as a whole search condition: `WHERE :prm`. Arguable (ISO leaves an untyped parameter's
-    type to context; here the context is boolean, and PostgreSQL accepts it).
-  - A CASE of boolean results is rejected as a search condition: `WHERE CASE WHEN x >= 20 THEN TRUE ELSE FALSE END`
-    ("Unsupported predicate expression 'BoundCaseExpression'"). Valid ISO: a boolean value expression.
-  - A predicate is rejected as a value: `COALESCE('ALFKI' IN (SELECT ...), FALSE)` ("Expected token 'RightParen' ...
-    but found 'In'"). Valid ISO (SQL:1999 BOOLEAN).
-  - An outer reference two subqueries down fails: `WHERE EXISTS (SELECT 1 FROM "Customers" AS "c" WHERE "o"."OrderID"
-    IN (SELECT "o0"."OrderID" FROM "Orders" AS "o0" WHERE "c"."CustomerID" = "o0"."CustomerID"))` throws "No row is
-    available for table 'Customers'".
+- An approximate numeric literal with an exponent (`4.9406564584124654E-324`, `1.7976931348623157E+308`) is parsed as a
+  decimal and throws `OverflowException` from `BoundPredicateEvaluator.EvaluateValue`. ISO: a literal with an exponent is
+  an approximate numeric (floating-point) literal. Found by
+  `LiteralConformanceTests.Floating_point_constants_at_the_edges_of_their_types`.
+- No `POWER` ("Unsupported scalar function 'POWER'"). Found by `TranslationConformanceTests.Math_on_doubles`.
+- Interval literals take one field and no precision (`SqlParser.ParseIntervalLiteral`): ISO's
+  `INTERVAL '0 01:02:03.5' DAY TO SECOND` and `DAY(8) TO SECOND(7)` are rejected. Found by
+  `LiteralConformanceTests.Time_span_constants`.
+- Renaming a table leaves foreign keys that reference it naming the old table: after
+  `ALTER TABLE "Authors" RENAME TO "Writers"`, an insert into `Shelves` fails with "Referenced table 'Authors' was not
+  found for foreign key 'FK_Shelves_Authors'". Found by `MigrationsConformanceTests.Migrate_applies_records_and_reverts_migrations`
+  and `Alter_column_changes_size_nullability_and_default`.
+- Not re-probed on preview.9: `DROP TABLE` of a missing table threw `InvalidOperationException`, not a `DbException`, on
+  preview.8.
+
+Fixed in preview.9 (our work-arounds removed, each by its test): `LIKE ... ESCAPE`; directional `TRIM`; `REPLACE`,
+`FLOOR`, `CEILING`, `ROUND`; zoned timestamp literals; `FETCH FIRST`/`OFFSET` in derived tables and `EXISTS`; parameters
+in `OFFSET`/`FETCH`; boolean `UPDATE` values; outer references in joined and nested subqueries; `ALTER SEQUENCE ...
+RENAME TO`; `ALTER COLUMN`; `VARBINARY`; `INTERVAL` columns; self-referencing foreign keys in `CREATE TABLE`; self-joins;
+a parameter as a comparison's left operand or a whole search condition; CASE as a search condition; a predicate as a
+value. EF's Where specification suite now passes 408 of 408 (36 failed on preview.8).
