@@ -1,323 +1,473 @@
-# Pomelo.EntityFrameworkCore.MySql (main, 9.0.1 / EF Core 9): test suite as a behaviour record
+# Microsoft.EntityFrameworkCore.Sqlite 10.0.11: the test suite as a behaviour record
 
-Source: `providers/pomelo/test` (EFCore.MySql.FunctionalTests 350 files, EFCore.MySql.Tests 28, EFCore.MySql.IntegrationTests 32, Shared 4). Read only; nothing was run.
-Concept and API names follow `api-inventory/mysql.md`. **[M]** = MySQL-only behaviour or gate, **[MDB]** = MariaDB-only.
+Sources read (read-only, nothing executed): `test/EFCore.Sqlite.FunctionalTests` (372 .cs files, 360 with a class), `test/EFCore.Sqlite.Tests` (20 files, exported from tag v10.0.11), and for base-class resolution `EFCore.Specification.Tests`, `EFCore.Relational.Specification.Tests`, `EFCore.Relational.Tests` and `EFCore.Tests` (exported read-only for counting only). Concept names follow `api-inventory/sqlite.md`.
 
-Method: class declarations, base chains and test attributes were parsed from the sources (partial classes merged). Inherited counts come from reading the `[Fact]/[Theory]/[ConditionalFact]/[ConditionalTheory]` methods in the EF Core **9.0.1** specification assemblies (`Microsoft.EntityFrameworkCore{,.Relational}.Specification.Tests.dll` in the NuGet cache), summed up the base chain. A theory counts once, whatever its data rows. "SQL baselines" counts `AssertSql(...)`/`AssertExecuteUpdateSql(...)`/`AssertBaseline(...)` calls that carry SQL (empty `AssertSql()` excluded).
+Counting method: a "test" is a method carrying `[ConditionalFact]`/`[ConditionalTheory]`/`[Fact]`/`[Theory]`. Theory rows are **not** expanded, so the real xUnit case count is several times higher. "Inherited" = test methods reachable through the spec base-class chain; "Overridden" = those the SQLite class overrides (nearly always to add an `AssertSql` baseline, sometimes to change the expectation); "Provider-only" = test methods declared only in the SQLite class.
 
-Tools left in `scratchpad/tools/` (`specount/`, `pomelo_classes.py`, `divs.py`, `conds.py`, `sqlden.py`) for re-running against EF 10.
+"Asserts" in section 1, and "Asserted by" in sections 2 and 3, use these values:
+- **SQL**: an `AssertSql` baseline, or a generated-SQL string compared exactly.
+- **Results**: query or saved data compared with expected data, usually LINQ-to-Objects over the seeded data (`AssertQuery`, `AssertCount`), or a value read back.
+- **Both**: the base `AssertQuery`/`Test` compares results, and the SQLite override adds an `AssertSql` baseline. This is the default shape of every Query/Translations/BulkUpdates/Migrations override.
+- **Exception/message**: an exception type is expected, and usually its exact message too (`SqliteStrings.*`, `CoreStrings.*`, `RelationalStrings.*`).
+- **Model**: metadata, annotations or a validation warning or error.
 
-**Assertion style** (section 1) and **Asserted by** (sections 2 and 3):
-- *SQL*: a SQL baseline (`AssertSql`) or generated-DDL string.
-- *Results*: query results compared with expected data (`AssertQuery` evaluates the same LINQ in memory) or with .NET values; for model or type-mapping tests, the model or mapping.
-- *Both*: results and a SQL baseline. This is the default for provider-only query tests.
-- *Exception/message*: the test expects an exception (type and sometimes message).
+## Totals
+
+| Project | Classes with tests | Inherited test methods | of which overridden | Provider-only test methods |
+|---|---:|---:|---:|---:|
+| FunctionalTests (script count) | ~270 | 13,842 | 2,382 | 239 |
+| + corrections: `Types/*` (16 classes per file pair, only first counted: about +91), `ModelBuilding` nested classes (9 nested suites, about +736 inherited, +10 provider-only) | | ~14,670 | ~2,390 | ~249 |
+| Unit tests (EFCore.Sqlite.Tests) | 20 | 452 | 15 | 80 |
+| **Total** | | **~15,100 inherited** | **~2,400** | **~330 provider-only** |
+
+Caveats: abstract SQLite bases (GraphUpdatesSqliteTestBase, ManyToManyLoadSqliteTestBase, interception bases) are counted once as a base and once per concrete subclass. Nested concrete classes (for example `CommandInterceptionSqliteTest.InterceptionSqliteTest` and `...WithDiagnostics`) run their base twice and are counted once. Of the provider-only methods, 30 are `Check_all_tests_overridden` guards, which are infrastructure and not behaviour.
+
+**SQL-heavy suites.** Query/Translations/*, GearsOfWar (596 baselines), PrimitiveCollections, Spatial, ComplexType, Json, BulkUpdates/*, Update/JsonUpdate and StoreValueGeneration, Migrations and MigrationsSqlGenerator, and NullSemantics. Each of these has a `Check_all_tests_overridden` guard, so every base test there carries an SQLite SQL baseline. **Results-only suites.** Load, Find, PropertyValues, GraphUpdates, ManyToMany*, ComplexTypesTracking, FieldsOnlyLoad, StoreGeneratedFixup, Transaction, ConcurrencyDetector, Interception, DataBinding, KeysWithConverters, WithConstructors, Northwind Include/AsNoTracking/Compiled/Navigations, Inheritance*, ComplexNavigations (non-collections), Owned*, and the TPC/TPT relationships suites.
 
 ---
 
 ## 1. Suite map
 
-### Totals
+Columns: inherited/overridden/provider-only test-method counts, the number of `AssertSql(` calls in the file, and the dominant assertion style. Rows with 0/0/0 and a spec base are usually shells (abstract generic hosts, nested-class files): see the corrections above.
 
-| | Classes | Tests (method count) |
-|---|---|---|
-| Spec-derived, runnable (public) | ~161 | **~11,770 inherited** (EF 9.0.1 spec methods); 11,082 of the non-model-building ones still exist under the same base names in EF 10.0.11 |
-| Spec-derived but `internal`, so xUnit never runs them | 9 (`CommandInterception*` x2, `TransactionInterception*` x2, `Logging`, `NorthwindQueryTagging`, `OptionalDependentQuery`, `AdHocJsonQuery`, `MySqlGenericOwnedTypes`) | ~230 (disabled) |
-| Provider-only tests (new `[Fact]/[Theory]` methods, in provider-only classes **and** added to spec-derived classes) | 47 provider-only classes, plus 14 spec-derived classes that add their own tests | **~664** (excludes 46 commented-out Npgsql leftovers in `MySqlTypeMappingTest` and 22 `Check_all_tests_overridden` guards) |
-| Overrides of spec tests | | ~3,130 (most only add a MySQL SQL baseline) |
+### EFCore.Sqlite.FunctionalTests
 
-Assertion style: **46 classes are SQL-heavy** (a baseline for most tests): the TPC suites, GroupBy, Functions, PrimitiveCollections, ManyToMany (TPC), EF.Property include, Migrations, ComplexNavigationsCollections(Split), BulkUpdates, Spatial, ComplexType, SqlQuery, Ef6GroupBy, StringComparison, MatchQuery, the SQL generators, StoreValueGeneration, the JSON DOM/POCO suites and DbFunctions. The plain (TPH) `GearsOfWarQueryMySqlTest`, `NorthwindIncludeQuery*`, `NorthwindMiscellaneous`, `NorthwindSelect`, `NorthwindAggregateOperators`, `ComplexNavigationsQuery`, `Load`, `GraphUpdates`, `PropertyValues`, `FieldMapping`, `ManyToMany(Query/NoTracking)` (TPH/TPT), `TPT*` and everything outside Query are **results-only or mostly results**. They inherit spec tests without SQL overrides.
 
-Folder tables: "Overrides" is the number of overriding methods; "SQL baselines" is counted per source file.
+#### (root)
 
-### FunctionalTests
+| Class | Spec base | Inherited | Overridden | Provider-only | AssertSql calls | Asserts |
+|---|---|---:|---:|---:|---:|---|
+| AutoincrementTest | provider-only | 0 | 0 | 1 | 0 | Results only |
+| BadDataJsonDeserializationSqliteTest | BadDataJsonDeserializationTestBase | 5 | 0 | 0 | 0 | Results only |
+| BuiltInDataTypesSqliteTest | BuiltInDataTypesTestBase | 28 | 1 | 60 | 16 | SQL baselines (+results) |
+| CommandConfigurationTest | provider-only | 0 | 0 | 1 | 0 | Results only |
+| CommandInterceptionSqliteTestBase | CommandInterceptionTestBase | 27 | 0 | 0 | 3 | Mostly results; few SQL baselines |
+| ComplexTypesTrackingSqliteTest | ComplexTypesTrackingRelationalTestBase | 128 | 0 | 0 | 0 | Results only |
+| CompositeKeyEndToEndSqliteTest | CompositeKeyEndToEndTestBase | 3 | 1 | 0 | 0 | Results only |
+| ConcurrencyDetectorDisabledSqliteTest | ConcurrencyDetectorDisabledRelationalTestBase | 9 | 0 | 0 | 0 | Results only |
+| ConcurrencyDetectorEnabledSqliteTest | ConcurrencyDetectorEnabledRelationalTestBase | 9 | 0 | 0 | 0 | Results only |
+| ConferencePlannerSqliteTest | ConferencePlannerTestBase | 22 | 0 | 0 | 0 | Results only |
+| ConnectionInterceptionSqliteTestBase | ConnectionInterceptionTestBase | 9 | 0 | 0 | 0 | Results only |
+| ConvertToProviderTypesSqliteTest | ConvertToProviderTypesTestBase | 30 | 0 | 0 | 0 | Results only |
+| CustomConvertersSqliteTest | CustomConvertersTestBase | 57 | 10 | 0 | 9 | Mostly results; few SQL baselines |
+| DataAnnotationSqliteTest | DataAnnotationRelationalTestBase | 83 | 5 | 0 | 3 | Mostly results; few SQL baselines |
+| DataBindingSqliteTest | DataBindingTestBase | 38 | 0 | 0 | 0 | Results only |
+| DefaultValuesTest | SharedStoreFixtureBase | 0 | 0 | 1 | 0 | Results only |
+| DesignTimeSqliteTest | DesignTimeTestBase | 2 | 0 | 0 | 0 | Results only |
+| EntitySplittingSqliteTest | EntitySplittingTestBase | 2 | 0 | 0 | 0 | Results only |
+| F1ULongSqliteFixture | F1RelationalFixture | 0 | 0 | 0 | 0 | Results only |
+| FieldsOnlyLoadSqliteTest | FieldsOnlyLoadTestBase | 120 | 0 | 0 | 0 | Results only |
+| FindSqliteTest | FindTestBase | 69 | 0 | 0 | 0 | Results only |
+| JsonTypesSqliteTest | JsonTypesRelationalTestBase | 244 | 32 | 0 | 0 | Results only |
+| KeysWithConvertersSqliteTest | KeysWithConvertersTestBase | 47 | 0 | 0 | 0 | Results only |
+| LazyLoadProxySqliteTest | LazyLoadProxyRelationalTestBase | 75 | 0 | 5 | 0 | Results only |
+| LoadSqliteTest | LoadTestBase | 203 | 0 | 0 | 0 | Results only |
+| LoggingSqliteTest | LoggingRelationalTestBase | 13 | 0 | 1 | 0 | Results only |
+| ManyToManyFieldsLoadSqliteTest | ManyToManyFieldsLoadTestBase | 23 | 0 | 0 | 0 | Results only |
+| ManyToManyLoadProxySqliteTest | ManyToManyLoadTestBase | 48 | 0 | 0 | 0 | Results only |
+| ManyToManyLoadSqliteTest | ManyToManyLoadTestBase | 48 | 0 | 0 | 0 | Results only |
+| ManyToManyLoadSqliteTestBase | ManyToManyLoadTestBase | 48 | 0 | 0 | 0 | Results only |
+| ManyToManyTrackingSqliteTest | ManyToManyTrackingRelationalTestBase | 67 | 0 | 0 | 0 | Results only |
+| MaterializationInterceptionSqliteTest | MaterializationInterceptionTestBase | 7 | 1 | 0 | 0 | Results only |
+| ModelBuilding101SqliteTest | ModelBuilding101RelationalTestBase | 124 | 0 | 0 | 0 | Results only |
+| MonsterFixupChangedOnlySqliteTest | MonsterFixupTestBase | 12 | 0 | 0 | 0 | Results only |
+| MusicStoreSqliteTest | MusicStoreTestBase | 16 | 0 | 0 | 0 | Results only |
+| NonLoadingNavigationsManyToManyLoadSqliteTest | ManyToManyLoadTestBase | 48 | 0 | 0 | 0 | Results only |
+| NotificationEntitiesSqliteTest | NotificationEntitiesTestBase | 2 | 0 | 0 | 0 | Results only |
+| OptimisticConcurrencyULongSqliteTest | OptimisticConcurrencyRelationalTestBase | 31 | 0 | 0 | 2 | Mostly results; few SQL baselines |
+| OverzealousInitializationSqliteTest | OverzealousInitializationTestBase | 1 | 0 | 0 | 0 | Results only |
+| PropertyValuesSqliteTest | PropertyValuesRelationalTestBase | 171 | 0 | 0 | 0 | Results only |
+| QueryExpressionInterceptionSqliteTestBase | QueryExpressionInterceptionTestBase | 4 | 0 | 0 | 0 | Results only |
+| SaveChangesInterceptionSqliteTestBase | SaveChangesInterceptionTestBase | 6 | 0 | 0 | 0 | Results only |
+| SeedingSqliteTest | SeedingTestBase | 2 | 0 | 0 | 0 | Results only |
+| SerializationSqliteTest | SerializationTestBase | 1 | 0 | 0 | 0 | Results only |
+| SpatialSqliteFixture | SpatialFixtureBase | 0 | 0 | 0 | 0 | Results only |
+| SpatialSqliteTest | SpatialTestBase | 5 | 0 | 0 | 0 | Results only |
+| SqliteApiConsistencyTest | ApiConsistencyTestBase | 19 | 0 | 0 | 0 | Results only |
+| SqliteComplianceTest | RelationalComplianceTestBase | 2 | 0 | 0 | 0 | Results only |
+| SqliteDatabaseCreatorTest | provider-only | 0 | 0 | 8 | 0 | Results only |
+| SqliteServiceCollectionExtensionsTest | RelationalServiceCollectionExtensionsTestBase | 3 | 0 | 0 | 0 | Results only |
+| SqliteValueGenerationScenariosTest | provider-only | 0 | 0 | 13 | 0 | Results only |
+| StoreGeneratedFixupSqliteTest | StoreGeneratedFixupRelationalTestBase | 118 | 0 | 1 | 0 | Results only |
+| StoreGeneratedSqliteTest | StoreGeneratedTestBase | 60 | 1 | 1 | 0 | Results only |
+| TPTTableSplittingSqliteTest | TPTTableSplittingTestBase | 26 | 1 | 0 | 0 | Results only |
+| TableSplittingSqliteTest | TableSplittingTestBase | 26 | 1 | 0 | 1 | Mostly results; few SQL baselines |
+| TransactionInterceptionSqliteTestBase | TransactionInterceptionTestBase | 17 | 0 | 0 | 0 | Results only |
+| TransactionSqliteTest | TransactionTestBase | 44 | 0 | 0 | 0 | Results only |
+| TwoDatabasesSqliteTest | TwoDatabasesTestBase | 3 | 0 | 0 | 0 | Results only |
+| ValueConvertersEndToEndSqliteTest | ValueConvertersEndToEndTestBase | 25 | 0 | 1 | 0 | Results only |
+| WithConstructorsSqliteTest | WithConstructorsTestBase | 41 | 0 | 0 | 0 | Results only |
 
-| Class | Spec base (EF 9.0.1) | Inherited tests | Provider-only tests | Overrides | SQL baselines | Assertion style | Notes |
-|---|---|---|---|---|---|---|---|
-| BadDataJsonDeserializationMySqlTest | BadDataJsonDeserializationTestBase | 5 | 0 | 1 | 0 | Results only |  |
-| BuiltInDataTypesMySqlTest | BuiltInDataTypesTestBase | 28 | 12 | 6 | 0 | Results only |  |
-| ChangeTracking | ProxyGraphUpdatesTestBase | 85 | 0 | 1 | 0 | Results only |  |
-| ChangeTrackingAndLazyLoading | ProxyGraphUpdatesTestBase | 85 | 0 | 0 | 0 | Results only |  |
-| CommandInterceptionMySqlTest | CommandInterceptionTestBase | 35 | 0 | 0 | 0 | Results only | **internal: not run** |
-| CommandInterceptionWithDiagnosticsMySqlTest | CommandInterceptionTestBase | 35 | 0 | 0 | 0 | Results only | **internal: not run** |
-| ComplexTypesTrackingMySqlTest | ComplexTypesTrackingTestBase | 39 | 0 | 1 | 0 | Results only |  |
-| CompositeKeyEndToEndMySqlTest | CompositeKeyEndToEndTestBase | 3 | 0 | 0 | 0 | Results only |  |
-| ConcurrencyDetectorDisabledMySqlTest | ConcurrencyDetectorDisabledRelationalTestBase | 9 | 0 | 1 | 0 | Results only |  |
-| ConcurrencyDetectorEnabledMySqlTest | ConcurrencyDetectorEnabledRelationalTestBase | 9 | 0 | 1 | 0 | Results only |  |
-| ConferencePlannerMySqlTest | ConferencePlannerTestBase | 22 | 0 | 1 | 0 | Results only |  |
-| ConnectionInterceptionMySqlTest | ConnectionInterceptionTestBase | 9 | 0 | 0 | 0 | Results only |  |
-| ConnectionInterceptionWithDiagnosticsMySqlTest | ConnectionInterceptionTestBase | 9 | 0 | 0 | 0 | Results only |  |
-| ConnectionMySqlTest | provider-only | 0 | 6 | 0 | 0 | Results only |  |
-| ConnectionSettingsMySqlTest | provider-only | 0 | 1 | 0 | 0 | Results only |  |
-| ConvertToProviderTypesMySqlTest | ConvertToProviderTypesTestBase | 30 | 0 | 5 | 0 | Results only |  |
-| CustomConvertersMySqlTest | CustomConvertersTestBase | 57 | 0 | 5 | 0 | Results only |  |
-| DataAnnotationMySqlTest | DataAnnotationRelationalTestBase | 97 | 0 | 3 | 5 | Mostly results |  |
-| DatabindingMySqlTest | DataBindingTestBase | 37 | 0 | 0 | 0 | Results only |  |
-| DefaultValuesTest | provider-only | 0 | 2 | 0 | 0 | Results only |  |
-| DesignTimeMySqlTest | DesignTimeTestBase | 2 | 0 | 0 | 0 | Results only |  |
-| EntitySplittingMySqlTest | EntitySplittingTestBase | 2 | 0 | 0 | 0 | Results only |  |
-| FieldMappingMySqlTest | FieldMappingTestBase | 101 | 0 | 1 | 0 | Results only |  |
-| FindMySqlTestContext | FindTestBase | 69 | 0 | 0 | 0 | Results only |  |
-| FindMySqlTestNonGeneric | FindTestBase | 69 | 0 | 0 | 0 | Results only |  |
-| FindMySqlTestSet | FindTestBase | 69 | 0 | 0 | 0 | Results only |  |
-| FullInfrastructureMigrationsTest | provider-only | 0 | 4 | 0 | 0 | Results only |  |
-| GraphUpdatesMySqlClientCascadeTest | GraphUpdatesTestBase | 127 | 0 | 1 | 0 | Results only |  |
-| GraphUpdatesMySqlClientNoActionTest | GraphUpdatesTestBase | 127 | 0 | 1 | 0 | Results only |  |
-| KeysWithConvertersMySqlTest | KeysWithConvertersTestBase | 47 | 0 | 0 | 0 | Results only |  |
-| LazyLoadProxyMySqlTest | LazyLoadProxyTestBase | 75 | 0 | 3 | 0 | Results only |  |
-| LazyLoading | ProxyGraphUpdatesTestBase | 85 | 0 | 0 | 0 | Results only |  |
-| LoadMySqlTest | LoadTestBase | 202 | 0 | 0 | 0 | Results only |  |
-| LoggingMySqlTest | LoggingRelationalTestBase | 13 | 0 | 0 | 0 | Results only | **internal: not run** |
-| ManyToManyLoadMySqlTest | ManyToManyLoadTestBase | 48 | 0 | 0 | 0 | Results only |  |
-| ManyToManyTrackingMySqlTest | ManyToManyTrackingRelationalTestBase | 67 | 0 | 0 | 0 | Results only |  |
-| MaterializationInterceptionMySqlTest | MaterializationInterceptionTestBase | 7 | 0 | 0 | 0 | Results only |  |
-| MigrationsInfrastructureMySqlTest | MigrationsInfrastructureTestBase | 25 | 0 | 24 | 0 | Results only |  |
-| MigrationsMySqlTest | MigrationsTestBase | 120 | 23 | 120 | 112 | SQL-heavy | Check_all_tests_overridden |
-| ModelBuilding101MySqlTest | ModelBuilding101RelationalTestBase | 124 | 0 | 0 | 0 | Results only |  |
-| MonsterFixupChangedChangingMySqlTest | MonsterFixupTestBase | 12 | 0 | 0 | 0 | Results only |  |
-| MusicStoreMySqlTest | MusicStoreTestBase | 16 | 0 | 0 | 0 | Results only |  |
-| MySqlApiConsistencyTest | ApiConsistencyTestBase | 18 | 0 | 1 | 0 | Results only |  |
-| MySqlComplianceTest | RelationalComplianceTestBase | 2 | 0 | 0 | 0 | Results only |  |
-| MySqlMigrationsSqlGeneratorTest | MigrationsSqlGeneratorTestBase | 49 | 57 | 36 | 35 | Mixed |  |
-| MySqlNetTopologySuiteApiConsistencyTest | ApiConsistencyTestBase | 18 | 0 | 1 | 0 | Results only |  |
-| MySqlServiceCollectionExtensionsTest | RelationalServiceCollectionExtensionsTestBase | 3 | 0 | 0 | 0 | Results only |  |
-| NorthwindQueryTaggingQueryMySqlTest | NorthwindQueryTaggingQueryTestBase | 9 | 0 | 0 | 0 | Results only | **internal: not run** |
-| NotificationEntitiesMySqlTest | NotificationEntitiesTestBase | 2 | 0 | 0 | 0 | Results only |  |
-| OptimisticConcurrencyMySqlTest | OptimisticConcurrencyRelationalTestBase | 34 | 0 | 3 | 0 | Results only |  |
-| OverzealousInitializationMySqlTest | OverzealousInitializationTestBase | 1 | 0 | 0 | 0 | Results only |  |
-| PropertyValuesMySqlTest | PropertyValuesTestBase | 142 | 0 | 0 | 0 | Results only |  |
-| QueryExpressionInterceptionMySqlTest | QueryExpressionInterceptionTestBase | 3 | 0 | 0 | 0 | Results only |  |
-| QueryExpressionInterceptionWithDiagnosticsMySqlTest | QueryExpressionInterceptionTestBase | 3 | 0 | 0 | 0 | Results only |  |
-| SaveChangesInterceptionMySqlTest | SaveChangesInterceptionTestBase | 6 | 0 | 0 | 0 | Results only |  |
-| SaveChangesInterceptionWithDiagnosticsMySqlTest | SaveChangesInterceptionTestBase | 6 | 0 | 0 | 0 | Results only |  |
-| SeedingMySqlTest | SeedingTestBase | 2 | 0 | 0 | 0 | Results only |  |
-| SerializationMySqlTest | SerializationTestBase | 1 | 0 | 0 | 0 | Results only |  |
-| SpatialMySqlTest | SpatialTestBase | 5 | 0 | 3 | 0 | Results only |  |
-| StoreGeneratedFixupMySqlTest | StoreGeneratedFixupRelationalTestBase | 118 | 1 | 1 | 0 | Results only |  |
-| StoreGeneratedMySqlTest | StoreGeneratedTestBase | 60 | 0 | 1 | 0 | Results only |  |
-| TPTTableSplittingMySqlTest | TPTTableSplittingTestBase | 26 | 0 | 1 | 0 | Results only |  |
-| TableSplittingMySqlTest | TableSplittingTestBase | 26 | 0 | 1 | 0 | Results only |  |
-| TransactionInterceptionMySqlTest | TransactionInterceptionTestBase | 17 | 0 | 0 | 0 | Results only | **internal: not run** |
-| TransactionInterceptionWithDiagnosticsMySqlTest | TransactionInterceptionTestBase | 17 | 0 | 0 | 0 | Results only | **internal: not run** |
-| TransactionMySqlTest | TransactionTestBase | 44 | 0 | 0 | 0 | Results only |  |
-| TwoDatabasesMySqlTest | TwoDatabasesTestBase | 3 | 0 | 0 | 0 | Results only |  |
-| UpdatesMySqlTest | UpdatesRelationalTestBase | 29 | 0 | 2 | 0 | Results only |  |
-| ValueConvertersEndToEndMySqlTest | ValueConvertersEndToEndTestBase | 25 | 1 | 0 | 0 | Results only |  |
-| WithConstructorsMySqlTest | WithConstructorsTestBase | 41 | 0 | 1 | 0 | Results only |  |
+#### BulkUpdates
 
-### FunctionalTests/BulkUpdates
+| Class | Spec base | Inherited | Overridden | Provider-only | AssertSql calls | Asserts |
+|---|---|---:|---:|---:|---:|---|
+| NonSharedModelBulkUpdatesSqliteTest | NonSharedModelBulkUpdatesRelationalTestBase | 17 | 17 | 1 | 19 | SQL baselines (+results) |
+| NorthwindBulkUpdatesSqliteFixture | NorthwindBulkUpdatesRelationalFixture | 0 | 0 | 0 | 0 | Results only |
+| NorthwindBulkUpdatesSqliteTest | NorthwindBulkUpdatesRelationalTestBase | 94 | 94 | 1 | 90 | SQL baselines heavy (+results) |
+| TPCFiltersInheritanceBulkUpdatesSqliteFixture | TPCInheritanceBulkUpdatesFixture | 0 | 0 | 0 | 0 | Results only |
+| TPCFiltersInheritanceBulkUpdatesSqliteTest | TPCFiltersInheritanceBulkUpdatesTestBase | 18 | 18 | 1 | 20 | SQL baselines (+results) |
+| TPCInheritanceBulkUpdatesSqliteFixture | TPCInheritanceBulkUpdatesFixture | 0 | 0 | 0 | 0 | Results only |
+| TPCInheritanceBulkUpdatesSqliteTest | TPCInheritanceBulkUpdatesTestBase | 20 | 20 | 1 | 22 | SQL baselines (+results) |
+| TPHFiltersInheritanceBulkUpdatesSqliteFixture | TPHInheritanceBulkUpdatesFixture | 0 | 0 | 0 | 0 | Results only |
+| TPHFiltersInheritanceBulkUpdatesSqliteTest | FiltersInheritanceBulkUpdatesRelationalTestBase | 18 | 18 | 1 | 20 | SQL baselines (+results) |
+| TPHInheritanceBulkUpdatesSqliteFixture | TPHInheritanceBulkUpdatesFixture | 0 | 0 | 0 | 0 | Results only |
+| TPHInheritanceBulkUpdatesSqliteTest | TPHInheritanceBulkUpdatesTestBase | 20 | 20 | 1 | 22 | SQL baselines (+results) |
+| TPTFiltersInheritanceBulkUpdatesSqliteFixture | TPTInheritanceBulkUpdatesFixture | 0 | 0 | 0 | 0 | Results only |
+| TPTFiltersInheritanceBulkUpdatesSqliteTest | TPTFiltersInheritanceBulkUpdatesTestBase | 18 | 18 | 1 | 18 | SQL baselines (+results) |
+| TPTInheritanceBulkUpdatesSqliteFixture | TPTInheritanceBulkUpdatesFixture | 0 | 0 | 0 | 0 | Results only |
+| TPTInheritanceBulkUpdatesSqliteTest | TPTInheritanceBulkUpdatesTestBase | 20 | 20 | 1 | 20 | SQL baselines (+results) |
 
-| Class | Spec base (EF 9.0.1) | Inherited tests | Provider-only tests | Overrides | SQL baselines | Assertion style | Notes |
-|---|---|---|---|---|---|---|---|
-| ComplexTypeBulkUpdatesMySqlTest | ComplexTypeBulkUpdatesRelationalTestBase | 15 | 0 | 15 | 17 | SQL-heavy | base gone in EF10, Check_all_tests_overridden |
-| NonSharedModelBulkUpdatesMySqlTest | NonSharedModelBulkUpdatesRelationalTestBase | 14 | 0 | 14 | 16 | SQL-heavy | Check_all_tests_overridden |
-| NorthwindBulkUpdatesMySqlTest | NorthwindBulkUpdatesRelationalTestBase | 86 | 0 | 86 | 79 | SQL-heavy | Check_all_tests_overridden |
-| TPCFiltersInheritanceBulkUpdatesMySqlTest | TPCFiltersInheritanceBulkUpdatesTestBase | 18 | 0 | 19 | 14 | SQL-heavy | Check_all_tests_overridden |
-| TPCInheritanceBulkUpdatesMySqlTest | TPCInheritanceBulkUpdatesTestBase | 20 | 0 | 21 | 16 | SQL-heavy | Check_all_tests_overridden |
-| TPHFiltersInheritanceBulkUpdatesMySqlTest | FiltersInheritanceBulkUpdatesTestBase | 16 | 0 | 16 | 16 | SQL-heavy | Check_all_tests_overridden |
-| TPHInheritanceBulkUpdatesMySqlTest | TPHInheritanceBulkUpdatesTestBase | 20 | 0 | 21 | 19 | SQL-heavy | Check_all_tests_overridden |
-| TPTFiltersInheritanceBulkUpdatesMySqlTest | TPTFiltersInheritanceBulkUpdatesTestBase | 18 | 0 | 19 | 12 | SQL-heavy | Check_all_tests_overridden |
-| TPTInheritanceBulkUpdatesMySqlTest | TPTInheritanceBulkUpdatesTestBase | 22 | 0 | 21 | 12 | SQL-heavy | Check_all_tests_overridden |
+#### GraphUpdates
 
-### FunctionalTests/Query
+| Class | Spec base | Inherited | Overridden | Provider-only | AssertSql calls | Asserts |
+|---|---|---:|---:|---:|---:|---|
+| GraphUpdatesSqliteChangedChangingNotificationsTest | GraphUpdatesTestBase | 127 | 0 | 0 | 0 | Results only |
+| GraphUpdatesSqliteChangedNotificationsTest | GraphUpdatesTestBase | 127 | 0 | 0 | 0 | Results only |
+| GraphUpdatesSqliteFullWithOriginalsNotificationsTest | GraphUpdatesTestBase | 127 | 0 | 0 | 0 | Results only |
+| GraphUpdatesSqliteSnapshotNotificationsTest | GraphUpdatesTestBase | 127 | 0 | 0 | 0 | Results only |
+| GraphUpdatesSqliteTestBase | GraphUpdatesTestBase | 127 | 6 | 0 | 0 | Results only |
 
-| Class | Spec base (EF 9.0.1) | Inherited tests | Provider-only tests | Overrides | SQL baselines | Assertion style | Notes |
-|---|---|---|---|---|---|---|---|
-| AdHocAdvancedMappingsQueryMySqlTest | AdHocAdvancedMappingsQueryRelationalTestBase | 19 | 0 | 3 | 0 | Results only |  |
-| AdHocJsonQueryMySqlTest | AdHocJsonQueryTestBase | 21 | 0 | 8 | 0 | Results only | **internal: not run** |
-| AdHocManyToManyQueryMySqlTest | AdHocManyToManyQueryRelationalTestBase | 2 | 0 | 0 | 0 | Results only |  |
-| AdHocMiscellaneousQueryMySqlTest | AdHocMiscellaneousQueryRelationalTestBase | 43 | 0 | 2 | 0 | Results only |  |
-| AdHocNavigationsQueryMySqlTest | AdHocNavigationsQueryRelationalTestBase | 21 | 0 | 0 | 0 | Results only |  |
-| AdHocQueryFiltersQueryMySqlTest | AdHocQueryFiltersQueryRelationalTestBase | 12 | 0 | 2 | 2 | Mixed |  |
-| AdHocQuerySplittingQueryMySqlTest | AdHocQuerySplittingQueryTestBase | 10 | 0 | 0 | 0 | Results only |  |
-| BoolIndexingOptimizationDisabledMySqlTest | provider-only | 0 | 8 | 0 | 12 | SQL-heavy |  |
-| ComplexNavigationsCollectionsQueryMySqlTest | ComplexNavigationsCollectionsQueryRelationalTestBase | 156 | 0 | 94 | 97 | SQL-heavy |  |
-| ComplexNavigationsCollectionsSharedTypeQueryMySqlTest | ComplexNavigationsCollectionsSharedTypeQueryRelationalTestBase | 156 | 0 | 8 | 10 | Mostly results |  |
-| ComplexNavigationsCollectionsSplitQueryMySqlTest | ComplexNavigationsCollectionsSplitQueryRelationalTestBase | 156 | 0 | 102 | 99 | SQL-heavy |  |
-| ComplexNavigationsCollectionsSplitSharedTypeQueryMySqlTest | ComplexNavigationsCollectionsSplitSharedTypeQueryRelationalTestBase | 156 | 0 | 0 | 0 | Results only |  |
-| ComplexNavigationsQueryMySqlTest | ComplexNavigationsQueryRelationalTestBase | 308 | 0 | 7 | 6 | Mostly results |  |
-| ComplexNavigationsSharedTypeQueryMySqlTest | ComplexNavigationsSharedTypeQueryRelationalTestBase | 308 | 0 | 9 | 5 | Mostly results |  |
-| ComplexTypeQueryMySqlTest | ComplexTypeQueryRelationalTestBase | 76 | 0 | 76 | 68 | SQL-heavy | Check_all_tests_overridden |
-| CompositeKeysQueryMySqlTest | CompositeKeysQueryRelationalTestBase | 7 | 0 | 7 | 9 | SQL-heavy |  |
-| CompositeKeysSplitQueryMySqlTest | CompositeKeysSplitQueryRelationalTestBase | 7 | 0 | 7 | 9 | SQL-heavy |  |
-| DateOnlyQueryMySqlTest | provider-only | 0 | 7 | 0 | 9 | SQL-heavy |  |
-| Ef6GroupByMySqlTest | Ef6GroupByTestBase | 55 | 0 | 55 | 45 | SQL-heavy | Check_all_tests_overridden |
-| EntitySplittingQueryMySqlTest | EntitySplittingQueryTestBase | 57 | 0 | 57 | 38 | SQL-heavy | Check_all_tests_overridden |
-| EscapesMySqlNoBackslashesTest | provider-only | 0 | 4 | 4 | 6 | SQL-heavy |  |
-| EscapesMySqlTest | provider-only | 0 | 4 | 4 | 6 | SQL-heavy |  |
-| FieldsOnlyLoadMySqlTest | FieldsOnlyLoadTestBase | 120 | 0 | 0 | 0 | Results only |  |
-| FromSqlQueryMySqlTest | FromSqlQueryTestBase | 73 | 0 | 1 | 0 | Results only |  |
-| FromSqlSprocQueryMySqlTest | FromSqlSprocQueryTestBase | 24 | 0 | 10 | 0 | Results only |  |
-| FunkyDataQueryMySqlTest | FunkyDataQueryTestBase | 19 | 0 | 5 | 5 | Mixed |  |
-| GearsOfWarFromSqlQueryMySqlTest | GearsOfWarFromSqlQueryTestBase | 1 | 0 | 0 | 0 | Results only |  |
-| GearsOfWarQueryMySqlTest | GearsOfWarQueryRelationalTestBase | 674 | 10 | 39 | 23 | Mostly results |  |
-| IncludeOneToOneMySqlTest | IncludeOneToOneTestBase | 12 | 0 | 0 | 0 | Results only |  |
-| InheritanceRelationshipsQueryMySqlTest | InheritanceRelationshipsQueryRelationalTestBase | 70 | 0 | 0 | 0 | Results only |  |
-| JsonMicrosoftDomChangeTrackingTest | provider-only | 0 | 12 | 0 | 0 | Results only |  |
-| JsonMicrosoftDomQueryTest | provider-only | 0 | 29 | 0 | 26 | SQL-heavy |  |
-| JsonMicrosoftPocoChangeTrackingTest | provider-only | 0 | 14 | 0 | 0 | Results only |  |
-| JsonMicrosoftPocoQueryTest | provider-only | 0 | 28 | 1 | 0 | Results only |  |
-| JsonMicrosoftStringChangeTrackingTest | provider-only | 0 | 12 | 0 | 0 | Results only |  |
-| JsonMicrosoftStringQueryTest | provider-only | 0 | 11 | 0 | 0 | Results only |  |
-| JsonNewtonsoftDomChangeTrackingTest | provider-only | 0 | 12 | 0 | 0 | Results only |  |
-| JsonNewtonsoftDomQueryTest | provider-only | 0 | 31 | 0 | 28 | SQL-heavy |  |
-| JsonNewtonsoftPocoChangeTrackingTest | provider-only | 0 | 14 | 0 | 0 | Results only |  |
-| JsonNewtonsoftPocoQueryTest | provider-only | 0 | 28 | 1 | 0 | Results only |  |
-| JsonNewtonsoftStringChangeTrackingTest | provider-only | 0 | 12 | 0 | 0 | Results only |  |
-| JsonNewtonsoftStringQueryTest | provider-only | 0 | 11 | 0 | 0 | Results only |  |
-| ManyToManyFieldsLoadMySqlTest | ManyToManyFieldsLoadTestBase | 23 | 0 | 0 | 0 | Results only |  |
-| ManyToManyNoTrackingQueryMySqlTest | ManyToManyNoTrackingQueryRelationalTestBase | 124 | 0 | 0 | 0 | Results only |  |
-| ManyToManyQueryMySqlTest | ManyToManyQueryRelationalTestBase | 123 | 0 | 0 | 0 | Results only |  |
-| MappingQueryMySqlTest | MappingQueryTestBase | 4 | 0 | 4 | 0 | Results only |  |
-| MatchQueryMySqlTest | provider-only | 0 | 37 | 0 | 37 | SQL-heavy |  |
-| NonSharedPrimitiveCollectionsQueryMySqlTest | NonSharedPrimitiveCollectionsQueryRelationalTestBase | 36 | 0 | 35 | 29 | SQL-heavy | Check_all_tests_overridden |
-| NorthwindAggregateOperatorsQueryMySqlTest | NorthwindAggregateOperatorsQueryRelationalTestBase | 211 | 0 | 7 | 3 | Mostly results |  |
-| NorthwindAsNoTrackingQueryMySqlTest | NorthwindAsNoTrackingQueryTestBase | 11 | 0 | 0 | 0 | Results only |  |
-| NorthwindAsTrackingQueryMySqlTest | NorthwindAsTrackingQueryTestBase | 5 | 0 | 0 | 0 | Results only |  |
-| NorthwindChangeTrackingQueryMySqlTest | NorthwindChangeTrackingQueryTestBase | 17 | 0 | 0 | 0 | Results only |  |
-| NorthwindCompiledQueryMySqlTest | NorthwindCompiledQueryTestBase | 32 | 0 | 0 | 2 | Mostly results |  |
-| NorthwindDbFunctionsQueryMySqlTest | NorthwindDbFunctionsQueryRelationalTestBase | 17 | 27 | 3 | 32 | SQL-heavy |  |
-| NorthwindEFPropertyIncludeQueryMySqlTest | NorthwindEFPropertyIncludeQueryTestBase | 118 | 0 | 118 | 116 | SQL-heavy | Check_all_tests_overridden |
-| NorthwindFunctionsQueryMySqlTest | NorthwindFunctionsQueryRelationalTestBase | 171 | 5 | 172 | 142 | SQL-heavy | Check_all_tests_overridden |
-| NorthwindGroupByQueryMySqlTest | NorthwindGroupByQueryRelationalTestBase | 257 | 0 | 258 | 241 | SQL-heavy | Check_all_tests_overridden |
-| NorthwindIncludeNoTrackingQueryMySqlTest | NorthwindIncludeNoTrackingQueryTestBase | 117 | 0 | 6 | 2 | Mostly results |  |
-| NorthwindIncludeQueryMySqlTest | NorthwindIncludeQueryRelationalTestBase | 117 | 0 | 6 | 2 | Mostly results |  |
-| NorthwindJoinQueryMySqlTest | NorthwindJoinQueryRelationalTestBase | 61 | 0 | 3 | 3 | Mostly results |  |
-| NorthwindKeylessEntitiesQueryMySqlTest | NorthwindKeylessEntitiesQueryRelationalTestBase | 20 | 0 | 1 | 3 | Mixed |  |
-| NorthwindMiscellaneousQueryMySqlTest | NorthwindMiscellaneousQueryRelationalTestBase | 482 | 1 | 31 | 23 | Mostly results |  |
-| NorthwindNavigationsQueryMySqlTest | NorthwindNavigationsQueryRelationalTestBase | 73 | 0 | 4 | 2 | Mostly results |  |
-| NorthwindQueryFiltersQueryMySqlTest | NorthwindQueryFiltersQueryTestBase | 17 | 0 | 1 | 3 | Mixed |  |
-| NorthwindSelectQueryMySqlTest | NorthwindSelectQueryRelationalTestBase | 182 | 2 | 26 | 14 | Mostly results |  |
-| NorthwindSetOperationsQueryMySqlTest | NorthwindSetOperationsQueryRelationalTestBase | 89 | 0 | 13 | 12 | Mostly results |  |
-| NorthwindSplitIncludeNoTrackingQueryMySqlTest | NorthwindSplitIncludeNoTrackingQueryTestBase | 117 | 0 | 7 | 0 | Results only |  |
-| NorthwindSplitIncludeQueryMySqlTest | NorthwindSplitIncludeQueryTestBase | 117 | 0 | 11 | 2 | Mostly results |  |
-| NorthwindSqlQueryMySqlTest | NorthwindSqlQueryTestBase | 4 | 0 | 4 | 6 | SQL-heavy | Check_all_tests_overridden |
-| NorthwindStringComparisonFunctionsQueryMySqlTest | provider-only | 0 | 44 | 0 | 41 | SQL-heavy |  |
-| NorthwindStringIncludeQueryMySqlTest | NorthwindStringIncludeQueryTestBase | 118 | 0 | 6 | 2 | Mostly results |  |
-| NorthwindWhereQueryMySqlTest | NorthwindWhereQueryRelationalTestBase | 239 | 17 | 37 | 38 | Mostly results |  |
-| NullKeysMySqlTest | NullKeysTestBase | 5 | 0 | 0 | 0 | Results only |  |
-| NullSemanticsQueryMySqlTest | NullSemanticsQueryTestBase | 166 | 1 | 2 | 3 | Mostly results |  |
-| OperatorsQueryMySqlTest | OperatorsQueryTestBase | 10 | 0 | 11 | 11 | SQL-heavy |  |
-| OptionalDependentQueryMySqlTest | OptionalDependentQueryTestBase | 10 | 0 | 10 | 2 | Mixed | **internal: not run** |
-| OwnedEntityQueryMySqlTest | OwnedEntityQueryRelationalTestBase | 23 | 0 | 4 | 2 | Mostly results |  |
-| OwnedQueryMySqlTest | OwnedQueryRelationalTestBase | 104 | 0 | 2 | 0 | Results only |  |
-| PrimitiveCollectionsQueryMySqlTest | PrimitiveCollectionsQueryRelationalTestBase | 131 | 0 | 128 | 121 | SQL-heavy | Check_all_tests_overridden |
-| QueryFilterFuncletizationMySqlTest | QueryFilterFuncletizationTestBase | 28 | 0 | 1 | 4 | Mostly results |  |
-| QueryNoClientEvalMySqlTest | QueryNoClientEvalTestBase | 14 | 0 | 1 | 0 | Results only |  |
-| SharedTypeQueryMySqlTest | SharedTypeQueryRelationalTestBase | 4 | 0 | 2 | 2 | SQL-heavy |  |
-| SpatialGeographyQueryMySqlTest | provider-only | 0 | 6 | 0 | 2 | Mixed |  |
-| SpatialQueryMySqlTest | SpatialQueryRelationalTestBase | 84 | 0 | 84 | 69 | SQL-heavy | Check_all_tests_overridden |
-| SqlExecutorMySqlTest | SqlExecutorTestBase | 14 | 0 | 13 | 5 | Mixed |  |
-| SqlQueryMySqlTest | SqlQueryTestBase | 61 | 0 | 60 | 57 | SQL-heavy | Check_all_tests_overridden |
-| TPCFiltersInheritanceQueryMySqlTest | TPCFiltersInheritanceQueryTestBase | 11 | 0 | 11 | 13 | SQL-heavy | Check_all_tests_overridden |
-| TPCGearsOfWarQueryMySqlTest | TPCGearsOfWarQueryRelationalTestBase | 674 | 0 | 669 | 642 | SQL-heavy | Check_all_tests_overridden |
-| TPCInheritanceQueryMySqlTest | TPCInheritanceQueryTestBase | 53 | 0 | 1 | 0 | Results only |  |
-| TPCManyToManyNoTrackingQueryMySqlTest | TPCManyToManyNoTrackingQueryRelationalTestBase | 124 | 0 | 124 | 117 | SQL-heavy | Check_all_tests_overridden |
-| TPCManyToManyQueryMySqlTest | TPCManyToManyQueryRelationalTestBase | 123 | 0 | 123 | 119 | SQL-heavy | Check_all_tests_overridden |
-| TPCRelationshipsQueryMySqlTest | TPCRelationshipsQueryTestBase | 70 | 0 | 70 | 71 | SQL-heavy | Check_all_tests_overridden |
-| TPHInheritanceQueryMySqlTest | TPHInheritanceQueryTestBase | 55 | 0 | 0 | 0 | Results only |  |
-| TPTFiltersInheritanceQueryMySqlTest | TPTFiltersInheritanceQueryTestBase | 11 | 0 | 0 | 0 | Results only |  |
-| TPTGearsOfWarQueryMySqlTest | TPTGearsOfWarQueryRelationalTestBase | 674 | 0 | 35 | 7 | Mostly results |  |
-| TPTInheritanceQueryMySqlTest | TPTInheritanceQueryTestBase | 53 | 0 | 0 | 0 | Results only |  |
-| TPTManyToManyNoTrackingQueryMySqlTest | TPTManyToManyNoTrackingQueryRelationalTestBase | 124 | 0 | 0 | 0 | Results only |  |
-| TPTManyToManyQueryMySqlTest | TPTManyToManyQueryRelationalTestBase | 123 | 0 | 0 | 0 | Results only |  |
-| TPTRelationshipsQueryMySqlTest | TPTRelationshipsQueryTestBase | 70 | 0 | 0 | 0 | Results only |  |
-| ToSqlQueryMySqlTest | ToSqlQueryTestBase | 1 | 0 | 1 | 3 | SQL-heavy | Check_all_tests_overridden |
-| WarningsMySqlTest | WarningsTestBase | 11 | 0 | 0 | 0 | Results only |  |
+#### Migrations
 
-### FunctionalTests/Scaffolding
+| Class | Spec base | Inherited | Overridden | Provider-only | AssertSql calls | Asserts |
+|---|---|---:|---:|---:|---:|---|
+| MigrationsInfrastructureSqliteTest | MigrationsInfrastructureTestBase | 25 | 13 | 0 | 0 | Results only |
+| MigrationsSqliteTest | MigrationsTestBase | 127 | 93 | 6 | 88 | SQL baselines heavy (+results) |
+| SqliteMigrationsSqlGeneratorTest | MigrationsSqlGeneratorTestBase | 49 | 34 | 27 | 44 | SQL baselines heavy (+results) |
 
-| Class | Spec base (EF 9.0.1) | Inherited tests | Provider-only tests | Overrides | SQL baselines | Assertion style | Notes |
-|---|---|---|---|---|---|---|---|
-| CompiledModelMySqlTest | CompiledModelRelationalTestBase | 15 | 0 | 8 | 0 | Results only |  |
-| MySqlDatabaseModelFactoryTest | provider-only | 0 | 49 | 0 | 0 | Results only |  |
+#### ModelBuilding
 
-### FunctionalTests/Storage
+| Class | Spec base | Inherited | Overridden | Provider-only | AssertSql calls | Asserts |
+|---|---|---:|---:|---:|---:|---|
+| SqliteModelBuilderGenericTest | RelationalModelBuilderTest | 546 | 0 | 0 | 0 | Results only |
+| SqliteModelBuilderTestBase | RelationalModelBuilderTest | 536 | 1 | 10 | 0 | Results only |
 
-| Class | Spec base (EF 9.0.1) | Inherited tests | Provider-only tests | Overrides | SQL baselines | Assertion style | Notes |
-|---|---|---|---|---|---|---|---|
-| MySqlJsonMicrosoftTypeMappingTest | provider-only | 0 | 6 | 0 | 0 | Results only |  |
-| MySqlJsonNewtonsoftTypeMappingTest | provider-only | 0 | 4 | 0 | 0 | Results only |  |
-| MySqlTypeMappingTest | provider-only | 0 | 5 | 0 | 0 | Results only |  |
+#### Query
 
-### FunctionalTests/Update
+| Class | Spec base | Inherited | Overridden | Provider-only | AssertSql calls | Asserts |
+|---|---|---:|---:|---:|---:|---|
+| AdHocAdvancedMappingsQuerySqliteTest | AdHocAdvancedMappingsQueryRelationalTestBase | 19 | 0 | 0 | 0 | Results only |
+| AdHocComplexTypeQuerySqliteTest | AdHocComplexTypeQueryRelationalTestBase | 14 | 0 | 0 | 0 | Results only |
+| AdHocJsonQuerySqliteTest | AdHocJsonQueryRelationalTestBase | 46 | 1 | 0 | 0 | Results only |
+| AdHocManyToManyQuerySqliteTest | AdHocManyToManyQueryRelationalTestBase | 2 | 0 | 0 | 0 | Results only |
+| AdHocMiscellaneousQuerySqliteTest | AdHocMiscellaneousQueryRelationalTestBase | 46 | 2 | 0 | 3 | Mostly results; few SQL baselines |
+| AdHocNavigationsQuerySqliteTest | AdHocNavigationsQueryRelationalTestBase | 21 | 3 | 0 | 3 | Mostly results; few SQL baselines |
+| AdHocPrecompiledQuerySqliteTest | AdHocPrecompiledQueryRelationalTestBase | 7 | 0 | 0 | 0 | Results only |
+| AdHocQueryFiltersQuerySqliteTest | AdHocQueryFiltersQueryRelationalTestBase | 21 | 0 | 0 | 0 | Results only |
+| AdHocQuerySplittingQuerySqliteTest | AdHocQuerySplittingQueryTestBase | 10 | 0 | 0 | 0 | Results only |
+| BadDataSqliteTest | provider-only | 0 | 0 | 8 | 0 | Results only |
+| ComplexNavigationsCollectionsQuerySqliteTest | ComplexNavigationsCollectionsQueryRelationalTestBase | 155 | 23 | 0 | 0 | Results only |
+| ComplexNavigationsCollectionsSharedTypeQuerySqliteTest | ComplexNavigationsCollectionsSharedTypeQueryRelationalTestBase | 155 | 20 | 0 | 0 | Results only |
+| ComplexNavigationsCollectionsSplitQuerySqliteTest | ComplexNavigationsCollectionsSplitQueryRelationalTestBase | 155 | 19 | 0 | 0 | Results only |
+| ComplexNavigationsCollectionsSplitSharedTypeQuerySqliteTest | ComplexNavigationsCollectionsSplitSharedTypeQueryRelationalTestBase | 155 | 16 | 0 | 0 | Results only |
+| ComplexNavigationsQuerySqliteFixture | ComplexNavigationsQueryRelationalFixtureBase | 0 | 0 | 0 | 0 | Results only |
+| ComplexNavigationsQuerySqliteTest | ComplexNavigationsQueryRelationalTestBase | 304 | 8 | 0 | 0 | Results only |
+| ComplexNavigationsSharedTypeQuerySqliteFixture | ComplexNavigationsSharedTypeQueryRelationalFixtureBase | 0 | 0 | 0 | 0 | Results only |
+| ComplexNavigationsSharedTypeQuerySqliteTest | ComplexNavigationsSharedTypeQueryRelationalTestBase | 304 | 8 | 0 | 0 | Results only |
+| ComplexTypeQuerySqliteTest | ComplexTypeQueryRelationalTestBase | 74 | 74 | 1 | 75 | SQL baselines heavy (+results) |
+| CompositeKeysQuerySqliteFixture | CompositeKeysQueryRelationalFixtureBase | 0 | 0 | 0 | 0 | Results only |
+| CompositeKeysQuerySqliteTest | CompositeKeysQueryRelationalTestBase | 7 | 0 | 0 | 0 | Results only |
+| CompositeKeysSplitQuerySqliteTest | CompositeKeysSplitQueryRelationalTestBase | 7 | 0 | 0 | 0 | Results only |
+| Ef6GroupBySqliteTest | Ef6GroupByTestBase | 55 | 6 | 0 | 4 | Mostly results; few SQL baselines |
+| EntitySplittingQuerySqliteTest | EntitySplittingQueryTestBase | 58 | 20 | 0 | 20 | SQL baselines (+results) |
+| FromSqlQuerySqliteTest | FromSqlQueryTestBase | 74 | 6 | 0 | 3 | Mostly results; few SQL baselines |
+| FunkyDataQuerySqliteTest | FunkyDataQueryTestBase | 19 | 1 | 0 | 2 | Mostly results; few SQL baselines |
+| GearsOfWarFromSqlQuerySqliteTest | GearsOfWarFromSqlQueryTestBase | 1 | 0 | 0 | 0 | Results only |
+| GearsOfWarQuerySqliteFixture | GearsOfWarQueryRelationalFixture | 0 | 0 | 0 | 0 | Results only |
+| GearsOfWarQuerySqliteTest | GearsOfWarQueryRelationalTestBase | 593 | 591 | 1 | 596 | SQL baselines heavy (+results) |
+| IncludeOneToOneSqliteTest | IncludeOneToOneTestBase | 12 | 0 | 0 | 0 | Results only |
+| IncompleteMappingInheritanceQuerySqliteFixture | TPHInheritanceQueryFixture | 0 | 0 | 0 | 0 | Results only |
+| IncompleteMappingInheritanceQuerySqliteTest | TPHInheritanceQueryTestBase | 55 | 1 | 0 | 0 | Results only |
+| InheritanceQuerySqliteTest | TPHInheritanceQueryTestBase | 55 | 0 | 0 | 0 | Results only |
+| InheritanceRelationshipsQuerySqliteTest | InheritanceRelationshipsQueryRelationalTestBase | 70 | 0 | 0 | 0 | Results only |
+| JsonQuerySqliteFixture | JsonQueryRelationalFixture | 0 | 0 | 0 | 0 | Results only |
+| JsonQuerySqliteTest | JsonQueryRelationalTestBase | 215 | 39 | 1 | 16 | SQL baselines (+results) |
+| ManyToManyNoTrackingQuerySqliteTest | ManyToManyNoTrackingQueryRelationalTestBase | 124 | 2 | 0 | 0 | Results only |
+| ManyToManyNoTrackingSplitQuerySqliteTest | ManyToManyNoTrackingQueryRelationalTestBase | 124 | 0 | 0 | 0 | Results only |
+| ManyToManyQuerySqliteFixture | ManyToManyQueryRelationalFixture | 0 | 0 | 0 | 0 | Results only |
+| ManyToManyQuerySqliteTest | ManyToManyQueryRelationalTestBase | 123 | 2 | 0 | 0 | Results only |
+| ManyToManySplitQuerySqliteFixture | ManyToManyQueryRelationalFixture | 0 | 0 | 0 | 0 | Results only |
+| ManyToManySplitQuerySqliteTest | ManyToManyQueryRelationalTestBase | 123 | 0 | 0 | 0 | Results only |
+| MappingQuerySqliteTest | MappingQueryTestBase | 4 | 4 | 0 | 0 | Results only |
+| NonSharedPrimitiveCollectionsQuerySqliteTest | NonSharedPrimitiveCollectionsQueryRelationalTestBase | 38 | 28 | 0 | 32 | SQL baselines (+results) |
+| NorthwindAggregateOperatorsQuerySqliteTest | NorthwindAggregateOperatorsQueryRelationalTestBase | 211 | 17 | 0 | 15 | SQL baselines (+results) |
+| NorthwindAsNoTrackingQuerySqliteTest | NorthwindAsNoTrackingQueryTestBase | 11 | 0 | 0 | 0 | Results only |
+| NorthwindAsTrackingQuerySqliteTest | NorthwindAsTrackingQueryTestBase | 5 | 0 | 0 | 0 | Results only |
+| NorthwindChangeTrackingQuerySqliteTest | NorthwindChangeTrackingQueryTestBase | 17 | 0 | 0 | 0 | Results only |
+| NorthwindCompiledQuerySqliteTest | NorthwindCompiledQueryTestBase | 32 | 0 | 0 | 0 | Results only |
+| NorthwindDbFunctionsQuerySqliteTest | NorthwindDbFunctionsQueryRelationalTestBase | 15 | 1 | 2 | 4 | Mostly results; few SQL baselines |
+| NorthwindEFPropertyIncludeQuerySqliteTest | NorthwindEFPropertyIncludeQueryTestBase | 119 | 5 | 0 | 0 | Results only |
+| NorthwindFunctionsQuerySqliteTest | NorthwindFunctionsQueryRelationalTestBase | 10 | 8 | 0 | 5 | Mostly results; few SQL baselines |
+| NorthwindGroupByQuerySqliteTest | NorthwindGroupByQueryRelationalTestBase | 258 | 14 | 0 | 2 | Mostly results; few SQL baselines |
+| NorthwindIncludeNoTrackingQuerySqliteTest | NorthwindIncludeNoTrackingQueryTestBase | 118 | 5 | 0 | 0 | Results only |
+| NorthwindIncludeQuerySqliteTest | NorthwindIncludeQueryRelationalTestBase | 118 | 4 | 0 | 0 | Results only |
+| NorthwindJoinQuerySqliteTest | NorthwindJoinQueryRelationalTestBase | 68 | 7 | 0 | 0 | Results only |
+| NorthwindKeylessEntitiesQuerySqliteTest | NorthwindKeylessEntitiesQueryRelationalTestBase | 20 | 1 | 0 | 0 | Results only |
+| NorthwindMiscellaneousQuerySqliteTest | NorthwindMiscellaneousQueryRelationalTestBase | 470 | 36 | 3 | 24 | SQL baselines (+results) |
+| NorthwindNavigationsQuerySqliteTest | NorthwindNavigationsQueryRelationalTestBase | 73 | 0 | 0 | 0 | Results only |
+| NorthwindQueryFiltersQuerySqliteTest | NorthwindQueryFiltersQueryTestBase | 17 | 1 | 0 | 2 | Mostly results; few SQL baselines |
+| NorthwindQuerySqliteFixture | NorthwindQueryRelationalFixture | 0 | 0 | 0 | 0 | Results only |
+| NorthwindQueryTaggingQuerySqliteTest | NorthwindQueryTaggingQueryTestBase | 9 | 0 | 0 | 0 | Results only |
+| NorthwindSelectQuerySqliteTest | NorthwindSelectQueryRelationalTestBase | 184 | 38 | 1 | 16 | SQL baselines (+results) |
+| NorthwindSetOperationsQuerySqliteTest | NorthwindSetOperationsQueryRelationalTestBase | 91 | 1 | 0 | 0 | Results only |
+| NorthwindSplitIncludeNoTrackingQuerySqliteTest | NorthwindSplitIncludeNoTrackingQueryTestBase | 118 | 4 | 0 | 0 | Results only |
+| NorthwindSplitIncludeQuerySqliteTest | NorthwindSplitIncludeQueryTestBase | 118 | 4 | 0 | 0 | Results only |
+| NorthwindSqlQuerySqliteTest | NorthwindSqlQueryTestBase | 4 | 0 | 0 | 1 | Mostly results; few SQL baselines |
+| NorthwindStringIncludeQuerySqliteTest | NorthwindStringIncludeQueryTestBase | 119 | 4 | 0 | 0 | Results only |
+| NorthwindWhereQuerySqliteTest | NorthwindWhereQueryRelationalTestBase | 203 | 11 | 0 | 13 | SQL baselines (+results) |
+| NullKeysSqliteTest | NullKeysTestBase | 5 | 0 | 0 | 0 | Results only |
+| NullSemanticsQuerySqliteFixture | NullSemanticsQueryFixtureBase | 0 | 0 | 0 | 0 | Results only |
+| NullSemanticsQuerySqliteTest | NullSemanticsQueryTestBase | 168 | 26 | 0 | 27 | SQL baselines (+results) |
+| OperatorsProceduralSqliteTest | OperatorsProceduralQueryTestBase | 0 | 0 | 0 | 0 | Results only |
+| OperatorsQuerySqliteTest | OperatorsQueryTestBase | 10 | 10 | 0 | 11 | SQL baselines (+results) |
+| OptionalDependentQuerySqliteFixture | OptionalDependentQueryFixtureBase | 0 | 0 | 0 | 0 | Results only |
+| OptionalDependentQuerySqliteTest | OptionalDependentQueryTestBase | 10 | 10 | 0 | 11 | SQL baselines (+results) |
+| OwnedEntityQuerySqliteTest | OwnedEntityQueryRelationalTestBase | 23 | 0 | 0 | 0 | Results only |
+| OwnedQuerySqliteTest | OwnedQueryRelationalTestBase | 103 | 0 | 0 | 0 | Results only |
+| PrecompiledQuerySqliteTest | PrecompiledQueryRelationalTestBase | 104 | 0 | 2 | 0 | Results only |
+| PrecompiledSqlPregenerationQuerySqlServerTest | PrecompiledSqlPregenerationQueryRelationalTestBase | 14 | 0 | 0 | 0 | Results only |
+| PrimitiveCollectionsQuerySqliteTest | PrimitiveCollectionsQueryRelationalTestBase | 158 | 158 | 2 | 133 | SQL baselines heavy (+results) |
+| QueryFilterFuncletizationSqliteTest | QueryFilterFuncletizationTestBase | 28 | 1 | 0 | 2 | Mostly results; few SQL baselines |
+| QueryNoClientEvalSqliteFixture | NorthwindQueryRelationalFixture | 0 | 0 | 0 | 0 | Results only |
+| QueryNoClientEvalSqliteTest | QueryNoClientEvalTestBase | 14 | 0 | 0 | 0 | Results only |
+| SharedTypeQuerySqliteTest | SharedTypeQueryRelationalTestBase | 4 | 0 | 0 | 0 | Results only |
+| SpatialQuerySqliteFixture | SpatialQueryRelationalFixture | 0 | 0 | 0 | 0 | Results only |
+| SpatialQuerySqliteTest | SpatialQueryRelationalTestBase | 84 | 83 | 0 | 83 | SQL baselines heavy (+results) |
+| SqlQuerySqliteTest | SqlQueryTestBase | 60 | 8 | 0 | 5 | Mostly results; few SQL baselines |
+| TPCFiltersInheritanceQuerySqliteFixture | TPCInheritanceQueryFixture | 0 | 0 | 0 | 0 | Results only |
+| TPCFiltersInheritanceQuerySqliteTest | TPCFiltersInheritanceQueryTestBase | 11 | 0 | 0 | 0 | Results only |
+| TPCGearsOfWarQuerySqliteFixture | TPCGearsOfWarQueryRelationalFixture | 0 | 0 | 0 | 0 | Results only |
+| TPCGearsOfWarQuerySqliteTest | TPCGearsOfWarQueryRelationalTestBase | 593 | 23 | 0 | 3 | Mostly results; few SQL baselines |
+| TPCInheritanceQuerySqliteFixture | TPCInheritanceQueryFixture | 0 | 0 | 0 | 0 | Results only |
+| TPCInheritanceQuerySqliteTest | TPCInheritanceQueryTestBase | 53 | 0 | 0 | 0 | Results only |
+| TPCManyToManyNoTrackingQuerySqliteTest | TPCManyToManyNoTrackingQueryRelationalTestBase | 124 | 2 | 0 | 0 | Results only |
+| TPCManyToManyQuerySqliteFixture | TPCManyToManyQueryRelationalFixture | 0 | 0 | 0 | 0 | Results only |
+| TPCManyToManyQuerySqliteTest | TPCManyToManyQueryRelationalTestBase | 123 | 2 | 0 | 0 | Results only |
+| TPCRelationshipsQuerySqliteTest | TPCRelationshipsQueryTestBase | 70 | 0 | 0 | 0 | Results only |
+| TPHFiltersInheritanceQuerySqliteFixture | TPHInheritanceQueryFixture | 0 | 0 | 0 | 0 | Results only |
+| TPHFiltersInheritanceQuerySqliteTest | FiltersInheritanceQueryTestBase | 11 | 0 | 0 | 0 | Results only |
+| TPHInheritanceQuerySqliteFixture | TPHInheritanceQueryFixture | 0 | 0 | 0 | 0 | Results only |
+| TPTFiltersInheritanceQuerySqliteFixture | TPTInheritanceQueryFixture | 0 | 0 | 0 | 0 | Results only |
+| TPTFiltersInheritanceQuerySqliteTest | TPTFiltersInheritanceQueryTestBase | 11 | 0 | 0 | 0 | Results only |
+| TPTGearsOfWarQuerySqliteFixture | TPTGearsOfWarQueryRelationalFixture | 0 | 0 | 0 | 0 | Results only |
+| TPTGearsOfWarQuerySqliteTest | TPTGearsOfWarQueryRelationalTestBase | 593 | 23 | 0 | 3 | Mostly results; few SQL baselines |
+| TPTInheritanceQuerySqliteFixture | TPTInheritanceQueryFixture | 0 | 0 | 0 | 0 | Results only |
+| TPTInheritanceQuerySqliteTest | TPTInheritanceQueryTestBase | 53 | 0 | 0 | 0 | Results only |
+| TPTManyToManyNoTrackingQuerySqliteTest | TPTManyToManyNoTrackingQueryRelationalTestBase | 124 | 2 | 0 | 0 | Results only |
+| TPTManyToManyQuerySqliteFixture | TPTManyToManyQueryRelationalFixture | 0 | 0 | 0 | 0 | Results only |
+| TPTManyToManyQuerySqliteTest | TPTManyToManyQueryRelationalTestBase | 123 | 2 | 0 | 0 | Results only |
+| TPTRelationshipsQuerySqliteTest | TPTRelationshipsQueryTestBase | 70 | 0 | 0 | 0 | Results only |
+| ToSqlQuerySqliteTest | ToSqlQueryTestBase | 1 | 1 | 1 | 2 | Mostly results; few SQL baselines |
+| WarningsSqliteTest | WarningsTestBase | 11 | 0 | 0 | 0 | Results only |
 
-| Class | Spec base (EF 9.0.1) | Inherited tests | Provider-only tests | Overrides | SQL baselines | Assertion style | Notes |
-|---|---|---|---|---|---|---|---|
-| MySqlUpdateSqlGeneratorTest | UpdateSqlGeneratorTestBase | 14 | 4 | 15 | 21 | SQL-heavy |  |
-| NonSharedModelUpdatesMySqlTest | NonSharedModelUpdatesTestBase | 2 | 0 | 1 | 4 | SQL-heavy |  |
-| StoreValueGenerationMySqlTest | StoreValueGenerationTestBase | 19 | 0 | 19 | 29 | SQL-heavy |  |
-| StoredProcedureUpdateMySqlTest | StoredProcedureUpdateTestBase | 28 | 0 | 30 | 15 | SQL-heavy |  |
+#### Query/Associations/ComplexJson
 
-### IntegrationTests/Tests
+| Class | Spec base | Inherited | Overridden | Provider-only | AssertSql calls | Asserts |
+|---|---|---:|---:|---:|---:|---|
+| ComplexJsonBulkUpdateSqliteTest | ComplexJsonBulkUpdateRelationalTestBase | 33 | 0 | 0 | 0 | Results only |
+| ComplexJsonCollectionSqliteTest | ComplexJsonCollectionRelationalTestBase | 14 | 0 | 0 | 0 | Results only |
+| ComplexJsonMiscellaneousSqliteTest | ComplexJsonMiscellaneousRelationalTestBase | 7 | 0 | 0 | 0 | Results only |
+| ComplexJsonPrimitiveCollectionSqliteTest | ComplexJsonPrimitiveCollectionRelationalTestBase | 6 | 0 | 0 | 0 | Results only |
+| ComplexJsonProjectionSqliteTest | ComplexJsonProjectionRelationalTestBase | 28 | 6 | 0 | 0 | Results only |
+| ComplexJsonSetOperationsSqliteTest | ComplexJsonSetOperationsRelationalTestBase | 5 | 0 | 0 | 0 | Results only |
+| ComplexJsonSqliteFixture | ComplexJsonRelationalFixtureBase | 0 | 0 | 0 | 0 | Results only |
+| ComplexJsonStructuralEqualitySqliteTest | ComplexJsonStructuralEqualityRelationalTestBase | 16 | 0 | 0 | 0 | Results only |
 
-| Class | Spec base (EF 9.0.1) | Inherited tests | Provider-only tests | Overrides | SQL baselines | Assertion style | Notes |
-|---|---|---|---|---|---|---|---|
-| BatchTest | provider-only | 0 | 1 | 0 | 0 | Results only |  |
-| ConnectionTest | provider-only | 0 | 1 | 0 | 0 | Results only |  |
-| CrmTest | provider-only | 0 | 2 | 0 | 0 | Results only |  |
-| DataTypesTest | provider-only | 0 | 2 | 0 | 0 | Results only |  |
-| ExpressionTest | provider-only | 0 | 26 | 0 | 0 | Results only |  |
-| GeneratedTypesTest | provider-only | 0 | 3 | 0 | 0 | Results only |  |
-| SequenceTest | provider-only | 0 | 1 | 0 | 0 | Results only |  |
+#### Query/Associations/ComplexTableSplitting
 
-### Tests
+| Class | Spec base | Inherited | Overridden | Provider-only | AssertSql calls | Asserts |
+|---|---|---:|---:|---:|---:|---|
+| ComplexTableSplittingBulkUpdateSqliteTest | ComplexTableSplittingBulkUpdateRelationalTestBase | 33 | 0 | 0 | 0 | Results only |
+| ComplexTableSplittingMiscellaneousSqliteTest | ComplexTableSplittingMiscellaneousRelationalTestBase | 7 | 0 | 0 | 0 | Results only |
+| ComplexTableSplittingPrimitiveCollectionSqliteTest | ComplexTableSplittingPrimitiveCollectionRelationalTestBase | 6 | 0 | 0 | 0 | Results only |
+| ComplexTableSplittingProjectionSqliteTest | ComplexTableSplittingProjectionRelationalTestBase | 28 | 3 | 0 | 0 | Results only |
+| ComplexTableSplittingSqliteFixture | ComplexTableSplittingRelationalFixtureBase | 0 | 0 | 0 | 0 | Results only |
+| ComplexTableSplittingStructuralEqualitySqliteTest | ComplexTableSplittingStructuralEqualityRelationalTestBase | 16 | 0 | 0 | 0 | Results only |
 
-| Class | Spec base (EF 9.0.1) | Inherited tests | Provider-only tests | Overrides | SQL baselines | Assertion style | Notes |
-|---|---|---|---|---|---|---|---|
-| MySqlDbContextOptionsBuilderExtensionsTest | provider-only | 0 | 26 | 0 | 0 | Results only |  |
-| MySqlOptionsExtensionTest | provider-only | 0 | 1 | 0 | 0 | Results only |  |
-| MySqlRelationalConnectionTest | provider-only | 0 | 9 | 0 | 0 | Results only |  |
+#### Query/Associations/Navigations
 
-### Tests/Behaviors
+| Class | Spec base | Inherited | Overridden | Provider-only | AssertSql calls | Asserts |
+|---|---|---:|---:|---:|---:|---|
+| NavigationsCollectionSqliteTest | NavigationsCollectionRelationalTestBase | 14 | 1 | 0 | 0 | Results only |
+| NavigationsIncludeSqliteTest | NavigationsIncludeRelationalTestBase | 9 | 0 | 0 | 0 | Results only |
+| NavigationsMiscellaneousSqliteTest | NavigationsMiscellaneousRelationalTestBase | 4 | 0 | 0 | 0 | Results only |
+| NavigationsPrimitiveCollectionSqliteTest | NavigationsPrimitiveCollectionRelationalTestBase | 6 | 0 | 0 | 0 | Results only |
+| NavigationsProjectionSqliteTest | NavigationsProjectionRelationalTestBase | 24 | 3 | 0 | 0 | Results only |
+| NavigationsSetOperationsSqliteTest | NavigationsSetOperationsRelationalTestBase | 5 | 0 | 0 | 0 | Results only |
+| NavigationsSqliteFixture | NavigationsRelationalFixtureBase | 0 | 0 | 0 | 0 | Results only |
+| NavigationsStructuralEqualitySqliteTest | NavigationsStructuralEqualityRelationalTestBase | 15 | 0 | 0 | 0 | Results only |
 
-| Class | Spec base (EF 9.0.1) | Inherited tests | Provider-only tests | Overrides | SQL baselines | Assertion style | Notes |
-|---|---|---|---|---|---|---|---|
-| HavingBehavior | provider-only | 0 | 5 | 0 | 0 | Results only |  |
-| MySql8WithSridConstraintSpatialBehavior | provider-only | 0 | 2 | 0 | 0 | Results only |  |
-| MySql8WithoutSridConstraintSpatialBehavior | provider-only | 0 | 2 | 0 | 0 | Results only |  |
-| SpatialBehavior | provider-only | 0 | 2 | 0 | 0 | Results only |  |
+#### Query/Associations/OwnedJson
 
-### Tests/Bugs
+| Class | Spec base | Inherited | Overridden | Provider-only | AssertSql calls | Asserts |
+|---|---|---:|---:|---:|---:|---|
+| OwnedJsonBulkUpdateSqliteTest | OwnedJsonBulkUpdateRelationalTestBase | 3 | 0 | 0 | 0 | Results only |
+| OwnedJsonCollectionSqliteTest | OwnedJsonCollectionRelationalTestBase | 14 | 1 | 0 | 0 | Results only |
+| OwnedJsonMiscellaneousSqliteTest | OwnedJsonMiscellaneousRelationalTestBase | 4 | 0 | 0 | 0 | Results only |
+| OwnedJsonPrimitiveCollectionSqliteTest | OwnedJsonPrimitiveCollectionRelationalTestBase | 6 | 0 | 0 | 0 | Results only |
+| OwnedJsonProjectionSqliteTest | OwnedJsonProjectionRelationalTestBase | 24 | 6 | 0 | 0 | Results only |
+| OwnedJsonSqliteFixture | OwnedJsonRelationalFixtureBase | 0 | 0 | 0 | 0 | Results only |
+| OwnedJsonStructuralEqualitySqliteTest | OwnedJsonStructuralEqualityRelationalTestBase | 15 | 15 | 1 | 15 | SQL baselines (+results) |
 
-| Class | Spec base (EF 9.0.1) | Inherited tests | Provider-only tests | Overrides | SQL baselines | Assertion style | Notes |
-|---|---|---|---|---|---|---|---|
-| MySqlBug96947 | provider-only | 0 | 2 | 0 | 0 | Results only |  |
+#### Query/Associations/OwnedNavigations
 
-### Tests/Migrations
+| Class | Spec base | Inherited | Overridden | Provider-only | AssertSql calls | Asserts |
+|---|---|---:|---:|---:|---:|---|
+| OwnedNavigationsCollectionSqliteTest | OwnedNavigationsCollectionRelationalTestBase | 14 | 1 | 0 | 0 | Results only |
+| OwnedNavigationsMiscellaneousSqliteTest | OwnedNavigationsMiscellaneousRelationalTestBase | 4 | 0 | 0 | 0 | Results only |
+| OwnedNavigationsPrimitiveCollectionSqliteTest | OwnedNavigationsPrimitiveCollectionRelationalTestBase | 6 | 0 | 0 | 0 | Results only |
+| OwnedNavigationsSetOperationsSqliteTest | OwnedNavigationsSetOperationsRelationalTestBase | 5 | 1 | 0 | 0 | Results only |
+| OwnedNavigationsStructuralEqualitySqliteTest | OwnedNavigationsStructuralEqualityRelationalTestBase | 15 | 15 | 1 | 15 | SQL baselines (+results) |
+| OwnedNavigationsSqliteFixture | OwnedNavigationsRelationalFixtureBase | 0 | 0 | 0 | 0 | Results only |
 
-| Class | Spec base (EF 9.0.1) | Inherited tests | Provider-only tests | Overrides | SQL baselines | Assertion style | Notes |
-|---|---|---|---|---|---|---|---|
-| MySqlHistoryRepositoryTest | provider-only | 0 | 2 | 0 | 0 | Results only |  |
-| ServerVersionTest | provider-only | 0 | 2 | 0 | 0 | Results only |  |
+#### Query/Associations/OwnedTableSplitting
 
-### Tests/Query
+| Class | Spec base | Inherited | Overridden | Provider-only | AssertSql calls | Asserts |
+|---|---|---:|---:|---:|---:|---|
+| OwnedTableSplittingMiscellaneousSqliteTest | OwnedTableSplittingMiscellaneousRelationalTestBase | 4 | 0 | 0 | 0 | Results only |
+| OwnedTableSplittingPrimitiveCollectionSqliteTest | OwnedTableSplittingPrimitiveCollectionRelationalTestBase | 6 | 0 | 0 | 0 | Results only |
+| OwnedTableSplittingSqliteFixture | OwnedTableSplittingRelationalFixtureBase | 0 | 0 | 0 | 0 | Results only |
+| OwnedTableSplittingStructuralEqualitySqliteTest | OwnedTableSplittingStructuralEqualityRelationalTestBase | 15 | 15 | 1 | 15 | SQL baselines (+results) |
 
-| Class | Spec base (EF 9.0.1) | Inherited tests | Provider-only tests | Overrides | SQL baselines | Assertion style | Notes |
-|---|---|---|---|---|---|---|---|
-| MySqlCollationTest | provider-only | 0 | 3 | 0 | 0 | Results only |  |
-| MySqlTimeZoneTest | provider-only | 0 | 2 | 0 | 0 | Results only |  |
+#### Query/Translations
 
-### Tests/ValueGeneration
+| Class | Spec base | Inherited | Overridden | Provider-only | AssertSql calls | Asserts |
+|---|---|---:|---:|---:|---:|---|
+| BasicTypesQuerySqliteFixture | BasicTypesQueryFixtureBase | 0 | 0 | 0 | 0 | Results only |
+| ByteArrayTranslationsSqliteTest | ByteArrayTranslationsTestBase | 7 | 7 | 1 | 6 | Mostly results; few SQL baselines |
+| EnumTranslationsSqliteTest | EnumTranslationsTestBase | 18 | 18 | 1 | 19 | SQL baselines (+results) |
+| GuidTranslationsSqliteTest | GuidTranslationsTestBase | 4 | 4 | 1 | 4 | Mostly results; few SQL baselines |
+| MathTranslationsSqliteTest | MathTranslationsTestBase | 66 | 66 | 1 | 64 | SQL baselines heavy (+results) |
+| MiscellaneousTranslationsSqliteTest | MiscellaneousTranslationsRelationalTestBase | 18 | 18 | 1 | 11 | SQL baselines (+results) |
+| StringTranslationsSqliteTest | StringTranslationsRelationalTestBase | 104 | 104 | 2 | 105 | SQL baselines heavy (+results) |
 
-| Class | Spec base (EF 9.0.1) | Inherited tests | Provider-only tests | Overrides | SQL baselines | Assertion style | Notes |
-|---|---|---|---|---|---|---|---|
-| MysqlSequentialGuidValueGeneratorTest | provider-only | 0 | 8 | 0 | 0 | Results only |  |
+#### Query/Translations/Operators
 
-### FunctionalTests/ModelBuilding
+| Class | Spec base | Inherited | Overridden | Provider-only | AssertSql calls | Asserts |
+|---|---|---:|---:|---:|---:|---|
+| ArithmeticOperatorTranslationsSqliteTest | ArithmeticOperatorTranslationsTestBase | 5 | 5 | 1 | 6 | Mostly results; few SQL baselines |
+| BitwiseOperatorTranslationsSqliteTest | BitwiseOperatorTranslationsTestBase | 15 | 15 | 1 | 12 | SQL baselines (+results) |
+| ComparisonOperatorTranslationsSqliteTest | ComparisonOperatorTranslationsTestBase | 6 | 6 | 1 | 7 | Mostly results; few SQL baselines |
+| LogicalOperatorTranslationsSqlServerTest | LogicalOperatorTranslationsTestBase | 6 | 6 | 1 | 7 | Mostly results; few SQL baselines |
+| MiscellaneousOperatorTranslationsSqlServerTest | MiscellaneousOperatorTranslationsTestBase | 2 | 2 | 1 | 3 | Mostly results; few SQL baselines |
 
-(Nested classes of `MySqlModelBuilderGenericTest : MySqlModelBuilderTestBase : RelationalModelBuilderTest`; counts are the nested spec base plus its core parent.)
+#### Query/Translations/Temporal
 
-| Class | Spec base (EF 9.0.1) | Inherited tests | Provider-only tests | Overrides | SQL baselines | Assertion style | Notes |
-|---|---|---|---|---|---|---|---|
-| MySqlGenericNonRelationship | RelationalNonRelationshipTestBase | 173 | 0 | 0 | 0 | Model only |  |
-| MySqlGenericComplexType | RelationalComplexTypeTestBase | 86 | 0 | 0 | 0 | Model only |  |
-| MySqlGenericInheritance | RelationalInheritanceTestBase | 31 | 0 | 0 | 0 | Model only |  |
-| MySqlGenericOneToMany | RelationalOneToManyTestBase | 90 | 0 | 0 | 0 | Model only |  |
-| MySqlGenericManyToOne | RelationalManyToOneTestBase | 59 | 0 | 0 | 0 | Model only |  |
-| MySqlGenericOneToOne | RelationalOneToOneTestBase | 142 | 0 | 0 | 0 | Model only |  |
-| MySqlGenericManyToMany | RelationalManyToManyTestBase | 36 | 0 | 0 | 0 | Model only |  |
-| MySqlGenericOwnedTypes | RelationalOwnedTypesTestBase | 63 | 0 | 1 | 0 | Model only | **internal: not run**; overrides `Can_use_sproc_mapping_with_owned_reference` to expect InvalidOperationException |
+| Class | Spec base | Inherited | Overridden | Provider-only | AssertSql calls | Asserts |
+|---|---|---:|---:|---:|---:|---|
+| DateOnlyTranslationsSqliteTest | DateOnlyTranslationsTestBase | 18 | 18 | 3 | 21 | SQL baselines (+results) |
+| DateTimeOffsetTranslationsSqliteTest | DateTimeOffsetTranslationsTestBase | 24 | 24 | 1 | 23 | SQL baselines (+results) |
+| DateTimeTranslationsSqliteTest | DateTimeTranslationsTestBase | 19 | 19 | 1 | 19 | SQL baselines (+results) |
+| TimeOnlyTranslationsSqliteTest | TimeOnlyTranslationsTestBase | 17 | 17 | 1 | 18 | SQL baselines (+results) |
+| TimeSpanTranslationsSqliteTest | TimeSpanTranslationsTestBase | 6 | 6 | 1 | 7 | Mostly results; few SQL baselines |
+
+#### Scaffolding
+
+| Class | Spec base | Inherited | Overridden | Provider-only | AssertSql calls | Asserts |
+|---|---|---:|---:|---:|---:|---|
+| CompiledModelSqliteTest | CompiledModelRelationalTestBase | 14 | 3 | 0 | 0 | Results only |
+| SqliteDatabaseModelFactoryTest | provider-only | 0 | 0 | 51 | 0 | Results only |
+
+#### Types
+
+| Class | Spec base | Inherited | Overridden | Provider-only | AssertSql calls | Asserts |
+|---|---|---:|---:|---:|---:|---|
+| BoolTypeTest | RelationalTypeTestBase | 7 | 0 | 0 | 0 | Results only |
+| ByteTypeTest | RelationalTypeTestBase | 7 | 0 | 0 | 0 | Results only |
+| DateTimeTypeTest | RelationalTypeTestBase | 7 | 1 | 0 | 0 | Results only |
+
+#### Update
+
+| Class | Spec base | Inherited | Overridden | Provider-only | AssertSql calls | Asserts |
+|---|---|---:|---:|---:|---:|---|
+| ComplexCollectionJsonUpdateSqliteTest | ComplexCollectionJsonUpdateTestBase | 20 | 19 | 0 | 19 | SQL baselines (+results) |
+| JsonUpdateSqliteFixture | JsonUpdateFixtureBase | 0 | 0 | 0 | 0 | Results only |
+| JsonUpdateSqliteTest | JsonUpdateTestBase | 136 | 104 | 0 | 99 | SQL baselines heavy (+results) |
+| NonSharedModelUpdatesSqliteTest | NonSharedModelUpdatesTestBase | 2 | 2 | 0 | 3 | Mostly results; few SQL baselines |
+| SqliteUpdateSqlGeneratorTest | UpdateSqlGeneratorTestBase | 13 | 2 | 0 | 0 | Results only |
+| StoreValueGenerationWithoutReturningSqliteTest | StoreValueGenerationTestBase | 19 | 18 | 0 | 18 | SQL baselines (+results) |
+| StoreValueGenerationSqliteFixture | StoreValueGenerationFixtureBase | 0 | 0 | 0 | 0 | Results only |
+| StoreValueGenerationSqliteTest | StoreValueGenerationTestBase | 19 | 18 | 0 | 18 | SQL baselines (+results) |
+| UpdatesSqliteTest | UpdatesRelationalTestBase | 29 | 2 | 0 | 0 | Results only |
+
+**Subtotal (EFCore.Sqlite.FunctionalTests)**: inherited test methods 13842 (of which overridden 2382), provider-only test methods 239.
+
+### EFCore.Sqlite.Tests (unit)
+
+
+#### (root)
+
+| Class | Spec base | Inherited | Overridden | Provider-only | AssertSql calls | Asserts |
+|---|---|---:|---:|---:|---:|---|
+| DbSetAsTableNameSqliteTest | DbSetAsTableNameTest | 14 | 0 | 0 | - | Unit (model/SQL strings/exceptions) |
+| SqliteNTSApiConsistencyTest | ApiConsistencyTestBase | 19 | 0 | 0 | - | Unit (model/SQL strings/exceptions) |
+
+#### Design
+
+| Class | Spec base | Inherited | Overridden | Provider-only | AssertSql calls | Asserts |
+|---|---|---:|---:|---:|---:|---|
+| SqliteDesignTimeProviderServicesTest | DesignTimeProviderServicesTest | 1 | 0 | 0 | - | Unit (model/SQL strings/exceptions) |
+
+#### Diagnostics
+
+| Class | Spec base | Inherited | Overridden | Provider-only | AssertSql calls | Asserts |
+|---|---|---:|---:|---:|---:|---|
+| SqliteEventIdTest | EventIdTestBase | 0 | 0 | 1 | - | Unit (model/SQL strings/exceptions) |
+
+#### Extensions
+
+| Class | Spec base | Inherited | Overridden | Provider-only | AssertSql calls | Asserts |
+|---|---|---:|---:|---:|---:|---|
+| SqliteDatabaseFacadeExtensionsTest | provider-only | 0 | 0 | 2 | - | Unit (model/SQL strings/exceptions) |
+| SqliteDbContextOptionsBuilderExtensionsTest | provider-only | 0 | 0 | 12 | - | Unit (model/SQL strings/exceptions) |
+| SqliteMetadataExtensionsTest | provider-only | 0 | 0 | 11 | - | Unit (model/SQL strings/exceptions) |
+
+#### Infrastructure
+
+| Class | Spec base | Inherited | Overridden | Provider-only | AssertSql calls | Asserts |
+|---|---|---:|---:|---:|---:|---|
+| SqliteModelValidatorTest | RelationalModelValidatorTest | 380 | 7 | 9 | - | Unit (model/SQL strings/exceptions) |
+
+#### Metadata/Builders
+
+| Class | Spec base | Inherited | Overridden | Provider-only | AssertSql calls | Asserts |
+|---|---|---:|---:|---:|---:|---|
+| SqliteBuilderExtensionsTest | provider-only | 0 | 0 | 7 | - | Unit (model/SQL strings/exceptions) |
+| SqliteMetadataBuilderExtensionsTest | provider-only | 0 | 0 | 1 | - | Unit (model/SQL strings/exceptions) |
+
+#### Metadata/Conventions
+
+| Class | Spec base | Inherited | Overridden | Provider-only | AssertSql calls | Asserts |
+|---|---|---:|---:|---:|---:|---|
+| SqliteConventionSetBuilderTests | ConventionSetBuilderTests | 2 | 0 | 0 | - | Unit (model/SQL strings/exceptions) |
+
+#### Migrations
+
+| Class | Spec base | Inherited | Overridden | Provider-only | AssertSql calls | Asserts |
+|---|---|---:|---:|---:|---:|---|
+| SqliteHistoryRepositoryTest | provider-only | 0 | 0 | 7 | - | Unit (model/SQL strings/exceptions) |
+| SqliteMigrationAnnotationProviderTest | provider-only | 0 | 0 | 7 | - | Unit (model/SQL strings/exceptions) |
+| SqliteMigrationBuilderTest | provider-only | 0 | 0 | 2 | - | Unit (model/SQL strings/exceptions) |
+| SqliteModelDifferTest | MigrationsModelDifferTestBase | 0 | 0 | 6 | - | Unit (model/SQL strings/exceptions) |
+
+#### Scaffolding
+
+| Class | Spec base | Inherited | Overridden | Provider-only | AssertSql calls | Asserts |
+|---|---|---:|---:|---:|---:|---|
+| SqliteCodeGeneratorTest | provider-only | 0 | 0 | 3 | - | Unit (model/SQL strings/exceptions) |
+
+#### Storage
+
+| Class | Spec base | Inherited | Overridden | Provider-only | AssertSql calls | Asserts |
+|---|---|---:|---:|---:|---:|---|
+| SqliteRelationalConnectionTest | provider-only | 0 | 0 | 2 | - | Unit (model/SQL strings/exceptions) |
+| SqliteStringTypeMappingTest | provider-only | 0 | 0 | 1 | - | Unit (model/SQL strings/exceptions) |
+| SqliteTypeMappingSourceTest | RelationalTypeMappingSourceTestBase | 0 | 0 | 7 | - | Unit (model/SQL strings/exceptions) |
+| SqliteTypeMappingTest | RelationalTypeMappingTest | 36 | 8 | 2 | - | Unit (model/SQL strings/exceptions) |
+
+**Subtotal (EFCore.Sqlite.Tests (unit))**: inherited test methods 452 (of which overridden 15), provider-only test methods 80.
+
 
 ---
 
