@@ -140,7 +140,28 @@ plain ADO.NET:
 - A `DELETE` target takes no correlation name: `DELETE FROM "T" AS "t" WHERE "t"."Id" = 1` and `DELETE FROM "T" "t" ...`
   fail ("Expected token 'EndOfInput' ... but found 'As'"), though `UPDATE "T" AS "t"` and `UPDATE "T" "t"` work. ISO
   (SQL:2011) allows `DELETE FROM <target table> [ [ AS ] <correlation name> ]`. Found by running `ExecuteDelete` with EF's
-  standard DML. Our work-around: the flatfile dialect keeps `DmlSyntax.UnaliasedTarget`.
+  standard DML. No work-around: every `ExecuteDelete` fails, and the five tests that use it are skipped.
+- Found by EF's Select specification suite on preview.9 (each skipped in the base suite's flatfile Select class):
+  - Joins of several derived tables don't finish: three `LEFT JOIN (SELECT ... FROM "OrderDetails" INNER JOIN "Products"
+    ...)` on `"Orders"`, one with `ROW_NUMBER()`, filtered `"o"."OrderID" < 10350` (`Do_not_erase_projection_mapping_when_adding_single_projection`),
+    run in milliseconds elsewhere and were unfinished after 90 seconds. Likely nested-loop joins of derived tables with
+    the filter applied last.
+  - An outer column inside a lateral subquery isn't resolved: `LEFT JOIN LATERAL (SELECT ... WHERE "o"."CustomerID" =
+    "c"."CustomerID") AS "o1" ON TRUE` throws "No row is available for table 'c0'" / "for table 'Customers'".
+  - A window function's `ORDER BY` takes only column references: `ROW_NUMBER() OVER (ORDER BY (SELECT 1))` throws
+    "ORDER BY only supports column references, not 'ScalarSubqueryExpression'". ISO allows any value expression.
+  - `ROW_NUMBER() OVER (PARTITION BY "o0"."OrderID" ORDER BY "p"."ProductName")`, ordering by a column of a table joined
+    into the window's query, numbers the rows differently from every other database (wrong first row per partition).
+  - An integer literal is read back as a `decimal`: `CASE WHEN ... THEN 1 ELSE 2 END` fails EF's `GetByte` ("expected
+    'Nullable<Byte>' but the actual value was of type 'System.Decimal'"). An exact numeric literal without a decimal point
+    could be an integer, and `GetByte` could convert an in-range decimal.
+  - A predicate as a CASE result is rejected: `CASE WHEN "o"."CustomerID" IS NULL THEN TRUE ELSE "o"."OrderID" < 100 END`
+    ("Expected token 'End' ... but found 'LessThan'"). Valid ISO (a boolean value expression).
+- A connection holds the database's write lock from `Open`, even one that only reads, so two contexts on one database
+  can't both be open: the second waits, then times out ("Timed out after 5000ms waiting for another write connection to
+  close"). EF opens a connection per query, so parallel work on one database (EF's specification test classes in
+  parallel, or an application's concurrent requests) serializes or fails. Taking the lock on the first write, as SQLite
+  does, would let readers run together.
 - Errors that are not `DbException`s: the three above surface as `OverflowException`, `ArgumentException` and
   `InvalidOperationException`; provider-agnostic code (EF's `DbUpdateException` wrapping included) catches database errors
   as `DbException`. `DROP TABLE` of a missing table is fixed: it now throws `FlatFileException`, a `DbException`.

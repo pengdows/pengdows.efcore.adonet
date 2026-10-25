@@ -2,7 +2,7 @@ namespace pengdows.efcore.adonet.flatfile;
 
 /// <summary>
 ///     pengdows.flatfile: strict ISO SQL. Named parameters are <c>:name</c>; there is no RETURNING or last-insert function,
-///     so keys come from <c>NEXT VALUE FOR</c> sequences; and there is no <c>UPDATE ... FROM</c>.
+///     so keys come from <c>NEXT VALUE FOR</c> sequences.
 /// </summary>
 public sealed class FlatFileDialect : AdoNetDialect
 {
@@ -26,5 +26,4 @@ internal sealed class FlatFileSql : AnsiSqlDialect
     public override string ParameterMarker => ":";
     public override bool ParameterNameIncludesMarker => false;
     public override KeyRetrieval Keys { get; } = KeyRetrieval.Sequence();
-    public override DmlSyntax Dml => DmlSyntax.UnaliasedTarget;
 }

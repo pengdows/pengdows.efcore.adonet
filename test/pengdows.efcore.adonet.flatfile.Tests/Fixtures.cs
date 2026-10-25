@@ -32,6 +32,14 @@ public sealed class FlatFileFixture : ProviderFixture
 
         ["Math_on_doubles"] = "pengdows.flatfile 0.2.1-preview.9 has no POWER",
 
+        // DELETE FROM "Blogs" AS "b" ... (ISO SQL:2011 allows a correlation name on a DELETE target): each test deletes
+        // through ExecuteDelete, in its body or to clear its table.
+        ["Execute_delete_removes_matching_rows"] = DeleteAlias,
+        ["Execute_delete_filters_through_a_navigation"] = DeleteAlias,
+        ["Synchronous_insert_query_update_delete_and_transaction"] = DeleteAlias,
+        ["Constants_match_the_values_parameters_stored"] = DeleteAlias,
+        ["Date_offset_constants_and_parts"] = DeleteAlias,
+
         // INTERVAL '0 01:02:03.5' DAY TO SECOND (ISO). The engine's interval literals have one field and no precision.
         ["Time_span_constants"] = "pengdows.flatfile 0.2.1-preview.9 has no DAY TO SECOND interval literal",
 
@@ -39,6 +47,8 @@ public sealed class FlatFileFixture : ProviderFixture
         ["Floating_point_constants_at_the_edges_of_their_types"] =
             "pengdows.flatfile 0.2.1-preview.9 parses a literal with an exponent as a decimal and overflows"
     };
+
+    private const string DeleteAlias = "pengdows.flatfile 0.2.1-preview.9 rejects an alias on a DELETE target";
 
     public override IReadOnlyList<string> ModelSequences { get; } =
         ["SchemaAuthors_Id_seq", "SchemaBooks_Id_seq", "SchemaCategories_Id_seq", "LongNames_Id_seq", "Authors_Id_seq", "Writers_Id_seq", "Shelves_Id_seq"];
