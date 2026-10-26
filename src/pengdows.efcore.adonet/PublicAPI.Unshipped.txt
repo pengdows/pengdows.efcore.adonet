@@ -107,6 +107,7 @@ pengdows.efcore.adonet.IDatabaseCapabilities.IsTransient(System.Exception! excep
 pengdows.efcore.adonet.IDatabaseCapabilities.MaxIdentifierLength.get -> int
 pengdows.efcore.adonet.IDatabaseCapabilities.MaxParametersPerCommand.get -> int
 pengdows.efcore.adonet.IDatabaseCapabilities.SupportsAmbientTransactions.get -> bool
+pengdows.efcore.adonet.IDatabaseCapabilities.SupportsMultipleActiveReaders.get -> bool
 pengdows.efcore.adonet.IDatabaseCapabilities.SupportsMultipleStatementsPerCommand.get -> bool
 pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder
 pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder.AdoNetDbContextOptionsBuilder(Microsoft.EntityFrameworkCore.DbContextOptionsBuilder! optionsBuilder) -> void
@@ -297,6 +298,8 @@ virtual pengdows.efcore.adonet.DatabaseCapabilities.MaxParametersPerCommand.get 
 virtual pengdows.efcore.adonet.DatabaseCapabilities.MaxParametersPerCommand.init -> void
 virtual pengdows.efcore.adonet.DatabaseCapabilities.SupportsAmbientTransactions.get -> bool
 virtual pengdows.efcore.adonet.DatabaseCapabilities.SupportsAmbientTransactions.init -> void
+virtual pengdows.efcore.adonet.DatabaseCapabilities.SupportsMultipleActiveReaders.get -> bool
+virtual pengdows.efcore.adonet.DatabaseCapabilities.SupportsMultipleActiveReaders.init -> void
 virtual pengdows.efcore.adonet.DatabaseCapabilities.SupportsMultipleStatementsPerCommand.get -> bool
 virtual pengdows.efcore.adonet.DatabaseCapabilities.SupportsMultipleStatementsPerCommand.init -> void
 virtual pengdows.efcore.adonet.DmlSyntax.CanDeleteDirectly(Microsoft.EntityFrameworkCore.Query.SqlExpressions.SelectExpression! select) -> bool?

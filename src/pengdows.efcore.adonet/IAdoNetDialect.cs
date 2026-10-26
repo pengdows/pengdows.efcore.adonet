@@ -183,6 +183,12 @@ public interface IDatabaseCapabilities
     bool SupportsAmbientTransactions { get; }
 
     /// <summary>
+    ///     Whether one connection can hold several open data readers at once. Where it can't, a split query's results are
+    ///     buffered, so each command runs after the previous reader is read and closed.
+    /// </summary>
+    bool SupportsMultipleActiveReaders { get; }
+
+    /// <summary>
     ///     Whether a failure may succeed if retried (a deadlock, a dropped connection, a busy server), for a retrying
     ///     execution strategy (<c>EnableRetryOnFailure</c>).
     /// </summary>

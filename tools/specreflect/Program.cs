@@ -53,12 +53,16 @@ foreach (var name in names)
         cs = Cs(t),
         nested = t.IsNested,
         @namespace = t.Namespace,
-        generic = generics.Select(g => new { g.Name, constraints = g.GetGenericParameterConstraints().Select(c => new { cs = Cs(c), isClass = c.IsClass, isAbstract = c.IsAbstract, abstracts = c.IsClass ? Abstracts(c).Select(Member).ToArray() : [] }).ToArray() }).ToArray(),
+        generic = generics.Select(g => new { g.Name, constraints = g.GetGenericParameterConstraints().Select(c => new { cs = Cs(c), isClass = c.IsClass, isAbstract = c.IsAbstract, abstracts = c.IsClass ? Abstracts(c).Select(Member).ToArray() : [], listLogger = c.IsClass && (c.GetProperty("ListLoggerFactory", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance) != null) }).ToArray() }).ToArray(),
         ctors = t.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).Where(c => !c.IsPrivate).Select(c => c.GetParameters().Select(p => Cs(p.ParameterType) + " " + p.Name).ToArray()).ToArray(),
         ctorFixtures = t.IsGenericTypeDefinition ? [] : t.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).Where(c => !c.IsPrivate)
             .SelectMany(c => c.GetParameters()).Where(p => p.ParameterType.IsClass && p.ParameterType.Name.Contains("Fixture"))
             .Select(p => new { cs = Cs(p.ParameterType), isAbstract = p.ParameterType.IsAbstract, abstracts = Abstracts(p.ParameterType).Select(Member).ToArray() }).ToArray(),
-        abstracts = Abstracts(t).Select(Member).ToArray()
+        abstracts = Abstracts(t).Select(Member).ToArray(),
+        // Overridable members a provider is expected to fill in, though they have a default (UseTransaction does nothing).
+        virtuals = t.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+            .Where(m => m.IsVirtual && !m.IsAbstract && !m.IsFinal && (m.IsFamily || m.IsPublic) && m.DeclaringType != typeof(object))
+            .Select(m => m.Name).Distinct().OrderBy(n => n).ToArray()
     });
 }
 File.WriteAllText(args[1], JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }));

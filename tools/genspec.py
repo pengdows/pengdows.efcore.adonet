@@ -17,6 +17,11 @@ SHARED_FIXTURES = {
 VIRTUALS = {
     'TransactionTestBase': ['    protected override bool AmbientTransactionsSupported => new THost().Dialect.Capabilities.SupportsAmbientTransactions;', '    protected override bool SavepointsSupported => new THost().Dialect.Sql.Savepoints != null;'],
 }
+# Virtual members whose EF default does nothing but every provider overrides: emitted wherever a base declares them.
+VIRTUAL_DEFAULTS = {
+    # The inner contexts of EF's ExecuteWithStrategyInTransaction must join the outer one's transaction.
+    'UseTransaction': '    protected override void UseTransaction(global::Microsoft.EntityFrameworkCore.Infrastructure.DatabaseFacade facade, global::Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction transaction)\n        => facade.UseTransaction(global::Microsoft.EntityFrameworkCore.Storage.DbContextTransactionExtensions.GetDbTransaction(transaction));',
+}
 HAND_WRITTEN = {'NorthwindWhereQueryAdoNetTest', 'NorthwindSelectQueryAdoNetTest'}
 NORTHWIND = re.compile(r'Northwind(Query(Relational)?Fixture|QueryFixtureBase)<global::Microsoft\.EntityFrameworkCore\.TestUtilities\.NoopModelCustomizer>$')
 NOT_YET = 'throw new NotSupportedException("Not yet provided by the base suite: {0}.")'
@@ -138,7 +143,14 @@ for b in bases:
     else:
         fixture = f'{cls}<THost>.AdoNetFixture'
         base_fixture = c['cs'].replace('<TFixture>', '<AdoNetFixture>')
-        nested = ['', f'    public class AdoNetFixture : {base_fixture}', '    {'] + ['    ' + l for l in members(c['abstracts'], name, 'AdoNetFixture')] + ['    }']
+        # EF's query asserter casts the fixture to ITestSqlLoggerFactory to show a failed query's SQL; without it a
+        # failure is reported as an InvalidCastException.
+        logger = ['        public global::Microsoft.EntityFrameworkCore.TestUtilities.TestSqlLoggerFactory TestSqlLoggerFactory',
+                  '            => (global::Microsoft.EntityFrameworkCore.TestUtilities.TestSqlLoggerFactory)ListLoggerFactory;']
+        if not c.get('listLogger'):
+            logger = []
+        interface = ', global::Microsoft.EntityFrameworkCore.TestUtilities.ITestSqlLoggerFactory' if logger else ''
+        nested = ['', f'    public class AdoNetFixture : {base_fixture}{interface}', '    {'] + ['    ' + l for l in members(c['abstracts'], name, 'AdoNetFixture')] + logger + ['    }']
     params = f'{fixture} fixture' + (f', {extra}' if extra else '')
     args = 'fixture' + (f', {extra_args}' if extra_args else '')
     lines.append(f'public abstract class {cls}<THost>({params}) : {cs.replace("<TFixture>", "<" + fixture + ">")}({args})')
@@ -146,6 +158,7 @@ for b in bases:
     lines.append('{')
     lines += members(b['abstracts'], name, fixture)
     lines += VIRTUALS.get(name, [])
+    lines += [code for member, code in VIRTUAL_DEFAULTS.items() if member in (b.get('virtuals') or [])]
     lines += nested
     lines.append('}')
     generated.append(dict(name=name, cls=cls, sub=ns_sub, code=lines, fixture=fixture, ctor=ctor, nonshared=False, has_output=has_output, extra=extra, extra_args=extra_args))

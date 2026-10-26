@@ -193,6 +193,9 @@ public record DatabaseCapabilities : IDatabaseCapabilities
     /// <summary>False: enlisting in a <c>TransactionScope</c> is the driver's, which says so in its own dialect.</summary>
     public virtual bool SupportsAmbientTransactions { get; init; }
 
+    /// <summary>False, the safe assumption: a split query is buffered.</summary>
+    public virtual bool SupportsMultipleActiveReaders { get; init; }
+
     /// <summary>
     ///     What the driver reports as transient (<see cref="System.Data.Common.DbException.IsTransient" />), or a timeout; a
     ///     dialect whose driver doesn't report it adds the driver's own transient errors.

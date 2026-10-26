@@ -22,7 +22,9 @@ public class SqliteDialect : AdoNetDialect
         DefaultMaxBatchSize = 128,
         MaxParametersPerCommand = 32766,
         // SQLite has no limit; names are left whole, as Microsoft's SQLite provider leaves them.
-        MaxIdentifierLength = int.MaxValue
+        MaxIdentifierLength = int.MaxValue,
+        // Microsoft.Data.Sqlite steps several statements on one connection, so split queries stream.
+        SupportsMultipleActiveReaders = true
     };
 
     public override void ConfigureServices(IServiceCollection services)
