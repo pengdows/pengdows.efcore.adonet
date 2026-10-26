@@ -304,8 +304,6 @@ public partial class PrimitiveCollectionsQuerySqlServerTest(PrimitiveCollections
 
 public partial class PropertyValuesSqlServerTest(PropertyValuesAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : PropertyValuesAdoNetTest<SqlServerHost>(fixture);
 
-public partial class ProxyGraphUpdatesSqlServerTest(ProxyGraphUpdatesAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : ProxyGraphUpdatesAdoNetTest<SqlServerHost>(fixture);
-
 public partial class QueryExpressionInterceptionSqlServerTest(AdoNetInterceptionFixture<SqlServerHost> fixture) : QueryExpressionInterceptionAdoNetTest<SqlServerHost>(fixture);
 
 public partial class QueryFilterFuncletizationSqlServerTest(QueryFilterFuncletizationAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : QueryFilterFuncletizationAdoNetTest<SqlServerHost>(fixture);

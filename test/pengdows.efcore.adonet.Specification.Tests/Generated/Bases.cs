@@ -1765,24 +1765,6 @@ public abstract class PropertyValuesAdoNetTest<THost>(PropertyValuesAdoNetTest<T
     }
 }
 
-/// <summary>EF's ProxyGraphUpdatesTestBase.</summary>
-public abstract class ProxyGraphUpdatesAdoNetTest<THost>(ProxyGraphUpdatesAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.ProxyGraphUpdatesTestBase<ProxyGraphUpdatesAdoNetTest<THost>.AdoNetFixture>(fixture)
-    where THost : IDatabaseHost, new()
-{
-    protected override bool DoesLazyLoading => throw new NotSupportedException("Not yet provided by the base suite: DoesLazyLoading.");
-    protected override bool DoesChangeTracking => throw new NotSupportedException("Not yet provided by the base suite: DoesChangeTracking.");
-    protected override void UseTransaction(global::Microsoft.EntityFrameworkCore.Infrastructure.DatabaseFacade facade, global::Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction transaction)
-        => facade.UseTransaction(global::Microsoft.EntityFrameworkCore.Storage.DbContextTransactionExtensions.GetDbTransaction(transaction));
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.ProxyGraphUpdatesTestBase<AdoNetFixture>.ProxyGraphUpdatesFixtureBase, global::Microsoft.EntityFrameworkCore.TestUtilities.ITestSqlLoggerFactory
-    {
-        protected override string StoreName => "ProxyGraphUpdates";
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-        public global::Microsoft.EntityFrameworkCore.TestUtilities.TestSqlLoggerFactory TestSqlLoggerFactory
-            => (global::Microsoft.EntityFrameworkCore.TestUtilities.TestSqlLoggerFactory)ListLoggerFactory;
-    }
-}
-
 /// <summary>EF's QueryExpressionInterceptionTestBase.</summary>
 public abstract class QueryExpressionInterceptionAdoNetTest<THost>(AdoNetInterceptionFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.QueryExpressionInterceptionTestBase(fixture), global::Xunit.IClassFixture<AdoNetInterceptionFixture<THost>>
     where THost : IDatabaseHost, new()

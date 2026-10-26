@@ -304,8 +304,6 @@ public partial class PrimitiveCollectionsQueryMySqlTest(PrimitiveCollectionsQuer
 
 public partial class PropertyValuesMySqlTest(PropertyValuesAdoNetTest<MySqlHost>.AdoNetFixture fixture) : PropertyValuesAdoNetTest<MySqlHost>(fixture);
 
-public partial class ProxyGraphUpdatesMySqlTest(ProxyGraphUpdatesAdoNetTest<MySqlHost>.AdoNetFixture fixture) : ProxyGraphUpdatesAdoNetTest<MySqlHost>(fixture);
-
 public partial class QueryExpressionInterceptionMySqlTest(AdoNetInterceptionFixture<MySqlHost> fixture) : QueryExpressionInterceptionAdoNetTest<MySqlHost>(fixture);
 
 public partial class QueryFilterFuncletizationMySqlTest(QueryFilterFuncletizationAdoNetTest<MySqlHost>.AdoNetFixture fixture) : QueryFilterFuncletizationAdoNetTest<MySqlHost>(fixture);

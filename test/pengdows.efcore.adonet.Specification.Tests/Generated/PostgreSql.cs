@@ -304,8 +304,6 @@ public partial class PrimitiveCollectionsQueryPostgreSqlTest(PrimitiveCollection
 
 public partial class PropertyValuesPostgreSqlTest(PropertyValuesAdoNetTest<PostgreSqlHost>.AdoNetFixture fixture) : PropertyValuesAdoNetTest<PostgreSqlHost>(fixture);
 
-public partial class ProxyGraphUpdatesPostgreSqlTest(ProxyGraphUpdatesAdoNetTest<PostgreSqlHost>.AdoNetFixture fixture) : ProxyGraphUpdatesAdoNetTest<PostgreSqlHost>(fixture);
-
 public partial class QueryExpressionInterceptionPostgreSqlTest(AdoNetInterceptionFixture<PostgreSqlHost> fixture) : QueryExpressionInterceptionAdoNetTest<PostgreSqlHost>(fixture);
 
 public partial class QueryFilterFuncletizationPostgreSqlTest(QueryFilterFuncletizationAdoNetTest<PostgreSqlHost>.AdoNetFixture fixture) : QueryFilterFuncletizationAdoNetTest<PostgreSqlHost>(fixture);

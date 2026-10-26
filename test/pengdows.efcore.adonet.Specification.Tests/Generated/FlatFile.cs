@@ -455,9 +455,6 @@ public partial class PrimitiveCollectionsQueryFlatFileTest(PrimitiveCollectionsQ
 public partial class PropertyValuesFlatFileTest(PropertyValuesAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : PropertyValuesAdoNetTest<FlatFileHost>(fixture);
 
 [Collection(SingleWriter.FlatFile)]
-public partial class ProxyGraphUpdatesFlatFileTest(ProxyGraphUpdatesAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : ProxyGraphUpdatesAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
 public partial class QueryExpressionInterceptionFlatFileTest(AdoNetInterceptionFixture<FlatFileHost> fixture) : QueryExpressionInterceptionAdoNetTest<FlatFileHost>(fixture);
 
 [Collection(SingleWriter.FlatFile)]

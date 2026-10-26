@@ -22,7 +22,7 @@ VIRTUAL_DEFAULTS = {
     # The inner contexts of EF's ExecuteWithStrategyInTransaction must join the outer one's transaction.
     'UseTransaction': '    protected override void UseTransaction(global::Microsoft.EntityFrameworkCore.Infrastructure.DatabaseFacade facade, global::Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction transaction)\n        => facade.UseTransaction(global::Microsoft.EntityFrameworkCore.Storage.DbContextTransactionExtensions.GetDbTransaction(transaction));',
 }
-HAND_WRITTEN = {'NorthwindWhereQueryAdoNetTest', 'NorthwindSelectQueryAdoNetTest'}
+HAND_WRITTEN = {'NorthwindWhereQueryAdoNetTest', 'NorthwindSelectQueryAdoNetTest', 'ProxyGraphUpdatesAdoNetTest'}
 NORTHWIND = re.compile(r'Northwind(Query(Relational)?Fixture|QueryFixtureBase)<global::Microsoft\.EntityFrameworkCore\.TestUtilities\.NoopModelCustomizer>$')
 NOT_YET = 'throw new NotSupportedException("Not yet provided by the base suite: {0}.")'
 

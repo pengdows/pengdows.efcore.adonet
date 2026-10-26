@@ -455,9 +455,6 @@ public partial class PrimitiveCollectionsQueryDuckDbTest(PrimitiveCollectionsQue
 public partial class PropertyValuesDuckDbTest(PropertyValuesAdoNetTest<DuckDbHost>.AdoNetFixture fixture) : PropertyValuesAdoNetTest<DuckDbHost>(fixture);
 
 [Collection(SingleWriter.DuckDb)]
-public partial class ProxyGraphUpdatesDuckDbTest(ProxyGraphUpdatesAdoNetTest<DuckDbHost>.AdoNetFixture fixture) : ProxyGraphUpdatesAdoNetTest<DuckDbHost>(fixture);
-
-[Collection(SingleWriter.DuckDb)]
 public partial class QueryExpressionInterceptionDuckDbTest(AdoNetInterceptionFixture<DuckDbHost> fixture) : QueryExpressionInterceptionAdoNetTest<DuckDbHost>(fixture);
 
 [Collection(SingleWriter.DuckDb)]

@@ -455,9 +455,6 @@ public partial class PrimitiveCollectionsQuerySqliteTest(PrimitiveCollectionsQue
 public partial class PropertyValuesSqliteTest(PropertyValuesAdoNetTest<SqliteHost>.AdoNetFixture fixture) : PropertyValuesAdoNetTest<SqliteHost>(fixture);
 
 [Collection(SingleWriter.Sqlite)]
-public partial class ProxyGraphUpdatesSqliteTest(ProxyGraphUpdatesAdoNetTest<SqliteHost>.AdoNetFixture fixture) : ProxyGraphUpdatesAdoNetTest<SqliteHost>(fixture);
-
-[Collection(SingleWriter.Sqlite)]
 public partial class QueryExpressionInterceptionSqliteTest(AdoNetInterceptionFixture<SqliteHost> fixture) : QueryExpressionInterceptionAdoNetTest<SqliteHost>(fixture);
 
 [Collection(SingleWriter.Sqlite)]
