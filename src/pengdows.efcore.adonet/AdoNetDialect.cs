@@ -60,6 +60,9 @@ public class AnsiSqlDialect : ISqlDialect
     public virtual string DefaultValues => "DEFAULT VALUES";
     public virtual string? CurrentSchema => null;
     public virtual SavepointSyntax? Savepoints => SavepointSyntax.Iso;
+
+    // ISO SQL has no CREATE DATABASE: each dialect says how its databases are made.
+    public virtual DatabaseLifecycle? Databases => null;
     public virtual bool RowValues => true;
     public virtual bool LimitInPredicateSubqueries => true;
     public virtual LateralJoinSyntax? LateralJoins => LateralJoinSyntax.Iso;

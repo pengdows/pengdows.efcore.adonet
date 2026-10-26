@@ -43,8 +43,10 @@ public sealed class PartsSql(
     bool limitInPredicateSubqueries = true,
     Func<string, bool>? requiresQuoting = null,
     LateralJoinSyntax? lateralJoins = null,
-    bool noLateralJoins = false) : AnsiSqlDialect
+    bool noLateralJoins = false,
+    DatabaseLifecycle? databases = null) : AnsiSqlDialect
 {
+    public override DatabaseLifecycle? Databases => databases;
     public override PagingSyntax Paging { get; } = paging ?? PagingSyntax.OffsetFetch;
     public override BooleanSyntax Booleans { get; } = booleans ?? BooleanSyntax.Native;
     public override KeyRetrieval Keys { get; } = keys ?? KeyRetrieval.Returning;

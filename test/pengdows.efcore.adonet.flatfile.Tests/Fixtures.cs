@@ -108,3 +108,5 @@ public class FlatFileBulkConformanceTests(FlatFileFixture fixture) : BulkConform
 public class FlatFileTranslationConformanceTests(FlatFileFixture fixture) : TranslationConformanceTests<FlatFileFixture>(fixture);
 
 public class FlatFileLiteralConformanceTests(FlatFileFixture fixture) : LiteralConformanceTests<FlatFileFixture>(fixture);
+
+public class FlatFileDatabaseCreatorConformanceTests(FlatFileFixture fixture) : DatabaseCreatorConformanceTests<FlatFileFixture>(fixture);

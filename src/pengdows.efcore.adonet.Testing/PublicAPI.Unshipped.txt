@@ -113,6 +113,21 @@ pengdows.efcore.adonet.Testing.Category.ParentId.get -> int?
 pengdows.efcore.adonet.Testing.Category.ParentId.set -> void
 pengdows.efcore.adonet.Testing.ContainerFixture
 pengdows.efcore.adonet.Testing.ContainerFixture.ContainerFixture() -> void
+pengdows.efcore.adonet.Testing.DatabaseCreatorConformanceTests<TFixture>
+pengdows.efcore.adonet.Testing.DatabaseCreatorConformanceTests<TFixture>.A_database_exists_once_created_and_not_before() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.DatabaseCreatorConformanceTests<TFixture>.A_deleted_database_can_be_created_again() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.DatabaseCreatorConformanceTests<TFixture>.Create_and_delete_work_synchronously_too() -> void
+pengdows.efcore.adonet.Testing.DatabaseCreatorConformanceTests<TFixture>.Create_refuses_a_database_that_already_exists() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.DatabaseCreatorConformanceTests<TFixture>.DatabaseCreatorConformanceTests(TFixture! fixture) -> void
+pengdows.efcore.adonet.Testing.DatabaseCreatorConformanceTests<TFixture>.Delete_refuses_a_database_that_does_not_exist() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.DatabaseCreatorConformanceTests<TFixture>.DisposeAsync() -> System.Threading.Tasks.ValueTask
+pengdows.efcore.adonet.Testing.DatabaseCreatorConformanceTests<TFixture>.Ensure_created_adds_tables_to_an_existing_empty_database() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.DatabaseCreatorConformanceTests<TFixture>.Ensure_created_creates_the_database_and_its_tables_once() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.DatabaseCreatorConformanceTests<TFixture>.Ensure_created_refuses_when_only_the_other_kind_of_seeder_is_configured() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.DatabaseCreatorConformanceTests<TFixture>.Ensure_deleted_deletes_and_then_does_nothing() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.DatabaseCreatorConformanceTests<TFixture>.Fixture.get -> TFixture!
+pengdows.efcore.adonet.Testing.DatabaseCreatorConformanceTests<TFixture>.InitializeAsync() -> System.Threading.Tasks.ValueTask
+pengdows.efcore.adonet.Testing.DatabaseCreatorConformanceTests<TFixture>.The_create_script_creates_every_table() -> void
 pengdows.efcore.adonet.Testing.EntryPointConformanceTests<TEntryPoints>
 pengdows.efcore.adonet.Testing.EntryPointConformanceTests<TEntryPoints>.A_connection_string() -> void
 pengdows.efcore.adonet.Testing.EntryPointConformanceTests<TEntryPoints>.A_connection_string_set_later() -> void
@@ -350,6 +365,7 @@ pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Translation
 pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Trimming() -> System.Threading.Tasks.Task!
 static pengdows.efcore.adonet.Testing.MigrationsOptions.ForTestMigrations<TContext>(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>! builder) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>!
 static pengdows.efcore.adonet.Testing.ProviderConformanceTests<TFixture>.NewBlog(string! name, decimal rating = 1, bool active = true) -> pengdows.efcore.adonet.Testing.Blog!
+virtual pengdows.efcore.adonet.Testing.ProviderFixture.ConnectionStringFor(string! database) -> string!
 virtual pengdows.efcore.adonet.Testing.ProviderFixture.DisposeAsync() -> System.Threading.Tasks.ValueTask
 virtual pengdows.efcore.adonet.Testing.ProviderFixture.InitializeAsync() -> System.Threading.Tasks.ValueTask
 virtual pengdows.efcore.adonet.Testing.ProviderFixture.KnownEngineGaps.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!

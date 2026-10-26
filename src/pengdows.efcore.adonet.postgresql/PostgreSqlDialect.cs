@@ -36,6 +36,14 @@ public sealed class PostgreSqlDialect : AdoNetDialect
 
 internal sealed class PostgreSqlSql : AnsiSqlDialect
 {
+    // Through the postgres database; WITH (FORCE) ends other sessions (PostgreSQL 13+). Behaviour reference (not copied):
+    // https://github.com/npgsql/efcore.pg/blob/v10.0.3/src/EFCore.PG/Storage/Internal/NpgsqlDatabaseCreator.cs
+    public override DatabaseLifecycle Databases { get; } = DatabaseLifecycle.Server(
+        "Database",
+        "postgres",
+        dropSql: ["DROP DATABASE {0} WITH (FORCE)"],
+        clearPool: c => NpgsqlConnection.ClearPool((NpgsqlConnection)c));
+
     // The reserved words as Npgsql lists them, which is where the official provider takes them from too.
     private static readonly Lazy<HashSet<string>> ReservedWords = new(() =>
     {

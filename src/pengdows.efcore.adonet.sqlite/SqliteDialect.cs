@@ -46,6 +46,17 @@ public sealed class LegacySqliteDialect : SqliteDialect
 
 internal class SqliteSql : AnsiSqlDialect
 {
+    // A file, created in write-ahead-log mode, with its -wal and -shm files; :memory: or Mode=Memory exists while open.
+    // Behaviour reference (not copied):
+    // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.Core/Storage/Internal/SqliteDatabaseCreator.cs
+    public override DatabaseLifecycle Databases { get; } = DatabaseLifecycle.File(
+        "Data Source",
+        ["-wal", "-shm"],
+        "PRAGMA journal_mode = 'wal';",
+        isInMemory: b => string.Equals(Convert.ToString(b.TryGetValue("Data Source", out var path) ? path : null, CultureInfo.InvariantCulture), ":memory:", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(Convert.ToString(b.TryGetValue("Mode", out var mode) ? mode : null, CultureInfo.InvariantCulture), "Memory", StringComparison.OrdinalIgnoreCase),
+        clearPool: c => Microsoft.Data.Sqlite.SqliteConnection.ClearPool((Microsoft.Data.Sqlite.SqliteConnection)c));
+
     public override bool SupportsSchemas => false;
 
     // SQLite has no lateral join; a query needing one fails to translate, as with the official provider. Behaviour reference

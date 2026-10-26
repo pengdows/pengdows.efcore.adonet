@@ -44,6 +44,15 @@ public sealed class SqlServerDialect : AdoNetDialect
 
 internal sealed class SqlServerSql : AnsiSqlDialect
 {
+    // Through master; a database still in use is put in single-user mode, rolling back other sessions, before it's dropped.
+    // Behaviour reference (not copied):
+    // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.SqlServer/Storage/Internal/SqlServerDatabaseCreator.cs
+    public override DatabaseLifecycle Databases { get; } = DatabaseLifecycle.Server(
+        "Initial Catalog",
+        "master",
+        dropSql: ["ALTER DATABASE {0} SET SINGLE_USER WITH ROLLBACK IMMEDIATE", "DROP DATABASE {0}"],
+        clearPool: c => Microsoft.Data.SqlClient.SqlConnection.ClearPool((Microsoft.Data.SqlClient.SqlConnection)c));
+
     public override string IdentifierQuotePrefix => "[";
     public override string IdentifierQuoteSuffix => "]";
     public override LateralJoinSyntax? LateralJoins => LateralJoinSyntax.Apply;

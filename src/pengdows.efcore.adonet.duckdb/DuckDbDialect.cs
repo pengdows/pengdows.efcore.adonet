@@ -30,6 +30,13 @@ public sealed class DuckDbDialect : AdoNetDialect
 
 internal sealed class DuckDbSql : AnsiSqlDialect
 {
+    // A file with its .wal; :memory: (or no path) exists while open.
+    public override DatabaseLifecycle Databases { get; } = DatabaseLifecycle.File(
+        "Data Source",
+        [".wal"],
+        isInMemory: b => (Convert.ToString(b.TryGetValue("Data Source", out var path) ? path : null, CultureInfo.InvariantCulture) is not { Length: > 0 } text)
+            || text.StartsWith(":memory:", StringComparison.OrdinalIgnoreCase));
+
     public override string ParameterMarker => "$";
     public override bool ParameterNameIncludesMarker => false;
     public override PagingSyntax Paging { get; } = PagingSyntax.LimitOffset();

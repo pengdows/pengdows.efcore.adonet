@@ -53,6 +53,13 @@ public sealed class MySqlDialect : AdoNetDialect
 
 internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = true) : AnsiSqlDialect
 {
+    // Through a connection to no database. Behaviour reference (not copied):
+    // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Storage/Internal/MySqlDatabaseCreator.cs
+    public override DatabaseLifecycle Databases { get; } = DatabaseLifecycle.Server(
+        "Database",
+        adminDatabase: null,
+        clearPool: c => MySqlConnector.MySqlConnection.ClearPool((MySqlConnector.MySqlConnection)c));
+
     public override SavepointSyntax? Savepoints
         => savepoints ? SavepointSyntax.Iso : null;
 

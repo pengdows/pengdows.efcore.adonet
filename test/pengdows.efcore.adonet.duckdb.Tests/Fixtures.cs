@@ -73,3 +73,5 @@ public class DuckDbBulkConformanceTests(DuckDbFixture fixture) : BulkConformance
 public class DuckDbTranslationConformanceTests(DuckDbFixture fixture) : TranslationConformanceTests<DuckDbFixture>(fixture);
 
 public class DuckDbLiteralConformanceTests(DuckDbFixture fixture) : LiteralConformanceTests<DuckDbFixture>(fixture);
+
+public class DuckDbDatabaseCreatorConformanceTests(DuckDbFixture fixture) : DatabaseCreatorConformanceTests<DuckDbFixture>(fixture);

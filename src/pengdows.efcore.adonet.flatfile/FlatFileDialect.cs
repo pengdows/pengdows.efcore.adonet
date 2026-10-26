@@ -23,6 +23,9 @@ public sealed class FlatFileDialect : AdoNetDialect
 
 internal sealed class FlatFileSql : AnsiSqlDialect
 {
+    // A database is a directory of table files.
+    public override DatabaseLifecycle Databases { get; } = DatabaseLifecycle.Directory("path");
+
     public override string ParameterMarker => ":";
     public override bool ParameterNameIncludesMarker => false;
     public override KeyRetrieval Keys { get; } = KeyRetrieval.Sequence();

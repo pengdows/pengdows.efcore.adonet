@@ -73,6 +73,20 @@ pengdows.efcore.adonet.Bulk.IAdoNetBulkLoader
 pengdows.efcore.adonet.Bulk.IAdoNetBulkLoader.Load(pengdows.efcore.adonet.Bulk.BulkLoad! load) -> void
 pengdows.efcore.adonet.Bulk.IAdoNetBulkLoader.LoadAsync(pengdows.efcore.adonet.Bulk.BulkLoad! load, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.DatabaseCapabilities
+pengdows.efcore.adonet.DatabaseLifecycle
+pengdows.efcore.adonet.DatabaseLifecycle.AdminDatabase.get -> string?
+pengdows.efcore.adonet.DatabaseLifecycle.ClearPool.get -> System.Action<System.Data.Common.DbConnection!>?
+pengdows.efcore.adonet.DatabaseLifecycle.CompanionSuffixes.get -> System.Collections.Generic.IReadOnlyList<string!>!
+pengdows.efcore.adonet.DatabaseLifecycle.CreateSql.get -> string!
+pengdows.efcore.adonet.DatabaseLifecycle.DropSql.get -> System.Collections.Generic.IReadOnlyList<string!>!
+pengdows.efcore.adonet.DatabaseLifecycle.InitializeSql.get -> string?
+pengdows.efcore.adonet.DatabaseLifecycle.IsInMemory.get -> System.Func<System.Data.Common.DbConnectionStringBuilder!, bool>!
+pengdows.efcore.adonet.DatabaseLifecycle.Keyword.get -> string!
+pengdows.efcore.adonet.DatabaseLifecycle.Storage.get -> pengdows.efcore.adonet.DatabaseStorage
+pengdows.efcore.adonet.DatabaseStorage
+pengdows.efcore.adonet.DatabaseStorage.Directory = 2 -> pengdows.efcore.adonet.DatabaseStorage
+pengdows.efcore.adonet.DatabaseStorage.File = 1 -> pengdows.efcore.adonet.DatabaseStorage
+pengdows.efcore.adonet.DatabaseStorage.Server = 0 -> pengdows.efcore.adonet.DatabaseStorage
 pengdows.efcore.adonet.DmlSyntax
 pengdows.efcore.adonet.DmlSyntax.DmlSyntax() -> void
 pengdows.efcore.adonet.FunctionSyntax
@@ -104,6 +118,7 @@ pengdows.efcore.adonet.IQuerySqlWriter.Visit(System.Linq.Expressions.Expression!
 pengdows.efcore.adonet.ISqlDialect
 pengdows.efcore.adonet.ISqlDialect.Booleans.get -> pengdows.efcore.adonet.BooleanSyntax!
 pengdows.efcore.adonet.ISqlDialect.CurrentSchema.get -> string?
+pengdows.efcore.adonet.ISqlDialect.Databases.get -> pengdows.efcore.adonet.DatabaseLifecycle?
 pengdows.efcore.adonet.ISqlDialect.DefaultValues.get -> string!
 pengdows.efcore.adonet.ISqlDialect.Dml.get -> pengdows.efcore.adonet.DmlSyntax!
 pengdows.efcore.adonet.ISqlDialect.FalseLiteral.get -> string!
@@ -204,6 +219,9 @@ static pengdows.efcore.adonet.AnsiTypeMappings.SupportedClrTypes.get -> System.C
 static pengdows.efcore.adonet.BooleanSyntax.BitValues.get -> pengdows.efcore.adonet.BooleanSyntax!
 static pengdows.efcore.adonet.BooleanSyntax.BitValuesWithBitwiseOperators.get -> pengdows.efcore.adonet.BooleanSyntax!
 static pengdows.efcore.adonet.BooleanSyntax.Native.get -> pengdows.efcore.adonet.BooleanSyntax!
+static pengdows.efcore.adonet.DatabaseLifecycle.Directory(string! pathKeyword) -> pengdows.efcore.adonet.DatabaseLifecycle!
+static pengdows.efcore.adonet.DatabaseLifecycle.File(string! pathKeyword, System.Collections.Generic.IReadOnlyList<string!>? companionSuffixes = null, string? initializeSql = null, System.Func<System.Data.Common.DbConnectionStringBuilder!, bool>? isInMemory = null, System.Action<System.Data.Common.DbConnection!>? clearPool = null) -> pengdows.efcore.adonet.DatabaseLifecycle!
+static pengdows.efcore.adonet.DatabaseLifecycle.Server(string! databaseKeyword, string? adminDatabase, string! createSql = "CREATE DATABASE {0}", System.Collections.Generic.IReadOnlyList<string!>? dropSql = null, System.Action<System.Data.Common.DbConnection!>? clearPool = null) -> pengdows.efcore.adonet.DatabaseLifecycle!
 static pengdows.efcore.adonet.DmlSyntax.AppendSetters(pengdows.efcore.adonet.IQuerySqlWriter! sql, Microsoft.EntityFrameworkCore.Query.SqlExpressions.UpdateExpression! update, bool qualified) -> void
 static pengdows.efcore.adonet.DmlSyntax.AppendTables(pengdows.efcore.adonet.IQuerySqlWriter! sql, Microsoft.EntityFrameworkCore.Query.SqlExpressions.SelectExpression! select) -> void
 static pengdows.efcore.adonet.DmlSyntax.AppendWhere(pengdows.efcore.adonet.IQuerySqlWriter! sql, Microsoft.EntityFrameworkCore.Query.SqlExpressions.SelectExpression! select) -> void
@@ -235,6 +253,7 @@ virtual pengdows.efcore.adonet.AdoNetDialect.Sql.get -> pengdows.efcore.adonet.I
 virtual pengdows.efcore.adonet.AdoNetDialect.TypeMappings.get -> pengdows.efcore.adonet.ITypeMappingDialect!
 virtual pengdows.efcore.adonet.AnsiSqlDialect.Booleans.get -> pengdows.efcore.adonet.BooleanSyntax!
 virtual pengdows.efcore.adonet.AnsiSqlDialect.CurrentSchema.get -> string?
+virtual pengdows.efcore.adonet.AnsiSqlDialect.Databases.get -> pengdows.efcore.adonet.DatabaseLifecycle?
 virtual pengdows.efcore.adonet.AnsiSqlDialect.DefaultValues.get -> string!
 virtual pengdows.efcore.adonet.AnsiSqlDialect.Dml.get -> pengdows.efcore.adonet.DmlSyntax!
 virtual pengdows.efcore.adonet.AnsiSqlDialect.FalseLiteral.get -> string!

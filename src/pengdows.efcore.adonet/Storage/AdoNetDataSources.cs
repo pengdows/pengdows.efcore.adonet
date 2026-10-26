@@ -25,6 +25,22 @@ internal sealed class AdoNetDataSources : IDisposable
             .Value;
     }
 
+    /// <summary>
+    ///     Disposes the data source for this pair, if one was made, closing its pool: a database about to be dropped must not
+    ///     be left with pooled connections that would be handed out after it is gone.
+    /// </summary>
+    /// <returns>Whether there was one: connections it made are then unusable.</returns>
+    public bool Evict(DbProviderFactory factory, string connectionString)
+    {
+        if (!_dataSources.TryRemove((factory, connectionString), out var dataSource) || !dataSource.IsValueCreated)
+        {
+            return false;
+        }
+
+        dataSource.Value.Dispose();
+        return true;
+    }
+
     public void Dispose()
     {
         _disposed = true;

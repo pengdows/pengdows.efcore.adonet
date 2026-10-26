@@ -186,6 +186,9 @@ Gaps that keep core paths out of reach of fakeDb tests (REVIEW_POLICY: a gap is 
   string) and `ConfigurationRulesTests.TrackingFactory` (data sources disposed with the service provider). fakeDb's source
   (built locally as 2.0.6.1) has `SupportsNativeDataSource`, `CreatedDataSources` and `FakeDbDataSource.WasDisposed`, which
   replace both once published; nuget.org's latest is 2.0.5.
+- 2.0.5's `fakeDbConnection` names no `DbProviderFactory` (`DbProviderFactories.GetFactory(connection)` is null); the
+  source reports the factory that created it. The core's database creator therefore prefers the factory the context was
+  configured with, and only then asks the connection.
 - A dialect is registered by factory type and `fakeDbFactory` is sealed, so a test that registers one needs a factory type
   of its own (`ProbedFactory`, `UnknownFactory`); both hand out fakeDb connections.
 

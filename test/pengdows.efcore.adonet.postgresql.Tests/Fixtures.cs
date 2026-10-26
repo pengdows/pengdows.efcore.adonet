@@ -56,3 +56,5 @@ public class PostgreSqlBulkConformanceTests(PostgreSqlFixture fixture) : BulkCon
 public class PostgreSqlTranslationConformanceTests(PostgreSqlFixture fixture) : TranslationConformanceTests<PostgreSqlFixture>(fixture);
 
 public class PostgreSqlLiteralConformanceTests(PostgreSqlFixture fixture) : LiteralConformanceTests<PostgreSqlFixture>(fixture);
+
+public class PostgreSqlDatabaseCreatorConformanceTests(PostgreSqlFixture fixture) : DatabaseCreatorConformanceTests<PostgreSqlFixture>(fixture);

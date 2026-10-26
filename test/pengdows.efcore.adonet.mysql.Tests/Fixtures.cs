@@ -20,7 +20,8 @@ public sealed class MySqlFixture : ContainerFixture
         => MathF.BitDecrement(float.MaxValue);
 
     protected override IDatabaseContainer CreateContainer()
-        => new MySqlBuilder("mysql:8.4").Build();
+        // As root: the database-creator tests create and drop databases, which the container's own user may not.
+        => new MySqlBuilder("mysql:8.4").WithUsername("root").Build();
 
     protected override IEnumerable<string> Ddl =>
     [
@@ -52,3 +53,5 @@ public class MySqlBulkConformanceTests(MySqlFixture fixture) : BulkConformanceTe
 public class MySqlTranslationConformanceTests(MySqlFixture fixture) : TranslationConformanceTests<MySqlFixture>(fixture);
 
 public class MySqlLiteralConformanceTests(MySqlFixture fixture) : LiteralConformanceTests<MySqlFixture>(fixture);
+
+public class MySqlDatabaseCreatorConformanceTests(MySqlFixture fixture) : DatabaseCreatorConformanceTests<MySqlFixture>(fixture);

@@ -48,3 +48,5 @@ public class SqlServerBulkConformanceTests(SqlServerFixture fixture) : BulkConfo
 public class SqlServerTranslationConformanceTests(SqlServerFixture fixture) : TranslationConformanceTests<SqlServerFixture>(fixture);
 
 public class SqlServerLiteralConformanceTests(SqlServerFixture fixture) : LiteralConformanceTests<SqlServerFixture>(fixture);
+
+public class SqlServerDatabaseCreatorConformanceTests(SqlServerFixture fixture) : DatabaseCreatorConformanceTests<SqlServerFixture>(fixture);

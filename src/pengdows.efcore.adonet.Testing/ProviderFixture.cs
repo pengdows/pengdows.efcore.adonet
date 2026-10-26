@@ -122,6 +122,30 @@ public abstract class ProviderFixture : IAsyncLifetime
         await ExecuteAsync($"DELETE FROM {Quote("Blogs")}");
     }
 
+    /// <summary>
+    ///     A connection string for another database, <paramref name="database" />, beside this fixture's: on the same server,
+    ///     or in the same directory (the temporary directory, for one in memory). It need not exist.
+    /// </summary>
+    public virtual string ConnectionStringFor(string database)
+    {
+        var lifecycle = ExpectedDialect.Sql.Databases
+            ?? throw new NotSupportedException($"{ExpectedDialect.Name} declares no DatabaseLifecycle to name another database by.");
+        var builder = Factory.CreateConnectionStringBuilder() ?? new DbConnectionStringBuilder();
+        builder.ConnectionString = ConnectionString;
+        if (lifecycle.Storage == DatabaseStorage.Server)
+        {
+            builder[lifecycle.Keyword] = database;
+            return builder.ConnectionString;
+        }
+
+        var directory = lifecycle.IsInMemory(builder) || !builder.TryGetValue(lifecycle.Keyword, out var path)
+            ? Path.GetTempPath()
+            : Path.GetDirectoryName(Path.GetFullPath(Convert.ToString(path, System.Globalization.CultureInfo.InvariantCulture)!))!;
+        var fresh = Factory.CreateConnectionStringBuilder() ?? new DbConnectionStringBuilder();
+        fresh[lifecycle.Keyword] = Path.Combine(directory, lifecycle.Storage == DatabaseStorage.File ? database + ".db" : database);
+        return fresh.ConnectionString;
+    }
+
     /// <summary>Delimits an identifier for hand-written SQL.</summary>
     public string Quote(string identifier)
         => ExpectedDialect.Sql.IdentifierQuotePrefix + identifier + ExpectedDialect.Sql.IdentifierQuoteSuffix;
