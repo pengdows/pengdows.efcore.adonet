@@ -26,6 +26,9 @@ public interface IAdoNetDialect
     ///     what is still missing, so anything registered here wins. Dialect packages may use their driver's own APIs here.
     /// </summary>
     void ConfigureServices(IServiceCollection services);
+
+    /// <summary>Reads the database's schema (reverse engineering); null where the dialect can't.</summary>
+    Scaffolding.InformationSchemaReader? SchemaReader { get; }
 }
 
 /// <summary>The SQL text: identifiers, parameters, literals, and the grammar parts that differ between databases.</summary>

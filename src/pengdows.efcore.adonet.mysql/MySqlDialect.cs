@@ -45,6 +45,9 @@ public sealed class MySqlDialect : AdoNetDialect
         SupportsAmbientTransactions = true
     };
 
+    public override pengdows.efcore.adonet.Scaffolding.InformationSchemaReader SchemaReader
+        => MySqlSchemaReader.Instance;
+
     public override void ConfigureServices(IServiceCollection services)
         => new EntityFrameworkRelationalServicesBuilder(services)
             .TryAdd<IMigrationsSqlGenerator, MySqlMigrationsSqlGenerator>()
@@ -224,6 +227,8 @@ internal sealed class MySqlTypeMappings : AnsiTypeMappings
     {
         [typeof(bool)] = "TINYINT(1)",
         [typeof(byte)] = "TINYINT UNSIGNED",
+        // MySQL's own name, as its catalog reports it.
+        [typeof(int)] = "INT",
         [typeof(float)] = "FLOAT",
         [typeof(double)] = "DOUBLE",
         [typeof(string)] = "LONGTEXT",
@@ -256,8 +261,9 @@ internal sealed class MySqlTypeMappings : AnsiTypeMappings
             // Every VARCHAR and VARBINARY byte counts toward a 65,535-byte row: a string longer than fits at utf8mb4's 4 bytes
             // a character is LONGTEXT, and binary of 8,000 bytes or more LONGBLOB. Adapted from Pomelo's MySqlTypeMappingSource
             // and MySqlByteArrayTypeMapping (MIT, Pomelo Foundation).
-            { Size: > MaxVarcharCharacters } when clrType == typeof(string) => "LONGTEXT",
-            { Size: >= MinBlobBytes } when clrType == typeof(byte[]) => "LONGBLOB",
+            // A size of -1 is EF's "as large as the type allows".
+            { Size: > MaxVarcharCharacters or < 0 } when clrType == typeof(string) => "LONGTEXT",
+            { Size: >= MinBlobBytes or < 0 } when clrType == typeof(byte[]) => "LONGBLOB",
             _ => base.GetStoreType(clrType, facets)
         };
 
@@ -267,9 +273,15 @@ internal sealed class MySqlTypeMappings : AnsiTypeMappings
     // TIME spans -838:59:59 to 838:59:59 and counts hours past a day; outside that MySQL would clip the value.
     public override string FormatLiteral(object value, string storeType, string literal)
     {
+        // DATETIME keeps microseconds, and a literal (a column default) with more digits is refused, not rounded.
         if (value is DateTimeOffset offset)
         {
             return "TIMESTAMP '" + offset.UtcDateTime.ToString(@"yyyy\-MM\-dd HH\:mm\:ss.ffffff", CultureInfo.InvariantCulture) + "'";
+        }
+
+        if (value is DateTime dateTime)
+        {
+            return "TIMESTAMP '" + dateTime.ToString(@"yyyy\-MM\-dd HH\:mm\:ss.ffffff", CultureInfo.InvariantCulture) + "'";
         }
 
         if (value is not TimeSpan span)

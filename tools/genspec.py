@@ -15,6 +15,11 @@ SHARED_FIXTURES = {
 
 # Virtual members of a base whose value is the database's: overridden from its dialect.
 VIRTUALS = {
+    # What the database reads back: schemas where it has them, constraint names and index filters where its reader keeps them.
+    'MigrationsTestBase': [
+        '    protected override bool AssertSchemaNames => new THost().Dialect.Sql.SupportsSchemas;',
+        '    protected override bool AssertConstraintNames => new THost().Dialect.SchemaReader?.KeepsConstraintNames ?? true;',
+        '    protected override bool AssertIndexFilters => new THost().Dialect.SchemaReader?.ReadsIndexFilters ?? true;'],
     # The provider, over a database it never opens: the tests only deserialize.
     'BadDataJsonDeserializationTestBase': ['    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)\n        => base.OnConfiguring(new THost().UseProvider(optionsBuilder, new THost().ConnectionStringFor("ef_bad_json"), _ => { }));'],
     'TransactionTestBase': ['    protected override bool AmbientTransactionsSupported => new THost().Dialect.Capabilities.SupportsAmbientTransactions;', '    protected override bool SavepointsSupported => new THost().Dialect.Sql.Savepoints != null;'],
@@ -67,6 +72,7 @@ def impl(m, base, fixture='TFixture'):
         'TenMostExpensiveProductsSproc': lambda: prop('Sprocs.Of<THost>().TenMostExpensiveProducts'),
         'CustomerOrderHistorySproc': lambda: prop('Sprocs.Of<THost>().' + ('CustomerOrderHistoryNamed' if base == 'SqlExecutorTestBase' else 'CustomerOrderHistory')),
         'CustomerOrderHistoryWithGeneratedParameterSproc': lambda: prop('Sprocs.Of<THost>().CustomerOrderHistory'),
+        'NonDefaultCollation': lambda: prop('new THost().NonDefaultCollation ?? throw new NotSupportedException("The host names no non-default collation.")'),
         'StrictEquality': lambda: prop('true'),
         'SupportsAnsi': lambda: prop('false'),
         'SupportsUnicodeToAnsiConversion': lambda: prop('true'),
@@ -85,6 +91,10 @@ def impl(m, base, fixture='TFixture'):
     # NullSemantics: a context over the fixture's options, with relational nulls when asked (TestUtilities/GeneratedSupport.cs).
     if n == 'CreateContext' and 'useRelationalNulls' in args:
         return meth('NullSemantics.CreateContext(Fixture, useRelationalNulls)')
+    # A required primitive collection added with a default: the JSON array as the dialect's string literal, as each upstream
+    # provider passes its own.
+    if base == 'MigrationsTestBase' and n.endswith('_with_custom_default_value_sql_to_existing_table'):
+        return meth(f'{n}_core(new THost().Dialect.Sql.StringLiteral("[3, 2, 1]"))')
     # A fixture mapped to an EF fixture that implements the member (FIXTURE_BASES) keeps EF's.
     if (base, n) in INHERITED:
         return None

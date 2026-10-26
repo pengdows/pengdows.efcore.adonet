@@ -13,6 +13,10 @@ public class SqliteDialect : AdoNetDialect
     {
     }
 
+    // No INFORMATION_SCHEMA: the catalog is sqlite_master and PRAGMA table_info, which this reader doesn't speak.
+    public override pengdows.efcore.adonet.Scaffolding.InformationSchemaReader? SchemaReader
+        => null;
+
     public override string Name => "SQLite";
     public override ISqlDialect Sql { get; } = new SqliteSql();
     public override ITypeMappingDialect TypeMappings { get; } = new SqliteTypeMappings();

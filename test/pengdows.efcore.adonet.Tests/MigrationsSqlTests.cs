@@ -40,8 +40,10 @@ public class MigrationsSqlTests
                 OldColumn = new AddColumnOperation { Table = "Shelves", Name = "Code", ClrType = typeof(string), MaxLength = 20, IsNullable = true }
             });
 
+        // Made required with a default, existing nulls take the default first.
         Assert.Equal(
-            "ALTER TABLE \"Shelves\" ALTER COLUMN \"Code\" SET DATA TYPE VARCHAR(40);\n"
+            "UPDATE \"Shelves\" SET \"Code\" = 'none' WHERE \"Code\" IS NULL;\n"
+            + "ALTER TABLE \"Shelves\" ALTER COLUMN \"Code\" SET DATA TYPE VARCHAR(40);\n"
             + "ALTER TABLE \"Shelves\" ALTER COLUMN \"Code\" SET NOT NULL;\n"
             + "ALTER TABLE \"Shelves\" ALTER COLUMN \"Code\" SET DEFAULT 'none';\n",
             sql);

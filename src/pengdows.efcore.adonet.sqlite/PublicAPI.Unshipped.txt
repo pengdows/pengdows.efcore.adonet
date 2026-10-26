@@ -21,3 +21,4 @@ static pengdows.efcore.adonet.sqlite.SqliteDbContextOptionsBuilderExtensions.Use
 static pengdows.efcore.adonet.sqlite.SqliteDbContextOptionsBuilderExtensions.UseAdoNetSqlite<TContext>(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>! optionsBuilder, System.Data.Common.DbDataSource! dataSource, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>!
 static readonly pengdows.efcore.adonet.sqlite.LegacySqliteDialect.Instance -> pengdows.efcore.adonet.sqlite.LegacySqliteDialect!
 static readonly pengdows.efcore.adonet.sqlite.SqliteDialect.Instance -> pengdows.efcore.adonet.sqlite.SqliteDialect!
+override pengdows.efcore.adonet.sqlite.SqliteDialect.SchemaReader.get -> pengdows.efcore.adonet.Scaffolding.InformationSchemaReader?

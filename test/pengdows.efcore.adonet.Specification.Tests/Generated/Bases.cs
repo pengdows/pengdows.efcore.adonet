@@ -1102,10 +1102,13 @@ public abstract partial class MigrationsAdoNetTest<THost>(MigrationsAdoNetTest<T
     where THost : IDatabaseHost, new()
 {
     public override global::System.Threading.Tasks.Task Add_required_primitive_collection_with_custom_default_value_sql_to_existing_table()
-        => throw new NotSupportedException("Not yet provided by the base suite: Add_required_primitive_collection_with_custom_default_value_sql_to_existing_table.");
+        => Add_required_primitive_collection_with_custom_default_value_sql_to_existing_table_core(new THost().Dialect.Sql.StringLiteral("[3, 2, 1]"));
     public override global::System.Threading.Tasks.Task Add_required_primitve_collection_with_custom_default_value_sql_to_existing_table()
-        => throw new NotSupportedException("Not yet provided by the base suite: Add_required_primitve_collection_with_custom_default_value_sql_to_existing_table.");
-    protected override string NonDefaultCollation => throw new NotSupportedException("Not yet provided by the base suite: NonDefaultCollation.");
+        => Add_required_primitve_collection_with_custom_default_value_sql_to_existing_table_core(new THost().Dialect.Sql.StringLiteral("[3, 2, 1]"));
+    protected override string NonDefaultCollation => new THost().NonDefaultCollation ?? throw new NotSupportedException("The host names no non-default collation.");
+    protected override bool AssertSchemaNames => new THost().Dialect.Sql.SupportsSchemas;
+    protected override bool AssertConstraintNames => new THost().Dialect.SchemaReader?.KeepsConstraintNames ?? true;
+    protected override bool AssertIndexFilters => new THost().Dialect.SchemaReader?.ReadsIndexFilters ?? true;
 
     public partial class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Migrations.MigrationsTestBase<AdoNetFixture>.MigrationsFixtureBase, global::Microsoft.EntityFrameworkCore.TestUtilities.ITestSqlLoggerFactory
     {

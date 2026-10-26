@@ -22,6 +22,7 @@ public abstract class ServerHost : IDatabaseHost
     public virtual TimeSpan TemporalResolution => TimeSpan.FromTicks(1);
     public virtual bool KeepsOffsets => true;
     public virtual NorthwindProcedures? Procedures => null;
+    public virtual string? NonDefaultCollation => null;
 
     protected abstract string AdminConnectionString { get; }
     protected abstract IEnumerable<string> RecreateSql(string database);
@@ -110,6 +111,9 @@ public sealed class MySqlHost : ServerHost
     // A DateTimeOffset is stored as its UTC instant in a DATETIME(6), read back at offset zero.
     public override bool KeepsOffsets => false;
 
+    // The test databases are utf8mb4_0900_as_cs.
+    public override string NonDefaultCollation => "utf8mb4_bin";
+
     // As Pomelo's Northwind script defines them; the parameter's collation yields to the column's (as a _bin one does), where
     // the character set's default (utf8mb4_0900_ai_ci) would clash with it. CALL reports no rows affected. Behaviour reference
     // (not copied):
@@ -159,6 +163,7 @@ public abstract class FileHost : IDatabaseHost
     public virtual TimeSpan TemporalResolution => TimeSpan.FromTicks(1);
     public virtual bool KeepsOffsets => true;
     public virtual NorthwindProcedures? Procedures => null;
+    public virtual string? NonDefaultCollation => null;
 
     protected static readonly string Root = Directory.CreateTempSubdirectory("adonet-spec-").FullName;
 

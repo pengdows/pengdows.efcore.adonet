@@ -32,7 +32,7 @@ public static class AdoNetServiceCollectionExtensions
 
         new EntityFrameworkRelationalServicesBuilder(services)
             .TryAdd<LoggingDefinitions, AdoNetLoggingDefinitions>()
-            .TryAdd<IDatabaseProvider, DatabaseProvider<AdoNetOptionsExtension>>()
+            .TryAdd<IDatabaseProvider, AdoNetDatabaseProvider>()
             .TryAdd<IRelationalTypeMappingSource, AdoNetTypeMappingSource>()
             .TryAdd<ISqlGenerationHelper, AdoNetSqlGenerationHelper>()
             .TryAdd<IProviderConventionSetBuilder, AdoNetConventionSetBuilder>()

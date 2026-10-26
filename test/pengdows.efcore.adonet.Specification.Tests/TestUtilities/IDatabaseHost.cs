@@ -28,6 +28,9 @@ public interface IDatabaseHost
 
     /// <summary>Northwind's stored procedures, for EF's raw-SQL suites; null where the database has none.</summary>
     NorthwindProcedures? Procedures { get; }
+
+    /// <summary>A collation other than the test databases' own, for the migrations suites; null where there is none to name.</summary>
+    string? NonDefaultCollation { get; }
 }
 
 /// <summary>

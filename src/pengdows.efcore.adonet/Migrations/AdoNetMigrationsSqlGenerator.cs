@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Migrations.Operations;
 
@@ -99,7 +100,15 @@ public class AdoNetMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dep
         builder
             .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(name))
             .Append(" ")
-            .Append(operation.ColumnType ?? GetColumnType(schema, table, name, operation, model)!)
+            .Append(operation.ColumnType ?? GetColumnType(schema, table, name, operation, model)!);
+
+        // ISO's collation follows the data type.
+        if (operation.Collation != null)
+        {
+            builder.Append(" COLLATE ").Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Collation));
+        }
+
+        builder
             .Append(" GENERATED ALWAYS AS (")
             .Append(operation.ComputedColumnSql!)
             .Append(")");
@@ -118,6 +127,7 @@ public class AdoNetMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dep
     {
         var oldColumn = operation.OldColumn;
         RefuseUnalterable(operation, oldColumn);
+        FillNullsWithDefault(operation, builder);
 
         // The old type from the operation's own facets: the model, when there is one, only knows the new column.
         var type = operation.ColumnType ?? GetColumnType(operation.Schema, operation.Table, operation.Name, operation, model);
@@ -152,6 +162,34 @@ public class AdoNetMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dep
             builder.AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
             EndStatement(builder);
         }
+    }
+
+    /// <summary>
+    ///     A column made required with a default first takes the default where it is null, which NOT NULL would refuse.
+    ///     Behaviour reference (not copied):
+    ///     https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.SqlServer/Migrations/SqlServerMigrationsSqlGenerator.cs
+    /// </summary>
+    protected virtual void FillNullsWithDefault(AlterColumnOperation operation, MigrationCommandListBuilder builder)
+    {
+        if (!operation.OldColumn.IsNullable || operation.IsNullable || ((operation.DefaultValue == null) && (operation.DefaultValueSql == null)))
+        {
+            return;
+        }
+
+        var column = Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Name);
+        builder
+            .Append("UPDATE ")
+            .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Table, operation.Schema))
+            .Append(" SET ")
+            .Append(column)
+            .Append(" = ")
+            .Append(operation.DefaultValueSql
+                ?? Dependencies.TypeMappingSource.GetMappingForValue(operation.DefaultValue).GenerateSqlLiteral(operation.DefaultValue))
+            .Append(" WHERE ")
+            .Append(column)
+            .Append(" IS NULL")
+            .AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
+        EndStatement(builder);
     }
 
     private void RefuseUnalterable(AlterColumnOperation operation, ColumnOperation oldColumn)

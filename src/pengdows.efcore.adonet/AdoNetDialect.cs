@@ -23,6 +23,9 @@ public abstract class AdoNetDialect : IAdoNetDialect
     {
     }
 
+    public virtual Scaffolding.InformationSchemaReader? SchemaReader
+        => Scaffolding.InformationSchemaReader.Iso;
+
     public override string ToString()
         => Name;
 }
