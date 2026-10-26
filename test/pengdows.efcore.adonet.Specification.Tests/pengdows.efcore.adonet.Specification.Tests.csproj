@@ -15,6 +15,7 @@
     <ProjectReference Include="..\..\src\pengdows.efcore.adonet.duckdb\pengdows.efcore.adonet.duckdb.csproj" />
     <ProjectReference Include="..\..\src\pengdows.efcore.adonet.flatfile\pengdows.efcore.adonet.flatfile.csproj" />
     <PackageReference Include="DuckDB.NET.Data.Full" />
+    <PackageReference Include="pengdows.crud.fakeDb" />
     <PackageReference Include="Testcontainers.MsSql" />
     <PackageReference Include="Testcontainers.PostgreSql" />
     <PackageReference Include="Testcontainers.MySql" />

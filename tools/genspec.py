@@ -60,7 +60,7 @@ def impl(m, base, fixture='TFixture'):
         'ShouldSubscribeToDiagnosticListener': lambda: prop('false'),
         'CreateModelBuilder': lambda: meth('new global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.GenericTestModelBuilder(Fixture, configure)'),
         'ConfigureProvider': lambda: meth('new THost().UseProvider(optionsBuilder, new THost().ConnectionStringFor("Interception"), _ => { })'),
-        'CreateBadUniverse': lambda: meth('new(\n            new THost().UseProvider(optionsBuilder, new AdoNetThrowingConnection(), _ => { }).Options)'),
+        'CreateBadUniverse': lambda: meth('new(\n            new THost().UseProvider(optionsBuilder, FailingConnection.Create(), _ => { }).Options)'),
     }
     if n in table:
         return table[n]()

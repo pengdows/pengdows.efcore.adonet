@@ -83,7 +83,7 @@ public abstract class ConnectionInterceptionAdoNetTest<THost>(AdoNetInterception
         => new THost().UseProvider(optionsBuilder, new THost().ConnectionStringFor("Interception"), _ => { });
     protected override global::Microsoft.EntityFrameworkCore.ConnectionInterceptionTestBase.BadUniverseContext CreateBadUniverse(global::Microsoft.EntityFrameworkCore.DbContextOptionsBuilder optionsBuilder)
         => new(
-            new THost().UseProvider(optionsBuilder, new AdoNetThrowingConnection(), _ => { }).Options);
+            new THost().UseProvider(optionsBuilder, FailingConnection.Create(), _ => { }).Options);
 }
 
 /// <summary>EF's ConvertToProviderTypesTestBase.</summary>

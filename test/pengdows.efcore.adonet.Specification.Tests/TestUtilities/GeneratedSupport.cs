@@ -78,33 +78,17 @@ public sealed class AdoNetInterceptionFixture<THost>
             injectedInterceptors);
 }
 
-/// <summary>A connection used by connection-interception tests to exercise an open failure.</summary>
-public sealed class AdoNetThrowingConnection : DbConnection
+/// <summary>
+///     A connection that fails to open, for EF's connection-interception tests: fakeDb's, not a hand-written one (REVIEW_POLICY:
+///     fakeDb or a real provider only). Behaviour reference (not copied):
+///     https://github.com/dotnet/efcore/blob/v10.0.11/test/EFCore.SqlServer.FunctionalTests/ConnectionInterceptionSqlServerTest.cs
+/// </summary>
+public static class FailingConnection
 {
-    [global::System.Diagnostics.CodeAnalysis.AllowNull]
-    public override string ConnectionString { get; set; } = "throwing";
-
-    public override string Database => "throwing";
-
-    public override string DataSource => "throwing";
-
-    public override string ServerVersion => "0";
-
-    public override System.Data.ConnectionState State => System.Data.ConnectionState.Closed;
-
-    public override void ChangeDatabase(string databaseName)
-        => throw new NotSupportedException();
-
-    public override void Close()
+    public static DbConnection Create()
     {
+        var connection = new pengdows.crud.fakeDb.fakeDbConnection();
+        connection.SetFailOnOpen();
+        return connection;
     }
-
-    public override void Open()
-        => throw new InvalidOperationException("AdoNet connection open failure.");
-
-    protected override DbTransaction BeginDbTransaction(System.Data.IsolationLevel isolationLevel)
-        => throw new NotSupportedException();
-
-    protected override DbCommand CreateDbCommand()
-        => throw new NotSupportedException();
 }
