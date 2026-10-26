@@ -1,61 +1,37 @@
+using System.Data.Common;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.Data.SqlClient;
+using pengdows.efcore.adonet.Infrastructure;
 using pengdows.efcore.adonet.Testing;
+using Microsoft.Data.SqlClient;
 
 namespace pengdows.efcore.adonet.sqlserver.Tests;
 
-/// <summary>Every entry point configures the SQL Server dialect, with core's argument order.</summary>
-public class SqlServerEntryPointTests
+public sealed class SqlServerEntryPoints : AdoNetEntryPoints
 {
-    private const string ConnectionString = "Server=localhost";
+    public override IAdoNetDialect Dialect => SqlServerDialect.Instance;
 
-    private static void UsesTheDialect(DbContextOptions<BlogContext> options)
-    {
-        using var context = new BlogContext(options);
-        Assert.Same(SqlServerDialect.Instance, context.GetService<IAdoNetDialect>());
-    }
+    public override DbProviderFactory Factory => SqlClientFactory.Instance;
 
-    [Fact]
-    public void A_connection_string()
-        => UsesTheDialect(new DbContextOptionsBuilder<BlogContext>().UseAdoNetSqlServer(ConnectionString).Options);
+    public override string ConnectionString => "Server=localhost";
 
-    [Fact]
-    public void A_connection_the_context_may_own()
-    {
-        using var connection = new SqlConnection("Server=localhost");
-        var options = new DbContextOptionsBuilder<BlogContext>().UseAdoNetSqlServer(connection, contextOwnsConnection: false, o => o.CommandTimeout(5)).Options;
+    public override DbContextOptionsBuilder<BlogContext> UseConnectionString(DbContextOptionsBuilder<BlogContext> builder, string connectionString)
+        => builder.UseAdoNetSqlServer(connectionString);
 
-        UsesTheDialect(options);
-        using var context = new BlogContext(options);
-        Assert.Same(connection, context.Database.GetDbConnection());
-        Assert.Equal(5, context.Database.GetCommandTimeout());
-    }
+    public override DbContextOptionsBuilder UseConnectionString(DbContextOptionsBuilder builder, string connectionString)
+        => builder.UseAdoNetSqlServer(connectionString);
 
-    [Fact]
-    public void A_data_source()
-    {
-        using var dataSource = SqlClientFactory.Instance.CreateDataSource(ConnectionString);
+    public override DbContextOptionsBuilder<BlogContext> UseConnection(
+        DbContextOptionsBuilder<BlogContext> builder,
+        DbConnection connection,
+        bool contextOwnsConnection,
+        Action<AdoNetDbContextOptionsBuilder> configure)
+        => builder.UseAdoNetSqlServer(connection, contextOwnsConnection, configure);
 
-        UsesTheDialect(new DbContextOptionsBuilder<BlogContext>().UseAdoNetSqlServer(dataSource).Options);
-    }
+    public override DbContextOptionsBuilder<BlogContext> UseDataSource(DbContextOptionsBuilder<BlogContext> builder, DbDataSource dataSource)
+        => builder.UseAdoNetSqlServer(dataSource);
 
-    [Fact]
-    public void A_connection_string_set_later()
-    {
-        using var context = new BlogContext(new DbContextOptionsBuilder<BlogContext>().UseAdoNetSqlServer().Options);
-        context.Database.SetConnectionString(ConnectionString);
-
-        Assert.Same(SqlServerDialect.Instance, context.GetService<IAdoNetDialect>());
-        Assert.Equal(ConnectionString, context.Database.GetConnectionString());
-    }
-
-    [Fact]
-    public void The_non_generic_builder_works_too()
-    {
-        var builder = new DbContextOptionsBuilder<BlogContext>();
-        ((DbContextOptionsBuilder)builder).UseAdoNetSqlServer(ConnectionString);
-
-        UsesTheDialect(builder.Options);
-    }
+    public override DbContextOptionsBuilder<BlogContext> UseNoConnection(DbContextOptionsBuilder<BlogContext> builder)
+        => builder.UseAdoNetSqlServer();
 }
+
+public class SqlServerEntryPointTests : EntryPointConformanceTests<SqlServerEntryPoints>;

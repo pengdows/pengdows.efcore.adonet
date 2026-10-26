@@ -1,61 +1,37 @@
+using System.Data.Common;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using DuckDB.NET.Data;
+using pengdows.efcore.adonet.Infrastructure;
 using pengdows.efcore.adonet.Testing;
+using DuckDB.NET.Data;
 
 namespace pengdows.efcore.adonet.duckdb.Tests;
 
-/// <summary>Every entry point configures the DuckDB dialect, with core's argument order.</summary>
-public class DuckDbEntryPointTests
+public sealed class DuckDbEntryPoints : AdoNetEntryPoints
 {
-    private const string ConnectionString = "Data Source=:memory:";
+    public override IAdoNetDialect Dialect => DuckDbDialect.Instance;
 
-    private static void UsesTheDialect(DbContextOptions<BlogContext> options)
-    {
-        using var context = new BlogContext(options);
-        Assert.Same(DuckDbDialect.Instance, context.GetService<IAdoNetDialect>());
-    }
+    public override DbProviderFactory Factory => DuckDBClientFactory.Instance;
 
-    [Fact]
-    public void A_connection_string()
-        => UsesTheDialect(new DbContextOptionsBuilder<BlogContext>().UseAdoNetDuckDb(ConnectionString).Options);
+    public override string ConnectionString => "Data Source=:memory:";
 
-    [Fact]
-    public void A_connection_the_context_may_own()
-    {
-        using var connection = new DuckDBConnection("Data Source=:memory:");
-        var options = new DbContextOptionsBuilder<BlogContext>().UseAdoNetDuckDb(connection, contextOwnsConnection: false, o => o.CommandTimeout(5)).Options;
+    public override DbContextOptionsBuilder<BlogContext> UseConnectionString(DbContextOptionsBuilder<BlogContext> builder, string connectionString)
+        => builder.UseAdoNetDuckDb(connectionString);
 
-        UsesTheDialect(options);
-        using var context = new BlogContext(options);
-        Assert.Same(connection, context.Database.GetDbConnection());
-        Assert.Equal(5, context.Database.GetCommandTimeout());
-    }
+    public override DbContextOptionsBuilder UseConnectionString(DbContextOptionsBuilder builder, string connectionString)
+        => builder.UseAdoNetDuckDb(connectionString);
 
-    [Fact]
-    public void A_data_source()
-    {
-        using var dataSource = DuckDBClientFactory.Instance.CreateDataSource(ConnectionString);
+    public override DbContextOptionsBuilder<BlogContext> UseConnection(
+        DbContextOptionsBuilder<BlogContext> builder,
+        DbConnection connection,
+        bool contextOwnsConnection,
+        Action<AdoNetDbContextOptionsBuilder> configure)
+        => builder.UseAdoNetDuckDb(connection, contextOwnsConnection, configure);
 
-        UsesTheDialect(new DbContextOptionsBuilder<BlogContext>().UseAdoNetDuckDb(dataSource).Options);
-    }
+    public override DbContextOptionsBuilder<BlogContext> UseDataSource(DbContextOptionsBuilder<BlogContext> builder, DbDataSource dataSource)
+        => builder.UseAdoNetDuckDb(dataSource);
 
-    [Fact]
-    public void A_connection_string_set_later()
-    {
-        using var context = new BlogContext(new DbContextOptionsBuilder<BlogContext>().UseAdoNetDuckDb().Options);
-        context.Database.SetConnectionString(ConnectionString);
-
-        Assert.Same(DuckDbDialect.Instance, context.GetService<IAdoNetDialect>());
-        Assert.Equal(ConnectionString, context.Database.GetConnectionString());
-    }
-
-    [Fact]
-    public void The_non_generic_builder_works_too()
-    {
-        var builder = new DbContextOptionsBuilder<BlogContext>();
-        ((DbContextOptionsBuilder)builder).UseAdoNetDuckDb(ConnectionString);
-
-        UsesTheDialect(builder.Options);
-    }
+    public override DbContextOptionsBuilder<BlogContext> UseNoConnection(DbContextOptionsBuilder<BlogContext> builder)
+        => builder.UseAdoNetDuckDb();
 }
+
+public class DuckDbEntryPointTests : EntryPointConformanceTests<DuckDbEntryPoints>;

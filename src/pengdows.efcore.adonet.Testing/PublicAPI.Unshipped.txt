@@ -1,4 +1,12 @@
 #nullable enable
+abstract pengdows.efcore.adonet.Testing.AdoNetEntryPoints.ConnectionString.get -> string!
+abstract pengdows.efcore.adonet.Testing.AdoNetEntryPoints.Dialect.get -> pengdows.efcore.adonet.IAdoNetDialect!
+abstract pengdows.efcore.adonet.Testing.AdoNetEntryPoints.Factory.get -> System.Data.Common.DbProviderFactory!
+abstract pengdows.efcore.adonet.Testing.AdoNetEntryPoints.UseConnection(Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<pengdows.efcore.adonet.Testing.BlogContext!>! builder, System.Data.Common.DbConnection! connection, bool contextOwnsConnection, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>! configure) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<pengdows.efcore.adonet.Testing.BlogContext!>!
+abstract pengdows.efcore.adonet.Testing.AdoNetEntryPoints.UseConnectionString(Microsoft.EntityFrameworkCore.DbContextOptionsBuilder! builder, string! connectionString) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder!
+abstract pengdows.efcore.adonet.Testing.AdoNetEntryPoints.UseConnectionString(Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<pengdows.efcore.adonet.Testing.BlogContext!>! builder, string! connectionString) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<pengdows.efcore.adonet.Testing.BlogContext!>!
+abstract pengdows.efcore.adonet.Testing.AdoNetEntryPoints.UseDataSource(Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<pengdows.efcore.adonet.Testing.BlogContext!>! builder, System.Data.Common.DbDataSource! dataSource) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<pengdows.efcore.adonet.Testing.BlogContext!>!
+abstract pengdows.efcore.adonet.Testing.AdoNetEntryPoints.UseNoConnection(Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<pengdows.efcore.adonet.Testing.BlogContext!>! builder) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<pengdows.efcore.adonet.Testing.BlogContext!>!
 abstract pengdows.efcore.adonet.Testing.ContainerFixture.CreateContainer() -> DotNet.Testcontainers.Containers.IDatabaseContainer!
 abstract pengdows.efcore.adonet.Testing.ProviderFixture.ConnectionString.get -> string!
 abstract pengdows.efcore.adonet.Testing.ProviderFixture.Ddl.get -> System.Collections.Generic.IEnumerable<string!>!
@@ -20,6 +28,8 @@ override pengdows.efcore.adonet.Testing.MigrationsContext.OnModelCreating(Micros
 override pengdows.efcore.adonet.Testing.ReshapeMigration.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder! migrationBuilder) -> void
 override pengdows.efcore.adonet.Testing.ReshapeMigration.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder! migrationBuilder) -> void
 override pengdows.efcore.adonet.Testing.SchemaContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder! modelBuilder) -> void
+pengdows.efcore.adonet.Testing.AdoNetEntryPoints
+pengdows.efcore.adonet.Testing.AdoNetEntryPoints.AdoNetEntryPoints() -> void
 pengdows.efcore.adonet.Testing.AlterCodeMigration
 pengdows.efcore.adonet.Testing.AlterCodeMigration.AlterCodeMigration() -> void
 pengdows.efcore.adonet.Testing.Author
@@ -98,6 +108,13 @@ pengdows.efcore.adonet.Testing.Category.ParentId.get -> int?
 pengdows.efcore.adonet.Testing.Category.ParentId.set -> void
 pengdows.efcore.adonet.Testing.ContainerFixture
 pengdows.efcore.adonet.Testing.ContainerFixture.ContainerFixture() -> void
+pengdows.efcore.adonet.Testing.EntryPointConformanceTests<TEntryPoints>
+pengdows.efcore.adonet.Testing.EntryPointConformanceTests<TEntryPoints>.A_connection_string() -> void
+pengdows.efcore.adonet.Testing.EntryPointConformanceTests<TEntryPoints>.A_connection_string_set_later() -> void
+pengdows.efcore.adonet.Testing.EntryPointConformanceTests<TEntryPoints>.A_connection_the_context_may_own() -> void
+pengdows.efcore.adonet.Testing.EntryPointConformanceTests<TEntryPoints>.A_data_source() -> void
+pengdows.efcore.adonet.Testing.EntryPointConformanceTests<TEntryPoints>.EntryPointConformanceTests() -> void
+pengdows.efcore.adonet.Testing.EntryPointConformanceTests<TEntryPoints>.The_non_generic_builder_works_too() -> void
 pengdows.efcore.adonet.Testing.FloatSample
 pengdows.efcore.adonet.Testing.FloatSample.Double.get -> double
 pengdows.efcore.adonet.Testing.FloatSample.Double.set -> void
