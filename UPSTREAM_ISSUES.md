@@ -123,6 +123,27 @@ noted so they can be removed once the fix ships.
 - **Our work-around (test harness only):** the test store closes its connection only when it is open. Remove it with the
   update to that release.
 
+### Driver fixes merged upstream, not yet released (we pin 1.5.6.1)
+
+Merged into Giorgi/DuckDB.NET from our ADO.NET conformance work; each ships in the next release. Until we update, a DuckDB
+failure in the specification suite that matches one of these is the driver's, not the provider's.
+
+| PR | Change | Where it shows in EF's specification suites |
+|---|---|---|
+| [#373](https://github.com/Giorgi/DuckDB.NET/pull/373), [#379](https://github.com/Giorgi/DuckDB.NET/pull/379) | `Close` may be called more than once, also on a never-opened connection | The test store's close-only-if-open check (above) |
+| [#374](https://github.com/Giorgi/DuckDB.NET/pull/374) | `RecordsAffected` is -1 for statements other than INSERT, UPDATE and DELETE | Update and concurrency suites (affected-row checks) |
+| [#359](https://github.com/Giorgi/DuckDB.NET/pull/359), [#360](https://github.com/Giorgi/DuckDB.NET/pull/360) | Negative intervals; an untyped `TimeSpan` parameter binds as an interval | Built-in data types, temporal translations, value converters |
+| [#375](https://github.com/Giorgi/DuckDB.NET/pull/375) | `GetOrdinal`: case-insensitive fallback, `IndexOutOfRangeException` | Raw SQL (`FromSql`, `SqlQuery`), which reads columns by name |
+| [#376](https://github.com/Giorgi/DuckDB.NET/pull/376), [#377](https://github.com/Giorgi/DuckDB.NET/pull/377) | `GetValues` copies only what the array holds; `GetBytes`, `GetChars` | Reader-level tests: built-in data types, large binary and text |
+| [#372](https://github.com/Giorgi/DuckDB.NET/pull/372) | `CommandType` defaults to Text, parameter `Direction` to Input | Interception and command tests that inspect commands |
+| [#378](https://github.com/Giorgi/DuckDB.NET/pull/378) | `Prepare()` requires an open connection | Command lifecycle |
+| [#380](https://github.com/Giorgi/DuckDB.NET/pull/380) | Unsupported savepoint operations fail consistently | Transaction suite (DuckDB has no savepoints; the dialect declares none) |
+| [#364](https://github.com/Giorgi/DuckDB.NET/pull/364) | ADO.NET schema data types and metadata | Scaffolding, once design-time services exist |
+| [#357](https://github.com/Giorgi/DuckDB.NET/pull/357) | Regression test for `CommandBehavior.CloseConnection` | (test only) |
+
+When the release ships: update `DuckDB.NET.Data` and `DuckDB.NET.Data.Full`, remove the test store's close-only-if-open
+check, and rerun the DuckDB specification suite.
+
 ## pengdows.crud.fakeDb (2.0.5; source at 2.0.6)
 
 Gaps that keep core paths out of reach of fakeDb tests (REVIEW_POLICY: a gap is added to fakeDb, never mocked around):
