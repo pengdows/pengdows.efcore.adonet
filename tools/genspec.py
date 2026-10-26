@@ -15,6 +15,8 @@ SHARED_FIXTURES = {
 
 # Virtual members of a base whose value is the database's: overridden from its dialect.
 VIRTUALS = {
+    # The provider, over a database it never opens: the tests only deserialize.
+    'BadDataJsonDeserializationTestBase': ['    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)\n        => base.OnConfiguring(new THost().UseProvider(optionsBuilder, new THost().ConnectionStringFor("ef_bad_json"), _ => { }));'],
     'TransactionTestBase': ['    protected override bool AmbientTransactionsSupported => new THost().Dialect.Capabilities.SupportsAmbientTransactions;', '    protected override bool SavepointsSupported => new THost().Dialect.Sql.Savepoints != null;'],
 }
 # Virtual members whose EF default does nothing but every provider overrides: emitted wherever a base declares them.
@@ -148,6 +150,7 @@ for b in bases:
         lines.append('    where THost : IDatabaseHost, new()')
         lines.append('{')
         lines += members(b['abstracts'], name)
+        lines += VIRTUALS.get(name, [])
         lines.append('}')
         generated.append(dict(name=name, cls=cls, sub=ns_sub, code=lines, fixture=None, ctor=ctor, nonshared=True))
         continue

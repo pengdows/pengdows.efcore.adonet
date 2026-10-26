@@ -120,6 +120,8 @@ public abstract partial class ArithmeticOperatorTranslationsAdoNetTest<THost>(Ar
 public abstract partial class BadDataJsonDeserializationAdoNetTest<THost>() : global::Microsoft.EntityFrameworkCore.BadDataJsonDeserializationTestBase()
     where THost : IDatabaseHost, new()
 {
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        => base.OnConfiguring(new THost().UseProvider(optionsBuilder, new THost().ConnectionStringFor("ef_bad_json"), _ => { }));
 }
 
 /// <summary>EF's BitwiseOperatorTranslationsTestBase.</summary>
