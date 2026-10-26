@@ -5,19 +5,22 @@ using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 
 namespace pengdows.efcore.adonet.Metadata;
 
-/// <summary>Marks single-column integer keys that the database generates (see <see cref="AdoNetAnnotationNames.Identity" />).</summary>
+/// <summary>Marks the integer key columns that the database generates (see <see cref="AdoNetAnnotationNames.Identity" />).</summary>
 internal class AdoNetIdentityConvention : IModelFinalizingConvention
 {
     public virtual void ProcessModelFinalizing(IConventionModelBuilder modelBuilder, IConventionContext<IConventionModelBuilder> context)
     {
         foreach (var entityType in modelBuilder.Metadata.GetEntityTypes())
         {
+            // Every key column EF generates on add: the key itself, or (an owned collection's) the number beside the owner's.
             if (entityType.BaseType == null
                 && entityType.GetTableName() != null
-                && entityType.FindPrimaryKey() is { Properties: [var property] }
-                && IsIdentity(property))
+                && entityType.FindPrimaryKey() is { } key)
             {
-                property.Builder.HasAnnotation(AdoNetAnnotationNames.Identity, true);
+                foreach (var property in key.Properties.Where(IsIdentity))
+                {
+                    property.Builder.HasAnnotation(AdoNetAnnotationNames.Identity, true);
+                }
             }
         }
     }
@@ -32,7 +35,9 @@ internal class AdoNetIdentityConvention : IModelFinalizingConvention
             // An enum without a converter is stored as its underlying integer.
             && (unwrapped.IsEnum ? Enum.GetUnderlyingType(unwrapped) : unwrapped) is var clrType
             && (clrType == typeof(int) || clrType == typeof(long) || clrType == typeof(short))
-            && !property.IsForeignKey()
+            // A key that is the entity's own foreign key copies another row's. A TPT hierarchy's derived types tie their
+            // keys to the root's through it too, but those foreign keys are theirs, not the root's.
+            && !property.GetContainingForeignKeys().Any(fk => fk.DeclaringEntityType == property.DeclaringType)
             && property.GetValueGeneratorFactory() == null
             // GetDefaultValue() is the CLR default (0) when none is configured.
             && !property.TryGetDefaultValue(out _)

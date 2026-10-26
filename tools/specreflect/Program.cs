@@ -53,6 +53,12 @@ foreach (var name in names)
         cs = Cs(t),
         nested = t.IsNested,
         @namespace = t.Namespace,
+        // EF's own fixture for this base (BaseNameFixture), where one exists and fits the constraint: the one upstream providers
+        // derive from, with its own store name, rather than the shared base fixture the constraint names.
+        preferredFixture = generics.Length == 1
+            && types.FirstOrDefault(x => x.Name == name.Replace("TestBase", "") + "Fixture" && x.IsPublic && !x.IsGenericTypeDefinition) is { } preferred
+            && generics[0].GetGenericParameterConstraints().Where(c => c.IsClass).All(c => !c.ContainsGenericParameters && c.IsAssignableFrom(preferred))
+                ? Cs(preferred) : null,
         generic = generics.Select(g => new { g.Name, constraints = g.GetGenericParameterConstraints().Select(c => new { cs = Cs(c), isClass = c.IsClass, isAbstract = c.IsAbstract, abstracts = c.IsClass ? Abstracts(c).Select(Member).ToArray() : [], listLogger = c.IsClass && (c.GetProperty("ListLoggerFactory", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance) != null) }).ToArray() }).ToArray(),
         ctors = t.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).Where(c => !c.IsPrivate).Select(c => c.GetParameters().Select(p => Cs(p.ParameterType) + " " + p.Name).ToArray()).ToArray(),
         ctorFixtures = t.IsGenericTypeDefinition ? [] : t.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).Where(c => !c.IsPrivate)

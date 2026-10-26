@@ -25,7 +25,7 @@ internal class AdoNetMigrationsAnnotationProvider(MigrationsAnnotationProviderDe
     private static IEnumerable<IAnnotation> WithIdentityColumns(IEnumerable<IAnnotation> annotations, ITable table)
     {
         var identities = table.Columns
-            .Where(c => c.PropertyMappings.Any(m => m.Property.FindAnnotation(AdoNetAnnotationNames.Identity)?.Value is true))
+            .Where(AdoNetAnnotationProvider.IsIdentity)
             .Select(c => c.Name)
             .ToArray();
         return identities.Length == 0 ? annotations : annotations.Append(new Annotation(AdoNetAnnotationNames.IdentityColumns, identities));

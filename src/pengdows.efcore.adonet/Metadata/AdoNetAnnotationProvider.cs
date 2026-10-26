@@ -14,9 +14,17 @@ internal class AdoNetAnnotationProvider(RelationalAnnotationProviderDependencies
             yield return annotation;
         }
 
-        if (column.PropertyMappings.Any(m => m.Property.FindAnnotation(AdoNetAnnotationNames.Identity)?.Value is true))
+        if (IsIdentity(column))
         {
             yield return new Annotation(AdoNetAnnotationNames.Identity, true);
         }
     }
+
+    /// <summary>
+    ///     Whether the database numbers this column: an identity property, in the table of the type that declares it. A table-
+    ///     per-type derived table maps the same key property, but its key is the root row's, copied in.
+    /// </summary>
+    internal static bool IsIdentity(IColumn column)
+        => column.PropertyMappings.Any(m => (m.Property.FindAnnotation(AdoNetAnnotationNames.Identity)?.Value is true)
+            && (m.TableMapping.TypeBase == m.Property.DeclaringType));
 }

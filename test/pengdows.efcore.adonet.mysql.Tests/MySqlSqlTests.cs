@@ -88,3 +88,34 @@ public class MySqlDefaultValueTests
     public void Other_columns_keep_a_plain_literal_default()
         => Assert.Contains("VARCHAR(20) DEFAULT 'Banana Joe'", Sql("VARCHAR(20)", "Banana Joe"));
 }
+
+/// <summary>
+///     InnoDB wants an AUTO_INCREMENT column to lead an index; in a composite key led by another column (an owned
+///     collection's owner key, then its own number) it doesn't, so the column gets a unique constraint of its own. Behaviour
+///     reference: Pomelo's MySqlMigrationsSqlGenerator (adapted).
+/// </summary>
+public class MySqlAutoIncrementKeyTests
+{
+    private static string Sql(params string[] primaryKey)
+    {
+        using var context = new BlogContext(new DbContextOptionsBuilder<BlogContext>().UseAdoNetMySql("Server=localhost").Options);
+        var owner = new Microsoft.EntityFrameworkCore.Migrations.Operations.AddColumnOperation { Table = "Lines", Name = "OwnerId", ClrType = typeof(int) };
+        var id = new Microsoft.EntityFrameworkCore.Migrations.Operations.AddColumnOperation { Table = "Lines", Name = "Id", ClrType = typeof(int) };
+        id.AddAnnotation(AdoNetAnnotationNames.Identity, true);
+        var create = new Microsoft.EntityFrameworkCore.Migrations.Operations.CreateTableOperation
+        {
+            Name = "Lines",
+            Columns = { owner, id },
+            PrimaryKey = new Microsoft.EntityFrameworkCore.Migrations.Operations.AddPrimaryKeyOperation { Table = "Lines", Name = "PK_Lines", Columns = primaryKey }
+        };
+        return string.Join("", context.GetService<Microsoft.EntityFrameworkCore.Migrations.IMigrationsSqlGenerator>().Generate([create]).Select(c => c.CommandText));
+    }
+
+    [Fact]
+    public void An_auto_increment_column_after_the_first_key_column_leads_a_unique_constraint()
+        => Assert.Contains("UNIQUE (`Id`)", Sql("OwnerId", "Id"));
+
+    [Fact]
+    public void An_auto_increment_column_that_leads_the_key_needs_nothing_more()
+        => Assert.DoesNotContain("UNIQUE", Sql("Id", "OwnerId"));
+}

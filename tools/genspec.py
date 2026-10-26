@@ -142,13 +142,18 @@ for b in bases:
         nested = []
     else:
         fixture = f'{cls}<THost>.AdoNetFixture'
-        base_fixture = c['cs'].replace('<TFixture>', '<AdoNetFixture>')
+        # EF's own fixture for the base when it has one (its own store name), else the one the constraint names.
+        base_fixture = b.get('preferredFixture') or c['cs'].replace('<TFixture>', '<AdoNetFixture>')
         # EF's query asserter casts the fixture to ITestSqlLoggerFactory to show a failed query's SQL; without it a
         # failure is reported as an InvalidCastException.
         logger = ['        public global::Microsoft.EntityFrameworkCore.TestUtilities.TestSqlLoggerFactory TestSqlLoggerFactory',
                   '            => (global::Microsoft.EntityFrameworkCore.TestUtilities.TestSqlLoggerFactory)ListLoggerFactory;']
         if not c.get('listLogger'):
             logger = []
+        # The Filters variants of EF's inheritance suites run their base's model with query filters on, in a store of their own.
+        if 'FiltersInheritance' in name:
+            logger = logger + ['        public override bool EnableFilters => true;',
+                               f'        protected override string StoreName => "{short(name)}";']
         interface = ', global::Microsoft.EntityFrameworkCore.TestUtilities.ITestSqlLoggerFactory' if logger else ''
         nested = ['', f'    public partial class AdoNetFixture : {base_fixture}{interface}', '    {'] + ['    ' + l for l in members(c['abstracts'], name, 'AdoNetFixture')] + logger + ['    }']
     params = f'{fixture} fixture' + (f', {extra}' if extra else '')

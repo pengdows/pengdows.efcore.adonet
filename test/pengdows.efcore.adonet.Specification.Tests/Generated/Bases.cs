@@ -739,6 +739,8 @@ public abstract partial class FiltersInheritanceBulkUpdatesAdoNetTest<THost>(Fil
         protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
         public global::Microsoft.EntityFrameworkCore.TestUtilities.TestSqlLoggerFactory TestSqlLoggerFactory
             => (global::Microsoft.EntityFrameworkCore.TestUtilities.TestSqlLoggerFactory)ListLoggerFactory;
+        public override bool EnableFilters => true;
+        protected override string StoreName => "FiltersInheritanceBulkUpdates";
     }
 }
 
@@ -752,6 +754,8 @@ public abstract partial class FiltersInheritanceQueryAdoNetTest<THost>(FiltersIn
         protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
         public global::Microsoft.EntityFrameworkCore.TestUtilities.TestSqlLoggerFactory TestSqlLoggerFactory
             => (global::Microsoft.EntityFrameworkCore.TestUtilities.TestSqlLoggerFactory)ListLoggerFactory;
+        public override bool EnableFilters => true;
+        protected override string StoreName => "FiltersInheritanceQuery";
     }
 }
 
@@ -816,7 +820,7 @@ public abstract partial class GearsOfWarQueryAdoNetTest<THost>(GearsOfWarQueryAd
     where THost : IDatabaseHost, new()
 {
 
-    public partial class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.GearsOfWarQueryFixtureBase, global::Microsoft.EntityFrameworkCore.TestUtilities.ITestSqlLoggerFactory
+    public partial class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.GearsOfWarQueryRelationalFixture, global::Microsoft.EntityFrameworkCore.TestUtilities.ITestSqlLoggerFactory
     {
         protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
         public global::Microsoft.EntityFrameworkCore.TestUtilities.TestSqlLoggerFactory TestSqlLoggerFactory
@@ -1010,7 +1014,7 @@ public abstract partial class ManyToManyQueryAdoNetTest<THost>(ManyToManyQueryAd
     where THost : IDatabaseHost, new()
 {
 
-    public partial class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.ManyToManyQueryFixtureBase, global::Microsoft.EntityFrameworkCore.TestUtilities.ITestSqlLoggerFactory
+    public partial class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.ManyToManyQueryRelationalFixture, global::Microsoft.EntityFrameworkCore.TestUtilities.ITestSqlLoggerFactory
     {
         protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
         public global::Microsoft.EntityFrameworkCore.TestUtilities.TestSqlLoggerFactory TestSqlLoggerFactory
@@ -1916,7 +1920,7 @@ public abstract partial class SpatialQueryAdoNetTest<THost>(SpatialQueryAdoNetTe
     where THost : IDatabaseHost, new()
 {
 
-    public partial class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.SpatialQueryFixtureBase, global::Microsoft.EntityFrameworkCore.TestUtilities.ITestSqlLoggerFactory
+    public partial class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.SpatialQueryRelationalFixture, global::Microsoft.EntityFrameworkCore.TestUtilities.ITestSqlLoggerFactory
     {
         protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
         public global::Microsoft.EntityFrameworkCore.TestUtilities.TestSqlLoggerFactory TestSqlLoggerFactory
@@ -2100,6 +2104,8 @@ public abstract partial class TPCFiltersInheritanceBulkUpdatesAdoNetTest<THost>(
         protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
         public global::Microsoft.EntityFrameworkCore.TestUtilities.TestSqlLoggerFactory TestSqlLoggerFactory
             => (global::Microsoft.EntityFrameworkCore.TestUtilities.TestSqlLoggerFactory)ListLoggerFactory;
+        public override bool EnableFilters => true;
+        protected override string StoreName => "TPCFiltersInheritanceBulkUpdates";
     }
 }
 
@@ -2113,6 +2119,8 @@ public abstract partial class TPCFiltersInheritanceQueryAdoNetTest<THost>(TPCFil
         protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
         public global::Microsoft.EntityFrameworkCore.TestUtilities.TestSqlLoggerFactory TestSqlLoggerFactory
             => (global::Microsoft.EntityFrameworkCore.TestUtilities.TestSqlLoggerFactory)ListLoggerFactory;
+        public override bool EnableFilters => true;
+        protected override string StoreName => "TPCFiltersInheritanceQuery";
     }
 }
 
@@ -2201,7 +2209,7 @@ public abstract partial class TPHInheritanceBulkUpdatesAdoNetTest<THost>(TPHInhe
     where THost : IDatabaseHost, new()
 {
 
-    public partial class AdoNetFixture : global::Microsoft.EntityFrameworkCore.BulkUpdates.InheritanceBulkUpdatesRelationalFixtureBase, global::Microsoft.EntityFrameworkCore.TestUtilities.ITestSqlLoggerFactory
+    public partial class AdoNetFixture : global::Microsoft.EntityFrameworkCore.BulkUpdates.TPHInheritanceBulkUpdatesFixture, global::Microsoft.EntityFrameworkCore.TestUtilities.ITestSqlLoggerFactory
     {
         protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
         public global::Microsoft.EntityFrameworkCore.TestUtilities.TestSqlLoggerFactory TestSqlLoggerFactory
@@ -2236,6 +2244,8 @@ public abstract partial class TPTFiltersInheritanceBulkUpdatesAdoNetTest<THost>(
         protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
         public global::Microsoft.EntityFrameworkCore.TestUtilities.TestSqlLoggerFactory TestSqlLoggerFactory
             => (global::Microsoft.EntityFrameworkCore.TestUtilities.TestSqlLoggerFactory)ListLoggerFactory;
+        public override bool EnableFilters => true;
+        protected override string StoreName => "TPTFiltersInheritanceBulkUpdates";
     }
 }
 
@@ -2249,6 +2259,8 @@ public abstract partial class TPTFiltersInheritanceQueryAdoNetTest<THost>(TPTFil
         protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
         public global::Microsoft.EntityFrameworkCore.TestUtilities.TestSqlLoggerFactory TestSqlLoggerFactory
             => (global::Microsoft.EntityFrameworkCore.TestUtilities.TestSqlLoggerFactory)ListLoggerFactory;
+        public override bool EnableFilters => true;
+        protected override string StoreName => "TPTFiltersInheritanceQuery";
     }
 }
 
