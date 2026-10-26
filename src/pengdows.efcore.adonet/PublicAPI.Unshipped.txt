@@ -132,6 +132,7 @@ pengdows.efcore.adonet.ISqlDialect.Functions.get -> pengdows.efcore.adonet.Funct
 pengdows.efcore.adonet.ISqlDialect.HasTablesSql.get -> string!
 pengdows.efcore.adonet.ISqlDialect.IdentifierQuotePrefix.get -> string!
 pengdows.efcore.adonet.ISqlDialect.IdentifierQuoteSuffix.get -> string!
+pengdows.efcore.adonet.ISqlDialect.Json.get -> pengdows.efcore.adonet.JsonSyntax?
 pengdows.efcore.adonet.ISqlDialect.Keys.get -> pengdows.efcore.adonet.KeyRetrieval!
 pengdows.efcore.adonet.ISqlDialect.LateralJoins.get -> pengdows.efcore.adonet.LateralJoinSyntax?
 pengdows.efcore.adonet.ISqlDialect.LimitInPredicateSubqueries.get -> bool
@@ -153,6 +154,16 @@ pengdows.efcore.adonet.ITypeMappingDialect.GetClrTypes(string! storeTypeBase) ->
 pengdows.efcore.adonet.ITypeMappingDialect.GetStoreType(System.Type! clrType) -> string?
 pengdows.efcore.adonet.ITypeMappingDialect.GetStoreType(System.Type! clrType, pengdows.efcore.adonet.StoreTypeFacets! facets) -> string?
 pengdows.efcore.adonet.ITypeMappingDialect.StringParameterSize(bool unicode) -> int?
+pengdows.efcore.adonet.JsonSyntax
+pengdows.efcore.adonet.JsonSyntax.BooleanValue.get -> string?
+pengdows.efcore.adonet.JsonSyntax.Concatenate.get -> string!
+pengdows.efcore.adonet.JsonSyntax.FromText.get -> string!
+pengdows.efcore.adonet.JsonSyntax.JsonSyntax(string! storeType, string! value, string! query, string! typedValue, string? booleanValue, string! concatenate, string! set, string! fromText) -> void
+pengdows.efcore.adonet.JsonSyntax.Query.get -> string!
+pengdows.efcore.adonet.JsonSyntax.Set.get -> string!
+pengdows.efcore.adonet.JsonSyntax.StoreType.get -> string!
+pengdows.efcore.adonet.JsonSyntax.TypedValue.get -> string!
+pengdows.efcore.adonet.JsonSyntax.Value.get -> string!
 pengdows.efcore.adonet.KeyRetrieval
 pengdows.efcore.adonet.LateralJoinSyntax
 pengdows.efcore.adonet.LateralJoinSyntax.CrossJoin.get -> string!
@@ -239,6 +250,7 @@ static pengdows.efcore.adonet.DmlSyntax.Standard.get -> pengdows.efcore.adonet.D
 static pengdows.efcore.adonet.DmlSyntax.TargetAliasFrom.get -> pengdows.efcore.adonet.DmlSyntax!
 static pengdows.efcore.adonet.DmlSyntax.UnaliasedTarget.get -> pengdows.efcore.adonet.DmlSyntax!
 static pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.Validate(pengdows.efcore.adonet.IAdoNetDialect! dialect) -> void
+static pengdows.efcore.adonet.JsonSyntax.Iso.get -> pengdows.efcore.adonet.JsonSyntax!
 static pengdows.efcore.adonet.KeyRetrieval.Returning.get -> pengdows.efcore.adonet.ReturningKeyRetrieval!
 static pengdows.efcore.adonet.KeyRetrieval.SelectAfter(string! identityFunction, string! rowsAffectedFunction) -> pengdows.efcore.adonet.SelectAfterKeyRetrieval!
 static pengdows.efcore.adonet.KeyRetrieval.Sequence(System.Func<string!, string!, string!>? sequenceName = null, System.Func<string!, string!>? nextValueSql = null) -> pengdows.efcore.adonet.SequenceKeyRetrieval!
@@ -269,6 +281,7 @@ virtual pengdows.efcore.adonet.AnsiSqlDialect.Functions.get -> pengdows.efcore.a
 virtual pengdows.efcore.adonet.AnsiSqlDialect.HasTablesSql.get -> string!
 virtual pengdows.efcore.adonet.AnsiSqlDialect.IdentifierQuotePrefix.get -> string!
 virtual pengdows.efcore.adonet.AnsiSqlDialect.IdentifierQuoteSuffix.get -> string!
+virtual pengdows.efcore.adonet.AnsiSqlDialect.Json.get -> pengdows.efcore.adonet.JsonSyntax?
 virtual pengdows.efcore.adonet.AnsiSqlDialect.Keys.get -> pengdows.efcore.adonet.KeyRetrieval!
 virtual pengdows.efcore.adonet.AnsiSqlDialect.LateralJoins.get -> pengdows.efcore.adonet.LateralJoinSyntax?
 virtual pengdows.efcore.adonet.AnsiSqlDialect.LimitInPredicateSubqueries.get -> bool

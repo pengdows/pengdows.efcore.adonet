@@ -13,6 +13,7 @@ internal class AdoNetTypeMappingSource : RelationalTypeMappingSource
     private readonly Dictionary<Type, RelationalTypeMapping> _clrTypeMappings = [];
     private readonly Dictionary<string, RelationalTypeMapping> _storeTypeMappings = new(StringComparer.OrdinalIgnoreCase);
     private readonly ITypeMappingDialect _typeMappings;
+    private readonly ISqlDialect _sql;
 
     public AdoNetTypeMappingSource(
         TypeMappingSourceDependencies dependencies,
@@ -22,6 +23,7 @@ internal class AdoNetTypeMappingSource : RelationalTypeMappingSource
         : base(dependencies, relationalDependencies)
     {
         _typeMappings = typeMappings;
+        _sql = sql;
 
         foreach (var clrType in AnsiTypeMappings.SupportedClrTypes)
         {
@@ -105,6 +107,12 @@ internal class AdoNetTypeMappingSource : RelationalTypeMappingSource
         if (mapping != null)
         {
             return mapping;
+        }
+
+        // A JSON column (ToJson), in the dialect's JSON type unless the model names another.
+        if (mappingInfo.ClrType == typeof(JsonTypePlaceholder))
+        {
+            return _sql.Json is { } json ? new AdoNetJsonTypeMapping(mappingInfo.StoreTypeName ?? json.StoreType, _sql) : null;
         }
 
         // A store type the dialect knows decides the CLR type; asked for one it doesn't hold, return nothing, so EF looks

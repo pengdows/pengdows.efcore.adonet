@@ -44,9 +44,11 @@ public sealed class PartsSql(
     Func<string, bool>? requiresQuoting = null,
     LateralJoinSyntax? lateralJoins = null,
     bool noLateralJoins = false,
-    DatabaseLifecycle? databases = null) : AnsiSqlDialect
+    DatabaseLifecycle? databases = null,
+    JsonSyntax? json = null) : AnsiSqlDialect
 {
     public override DatabaseLifecycle? Databases => databases;
+    public override JsonSyntax? Json => json;
     public override PagingSyntax Paging { get; } = paging ?? PagingSyntax.OffsetFetch;
     public override BooleanSyntax Booleans { get; } = booleans ?? BooleanSyntax.Native;
     public override KeyRetrieval Keys { get; } = keys ?? KeyRetrieval.Returning;
@@ -105,6 +107,7 @@ public static class TestDialects
         new PartsSql(keys: KeyRetrieval.SelectAfter("last_id()", "row_count()")),
         new DatabaseCapabilities { SupportsMultipleStatementsPerCommand = true, DefaultMaxBatchSize = 10 });
 
+    public static readonly IAdoNetDialect Json = new PartsDialect("Json", new PartsSql(json: JsonSyntax.Iso));
     public static readonly IAdoNetDialect Sequence = new PartsDialect("Sequence", new PartsSql(keys: KeyRetrieval.Sequence()));
 
     public static readonly IAdoNetDialect BatchesOfTwo = new PartsDialect(

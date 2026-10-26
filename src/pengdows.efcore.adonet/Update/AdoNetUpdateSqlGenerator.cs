@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore.Update;
 
 namespace pengdows.efcore.adonet.Update;
@@ -12,6 +13,41 @@ namespace pengdows.efcore.adonet.Update;
 internal class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependencies, IAdoNetDialect dialect)
     : UpdateAndSelectSqlGenerator(dependencies)
 {
+    // A property inside a JSON column is patched in place with the dialect's set function. A sub-document, or a bool sent as
+    // its text (AdoNetModificationCommand), is made a JSON value first, so it isn't stored as a string. Behaviour reference
+    // (not copied): https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.Core/Update/Internal/SqliteUpdateSqlGenerator.cs
+    protected override void AppendUpdateColumnValue(
+        ISqlGenerationHelper updateSqlGeneratorHelper,
+        IColumnModification columnModification,
+        StringBuilder stringBuilder,
+        string name,
+        string? schema)
+    {
+        if (columnModification.JsonPath is null or "$")
+        {
+            base.AppendUpdateColumnValue(updateSqlGeneratorHelper, columnModification, stringBuilder, name, schema);
+            return;
+        }
+
+        var json = dialect.Sql.Json
+            ?? throw new InvalidOperationException("This update patches a JSON column, which the dialect has no functions for.");
+        var property = columnModification.Property;
+        var isText = property is null or { IsPrimitiveCollection: true }
+            || ((Nullable.GetUnderlyingType(property.GetTypeMapping().Converter?.ProviderClrType ?? property.ClrType)
+                ?? property.GetTypeMapping().Converter?.ProviderClrType ?? property.ClrType) == typeof(bool));
+
+        var value = new StringBuilder();
+        base.AppendUpdateColumnValue(updateSqlGeneratorHelper, columnModification, value, name, schema);
+        var column = new StringBuilder();
+        updateSqlGeneratorHelper.DelimitIdentifier(column, columnModification.ColumnName);
+
+        stringBuilder.Append(
+            json.Set
+                .Replace("{0}", column.ToString(), StringComparison.Ordinal)
+                .Replace("{1}", dialect.Sql.StringLiteral(columnModification.JsonPath), StringComparison.Ordinal)
+                .Replace("{2}", isText ? json.FromText.Replace("{0}", value.ToString(), StringComparison.Ordinal) : value.ToString(), StringComparison.Ordinal));
+    }
+
     public override ResultSetMapping AppendInsertOperation(
         StringBuilder commandStringBuilder,
         IReadOnlyModificationCommand command,

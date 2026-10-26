@@ -90,6 +90,9 @@ public interface ISqlDialect
     /// <summary>How a database is created and deleted; null when the dialect can do neither.</summary>
     DatabaseLifecycle? Databases { get; }
 
+    /// <summary>JSON columns and the functions over them; null when the dialect has none.</summary>
+    JsonSyntax? Json { get; }
+
     /// <summary>Whether tuple comparisons can be written as ISO row values, <c>(a, b) = (x, y)</c>.</summary>
     bool RowValues { get; }
 

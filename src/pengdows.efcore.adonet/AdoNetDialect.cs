@@ -63,6 +63,9 @@ public class AnsiSqlDialect : ISqlDialect
 
     // ISO SQL has no CREATE DATABASE: each dialect says how its databases are made.
     public virtual DatabaseLifecycle? Databases => null;
+
+    // A dialect says which JSON functions its database has; ISO's are JsonSyntax.Iso.
+    public virtual JsonSyntax? Json => null;
     public virtual bool RowValues => true;
     public virtual bool LimitInPredicateSubqueries => true;
     public virtual LateralJoinSyntax? LateralJoins => LateralJoinSyntax.Iso;

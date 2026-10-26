@@ -373,3 +373,51 @@ public abstract class DmlSyntax
         }
     }
 }
+
+/// <summary>
+///     JSON columns (owned and complex types mapped with <c>ToJson</c>): the column's type, and how a value inside a document
+///     is read and patched. <c>{0}</c> is the JSON column or expression, <c>{1}</c> the SQL/JSON path literal (<c>'$.a[0].b'</c>),
+///     <c>{2}</c> the store type a value is returned as, or the new value. Each reading template is a function call, so it is
+///     never parenthesized as an operand.
+/// </summary>
+/// <param name="storeType">The JSON column's type.</param>
+/// <param name="value">A string value inside the document.</param>
+/// <param name="query">A sub-document (an object or array), as JSON.</param>
+/// <param name="typedValue">A value inside the document returned as the store type <c>{2}</c>.</param>
+/// <param name="booleanValue">A boolean value inside the document, where a typed value can't express it.</param>
+/// <param name="concatenate">Joins two strings, to build a path whose array index is computed: <c>{0} || {1}</c>.</param>
+/// <param name="set">Replaces the value at the path <c>{1}</c> in <c>{0}</c> with <c>{2}</c>.</param>
+/// <param name="fromText">Turns JSON text (a sub-document, or <c>true</c>/<c>false</c>) into a JSON value.</param>
+public sealed class JsonSyntax(
+    string storeType,
+    string value,
+    string query,
+    string typedValue,
+    string? booleanValue,
+    string concatenate,
+    string set,
+    string fromText)
+{
+    /// <summary>
+    ///     SQL:2016's JSON_VALUE and JSON_QUERY, SQL:2023's JSON type and JSON() constructor, and JSON_SET, which ISO lacks and
+    ///     several databases share.
+    /// </summary>
+    public static JsonSyntax Iso { get; } = new(
+        "JSON",
+        "JSON_VALUE({0}, {1})",
+        "JSON_QUERY({0}, {1})",
+        "JSON_VALUE({0}, {1} RETURNING {2})",
+        booleanValue: null,
+        "{0} || {1}",
+        "JSON_SET({0}, {1}, {2})",
+        "JSON({0})");
+
+    public string StoreType { get; } = storeType;
+    public string Value { get; } = value;
+    public string Query { get; } = query;
+    public string TypedValue { get; } = typedValue;
+    public string? BooleanValue { get; } = booleanValue;
+    public string Concatenate { get; } = concatenate;
+    public string Set { get; } = set;
+    public string FromText { get; } = fromText;
+}

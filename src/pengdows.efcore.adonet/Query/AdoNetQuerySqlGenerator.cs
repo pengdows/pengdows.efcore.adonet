@@ -30,6 +30,104 @@ internal class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencie
         return base.VisitColumn(columnExpression);
     }
 
+    // A value inside a JSON column, with the dialect's JSON functions: a sub-document (structural type or primitive
+    // collection) as JSON, a string as text, any other type returned as its store type. Behaviour reference (not copied):
+    // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.SqlServer/Query/Internal/SqlServerQuerySqlGenerator.cs
+    protected override Expression VisitJsonScalar(JsonScalarExpression jsonScalarExpression)
+    {
+        if (jsonScalarExpression.Path.Count == 0)
+        {
+            Visit(jsonScalarExpression.Json);
+            return jsonScalarExpression;
+        }
+
+        var json = dialect.Json
+            ?? throw new InvalidOperationException("This query reads a value inside a JSON column, which the dialect has no functions for.");
+        var typeMapping = jsonScalarExpression.TypeMapping;
+        var template = typeMapping is Storage.AdoNetJsonTypeMapping || typeMapping?.ElementTypeMapping != null ? json.Query
+            : typeMapping is null or StringTypeMapping ? json.Value
+            : ((Nullable.GetUnderlyingType(typeMapping.ClrType) ?? typeMapping.ClrType) == typeof(bool)) && (json.BooleanValue != null) ? json.BooleanValue
+            : json.TypedValue;
+
+        WriteTemplate(
+            template,
+            () => Visit(jsonScalarExpression.Json),
+            () => WriteJsonPath(json, jsonScalarExpression.Path),
+            () => Sql.Append(typeMappings.CastTarget(typeMapping!.StoreType)));
+        return jsonScalarExpression;
+    }
+
+    // A JSON scalar is written as a function call (the dialect's templates), so it never needs parentheses.
+    protected override bool RequiresParentheses(SqlExpression outerExpression, SqlExpression innerExpression)
+        => innerExpression is not JsonScalarExpression && base.RequiresParentheses(outerExpression, innerExpression);
+
+    // '$.a[0].b' when every array index is a constant; otherwise the constant runs joined to the computed indexes, each cast
+    // to text, with the dialect's concatenation.
+    private void WriteJsonPath(JsonSyntax json, IReadOnlyList<PathSegment> path)
+    {
+        var parts = new List<Action>();
+        var text = new System.Text.StringBuilder("$");
+        foreach (var segment in path)
+        {
+            if (segment.PropertyName is { } name)
+            {
+                text.Append('.').Append(Dependencies.SqlGenerationHelper.DelimitJsonPathElement(name));
+            }
+            else if (segment.ArrayIndex is SqlConstantExpression { Value: var index })
+            {
+                text.Append('[').Append(Convert.ToString(index, System.Globalization.CultureInfo.InvariantCulture)).Append(']');
+            }
+            else
+            {
+                var literal = text.Append('[').ToString();
+                var computed = segment.ArrayIndex!;
+                parts.Add(() => Sql.Append(dialect.StringLiteral(literal)));
+                parts.Add(() =>
+                {
+                    Sql.Append("CAST(");
+                    Visit(computed);
+                    Sql.Append(" AS ").Append(typeMappings.CastTarget(typeMappings.GetStoreType(typeof(string))!)).Append(")");
+                });
+                text.Clear().Append(']');
+            }
+        }
+
+        var rest = text.ToString();
+        parts.Add(() => Sql.Append(dialect.StringLiteral(rest)));
+        WriteConcatenation(json.Concatenate, parts, 0);
+    }
+
+    private void WriteConcatenation(string template, List<Action> parts, int first)
+    {
+        if (first == parts.Count - 1)
+        {
+            parts[first]();
+            return;
+        }
+
+        WriteTemplate(template, parts[first], () => WriteConcatenation(template, parts, first + 1));
+    }
+
+    // Writes a template, running the writer for each {n} where it appears.
+    private void WriteTemplate(string template, params Action[] arguments)
+    {
+        var at = 0;
+        while (at < template.Length)
+        {
+            var open = template.IndexOf('{', at);
+            if ((open < 0) || (open + 2 >= template.Length) || (template[open + 2] != '}') || !char.IsDigit(template[open + 1]))
+            {
+                Sql.Append(open < 0 ? template[at..] : template[at..(open + 1)]);
+                at = open < 0 ? template.Length : open + 1;
+                continue;
+            }
+
+            Sql.Append(template[at..open]);
+            arguments[template[open + 1] - '0']();
+            at = open + 3;
+        }
+    }
+
     protected override Expression VisitExtension(Expression extensionExpression)
     {
         if (extensionExpression is not RowValueSqlExpression rowValue)

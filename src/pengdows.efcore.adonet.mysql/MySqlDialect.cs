@@ -63,6 +63,19 @@ internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = t
     public override SavepointSyntax? Savepoints
         => savepoints ? SavepointSyntax.Iso : null;
 
+    // MySQL's json type and functions. JSON_UNQUOTE turns a JSON null into the text "null", so a string is read only when the
+    // value isn't null; a bool compares against JSON true and false; other types use JSON_VALUE ... RETURNING (8.0.21+),
+    // which reads a JSON null as NULL. A patch value given as JSON text is CAST to JSON.
+    public override JsonSyntax Json { get; } = new(
+        "json",
+        "CASE JSON_TYPE(JSON_EXTRACT({0}, {1})) WHEN 'NULL' THEN NULL ELSE JSON_UNQUOTE(JSON_EXTRACT({0}, {1})) END",
+        "JSON_EXTRACT({0}, {1})",
+        "JSON_VALUE({0}, {1} RETURNING {2})",
+        "CASE JSON_EXTRACT({0}, {1}) WHEN CAST('true' AS JSON) THEN TRUE WHEN CAST('false' AS JSON) THEN FALSE END",
+        "CONCAT({0}, {1})",
+        "JSON_SET({0}, {1}, {2})",
+        "CAST({0} AS JSON)");
+
     public override string IdentifierQuotePrefix => "`";
     public override string IdentifierQuoteSuffix => "`";
     public override bool SupportsSchemas => false;

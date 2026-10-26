@@ -48,7 +48,7 @@ These are not checklist items — they are the lens through which every finding 
 
 **The Simplicity Rule** — Prefer the simplest design that solves the problem correctly. Complexity must justify its existence. Solve the problem you have, not the one you imagine.
 
-**The I/O Separation Rule** — Never mix business logic with I/O. Systems fail when domain rules are tangled with transport protocols or persistence mechanisms. Presentation I/O (controllers, Minimal API endpoints, route handlers, UI components) must only adapt transport protocols, bind inputs, extract auth context, delegate to domain operations, and format responses. Persistence I/O (TableGateways, SQL builders, repositories, database drivers) must only map schemas, build queries, execute statements, and manage transactions/connections. All business rules, invariants, validation logic, domain workflows, and multi-entity orchestrations belong exclusively in pure, isolated domain models, domain services, or use cases that can be verified in isolation without I/O.
+**The I/O Separation Rule** — Never mix business logic with I/O. Systems fail when domain rules are tangled with transport protocols or persistence mechanisms. Presentation I/O (controllers, route handlers, UI components) must only adapt transport protocols, bind inputs, extract auth context, delegate to domain operations, and format responses. Persistence I/O (SQL builders, repositories, database drivers) must only map schemas, build queries, execute statements, and manage transactions/connections. All business rules, invariants, validation logic, domain workflows, and multi-entity orchestrations belong exclusively in pure, isolated domain models, domain services, or use cases that can be verified in isolation without I/O.
 
 ---
 
@@ -60,6 +60,13 @@ These are not checklist items — they are the lens through which every finding 
 * Any change affecting DB behavior, SQL generation, transactions, pooling, or dialects **must include integration coverage**.
 * Capability skips only: a test may skip solely because the database lacks the feature under test, and each such skip is attributed `[SKIP:<Product>]`. Any other skip, and any silent early `return` standing in for one, is a blocker.
 * **Block if** behavior changed but tests did not change.
+* Tests brought in from an existing EF provider are behavior references, not a reason to test only that provider. The rewritten test must try to run against all six providers (MySQL, PostgreSQL, SQL Server, flatfile, SQLite, and DuckDB); when the behavior cannot apply everywhere, it must cover as many providers as the capability model permits and record the remaining `[SKIP:<Product>]` reasons.
+* Before adding an imported test, search the existing suites for the same setup, operation, expected result, and failure mode. If an existing test already covers that behavior, do not add the imported duplicate.
+* Borrow from existing EF providers, and borrow the best: where a database has more than one public provider (MySQL: Pomelo and others; SQLite: Microsoft's and others; DuckDB: each community provider), compare them all and take the best code of the bunch, or write better code of our own. Borrowed code must be under a license compatible with this repository (MIT, Apache-2.0, PostgreSQL), keep its copyright notice, and name its source and license with a pinned link (`Adapted from EF Core's SQL Server SearchConditionConverter (MIT, .NET Foundation): <url>`); a re-implementation cites what it follows (`Behaviour reference (not copied): <url>`). Fit borrowed code to this repository's shared fixtures and abstractions rather than keeping the source's helper structure.
+* Never copy test or implementation code from Oracle's providers (MySql.EntityFrameworkCore, MySql.Data / Connector/NET): they are GPL-licensed. Read them only to learn a behavior, and implement it independently.
+* Prefer one shared behavior and API across providers. Do not blindly reproduce provider-specific APIs or divergent implementations when the same EF-visible capability can be expressed through the core abstraction and dialect capabilities.
+* Classify each imported behavior as shared unchanged, shared with capability skips, shared with provider-specific expectations, or provider-only. The classification and provider matrix belong in the PR description.
+* Compare semantic outcomes across all applicable providers. SQL text may differ by dialect, but equivalent operations should agree on results, affected rows, generated values, and exception behavior unless the database contract requires otherwise.
 
 ### B. Security invariants
 
@@ -86,10 +93,9 @@ Block if any of these occur:
 
 * Public API surface must remain stable unless explicitly intended.
 * **Expose only what needs exposing.** A public or protected type or member needs a consumer that cannot do without it and a documented reason; everything else is `internal` or `private`. Adding API later costs a minor version, removing it costs a major one, so the default is closed.
-* **Raw ADO.NET objects never leave the library.** The provider's own `DbConnection`, `DbCommand`, `DbDataReader`, `DbTransaction`, `DbDataSource` (and their `System.Data` interfaces) must not be returned, exposed as a property, field or event, or otherwise reachable from public API, and a public type must not inherit one. Pool governance (no leaked connections, readers or transactions) depends on callers never holding one. The sanctioned form is a *governed wrapper*: a type the library owns that holds the lease and releases it on disposal. Today that is `ITrackedReader`, which is an `IDataReader` so it can feed ADO.NET consumers and the mappers while the provider's reader never leaves the library; any other public type that inherits a `System.Data` interface needs a recorded reason and an entry in `PublicSurfaceGuardTests`. Accepting a raw object as an *input* is allowed only where unavoidable and needs a recorded reason.
-* **Every new public or protected member is declared.** It appears in its project's `PublicAPI.Unshipped.txt` with a one-line reason; an undeclared addition is a blocker. This includes `pengdows.crud.fakeDb`: fakeDb may grow freely to mock more, but a public type there needs a documented purpose, and provider-shaped test doubles (parameter classes, provider enums) are `internal`.
+* **Raw provider objects never leave the library unexpectedly.** Provider connections, commands, readers, transactions, data sources, and related interfaces must not escape through public API unless that boundary is intentional, documented, and lifetime-safe. A governed wrapper is required when the library owns a resource lease. Accepting a raw provider object as an input is allowed only where unavoidable and needs a recorded reason.
+* **Every new public or protected member is declared.** It appears in the project's public API baseline with a one-line reason; an undeclared addition is a blocker.
 * A member added to a shipped public interface must have a default implementation; no new abstract member on a shipped interface.
-* All public APIs live in `pengdows.crud.abstractions`.
 * Concrete types must not cross module or service boundaries where an interface exists.
 * Changes to interfaces require baseline verification updates.
 * Compatibility with the last shipped version is checked with ApiCompat before release; anything it reports needs an explicit, recorded decision.
@@ -99,7 +105,7 @@ Block if any of these occur:
 Block if:
 
 * `DbConnection` lifetime escapes execution scope.
-* `IDataReader` / `ITrackedReader` is not deterministically disposed.
+* A reader or other provider resource is not deterministically disposed.
 * Transactions are stored in long-lived fields.
 * Async paths allow connection or reader leaks.
 
@@ -109,12 +115,12 @@ Resource leaks are architecture violations, not just bugs. The entire pool gover
 
 These rules are not stylistic preferences. They exist because violations create conditions where correctness defects become invisible in diffs, debugging sessions, and code review. They are therefore treated as correctness safeguards and enforced as P0 blockers.
 
-* **Never mock ADO.NET provider behaviour.** Connections, commands, readers, transactions, parameters, factories, data sources and their failures run on `pengdows.crud.fakeDb`, which must produce anything a real provider can and every failure; a gap is added to fakeDb, never worked around with a mock. Mocking anything else (the library's own interfaces, loggers, resolvers) is fine and may use Moq. `NoMockedProviderTypesTests` fails the build when a mocking framework or `DispatchProxy` creates a provider type.
-* **Empty catch blocks and comment-only catch blocks need a stated reason.** An empty catch must say, in a comment, what exception is expected and why swallowing it is correct; otherwise narrow it, log it or rethrow (CATCH-001 in `docs/FUTURE_WORK.md`).
-* **TransactionScope is forbidden** — use `BeginTransaction`.
+* **Never mock provider behaviour.** Connections, commands, readers, transactions, parameters, factories, data sources and their failures must be exercised through an approved provider test double or a real provider. Add missing behavior to that test infrastructure; do not work around it with a mock. Mocking the library's own interfaces or loggers is acceptable where it does not conceal provider behavior.
+* **Empty catch blocks and comment-only catch blocks need a stated reason.** An empty catch must say, in a comment, what exception is expected and why swallowing it is correct; otherwise narrow it, log it or rethrow.
+* EF `TransactionScope` compatibility is required where EF supports ambient transactions. Do not ban or break `TransactionScope`; test ambient and explicit transaction paths according to EF's expected behavior, while keeping ownership and lifetime boundaries deterministic.
 * No string interpolation for SQL values.
-* No unquoted identifiers in custom SQL — use `WrapObjectName`.
-* Where available, use `pengdows.crud.analyzers` to machine-enforce review invariants. Current analyzer coverage includes raw SQL predicate/join value injection (`PGC008`).
+* No unquoted identifiers in custom SQL — use the repository's identifier-quoting helper.
+* Where available, use analyzers to machine-enforce review invariants such as raw SQL value-injection safety.
 * **One statement per line, always.** `if (something) break;` on one line is forbidden. The break is invisible in a diff and makes debugger breakpoints ambiguous. This is how correctness defects hide.
 * **Braces are required for all control flow blocks without exception.** Brace-free single-line blocks are forbidden regardless of brevity. Braces and parentheses compile to nothing — file length is not a valid reason to omit them. An unbraced block is one added line away from a silent correctness bug.
 * **After any scope-exiting statement — `return`, `break`, `continue`, or `throw` — do not use `else`.** The else branch is already implied by the exit. An else after a scope exit is logically redundant and adds indentation that obscures control flow.
@@ -139,20 +145,17 @@ Block if a change introduces any of the following:
 Never mix business logic into I/O layers. Block if:
 
 * **Business logic in controllers / endpoint handlers / presentation I/O**: Endpoint delegates, controllers, or route handlers perform business logic, domain calculations, invariant enforcement, multi-step domain workflows (e.g., revision walking, redirect traversal, parsing/category sync), or direct entity mutations. The I/O layer is strictly an adapter: bind inputs, resolve auth/tenant context, delegate to domain service/operation, and format the HTTP response.
-* **Business logic in TableGateways / persistence I/O**: TableGateways, SQL builders, or repositories contain business rules, domain validation, or cross-entity domain orchestration. Gateways are strictly data-access adapters: build SQL, map rows to entities, execute statements, and commit/rollback transactions.
+* **Business logic in persistence I/O**: SQL builders, repositories, or database adapters contain business rules, domain validation, or cross-entity domain orchestration. Persistence components are strictly data-access adapters: build SQL, map rows to entities, execute statements, and commit/rollback transactions.
 * **Domain logic coupled to I/O abstractions**: Business logic directly depends on HTTP primitives (`HttpContext`, `ClaimsPrincipal`, `IResult`) or raw database primitives (`IDbConnection`, `IDbCommand`) rather than domain models and clean abstractions.
 
 ---
 
 ## 5) P1 majors (fix or justify with false-positive evidence)
 
-### A. pengdows.crud core invariants
+### A. Core library invariants
 
 * **ValueTask in hot paths** — execution methods return `ValueTask`/`ValueTask<T>`; do not regress to `Task`.
-* **No public constructors** on implementation types except the deliberate entry points: `DatabaseContext`, `TableGateway<,>`, `PrimaryKeyTableGateway<>` and the tenant helpers (`TenantConnectionResolver`, `TenantContextRegistry`). A new public constructor needs a recorded reason (§4D).
 * **Interface-first** — consumers depend on abstractions, not implementation types.
-* **TableGateway extension rule** — extend TableGateway; do not wrap it with service layers.
-* **[Id] vs [PrimaryKey]** — never apply both to the same property; preserve documented upsert key priority.
 
 ### B. Function and method design (Holub/Martin)
 
@@ -166,9 +169,9 @@ Never mix business logic into I/O layers. Block if:
 
 * Behavior must live with the structure that owns the data or invariant it manipulates.
 * Never put business logic into I/O adapters: flag when business logic is placed in controllers, minimal API endpoint handlers, or HTTP presentation layers.
-* Never put business logic into persistence adapters: flag when business logic or domain orchestration is placed in TableGateways. Gateways are purely data-access adapters.
-* Flag when business logic is implemented in service layers that simply wrap TableGateway calls without adding domain rules.
-* Flag when SQL logic is implemented outside the gateway responsible for the table.
+* Never put business logic into persistence adapters: flag when business logic or domain orchestration is placed in SQL builders, repositories, or database adapters.
+* Flag when business logic is implemented in service layers that simply wrap persistence calls without adding domain rules.
+* Flag when SQL logic is implemented outside the component responsible for that SQL.
 * Flag "ask then act" patterns — code that retrieves state only to make decisions on it elsewhere. That decision belongs with the object that owns the state.
 * Objects should expose capabilities, not data. Flag getters whose primary purpose is to allow outside code to enforce invariants that should live with the owning type. Do not flag simple data carriers, value objects, DTOs, or read models solely for exposing state.
 
@@ -180,7 +183,7 @@ Hidden cost violations are P1 unless they affect a known hot path or introduce b
 
 ### E. Deterministic resource ownership
 
-* Dispose readers promptly — `ITrackedReader` is a lease.
+* Dispose readers and other provider resources promptly; every lease has one clear owner.
 * No async leaks, no undisposed containers/readers/transactions.
 * No long-lived transactions stored as fields.
 * Every error path must be explicitly handled and tested — assume things will go wrong.
@@ -191,6 +194,11 @@ Hidden cost violations are P1 unless they affect a known hot path or introduce b
 * Changes to dialects/SQL generation must consider: quoting rules, parameter marker rules, upsert behavior per DB, transaction/isolation semantics.
 * If a change risks a specific DB family, call it out and require a targeted integration test.
 * Do not represent the same SQL concept in two different ways simultaneously — duplicate dialect code paths are a correctness and maintenance hazard.
+* When provider implementations expose equivalent behavior, prefer a unified core API and capability contract. A provider-specific API or code path needs a documented behavior difference that the shared abstraction cannot represent.
+* Apply the behavior-precedence rule: EF's public contract comes first, the shared ADO.NET contract comes second, and database-specific behavior comes third. An upstream provider quirk is not automatically part of this library's API.
+* Before adding a provider-specific API, overload, naming variant, or translation path, ask whether an existing core API, dialect component, or capability flag can express it. The default design is one coherent EF-facing contract with thin provider adapters.
+* Do not force a lowest-common-denominator design. Unify genuinely common behavior, but preserve explicit extension points for real database capabilities and document why the shared contract is insufficient.
+* Every provider feature needs a capability matrix covering all six providers, expected behavior, unsupported-feature reasons, and whether each difference comes from the database engine, driver, or adapter.
 
 ### G. Move errors left
 
@@ -229,6 +237,23 @@ Hidden cost violations are P1 unless they affect a known hot path or introduce b
   * Make no assumptions about input size or content. Where a developer puts `"foo"`, a user will put `"supercalifragilisticexpialidocious"` — or a 64KB string, a null, a reserved word in one or more dialects, a string containing a parameter marker, a Unicode edge case, or a value at the boundary of the underlying type.
   * Minimum bar: test with values that are longer, stranger, and more hostile than any example in the implementation.
 * Test names must express intent. A well-named test is documentation that cannot go stale. `Test1` is not a test name.
+
+### Cross-provider EF test imports
+
+When adapting a test from EF Core, SQL Server, SQLite, Npgsql, Pomelo, DuckDB, or another provider suite:
+
+* Treat the upstream test as the reference for the behavior and coverage. Write the test in the shared ADO.NET test harness, against the shared fixtures; borrow from its body, helpers, or expected SQL only under the rules in 4A (compatible license, attribution, never Oracle's).
+* Normalize the test around the behavior it proves and give it a meaningful name. Prefer names such as `Can_insert_and_read_back_store_generated_key` or `Can_query_with_offset_without_limit` over names tied to the source provider or a private helper.
+* Add a documentation comment to the test or test class naming the upstream behavior being covered and the providers that execute it. For example:
+
+  ```csharp
+  /// Covers EF Core's store-generated key round-trip behavior.
+  /// Runs on: MySQL, PostgreSQL, SQL Server, flatfile, SQLite, and DuckDB.
+  ```
+
+* The comment must list the actual provider coverage. If a provider cannot run the test, state the capability reason next to its `[SKIP:<Product>]` attribution and keep the test active everywhere else.
+* If multiple upstream tests are semantically equivalent, consolidate them into one shared test when their expected behavior and failure mode match. Retain separate tests only when they exercise a materially different path, such as result behavior versus dialect SQL shape.
+* The PR description must identify the source suite, the duplicate search performed, the final provider matrix, and any intentionally omitted upstream cases.
 
 ### Performance
 
@@ -283,16 +308,14 @@ If SQL/dialect behavior changes, reviewers must state:
 * **Runtime reality:** What does this actually do at runtime? Are there hidden allocations, blocking calls, implicit IO, or other invisible costs?
 * **Behavior locality:** Does behavior live with the structure that owns the invariant? Are objects exposing capabilities or leaking data?
 * **Design/Testability:** If it is hard to test, the design is wrong.
-* **I/O Separation:** Is business logic mixed with I/O? Are controllers/endpoints doing more than protocol translation and delegation? Are TableGateways doing more than SQL/data access? Does domain logic exist in a pure, easily testable layer free of HTTP and DB primitives?
+* **I/O Separation:** Is business logic mixed with I/O? Are controllers/endpoints doing more than protocol translation and delegation? Are persistence adapters doing more than SQL/data access? Does domain logic exist in a pure, easily testable layer free of transport and database primitives?
 * **Clarity:** Code should read like an executable spec. One statement per line. Braces everywhere. Explicit parentheses. If you cannot say it in English, you cannot say it in code.
 
 ---
 
 ## Notes (repo-specific)
 
-This policy aligns with existing repo mandates:
-
-* TDD required, integration suite required, ValueTask hot paths, TransactionScope ban, interface-first, multi-dialect correctness constraints, and strict separation of business logic from I/O (no business logic in controllers/endpoints, no business logic in TableGateways; domain logic isolated from HTTP/SQL plumbing).
+This policy aligns with the repository's mandates: TDD, integration coverage, interface-first design, multi-dialect correctness, deterministic resource ownership, safe public API evolution, and strict separation of business logic from I/O.
 
 Influences: Abrash (measure everything, know the machine, expose hidden costs), Holub (behavior lives with the owning structure, design for testability, interfaces over concrete types), Lampson (explicit ownership, every resource has a single clear owner), Martin (small cohesive functions, single responsibility, clean contracts, dependency direction), Schneier (hostile inputs, explicit boundaries, fail loudly, secrets stay secret).
 
@@ -302,10 +325,7 @@ Influences: Abrash (measure everything, know the machine, expose hidden costs), 
 
 Compliance with this policy is enforced via:
 
-1. **GitHub PR Template (`.github/PULL_REQUEST_TEMPLATE.md`)**: Reminds contributors of the P0 hard-bans and required standards.
-2. **Copilot Instructions (`.github/copilot-instructions.md`)**: Configures GitHub Copilot Code Review to use this policy as its primary system prompt for PR analysis.
-3. **CI Checks (`.github/workflows/deploy.yml`)**: Automated `grep` checks in the build pipeline to catch P0 violations like `TransactionScope` usage before merge.
-4. **Source hygiene tests (`pengdows.crud.Tests/hygiene`)**: `LibrarySourceAuditTests.Policy4F_NoUnbracedControlFlow` fails on a one-line `if (x) stmt;` or an unbraced `else`, and the build itself fails on any unbraced block of any shape (`.editorconfig` sets IDE0011 to a warning, `EnforceCodeStyleInBuild` reports it, `WarningsAsErrors` makes it an error; `Policy4F_TheBuildRequiresBraces` pins the configuration); `Catch001_EveryCommentOnlyCatchStatesAReason` and `Policy4B_NoOneLineEmptyCatch` fail on an empty catch or one with no stated reason; `NoMockedProviderTypesTests` fails on a mocked ADO.NET provider type.
-6. **Manual Peer Review**: All PRs require approval from a maintainer who verifies adherence to this policy and project-specific invariants.
-7. **Public-API guards (in the build; see the "Code review of the 2026-10-10 changes (fifth pass) and slimming the public interface" section of `docs/FUTURE_WORK.md`)**: PublicApiAnalyzers on `pengdows.crud`, `pengdows.crud.abstractions` and `pengdows.crud.fakeDb` (an undeclared public or protected member fails the build, RS0016; a removed one fails it too, RS0017). `PublicAPI.Shipped.txt` is the 2.0.5 surface; `PublicAPI.Unshipped.txt` lists what 2.0.6 added. Declaring a member there is the explicit act that §4D asks for, so the PR must state its reason. Package validation (ApiCompat) compares against the last shipped version on `dotnet pack`, and `PublicSurfaceGuardTests` ratchets raw ADO.NET outputs and inheritance.
+1. **Project CI and build checks**: Run the repository's build, test, analyzer, formatting, and public-API checks before merge.
+2. **Manual peer review**: Maintainers verify adherence to this policy and project-specific invariants.
+3. **Public-API guards**: Public API analyzers and the project's `PublicAPI.*.txt` baselines must reject undeclared public or protected members and unexplained removals.
 
