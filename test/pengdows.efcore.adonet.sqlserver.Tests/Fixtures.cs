@@ -52,3 +52,5 @@ public class SqlServerLiteralConformanceTests(SqlServerFixture fixture) : Litera
 public class SqlServerDatabaseCreatorConformanceTests(SqlServerFixture fixture) : DatabaseCreatorConformanceTests<SqlServerFixture>(fixture);
 
 public class SqlServerConnectionConformanceTests(SqlServerFixture fixture) : ConnectionConformanceTests<SqlServerFixture>(fixture);
+
+public class SqlServerExecutionStrategyConformanceTests(SqlServerFixture fixture) : ExecutionStrategyConformanceTests<SqlServerFixture>(fixture);

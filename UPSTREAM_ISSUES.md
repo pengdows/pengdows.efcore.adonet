@@ -21,6 +21,16 @@ noted so they can be removed once the fix ships.
 - **Our fix:** `CAST(LEN(REPLACE(x, ' ', '_')) AS int)` and `SUBSTRING(x, start, DATALENGTH(x))` in
   `SqlServerFunctions`; one copied baseline adapted and marked `pengdows:`.
 
+### A transaction that fails to begin leaves the connection open
+
+- **Defect:** `RelationalConnection.BeginTransaction` (and `BeginTransactionAsync`) calls `Open()`, then begins the
+  transaction; when beginning throws (a transient failure, a refused isolation level, an interceptor), nothing closes what
+  it opened. The open count stays raised, so the connection stays open for the context's life and the application's own
+  `CloseConnection` no longer closes it. With a retrying execution strategy every failed attempt adds one more.
+- **Confirmed:** `LifecycleTests.A_transaction_that_fails_to_begin_*` (fakeDb failing `BeginTransaction`), and on flatfile,
+  whose write lock made the leaked connection block the next one (`ExecutionStrategyConformanceTests.Beginning_a_transaction_is_retried`).
+- **Our fix:** `AdoNetRelationalConnection` closes what a failed begin opened. Not yet reported upstream.
+
 ### Migrator: a migration that fails while its SQL is generated leaves a statement-released lock held
 
 - **Where:** `src/EFCore.Relational/Migrations/Internal/Migrator.cs` at v10.0.11, `MigrateImplementation` and

@@ -6,6 +6,7 @@ const pengdows.efcore.adonet.AdoNetAnnotationNames.Identity = "AdoNet:Identity" 
 const pengdows.efcore.adonet.AdoNetAnnotationNames.IdentityColumns = "AdoNet:IdentityColumns" -> string!
 const pengdows.efcore.adonet.AdoNetAnnotationNames.Prefix = "AdoNet:" -> string!
 override pengdows.efcore.adonet.AdoNetDialect.ToString() -> string!
+override pengdows.efcore.adonet.AdoNetRetryingExecutionStrategy.ShouldRetryOn(System.Exception! exception) -> bool
 override pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.ApplyServices(Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> void
 override pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.Clone() -> Microsoft.EntityFrameworkCore.Infrastructure.RelationalOptionsExtension!
 override pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.Info.get -> Microsoft.EntityFrameworkCore.Infrastructure.DbContextOptionsExtensionInfo!
@@ -38,6 +39,8 @@ pengdows.efcore.adonet.AdoNetDbContextOptionsBuilderExtensions
 pengdows.efcore.adonet.AdoNetDialect
 pengdows.efcore.adonet.AdoNetDialect.AdoNetDialect() -> void
 pengdows.efcore.adonet.AdoNetDialects
+pengdows.efcore.adonet.AdoNetRetryingExecutionStrategy
+pengdows.efcore.adonet.AdoNetRetryingExecutionStrategy.AdoNetRetryingExecutionStrategy(Microsoft.EntityFrameworkCore.Storage.ExecutionStrategyDependencies! dependencies, pengdows.efcore.adonet.IDatabaseCapabilities! capabilities, int maxRetryCount = 6, System.TimeSpan? maxRetryDelay = null, System.Func<System.Exception!, bool>? alsoRetryOn = null) -> void
 pengdows.efcore.adonet.AdoNetServiceCollectionExtensions
 pengdows.efcore.adonet.AnsiSqlDialect
 pengdows.efcore.adonet.AnsiSqlDialect.AnsiSqlDialect() -> void
@@ -100,6 +103,7 @@ pengdows.efcore.adonet.IAdoNetDialect.Sql.get -> pengdows.efcore.adonet.ISqlDial
 pengdows.efcore.adonet.IAdoNetDialect.TypeMappings.get -> pengdows.efcore.adonet.ITypeMappingDialect!
 pengdows.efcore.adonet.IDatabaseCapabilities
 pengdows.efcore.adonet.IDatabaseCapabilities.DefaultMaxBatchSize.get -> int
+pengdows.efcore.adonet.IDatabaseCapabilities.IsTransient(System.Exception! exception) -> bool
 pengdows.efcore.adonet.IDatabaseCapabilities.MaxIdentifierLength.get -> int
 pengdows.efcore.adonet.IDatabaseCapabilities.MaxParametersPerCommand.get -> int
 pengdows.efcore.adonet.IDatabaseCapabilities.SupportsAmbientTransactions.get -> bool
@@ -286,6 +290,7 @@ virtual pengdows.efcore.adonet.Bulk.AdoNetInsertBulkLoader.LoadAsync(pengdows.ef
 virtual pengdows.efcore.adonet.Bulk.AdoNetInsertBulkLoader.MaxRowsPerCommand.get -> int
 virtual pengdows.efcore.adonet.DatabaseCapabilities.DefaultMaxBatchSize.get -> int
 virtual pengdows.efcore.adonet.DatabaseCapabilities.DefaultMaxBatchSize.init -> void
+virtual pengdows.efcore.adonet.DatabaseCapabilities.IsTransient(System.Exception! exception) -> bool
 virtual pengdows.efcore.adonet.DatabaseCapabilities.MaxIdentifierLength.get -> int
 virtual pengdows.efcore.adonet.DatabaseCapabilities.MaxIdentifierLength.init -> void
 virtual pengdows.efcore.adonet.DatabaseCapabilities.MaxParametersPerCommand.get -> int
@@ -329,6 +334,7 @@ virtual pengdows.efcore.adonet.FunctionSyntax.TrimEnd.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.TrimStart.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.Upper.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.Year.get -> string?
+virtual pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder.EnableRetryOnFailure(int maxRetryCount = 6, System.TimeSpan? maxRetryDelay = null, System.Func<System.Exception!, bool>? alsoRetryOn = null) -> pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!
 virtual pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder.UseDialect(pengdows.efcore.adonet.IAdoNetDialect! dialect) -> pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!
 virtual pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.Dialect.get -> pengdows.efcore.adonet.IAdoNetDialect!
 virtual pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.WithDataSource(System.Data.Common.DbDataSource! dataSource) -> pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension!

@@ -1,3 +1,6 @@
+using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore;
 
 namespace pengdows.efcore.adonet.Tests;
@@ -275,4 +278,56 @@ public class SaveChangesTests
 
     private static int CountOf(string text, string within)
         => (within.Length - within.Replace(text, "").Length) / text.Length;
+
+    // A key drawn from a sequence when the entity is added runs outside SaveChanges, so outside its execution strategy:
+    // the draw runs under the context's own, retried like any other command where that strategy retries.
+    [Fact]
+    public async Task A_sequence_draw_that_fails_transiently_is_retried()
+    {
+        var events = new List<EventId>();
+        await using var context = new ItemContext(new DbContextOptionsBuilder<ItemContext>()
+            .UseAdoNet(_db.Connection, contextOwnsConnection: false, o => o.UseDialect(TestDialects.Sequence).ExecutionStrategy(d => new ImmediateRetry(d)))
+            .AllowManyDialects()
+            .LogTo((id, _) => id == RelationalEventId.CommandError || id == RelationalEventId.CommandExecuted || id == CoreEventId.ExecutionStrategyRetrying, e => events.Add(e.EventId))
+            .Options);
+        _db.Connection.SetScalarExecuteException(new TransientFailure());
+        _db.Connection.EnqueueScalarResult(42);
+        var item = NewItem();
+
+        await context.AddAsync(item, Ct);
+
+        // 42 is the draw after the failed one: fakeDb fails the first scalar and hands out 42 to the next.
+        Assert.Equal(42, item.Id);
+        Assert.Equal([RelationalEventId.CommandError, CoreEventId.ExecutionStrategyRetrying], events.Take(2));
+    }
+
+    // Inside the application's transaction a retrying strategy can't run (a failed statement may have aborted the
+    // transaction): the draw runs directly, and a failure surfaces.
+    [Fact]
+    public async Task A_sequence_draw_inside_a_transaction_is_not_retried()
+    {
+        await using var context = _db.Context(TestDialects.Sequence, o => o.ExecutionStrategy(d => new ImmediateRetry(d)));
+        await using var transaction = await context.Database.BeginTransactionAsync(Ct);
+        _db.Connection.EnqueueScalarResult(42);
+        var item = NewItem();
+
+        await context.AddAsync(item, Ct);
+        Assert.Equal(42, item.Id);
+
+        _db.Connection.SetScalarExecuteException(new TransientFailure());
+        await Assert.ThrowsAsync<TransientFailure>(() => context.AddAsync(NewItem(), Ct).AsTask());
+    }
+
+    private sealed class ImmediateRetry(ExecutionStrategyDependencies dependencies)
+        : AdoNetRetryingExecutionStrategy(dependencies, DatabaseCapabilities.Default, maxRetryCount: 3)
+    {
+        protected override TimeSpan? GetNextDelay(Exception lastException)
+            => base.GetNextDelay(lastException) == null ? null : TimeSpan.Zero;
+    }
+
+    private sealed class TransientFailure() : System.Data.Common.DbException("transient")
+    {
+        public override bool IsTransient
+            => true;
+    }
 }

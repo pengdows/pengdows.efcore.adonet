@@ -115,3 +115,5 @@ public class FlatFileLiteralConformanceTests(FlatFileFixture fixture) : LiteralC
 public class FlatFileDatabaseCreatorConformanceTests(FlatFileFixture fixture) : DatabaseCreatorConformanceTests<FlatFileFixture>(fixture);
 
 public class FlatFileConnectionConformanceTests(FlatFileFixture fixture) : ConnectionConformanceTests<FlatFileFixture>(fixture);
+
+public class FlatFileExecutionStrategyConformanceTests(FlatFileFixture fixture) : ExecutionStrategyConformanceTests<FlatFileFixture>(fixture);

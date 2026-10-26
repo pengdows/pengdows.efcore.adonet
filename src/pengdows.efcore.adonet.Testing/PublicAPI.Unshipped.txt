@@ -158,6 +158,19 @@ pengdows.efcore.adonet.Testing.EntryPointConformanceTests<TEntryPoints>.A_connec
 pengdows.efcore.adonet.Testing.EntryPointConformanceTests<TEntryPoints>.A_data_source() -> void
 pengdows.efcore.adonet.Testing.EntryPointConformanceTests<TEntryPoints>.EntryPointConformanceTests() -> void
 pengdows.efcore.adonet.Testing.EntryPointConformanceTests<TEntryPoints>.The_non_generic_builder_works_too() -> void
+pengdows.efcore.adonet.Testing.ExecutionStrategyConformanceTests<TFixture>
+pengdows.efcore.adonet.Testing.ExecutionStrategyConformanceTests<TFixture>.A_failed_commit_is_retried_only_if_it_did_not_commit(bool failsBeforeCommitting, bool async) -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.ExecutionStrategyConformanceTests<TFixture>.A_failure_that_is_not_transient_is_not_retried() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.ExecutionStrategyConformanceTests<TFixture>.A_query_is_retried(bool async) -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.ExecutionStrategyConformanceTests<TFixture>.A_raw_SQL_query_is_retried() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.ExecutionStrategyConformanceTests<TFixture>.Beginning_a_transaction_is_retried() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.ExecutionStrategyConformanceTests<TFixture>.DisposeAsync() -> System.Threading.Tasks.ValueTask
+pengdows.efcore.adonet.Testing.ExecutionStrategyConformanceTests<TFixture>.ExecutionStrategyConformanceTests(TFixture! fixture) -> void
+pengdows.efcore.adonet.Testing.ExecutionStrategyConformanceTests<TFixture>.Fixture.get -> TFixture!
+pengdows.efcore.adonet.Testing.ExecutionStrategyConformanceTests<TFixture>.InitializeAsync() -> System.Threading.Tasks.ValueTask
+pengdows.efcore.adonet.Testing.ExecutionStrategyConformanceTests<TFixture>.Opening_the_connection_is_retried(bool async) -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.ExecutionStrategyConformanceTests<TFixture>.Save_changes_is_retried_and_saves_once(bool failsBeforeRunning, bool async) -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.ExecutionStrategyConformanceTests<TFixture>.Verifying_a_commit_counts_against_the_same_retry_limit() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.FloatSample
 pengdows.efcore.adonet.Testing.FloatSample.Double.get -> double
 pengdows.efcore.adonet.Testing.FloatSample.Double.set -> void

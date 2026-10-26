@@ -192,4 +192,11 @@ public record DatabaseCapabilities : IDatabaseCapabilities
 
     /// <summary>False: enlisting in a <c>TransactionScope</c> is the driver's, which says so in its own dialect.</summary>
     public virtual bool SupportsAmbientTransactions { get; init; }
+
+    /// <summary>
+    ///     What the driver reports as transient (<see cref="System.Data.Common.DbException.IsTransient" />), or a timeout; a
+    ///     dialect whose driver doesn't report it adds the driver's own transient errors.
+    /// </summary>
+    public virtual bool IsTransient(Exception exception)
+        => exception is System.Data.Common.DbException { IsTransient: true } or TimeoutException;
 }

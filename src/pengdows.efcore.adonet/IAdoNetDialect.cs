@@ -181,4 +181,10 @@ public interface IDatabaseCapabilities
     ///     <c>TransactionScope</c>). Where they don't, EF warns that one is active.
     /// </summary>
     bool SupportsAmbientTransactions { get; }
+
+    /// <summary>
+    ///     Whether a failure may succeed if retried (a deadlock, a dropped connection, a busy server), for a retrying
+    ///     execution strategy (<c>EnableRetryOnFailure</c>).
+    /// </summary>
+    bool IsTransient(Exception exception);
 }

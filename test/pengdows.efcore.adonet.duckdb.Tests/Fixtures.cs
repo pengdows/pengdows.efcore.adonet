@@ -77,3 +77,5 @@ public class DuckDbLiteralConformanceTests(DuckDbFixture fixture) : LiteralConfo
 public class DuckDbDatabaseCreatorConformanceTests(DuckDbFixture fixture) : DatabaseCreatorConformanceTests<DuckDbFixture>(fixture);
 
 public class DuckDbConnectionConformanceTests(DuckDbFixture fixture) : ConnectionConformanceTests<DuckDbFixture>(fixture);
+
+public class DuckDbExecutionStrategyConformanceTests(DuckDbFixture fixture) : ExecutionStrategyConformanceTests<DuckDbFixture>(fixture);

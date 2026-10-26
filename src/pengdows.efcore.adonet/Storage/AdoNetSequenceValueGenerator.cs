@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -20,14 +21,38 @@ internal class AdoNetSequenceValueGenerator<TValue>(
     public override bool GeneratesTemporaryValues
         => false;
 
+    // A key is drawn when the entity is added, outside SaveChanges and so outside its execution strategy: the draw runs
+    // under the context's own, so a retrying one retries it. Not inside the application's transaction, where a retrying
+    // strategy refuses to run (a failed statement may have aborted the transaction); a skipped sequence value is harmless.
     public override TValue Next(EntityEntry entry)
-        => Convert(rawSqlCommandBuilder.Build(nextValueSql).ExecuteScalar(Parameters(entry)));
+    {
+        var strategy = Strategy(entry);
+        return Convert(
+            strategy == null
+                ? Draw(entry)
+                : strategy.Execute(entry, Draw));
+    }
 
     public override async ValueTask<TValue> NextAsync(EntityEntry entry, CancellationToken cancellationToken = default)
-        => Convert(
-            await rawSqlCommandBuilder.Build(nextValueSql)
-                .ExecuteScalarAsync(Parameters(entry), cancellationToken)
-                .ConfigureAwait(false));
+    {
+        var strategy = Strategy(entry);
+        return Convert(
+            strategy == null
+                ? await DrawAsync(entry, cancellationToken).ConfigureAwait(false)
+                : await strategy.ExecuteAsync(entry, DrawAsync, cancellationToken).ConfigureAwait(false));
+    }
+
+    private static IExecutionStrategy? Strategy(EntityEntry entry)
+        => entry.Context.Database.CurrentTransaction == null
+            && entry.Context.Database.CreateExecutionStrategy() is { RetriesOnFailure: true } strategy
+                ? strategy
+                : null;
+
+    private object? Draw(EntityEntry entry)
+        => rawSqlCommandBuilder.Build(nextValueSql).ExecuteScalar(Parameters(entry));
+
+    private Task<object?> DrawAsync(EntityEntry entry, CancellationToken cancellationToken)
+        => rawSqlCommandBuilder.Build(nextValueSql).ExecuteScalarAsync(Parameters(entry), cancellationToken);
 
     private RelationalCommandParameterObject Parameters(EntityEntry entry)
         => new(connection, null, null, entry.Context, commandLogger, CommandSource.ValueGenerator);

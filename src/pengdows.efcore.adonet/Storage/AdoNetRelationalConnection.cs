@@ -71,6 +71,36 @@ internal class AdoNetRelationalConnection : RelationalConnection
         return _dataSources.GetOrCreate(factory, ConnectionString).CreateConnection();
     }
 
+    // EF opens the connection to begin a transaction and, when beginning fails (a transient failure, an interceptor), leaves
+    // it open with its open count raised, so the application's own Close no longer closes it. Close what the failed begin
+    // opened; a connection the application opened stays open. Behaviour reference (not copied):
+    // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Relational/Storage/RelationalConnection.cs
+    public override IDbContextTransaction BeginTransaction(IsolationLevel isolationLevel)
+    {
+        try
+        {
+            return base.BeginTransaction(isolationLevel);
+        }
+        catch
+        {
+            Close();
+            throw;
+        }
+    }
+
+    public override async Task<IDbContextTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await base.BeginTransactionAsync(isolationLevel, cancellationToken);
+        }
+        catch
+        {
+            await CloseAsync();
+            throw;
+        }
+    }
+
     // DbConnection.Close is documented as safe to call on a closed connection and EF relies on that,
     // but not every driver honors it (some throw), so only close what is open.
     protected override void CloseDbConnection()

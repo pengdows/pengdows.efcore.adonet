@@ -276,6 +276,44 @@ public class LifecycleTests
         Assert.Equal(["SAVE TRANSACTION \"s1\"", "ROLLBACK TRANSACTION \"s1\""], db.Commands);
     }
 
+    // EF opens the connection to begin a transaction and, if beginning fails, leaves it open (UPSTREAM_ISSUES): a retry, or
+    // any later operation, then runs on a connection the context thinks it holds open.
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task A_transaction_that_fails_to_begin_closes_the_connection_it_opened(bool async)
+    {
+        var db = new FakeDatabase();
+        await using var context = db.Context(AdoNetDialect.Ansi);
+        db.Connection.SetFailOnBeginTransaction();
+
+        if (async)
+        {
+            await Assert.ThrowsAnyAsync<Exception>(() => context.Database.BeginTransactionAsync(Ct));
+        }
+        else
+        {
+            Assert.ThrowsAny<Exception>(() => context.Database.BeginTransaction());
+        }
+
+        Assert.Equal(ConnectionState.Closed, db.Connection.State);
+    }
+
+    [Fact]
+    public async Task A_transaction_that_fails_to_begin_leaves_a_connection_the_application_opened_open()
+    {
+        var db = new FakeDatabase();
+        await using var context = db.Context(AdoNetDialect.Ansi);
+        await context.Database.OpenConnectionAsync(Ct);
+        db.Connection.SetFailOnBeginTransaction();
+
+        await Assert.ThrowsAnyAsync<Exception>(() => context.Database.BeginTransactionAsync(Ct));
+
+        Assert.Equal(ConnectionState.Open, db.Connection.State);
+        await context.Database.CloseConnectionAsync();
+        Assert.Equal(ConnectionState.Closed, db.Connection.State);
+    }
+
     [Fact]
     public async Task Closing_a_closed_connection_never_reaches_the_driver()
     {

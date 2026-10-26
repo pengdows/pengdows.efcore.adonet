@@ -60,3 +60,5 @@ public class PostgreSqlLiteralConformanceTests(PostgreSqlFixture fixture) : Lite
 public class PostgreSqlDatabaseCreatorConformanceTests(PostgreSqlFixture fixture) : DatabaseCreatorConformanceTests<PostgreSqlFixture>(fixture);
 
 public class PostgreSqlConnectionConformanceTests(PostgreSqlFixture fixture) : ConnectionConformanceTests<PostgreSqlFixture>(fixture);
+
+public class PostgreSqlExecutionStrategyConformanceTests(PostgreSqlFixture fixture) : ExecutionStrategyConformanceTests<PostgreSqlFixture>(fixture);

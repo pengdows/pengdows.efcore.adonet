@@ -57,3 +57,5 @@ public class MySqlLiteralConformanceTests(MySqlFixture fixture) : LiteralConform
 public class MySqlDatabaseCreatorConformanceTests(MySqlFixture fixture) : DatabaseCreatorConformanceTests<MySqlFixture>(fixture);
 
 public class MySqlConnectionConformanceTests(MySqlFixture fixture) : ConnectionConformanceTests<MySqlFixture>(fixture);
+
+public class MySqlExecutionStrategyConformanceTests(MySqlFixture fixture) : ExecutionStrategyConformanceTests<MySqlFixture>(fixture);
