@@ -50,3 +50,5 @@ public class SqlServerTranslationConformanceTests(SqlServerFixture fixture) : Tr
 public class SqlServerLiteralConformanceTests(SqlServerFixture fixture) : LiteralConformanceTests<SqlServerFixture>(fixture);
 
 public class SqlServerDatabaseCreatorConformanceTests(SqlServerFixture fixture) : DatabaseCreatorConformanceTests<SqlServerFixture>(fixture);
+
+public class SqlServerConnectionConformanceTests(SqlServerFixture fixture) : ConnectionConformanceTests<SqlServerFixture>(fixture);

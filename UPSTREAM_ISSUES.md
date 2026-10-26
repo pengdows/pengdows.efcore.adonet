@@ -97,6 +97,17 @@ noted so they can be removed once the fix ships.
   `Release` (SQL Server has no release; it should be a no-op).
 - **Our work-around:** `SqlServerSql.Savepoints` writes `SAVE TRANSACTION` / `ROLLBACK TRANSACTION` as SQL.
 
+## npgsql/npgsql (Npgsql 10; source at eb2cb791)
+
+### `NpgsqlConnection` never raises `Disposed`
+
+- **Defect:** `Dispose(bool)` and `DisposeAsync()` close the connection and set `_disposed`, but neither calls
+  `base.Dispose(disposing)`, so `Component.Disposed` never fires. `DbConnection` derives from `Component`, whose event is how
+  code observes disposal; SqlClient, MySqlConnector and Microsoft.Data.Sqlite raise it.
+- **Found by:** `ConnectionConformanceTests.An_owned_connection_in_OnConfiguring_is_disposed_with_the_context`, which now
+  accepts either the event or a refusal to reopen (Npgsql refuses), since some drivers reopen a disposed connection.
+- **Status:** read in source, not yet reported; no pull request.
+
 ## mysql-net/MySqlConnector (2.6.2)
 
 ### `MySqlTransaction.SupportsSavepoints` is false although its savepoints work

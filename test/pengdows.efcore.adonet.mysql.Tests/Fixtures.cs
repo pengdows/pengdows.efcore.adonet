@@ -55,3 +55,5 @@ public class MySqlTranslationConformanceTests(MySqlFixture fixture) : Translatio
 public class MySqlLiteralConformanceTests(MySqlFixture fixture) : LiteralConformanceTests<MySqlFixture>(fixture);
 
 public class MySqlDatabaseCreatorConformanceTests(MySqlFixture fixture) : DatabaseCreatorConformanceTests<MySqlFixture>(fixture);
+
+public class MySqlConnectionConformanceTests(MySqlFixture fixture) : ConnectionConformanceTests<MySqlFixture>(fixture);

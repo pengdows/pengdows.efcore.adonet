@@ -58,3 +58,5 @@ public class PostgreSqlTranslationConformanceTests(PostgreSqlFixture fixture) : 
 public class PostgreSqlLiteralConformanceTests(PostgreSqlFixture fixture) : LiteralConformanceTests<PostgreSqlFixture>(fixture);
 
 public class PostgreSqlDatabaseCreatorConformanceTests(PostgreSqlFixture fixture) : DatabaseCreatorConformanceTests<PostgreSqlFixture>(fixture);
+
+public class PostgreSqlConnectionConformanceTests(PostgreSqlFixture fixture) : ConnectionConformanceTests<PostgreSqlFixture>(fixture);

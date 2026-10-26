@@ -56,7 +56,10 @@ public sealed class FlatFileFixture : ProviderFixture
 
         // WHERE "Hash" = :c through CREATE INDEX ... ("Hash"): ArgumentException "Object must be of type String".
         ["Unsized_key_and_index_columns_are_created_and_hold_long_values"] =
-            "pengdows.flatfile 0.2.1-preview.9 can't look up a VARBINARY value through an index"
+            "pengdows.flatfile 0.2.1-preview.9 can't look up a VARBINARY value through an index",
+
+        // A second connection opened while the first is open waits for the first's write lock, taken at open.
+        ["An_open_borrowed_connection_can_be_replaced"] = "pengdows.flatfile 0.2.1-preview.9 takes the write lock when a connection opens"
     };
 
     private const string DeleteAlias = "pengdows.flatfile 0.2.1-preview.9 rejects an alias on a DELETE target";
@@ -110,3 +113,5 @@ public class FlatFileTranslationConformanceTests(FlatFileFixture fixture) : Tran
 public class FlatFileLiteralConformanceTests(FlatFileFixture fixture) : LiteralConformanceTests<FlatFileFixture>(fixture);
 
 public class FlatFileDatabaseCreatorConformanceTests(FlatFileFixture fixture) : DatabaseCreatorConformanceTests<FlatFileFixture>(fixture);
+
+public class FlatFileConnectionConformanceTests(FlatFileFixture fixture) : ConnectionConformanceTests<FlatFileFixture>(fixture);

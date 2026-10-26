@@ -89,3 +89,5 @@ public class SqliteLiteralConformanceTests(SqliteFixture fixture) : LiteralConfo
 public class LegacySqliteLiteralConformanceTests(LegacySqliteFixture fixture) : LiteralConformanceTests<LegacySqliteFixture>(fixture);
 
 public class SqliteDatabaseCreatorConformanceTests(SqliteFixture fixture) : DatabaseCreatorConformanceTests<SqliteFixture>(fixture);
+
+public class SqliteConnectionConformanceTests(SqliteFixture fixture) : ConnectionConformanceTests<SqliteFixture>(fixture);

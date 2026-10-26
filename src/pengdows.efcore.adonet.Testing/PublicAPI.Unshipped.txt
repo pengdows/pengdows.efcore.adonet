@@ -111,6 +111,29 @@ pengdows.efcore.adonet.Testing.Category.Parent.get -> pengdows.efcore.adonet.Tes
 pengdows.efcore.adonet.Testing.Category.Parent.set -> void
 pengdows.efcore.adonet.Testing.Category.ParentId.get -> int?
 pengdows.efcore.adonet.Testing.Category.ParentId.set -> void
+pengdows.efcore.adonet.Testing.ConnectionConformanceTests<TFixture>
+pengdows.efcore.adonet.Testing.ConnectionConformanceTests<TFixture>.An_open_borrowed_connection_can_be_replaced() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.ConnectionConformanceTests<TFixture>.An_open_owned_connection_cannot_be_replaced() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.ConnectionConformanceTests<TFixture>.An_owned_connection_in_OnConfiguring_is_disposed_with_the_context(bool ownServiceProvider) -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.ConnectionConformanceTests<TFixture>.A_borrowed_connection_in_OnConfiguring_is_left_usable(bool ownServiceProvider) -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.ConnectionConformanceTests<TFixture>.A_connection_can_be_replaced_by_another() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.ConnectionConformanceTests<TFixture>.A_connection_set_later_is_disposed_only_when_the_context_owns_it(bool contextOwnsConnection) -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.ConnectionConformanceTests<TFixture>.A_connection_string_in_OnConfiguring(bool ownServiceProvider) -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.ConnectionConformanceTests<TFixture>.A_connection_the_application_opened_stays_open_and_one_it_closed_is_closed_again(bool openedByApplication) -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.ConnectionConformanceTests<TFixture>.A_context_with_no_connection_and_no_connection_string_says_so() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.ConnectionConformanceTests<TFixture>.A_context_with_no_provider_says_so() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.ConnectionConformanceTests<TFixture>.A_named_connection_string_is_read_from_configuration() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.ConnectionConformanceTests<TFixture>.ConfiguredContext
+pengdows.efcore.adonet.Testing.ConnectionConformanceTests<TFixture>.ConfiguredContext.Blogs.get -> Microsoft.EntityFrameworkCore.DbSet<pengdows.efcore.adonet.Testing.Blog!>!
+pengdows.efcore.adonet.Testing.ConnectionConformanceTests<TFixture>.ConfiguredContext.ConfiguredContext(Microsoft.EntityFrameworkCore.DbContextOptions! options) -> void
+pengdows.efcore.adonet.Testing.ConnectionConformanceTests<TFixture>.ConfiguredContext.ConfiguredContext(System.Action<Microsoft.EntityFrameworkCore.DbContextOptionsBuilder!>! configure, System.IServiceProvider? services = null) -> void
+pengdows.efcore.adonet.Testing.ConnectionConformanceTests<TFixture>.ConfiguredContext.OptionsWereConfigured.get -> bool
+pengdows.efcore.adonet.Testing.ConnectionConformanceTests<TFixture>.ConnectionConformanceTests(TFixture! fixture) -> void
+pengdows.efcore.adonet.Testing.ConnectionConformanceTests<TFixture>.DisposeAsync() -> System.Threading.Tasks.ValueTask
+pengdows.efcore.adonet.Testing.ConnectionConformanceTests<TFixture>.Fixture.get -> TFixture!
+pengdows.efcore.adonet.Testing.ConnectionConformanceTests<TFixture>.InitializeAsync() -> System.Threading.Tasks.ValueTask
+pengdows.efcore.adonet.Testing.ConnectionConformanceTests<TFixture>.No_connection_string_in_OnConfiguring_until_one_is_set(bool ownServiceProvider) -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.ConnectionConformanceTests<TFixture>.Options_from_dependency_injection_reach_OnConfiguring(bool generic) -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.ContainerFixture
 pengdows.efcore.adonet.Testing.ContainerFixture.ContainerFixture() -> void
 pengdows.efcore.adonet.Testing.DatabaseCreatorConformanceTests<TFixture>
