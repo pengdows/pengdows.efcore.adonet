@@ -119,3 +119,38 @@ public class MySqlAutoIncrementKeyTests
     public void An_auto_increment_column_that_leads_the_key_needs_nothing_more()
         => Assert.DoesNotContain("UNIQUE", Sql("Id", "OwnerId"));
 }
+
+/// <summary>
+///     A column type named in the model is written as named: Pomelo writes HasColumnType("boolean") as the invalid
+///     boolean(1) (https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/issues/2045). Upstream bug matrix:
+///     docs/upstream-bugs/MATRIX.md.
+/// </summary>
+public class MySqlNamedColumnTypeTests
+{
+    public class Flagged
+    {
+        public int Id { get; set; }
+        public bool Flag { get; set; }
+        public bool Other { get; set; }
+    }
+
+    private sealed class FlaggedContext(DbContextOptions<FlaggedContext> options) : DbContext(options)
+    {
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+            => modelBuilder.Entity<Flagged>(b =>
+            {
+                b.Property(e => e.Flag).HasColumnType("boolean");
+                b.Property(e => e.Other).HasColumnType("bool");
+            });
+    }
+
+    [Fact]
+    public void A_boolean_column_type_is_written_as_named()
+    {
+        using var context = new FlaggedContext(new DbContextOptionsBuilder<FlaggedContext>().UseAdoNetMySql("Server=localhost").Options);
+        var script = context.Database.GenerateCreateScript();
+
+        Assert.Contains("`Flag` boolean NOT NULL", script);
+        Assert.Contains("`Other` bool NOT NULL", script);
+    }
+}
