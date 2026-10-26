@@ -107,6 +107,22 @@ noted so they can be removed once the fix ships.
   deliberate or configuration-dependent. Unverified as a bug.
 - **Our work-around:** the core's ISO `SavepointSyntax` applies to MySQL.
 
+## Giorgi/DuckDB.NET (DuckDB.NET.Data 1.5.6.1)
+
+### `DuckDBConnection.Close()` throws on a connection that isn't open
+
+- **Defect:** `Close()` on a connection already closed, or never opened, throws `InvalidOperationException: Connection is
+  already closed.` ADO.NET's contract is that `Close` may be called more than once without an exception (SqlClient,
+  Npgsql, MySqlConnector and Microsoft.Data.Sqlite all return quietly), and provider-agnostic code relies on it.
+- **Confirmed:** directly, outside EF: `Open(); Close(); Close();` throws on the second call, and `Close()` on a new
+  connection throws. In the base test suite, the test store's `CloseConnection()` after setup failed every DuckDB fixture
+  (20,810 tests).
+- **History:** deliberate upstream since 2021 (`863a426` "Throw exception if already Closed"; `c0ea769` kept it).
+- **Status: fixed upstream.** Our pull request (from `pengdows/DuckDB.NET`, commit `a16b0af` "Allow Close to be called more
+  than once") is merged; the next DuckDB.NET release after 1.5.6.1 includes it.
+- **Our work-around (test harness only):** the test store closes its connection only when it is open. Remove it with the
+  update to that release.
+
 ## pengdows.crud.fakeDb (2.0.5; source at 2.0.6)
 
 Gaps that keep core paths out of reach of fakeDb tests (REVIEW_POLICY: a gap is added to fakeDb, never mocked around):
@@ -158,6 +174,11 @@ plain ADO.NET:
   - An integer literal is read back as a `decimal`: `CASE WHEN ... THEN 1 ELSE 2 END` fails EF's `GetByte` ("expected
     'Nullable<Byte>' but the actual value was of type 'System.Decimal'"). An exact numeric literal without a decimal point
     could be an integer, and `GetByte` could convert an in-range decimal.
+  - Correlated scalar subqueries inside a lateral join don't finish: `FROM "Customers" AS "c" LEFT JOIN LATERAL (SELECT
+    ... FROM "OrderDetails" AS "o" WHERE (SELECT "o0"."OrderID" FROM "Orders" AS "o0" WHERE "c"."CustomerID" =
+    "o0"."CustomerID" ORDER BY ... FETCH FIRST 1 ROWS ONLY) = "o"."OrderID" ...) ON TRUE WHERE "c"."CustomerID" LIKE 'F%'`
+    (`NorthwindAggregateOperatorsQuery...Multiple_collection_navigation_with_FirstOrDefault_chained`) ran past 5 minutes;
+    other databases answer at once. Likely each subquery is re-evaluated per row of the lateral subquery.
   - A predicate as a CASE result is rejected: `CASE WHEN "o"."CustomerID" IS NULL THEN TRUE ELSE "o"."OrderID" < 100 END`
     ("Expected token 'End' ... but found 'LessThan'"). Valid ISO (a boolean value expression).
 - A connection holds the database's write lock from `Open`, even one that only reads, so two contexts on one database
