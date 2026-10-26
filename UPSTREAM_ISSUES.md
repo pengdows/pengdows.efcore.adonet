@@ -123,6 +123,17 @@ noted so they can be removed once the fix ships.
 - **Our work-around (test harness only):** the test store closes its connection only when it is open. Remove it with the
   update to that release.
 
+### `GetFieldValue<byte[]>` on a BLOB column throws
+
+- **Defect:** `GetFieldValue<byte[]>` on a `BLOB` column throws `InvalidCastException: Unable to cast object of type
+  'System.IO.UnmanagedMemoryStream' to type 'System.Byte[]'`, and `GetValue` returns that stream. ADO.NET drivers return a
+  binary column's value as `byte[]` (SqlClient, Npgsql, MySqlConnector, Microsoft.Data.Sqlite), with `GetStream` for
+  streaming; EF reads a `byte[]` property through `GetFieldValue<byte[]>`.
+- **Confirmed:** directly, outside EF: `SELECT '\x01\x02'::BLOB`, then `GetFieldValue<byte[]>(0)`. Still in
+  `StringVectorDataReader.GetValidValue` on main after #377 (which added `GetBytes`).
+- **Found by:** `MigrationsConformanceTests.Unsized_key_and_index_columns_are_created_and_hold_long_values`, skipped on
+  DuckDB. **Status:** open; no pull request yet.
+
 ### Driver fixes merged upstream, not yet released (we pin 1.5.6.1)
 
 Merged into Giorgi/DuckDB.NET from our ADO.NET conformance work; each ships in the next release. Until we update, a DuckDB
@@ -190,6 +201,10 @@ plain ADO.NET:
   `SELECT COUNT(*) FROM "H"` says "Table 'H' must be schema-qualified". ISO: an unqualified name is in the default schema
   (`CURRENT_SCHEMA`, which the engine also lacks: "Column 'CURRENT_SCHEMA' was not found"). Found by
   `MigrationsConformanceTests.Another_schemas_history_table_is_not_this_ones`.
+- A lookup through an index on a `VARBINARY` column fails: with `CREATE INDEX "IX_K_Hash" ON "K" ("Hash")`,
+  `SELECT * FROM "K" WHERE "Hash" = :c` (a `byte[]` parameter) throws `ArgumentException: Object must be of type String`
+  from `FlatFileIndexKeyComparer.CompareValue` (it compares the index's key as a string). Found by
+  `MigrationsConformanceTests.Unsized_key_and_index_columns_are_created_and_hold_long_values`.
 - Found by EF's Select specification suite on preview.9 (each skipped in the base suite's flatfile Select class):
   - Joins of several derived tables don't finish: three `LEFT JOIN (SELECT ... FROM "OrderDetails" INNER JOIN "Products"
     ...)` on `"Orders"`, one with `ROW_NUMBER()`, filtered `"o"."OrderID" < 10350` (`Do_not_erase_projection_mapping_when_adding_single_projection`),

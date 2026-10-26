@@ -52,7 +52,11 @@ public sealed class FlatFileFixture : ProviderFixture
 
         // After CREATE TABLE "tenant"."H", an unqualified "H" means that table: CREATE TABLE "H" says it already exists.
         ["Another_schemas_history_table_is_not_this_ones"] =
-            "pengdows.flatfile 0.2.1-preview.9 resolves an unqualified table name to a table in any schema"
+            "pengdows.flatfile 0.2.1-preview.9 resolves an unqualified table name to a table in any schema",
+
+        // WHERE "Hash" = :c through CREATE INDEX ... ("Hash"): ArgumentException "Object must be of type String".
+        ["Unsized_key_and_index_columns_are_created_and_hold_long_values"] =
+            "pengdows.flatfile 0.2.1-preview.9 can't look up a VARBINARY value through an index"
     };
 
     private const string DeleteAlias = "pengdows.flatfile 0.2.1-preview.9 rejects an alias on a DELETE target";

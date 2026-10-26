@@ -11,7 +11,7 @@ namespace pengdows.efcore.adonet.Testing;
 public abstract class MigrationsConformanceTests<TFixture>(TFixture fixture) : IClassFixture<TFixture>, IAsyncLifetime
     where TFixture : ProviderFixture
 {
-    private static readonly string[] OwnTables = ["LongNames", "SchemaCategories", "SchemaBooks", "SchemaAuthors", "Shelves", "Writers", "Authors", "__EFMigrationsHistory", "__EFMigrationsLock"];
+    private static readonly string[] OwnTables = ["Keyed", "LongNames", "SchemaCategories", "SchemaBooks", "SchemaAuthors", "Shelves", "Writers", "Authors", "__EFMigrationsHistory", "__EFMigrationsLock"];
 
     // Only Another_schemas_history_table_is_not_this_ones creates it, and only in the tenant schema.
     private const string TenantHistory = "TenantHistory";
@@ -222,6 +222,34 @@ public abstract class MigrationsConformanceTests<TFixture>(TFixture fixture) : I
 
         var id = await Fixture.ExecuteScalarAsync(keys.GetNextValueSql(Fixture.Quote(keys.GetSequenceName("Shelves", "Id"))));
         await Fixture.ExecuteAsync($"INSERT INTO {shelves} ({Fixture.Quote("Id")}, {columns}) VALUES ({id}, {values})");
+    }
+
+    /// <remarks>
+    ///     Some databases can't key or index an unbounded column (SQL Server's nvarchar(max), MySQL's TEXT and BLOB), so a key
+    ///     or index column gets a bounded type there; it must still hold a long value. Runs on: every provider.
+    /// </remarks>
+    [Fact]
+    public async Task Unsized_key_and_index_columns_are_created_and_hold_long_values()
+    {
+        var code = new string('k', 200);
+        var indexed = new string('\u00e9', 200);
+        var hash = Enumerable.Range(0, 200).Select(i => (byte)i).ToArray();
+        await using (var context = Fixture.CreateContext<KeyedContext>(o => new KeyedContext(o)))
+        {
+            await context.GetService<IRelationalDatabaseCreator>().CreateTablesAsync(Ct);
+            context.Add(new Keyed { Code = code, Indexed = indexed, AnsiIndexed = new string('a', 200), Hash = hash });
+            await context.SaveChangesAsync(Ct);
+        }
+
+        await using (var context = Fixture.CreateContext<KeyedContext>(o => new KeyedContext(o)))
+        {
+            var keyed = await context.Keyed.SingleAsync(k => (k.Code == code) && (k.Indexed == indexed) && (k.Hash == hash), Ct);
+            Assert.Equal(new string('a', 200), keyed.AnsiIndexed);
+
+            // The unique index on Indexed.
+            context.Add(new Keyed { Code = "other", Indexed = indexed, Hash = [] });
+            await Assert.ThrowsAsync<DbUpdateException>(() => context.SaveChangesAsync(Ct));
+        }
     }
 
     /// <remarks>

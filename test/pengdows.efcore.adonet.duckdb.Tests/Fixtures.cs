@@ -22,7 +22,10 @@ public sealed class DuckDbFixture : ProviderFixture
     {
         ["Migrate_applies_records_and_reverts_migrations"] = DependentAlter,
         ["Migrations_apply_synchronously_too"] = DependentAlter,
-        ["Alter_column_changes_size_nullability_and_default"] = DependentAlter
+        ["Alter_column_changes_size_nullability_and_default"] = DependentAlter,
+
+        // GetFieldValue<byte[]> on a BLOB: InvalidCastException, the driver returns an UnmanagedMemoryStream.
+        ["Unsized_key_and_index_columns_are_created_and_hold_long_values"] = "DuckDB.NET 1.5.6.1 can't read a BLOB as byte[]"
     };
 
     private const string DependentAlter = "DuckDB 1.5 can't ALTER a table that has indexes or foreign keys";

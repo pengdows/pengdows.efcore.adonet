@@ -24,6 +24,7 @@ override pengdows.efcore.adonet.Testing.ContainerFixture.InitializeAsync() -> Sy
 override pengdows.efcore.adonet.Testing.GaugeContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder! modelBuilder) -> void
 override pengdows.efcore.adonet.Testing.InitialMigration.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder! migrationBuilder) -> void
 override pengdows.efcore.adonet.Testing.InitialMigration.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder! migrationBuilder) -> void
+override pengdows.efcore.adonet.Testing.KeyedContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder! modelBuilder) -> void
 override pengdows.efcore.adonet.Testing.LedgerContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder! modelBuilder) -> void
 override pengdows.efcore.adonet.Testing.LongNamesContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder! modelBuilder) -> void
 override pengdows.efcore.adonet.Testing.MigrationsContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder! modelBuilder) -> void
@@ -142,6 +143,19 @@ pengdows.efcore.adonet.Testing.GaugeContext.Gauges.get -> Microsoft.EntityFramew
 pengdows.efcore.adonet.Testing.GaugeContext.Readings.get -> Microsoft.EntityFrameworkCore.DbSet<pengdows.efcore.adonet.Testing.Reading!>!
 pengdows.efcore.adonet.Testing.InitialMigration
 pengdows.efcore.adonet.Testing.InitialMigration.InitialMigration() -> void
+pengdows.efcore.adonet.Testing.Keyed
+pengdows.efcore.adonet.Testing.Keyed.AnsiIndexed.get -> string!
+pengdows.efcore.adonet.Testing.Keyed.AnsiIndexed.set -> void
+pengdows.efcore.adonet.Testing.Keyed.Code.get -> string!
+pengdows.efcore.adonet.Testing.Keyed.Code.set -> void
+pengdows.efcore.adonet.Testing.Keyed.Hash.get -> byte[]!
+pengdows.efcore.adonet.Testing.Keyed.Hash.set -> void
+pengdows.efcore.adonet.Testing.Keyed.Indexed.get -> string!
+pengdows.efcore.adonet.Testing.Keyed.Indexed.set -> void
+pengdows.efcore.adonet.Testing.Keyed.Keyed() -> void
+pengdows.efcore.adonet.Testing.KeyedContext
+pengdows.efcore.adonet.Testing.KeyedContext.Keyed.get -> Microsoft.EntityFrameworkCore.DbSet<pengdows.efcore.adonet.Testing.Keyed!>!
+pengdows.efcore.adonet.Testing.KeyedContext.KeyedContext(Microsoft.EntityFrameworkCore.DbContextOptions<pengdows.efcore.adonet.Testing.KeyedContext!>! options) -> void
 pengdows.efcore.adonet.Testing.LedgerContext
 pengdows.efcore.adonet.Testing.LedgerContext.Entries.get -> Microsoft.EntityFrameworkCore.DbSet<pengdows.efcore.adonet.Testing.LedgerEntry!>!
 pengdows.efcore.adonet.Testing.LedgerContext.LedgerContext(Microsoft.EntityFrameworkCore.DbContextOptions<pengdows.efcore.adonet.Testing.LedgerContext!>! options) -> void
@@ -187,6 +201,7 @@ pengdows.efcore.adonet.Testing.MigrationsConformanceTests<TFixture>.Migrate_appl
 pengdows.efcore.adonet.Testing.MigrationsConformanceTests<TFixture>.MigrationsConformanceTests(TFixture! fixture) -> void
 pengdows.efcore.adonet.Testing.MigrationsConformanceTests<TFixture>.Migrations_apply_synchronously_too() -> void
 pengdows.efcore.adonet.Testing.MigrationsConformanceTests<TFixture>.Names_longer_than_the_database_takes_are_shortened_and_stay_distinct() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.MigrationsConformanceTests<TFixture>.Unsized_key_and_index_columns_are_created_and_hold_long_values() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.MigrationsContext
 pengdows.efcore.adonet.Testing.MigrationsContext.Authors.get -> Microsoft.EntityFrameworkCore.DbSet<pengdows.efcore.adonet.Testing.Author!>!
 pengdows.efcore.adonet.Testing.MigrationsContext.MigrationsContext(Microsoft.EntityFrameworkCore.DbContextOptions<pengdows.efcore.adonet.Testing.MigrationsContext!>! options) -> void

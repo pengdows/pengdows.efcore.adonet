@@ -88,6 +88,32 @@ public class LongNamesContext(DbContextOptions<LongNamesContext> options) : DbCo
         });
 }
 
+/// <summary>Unsized strings and bytes as a key and as indexed columns, which some databases can't index unbounded.</summary>
+public class Keyed
+{
+    [Key]
+    public string Code { get; set; } = "";
+
+    public string Indexed { get; set; } = "";
+    public string AnsiIndexed { get; set; } = "";
+    public byte[] Hash { get; set; } = [];
+}
+
+public class KeyedContext(DbContextOptions<KeyedContext> options) : DbContext(options)
+{
+    public DbSet<Keyed> Keyed => Set<Keyed>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+        => modelBuilder.Entity<Keyed>(b =>
+        {
+            b.ToTable("Keyed");
+            b.HasIndex(k => k.Indexed).IsUnique();
+            b.HasIndex(k => k.AnsiIndexed);
+            b.Property(k => k.AnsiIndexed).IsUnicode(false);
+            b.HasIndex(k => k.Hash);
+        });
+}
+
 /// <summary>Schema built by applying the migrations below.</summary>
 public class MigrationsContext(DbContextOptions<MigrationsContext> options) : DbContext(options)
 {
