@@ -19,4 +19,10 @@ public interface IDatabaseHost
     DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, DbConnection connection, Action<AdoNetDbContextOptionsBuilder> configure);
 
     IAdoNetDialect Dialect { get; }
+
+    /// <summary>The finest step the database's default date and time types keep: a 1-tick .NET value comes back rounded to it.</summary>
+    TimeSpan TemporalResolution { get; }
+
+    /// <summary>Whether a <see cref="DateTimeOffset" /> reads back with its offset; false where the database keeps only the instant.</summary>
+    bool KeepsOffsets { get; }
 }

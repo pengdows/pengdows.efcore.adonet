@@ -149,6 +149,12 @@ public interface ITypeMappingDialect
     string CastTarget(string storeType);
 
     /// <summary>
+    ///     How a value <c>{0}</c> is converted to <paramref name="storeType" />: <c>CAST({0} AS </c><see cref="CastTarget" /><c>)</c>,
+    ///     unless the database converts better another way.
+    /// </summary>
+    string Cast(string storeType);
+
+    /// <summary>
     ///     The DbType a DateTime parameter binds as: DateTime2 (a date and time with no offset) unless the database has one
     ///     datetime type its drivers bind as DbType.DateTime.
     /// </summary>

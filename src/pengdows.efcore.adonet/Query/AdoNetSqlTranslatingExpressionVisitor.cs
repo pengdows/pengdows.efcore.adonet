@@ -86,9 +86,26 @@ internal class AdoNetSqlTranslatingExpressionVisitor : RelationalSqlTranslatingE
             return QueryCompilationContext.NotTranslatedExpression;
         }
 
+        if (binaryExpression.NodeType is ExpressionType.LeftShift or ExpressionType.RightShift)
+        {
+            return TranslateShift(binaryExpression) ?? QueryCompilationContext.NotTranslatedExpression;
+        }
+
+        if (binaryExpression is { NodeType: ExpressionType.ArrayIndex, Left.Type: var array } && (array == typeof(byte[])))
+        {
+            return TranslateByteAt(binaryExpression) ?? QueryCompilationContext.NotTranslatedExpression;
+        }
+
         if (IsDateDifference(binaryExpression))
         {
-            return QueryCompilationContext.NotTranslatedExpression;
+            return IsTimeDifference(binaryExpression) && (_functions.TimeDifference is { } difference)
+                && (Visit(binaryExpression.Left) is SqlExpression left) && (Visit(binaryExpression.Right) is SqlExpression right)
+                ? Dependencies.SqlExpressionFactory.Call(
+                    difference,
+                    [left, Dependencies.SqlExpressionFactory.ApplyTypeMapping(right, left.TypeMapping)!],
+                    binaryExpression.Type,
+                    Dependencies.TypeMappingSource.FindMapping(typeof(TimeSpan)))!
+                : QueryCompilationContext.NotTranslatedExpression;
         }
 
         if (_rowValues
@@ -104,9 +121,80 @@ internal class AdoNetSqlTranslatingExpressionVisitor : RelationalSqlTranslatingE
     }
 
     protected override Expression VisitUnary(UnaryExpression unaryExpression)
-        => IsBitwise(unaryExpression.NodeType, unaryExpression.Type) && (_functions.BitwiseNot == null)
+    {
+        if (unaryExpression is { NodeType: ExpressionType.ArrayLength, Operand.Type: var array } && (array == typeof(byte[])))
+        {
+            return Visit(unaryExpression.Operand) is SqlExpression bytes
+                && Dependencies.SqlExpressionFactory.Call(
+                    _functions.ByteLength, [bytes], typeof(int), Dependencies.TypeMappingSource.FindMapping(typeof(int))) is { } length
+                    ? length
+                    : QueryCompilationContext.NotTranslatedExpression;
+        }
+
+        return IsBitwise(unaryExpression.NodeType, unaryExpression.Type) && (_functions.BitwiseNot == null)
             ? QueryCompilationContext.NotTranslatedExpression
             : base.VisitUnary(unaryExpression);
+    }
+
+    // bytes[i]: the byte at 1-based position i + 1.
+    private SqlExpression? TranslateByteAt(BinaryExpression index)
+    {
+        if ((_functions.ByteAt == null) || (Visit(index.Left) is not SqlExpression bytes) || (Visit(index.Right) is not SqlExpression position))
+        {
+            return null;
+        }
+
+        var factory = Dependencies.SqlExpressionFactory;
+        position = factory.ApplyDefaultTypeMapping(position)!;
+        var oneBased = position is SqlConstantExpression { Value: int value }
+            ? factory.Constant(value + 1, position.TypeMapping)
+            : factory.Add(position, factory.Constant(1));
+        return factory.Call(_functions.ByteAt, [bytes, oneBased], typeof(byte), Dependencies.TypeMappingSource.FindMapping(typeof(byte)));
+    }
+
+    // time - time: a TimeOnly difference, which wraps past midnight.
+    private static bool IsTimeDifference(BinaryExpression binary)
+        => (Nullable.GetUnderlyingType(binary.Left.Type) ?? binary.Left.Type) == typeof(TimeOnly);
+
+    // a << b and a >> b, through the dialect's operator; untranslated where it has none.
+    private SqlExpression? TranslateShift(BinaryExpression shift)
+    {
+        var template = shift.NodeType == ExpressionType.LeftShift ? _functions.LeftShift : _functions.RightShift;
+        if ((template == null) || (Visit(shift.Left) is not SqlExpression left) || (Visit(shift.Right) is not SqlExpression right))
+        {
+            return null;
+        }
+
+        var factory = Dependencies.SqlExpressionFactory;
+        left = factory.ApplyDefaultTypeMapping(left)!;
+        return factory.Call(template, [left, factory.ApplyDefaultTypeMapping(right)!], shift.Type, left.TypeMapping);
+    }
+
+    // EF.Functions.Greatest and Least, Math.Max and Min: the dialect's two-value form, nested for more values.
+    public override SqlExpression? GenerateGreatest(IReadOnlyList<SqlExpression> expressions, Type resultType)
+        => Nest(_functions.Greatest, expressions, resultType);
+
+    public override SqlExpression? GenerateLeast(IReadOnlyList<SqlExpression> expressions, Type resultType)
+        => Nest(_functions.Least, expressions, resultType);
+
+    private SqlExpression? Nest(string? template, IReadOnlyList<SqlExpression> expressions, Type resultType)
+    {
+        if ((template == null) || (expressions.Count == 0))
+        {
+            return null;
+        }
+
+        var factory = Dependencies.SqlExpressionFactory;
+        var mapping = ExpressionExtensions.InferTypeMapping([.. expressions]);
+        var values = expressions.Select(e => factory.ApplyTypeMapping(e, mapping)!).ToList();
+        var result = values[^1];
+        for (var i = values.Count - 2; i >= 0; i--)
+        {
+            result = factory.Call(template, [values[i], result], resultType, mapping ?? result.TypeMapping)!;
+        }
+
+        return result;
+    }
 
     // date - date is a TimeSpan; the database's own difference of dates (an interval, or a number of days) isn't read back as
     // one, so it is left to the client, or untranslated in a predicate.

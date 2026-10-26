@@ -82,12 +82,7 @@ internal class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencie
                 var literal = text.Append('[').ToString();
                 var computed = segment.ArrayIndex!;
                 parts.Add(() => Sql.Append(dialect.StringLiteral(literal)));
-                parts.Add(() =>
-                {
-                    Sql.Append("CAST(");
-                    Visit(computed);
-                    Sql.Append(" AS ").Append(typeMappings.CastTarget(typeMappings.GetStoreType(typeof(string))!)).Append(")");
-                });
+                parts.Add(() => WriteCast(computed, typeMappings.GetStoreType(typeof(string))!));
                 text.Clear().Append(']');
             }
         }
@@ -219,22 +214,29 @@ internal class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencie
             return base.VisitSqlUnary(sqlUnaryExpression);
         }
 
-        Sql.Append("CAST(");
-        var parenthesize = RequiresParentheses(sqlUnaryExpression, sqlUnaryExpression.Operand);
-        if (parenthesize)
-        {
-            Sql.Append("(");
-        }
-
-        Visit(sqlUnaryExpression.Operand);
-        if (parenthesize)
-        {
-            Sql.Append(")");
-        }
-
-        Sql.Append(" AS ").Append(typeMappings.CastTarget(typeMapping.StoreType)).Append(")");
+        WriteCast(sqlUnaryExpression.Operand, typeMapping.StoreType, RequiresParentheses(sqlUnaryExpression, sqlUnaryExpression.Operand));
         return sqlUnaryExpression;
     }
+
+    // The dialect's conversion of the value, parenthesized when EF would parenthesize it.
+    private void WriteCast(SqlExpression operand, string storeType, bool parenthesize = false)
+        => SqlTemplate.Write(
+            typeMappings.Cast(storeType),
+            [operand],
+            text => Sql.Append(text),
+            value =>
+            {
+                if (parenthesize)
+                {
+                    Sql.Append("(");
+                }
+
+                Visit(value);
+                if (parenthesize)
+                {
+                    Sql.Append(")");
+                }
+            });
 
     protected override Expression VisitSqlBinary(SqlBinaryExpression sqlBinaryExpression)
     {

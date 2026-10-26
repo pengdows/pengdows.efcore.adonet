@@ -118,6 +118,86 @@ internal sealed class MySqlFunctions : FunctionSyntax
     public override string Concat => "CONCAT({0}, {1})";
     public override string? Floor => "(FLOOR({0}) + 0.0)";
     public override string? Ceiling => "(CEILING({0}) + 0.0)";
+
+    // Shifts work on 64-bit unsigned integers, so each result is read back as signed, as the bitwise operators are.
+    public override string? LeftShift => "CAST({0} << {1} AS SIGNED)";
+    public override string? RightShift => "CAST({0} >> {1} AS SIGNED)";
+
+    // Behaviour reference for the math, string and date and time functions below (not copied):
+    // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Query/Internal/MySqlMathMethodTranslator.cs
+    // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Query/Internal/MySqlDateTimeMemberTranslator.cs
+    // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Query/Internal/MySqlDateTimeMethodTranslator.cs
+    public override string? Atan2 => "ATAN2({0}, {1})";
+    public override string? Log2 => "LOG2({0})";
+    public override string? Sign => "SIGN({0})";
+    public override string? Truncate => "TRUNCATE({0}, 0)";
+    public override string? Degrees => "DEGREES({0})";
+    public override string? Radians => "RADIANS({0})";
+    public override string? Greatest => "GREATEST({0}, {1})";
+    public override string? Least => "LEAST({0}, {1})";
+
+    // MySQL has no hyperbolic functions: their definitions in EXP and LN.
+    public override string? Cosh => "((EXP({0}) + EXP(-({0}))) / 2)";
+    public override string? Sinh => "((EXP({0}) - EXP(-({0}))) / 2)";
+    public override string? Tanh => "((EXP({0}) - EXP(-({0}))) / (EXP({0}) + EXP(-({0}))))";
+    public override string? Acosh => "LN({0} + SQRT({0} * {0} - 1))";
+    public override string? Asinh => "LN({0} + SQRT({0} * {0} + 1))";
+    public override string? Atanh => "(LN((1 + {0}) / (1 - {0})) / 2)";
+
+    public override string? PositionFrom => "LOCATE({0}, {1}, {2})";
+
+    // 'c': case-sensitive whatever the collation, as .NET's Regex. An empty pattern matches everything in .NET and is an error
+    // in MySQL, so it is matched before REGEXP_LIKE sees it.
+    public override string? RegexIsMatch => "CASE WHEN {1} = '' THEN TRUE ELSE REGEXP_LIKE({0}, {1}, 'c') END";
+    public override string? NewGuid => "UUID()";
+
+    public override string? DayOfYear => "DAYOFYEAR({0})";
+    public override string? DayOfWeek => "(DAYOFWEEK({0}) - 1)";
+    public override string? Millisecond => "(EXTRACT(MICROSECOND FROM {0}) DIV 1000)";
+    public override string? Microsecond => "(EXTRACT(MICROSECOND FROM {0}) % 1000)";
+
+    // DATETIME(6) and TIME(6) keep microseconds.
+    public override string? Nanosecond => "CASE WHEN {0} IS NOT NULL THEN 0 END";
+    public override string? DateOf => "DATE({0})";
+    public override string? TimeOfDay => "CAST({0} AS TIME(6))";
+    public override string? Now => "CURRENT_TIMESTAMP(6)";
+    public override string? UtcNow => "UTC_TIMESTAMP(6)";
+    public override string? Today => "CURDATE()";
+    public override string? AddYears => "DATE_ADD({0}, INTERVAL {1} YEAR)";
+    public override string? AddMonths => "DATE_ADD({0}, INTERVAL {1} MONTH)";
+    public override string? AddDays => "DATE_ADD({0}, INTERVAL {1} DAY)";
+    public override string? AddMicroseconds => "DATE_ADD({0}, INTERVAL ROUND({1}) MICROSECOND)";
+
+    // TO_DAYS counts from year 0, 366 days before 0001-01-01.
+    public override string? DayNumber => "(TO_DAYS({0}) - 366)";
+    public override string? DateFromDateTime => "DATE({0})";
+    public override string? TimeFromDateTime => "CAST({0} AS TIME(6))";
+    public override string? TimeFromTimeSpan => "{0}";
+    public override string? DateAtTime => "TIMESTAMP({0}, {1})";
+    public override string? AddTime => "ADDTIME({0}, {1})";
+    public override string? TimeIsBetween => "CASE WHEN {1} <= {2} THEN {0} >= {1} AND {0} < {2} ELSE {0} >= {1} OR {0} < {2} END";
+
+    // TIMEDIFF of two times may be negative; .NET's difference wraps past midnight.
+    public override string? TimeDifference => "CASE WHEN {0} >= {1} THEN TIMEDIFF({0}, {1}) ELSE ADDTIME(TIMEDIFF({0}, {1}), '24:00:00') END";
+
+    // A DateTimeOffset is stored as its UTC instant.
+    public override string? OffsetNow => "UTC_TIMESTAMP(6)";
+    public override string? UnixSeconds => "TIMESTAMPDIFF(SECOND, '1970-01-01', {0})";
+    public override string? UnixMilliseconds => "(TIMESTAMPDIFF(MICROSECOND, '1970-01-01', {0}) DIV 1000)";
+
+    public override string? ByteLength => "LENGTH({0})";
+    public override string? ByteAt => "ASCII(SUBSTRING({0}, {1}, 1))";
+
+    // CHAR(n) is the one-byte binary string of byte n.
+    public override string? BytesContain => "(LOCATE(CHAR({1}), {0}) > 0)";
+
+    // A TIME counts hours past a day; a TimeSpan's Hours are those of its last day.
+    public override string? TimeSpanHours => "(EXTRACT(HOUR FROM {0}) % 24)";
+    public override string? TimeSpanMinutes => "EXTRACT(MINUTE FROM {0})";
+    public override string? TimeSpanSeconds => "EXTRACT(SECOND FROM {0})";
+    public override string? TimeSpanMilliseconds => "(EXTRACT(MICROSECOND FROM {0}) DIV 1000)";
+    public override string? TimeSpanMicroseconds => "(EXTRACT(MICROSECOND FROM {0}) % 1000)";
+    public override string? TimeSpanNanoseconds => "CASE WHEN {0} IS NOT NULL THEN 0 END";
 }
 
 internal sealed class MySqlTypeMappings : AnsiTypeMappings
@@ -133,6 +213,9 @@ internal sealed class MySqlTypeMappings : AnsiTypeMappings
         [typeof(TimeOnly)] = "TIME(6)",
         [typeof(TimeSpan)] = "TIME(6)",
         [typeof(Guid)] = "CHAR(36)",
+        // No type keeps an offset: the instant, in UTC, read back with offset zero, as both MySQL EF providers store it.
+        // The driver writes a DateTimeOffset parameter in UTC and reads a DATETIME as one at offset zero.
+        [typeof(DateTimeOffset)] = "DATETIME(6)",
         [typeof(byte[])] = "LONGBLOB"
     };
 
@@ -166,6 +249,11 @@ internal sealed class MySqlTypeMappings : AnsiTypeMappings
     // TIME spans -838:59:59 to 838:59:59 and counts hours past a day; outside that MySQL would clip the value.
     public override string FormatLiteral(object value, string storeType, string literal)
     {
+        if (value is DateTimeOffset offset)
+        {
+            return "TIMESTAMP '" + offset.UtcDateTime.ToString(@"yyyy\-MM\-dd HH\:mm\:ss.ffffff", CultureInfo.InvariantCulture) + "'";
+        }
+
         if (value is not TimeSpan span)
         {
             return literal;
@@ -203,7 +291,12 @@ internal sealed class MySqlTypeMappings : AnsiTypeMappings
         };
     }
 
-    // No time-zone-aware type.
+    // CAST(x AS CHAR) has the connection's collation, and as strongly as a column's (IMPLICIT), so comparing it with a column of
+    // another collation fails ("Illegal mix of collations"). CONCAT(x) converts to text as weakly as a number does, so the
+    // other side's collation wins, as it would for x itself. A sized CHAR(n) keeps CAST, which truncates to n.
+    public override string Cast(string storeType)
+        => CastTarget(storeType) == "CHAR" ? "CONCAT({0})" : base.Cast(storeType);
+
     public override string? GetStoreType(Type clrType)
-        => clrType == typeof(DateTimeOffset) ? null : StoreTypes.GetValueOrDefault(clrType) ?? base.GetStoreType(clrType);
+        => StoreTypes.GetValueOrDefault(clrType) ?? base.GetStoreType(clrType);
 }

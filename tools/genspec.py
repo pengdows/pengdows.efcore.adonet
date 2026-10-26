@@ -22,6 +22,10 @@ VIRTUAL_DEFAULTS = {
     # The inner contexts of EF's ExecuteWithStrategyInTransaction must join the outer one's transaction.
     'UseTransaction': '    protected override void UseTransaction(global::Microsoft.EntityFrameworkCore.Infrastructure.DatabaseFacade facade, global::Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction transaction)\n        => facade.UseTransaction(global::Microsoft.EntityFrameworkCore.Storage.DbContextTransactionExtensions.GetDbTransaction(transaction));',
 }
+# EF fixtures given a hand-written subclass (under Fixtures/) that the generated fixtures derive from instead.
+FIXTURE_BASES = {
+    'global::Microsoft.EntityFrameworkCore.Query.Translations.BasicTypesQueryFixtureBase': 'BasicTypesAdoNetFixture<THost>',
+}
 HAND_WRITTEN = {'NorthwindWhereQueryAdoNetTest', 'NorthwindSelectQueryAdoNetTest', 'ProxyGraphUpdatesAdoNetTest'}
 NORTHWIND = re.compile(r'Northwind(Query(Relational)?Fixture|QueryFixtureBase)<global::Microsoft\.EntityFrameworkCore\.TestUtilities\.NoopModelCustomizer>$')
 NOT_YET = 'throw new NotSupportedException("Not yet provided by the base suite: {0}.")'
@@ -146,6 +150,7 @@ for b in bases:
         base_fixture = (b.get('preferredFixture')
                         or (f"{cs.replace('<TFixture>', '<AdoNetFixture>')}.{b['nestedFixture']}" if b.get('nestedFixture') else None)
                         or c['cs'].replace('<TFixture>', '<AdoNetFixture>'))
+        base_fixture = FIXTURE_BASES.get(base_fixture, base_fixture)
         # EF's query asserter casts the fixture to ITestSqlLoggerFactory to show a failed query's SQL; without it a
         # failure is reported as an InvalidCastException.
         logger = ['        public global::Microsoft.EntityFrameworkCore.TestUtilities.TestSqlLoggerFactory TestSqlLoggerFactory',

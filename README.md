@@ -156,6 +156,30 @@ dotnet test test/pengdows.efcore.adonet.Tests   # the core alone: fakeDb and an 
   `test/FunctionalTests.props`). Results only: no provider's SQL baselines. Where suite: 408 of 408 on all six (SQL Server,
   PostgreSQL, MySQL, SQLite, DuckDB and pengdows.flatfile 0.2.1-preview.9).
 
+### Coverage against the other MySQL providers
+
+Each provider's own tests, run against MySQL 8.4 under coverlet 10.1.0 and measured on the provider's own assemblies (for
+us, the core plus the MySQL plugin, since a MySQL user runs both). Measured 2026-10-26, on commit d238404.
+
+| Provider | Code (lines / coverable) | Line | Branch | Method | Tests run (passed / failed / skipped) |
+|---|---|---|---|---|---|
+| pengdows.efcore.adonet + mysql | 6,591 / 3,300 | **95.8%** | **89.0%** | **97.2%** | 27,927 / 1,692 / 225 |
+| Pomelo.EntityFrameworkCore.MySql 9.0.1 (EF Core 9) | 30,595 / 14,381 | 73.3% | 65.6% | 64.7% | 29,601 / 10 / 1,288 |
+| MySql.EntityFrameworkCore 26.10.0 (Oracle) | 18,085 / 6,859 | 58.9% | 42.0% | 53.6% | 137 / 3 / 2 |
+
+- **Ours:** the core's unit tests on fakeDb, the MySQL plugin's conformance suites, and EF Core 10.0.11's specification
+  suites on MySQL. The 1,692 failures are specification tests MySQL doesn't pass yet; the suites still run the code they
+  reach.
+- **Pomelo:** its unit tests and its functional tests (EF Core 9's specification suites with Pomelo's MySQL baselines). It
+  targets .NET 9 and was run there. Its test discoverer queries the server, so the run pins `ServerVersion` rather than
+  `auto`, and its 200-connection pool needs the server's `max_connections` raised.
+- **Oracle:** the three test projects in its source release (basic, design-time, migrations), run as a test-only tool
+  (GPL: read and run, never copied). It ships no specification-suite run.
+
+A percentage is of each provider's own code, so the numbers say how much of what each ships its tests reach, not how much
+each does. Pomelo's tests reach more lines than ours in total (about 10,500 against 3,200), and do so over a much
+larger codebase.
+
 Public API is declared in each project's `PublicAPI.*.txt` and enforced by PublicApiAnalyzers; why each public type is
 public is in [docs/PUBLIC_API.md](docs/PUBLIC_API.md). Reviews follow [REVIEW_POLICY.md](REVIEW_POLICY.md).
 

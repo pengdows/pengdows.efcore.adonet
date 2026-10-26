@@ -165,6 +165,24 @@ driver-neutral). Checked against the user's open pull requests there (#95-#115) 
   connection never raises `Disposed`.
 - **Status:** not reported; a pull request candidate.
 
+## PomeloFoundation/Pomelo.EntityFrameworkCore.MySql (9.0.1; source at 14c2cd55)
+
+Found while writing the MySQL dialect's translations against Pomelo's as the behaviour reference, and confirmed by running
+Pomelo 9.0.1 against MySQL 8.4. Searched Pomelo's issues: neither is reported.
+
+### `AddHours`, `AddMinutes`, `AddSeconds`, `AddMilliseconds` and `AddDays` drop the fraction
+
+- **Defect:** the amount is cast to an integer before `DATE_ADD`, and MySQL's cast rounds it:
+  `DATE_ADD(at, INTERVAL CAST(1.5 AS signed) hour)` adds 2 hours where `DateTime.AddHours(1.5)` adds 1 hour 30 minutes
+  (10:00 became 12:00, not 11:30).
+- **Here:** a fractional amount is added as microseconds (`FunctionSyntax.AddMicroseconds`), so the fraction is kept.
+
+### `TimeSpan.Hours` returns the total hours past a day
+
+- **Defect:** `EXTRACT(hour FROM span)` on a MySQL TIME counts every hour, so a span of 1 day 2 hours gives 26, where
+  `TimeSpan.Hours` is 2.
+- **Here:** `(EXTRACT(HOUR FROM span) % 24)`.
+
 ## Giorgi/DuckDB.NET (DuckDB.NET.Data 1.5.6.1)
 
 ### `DuckDBConnection.Close()` throws on a connection that isn't open

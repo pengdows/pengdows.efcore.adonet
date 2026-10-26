@@ -168,6 +168,9 @@ public class AnsiTypeMappings : ITypeMappingDialect
     public virtual string CastTarget(string storeType)
         => storeType;
 
+    public virtual string Cast(string storeType)
+        => "CAST({0} AS " + CastTarget(storeType) + ")";
+
     public virtual IReadOnlyList<Type> GetClrTypes(string storeTypeBase)
         => ClrTypes.TryGetValue(storeTypeBase, out var types) ? types : [];
 

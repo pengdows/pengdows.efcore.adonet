@@ -70,6 +70,174 @@ public class FunctionSyntax
     public virtual string? ExclusiveOr => null;
     public virtual string? Sqrt => "SQRT({0})";
 
+    // ISO SQL:2016's trigonometric and logarithmic functions (features T622-T624).
+    public virtual string? Acos => "ACOS({0})";
+    public virtual string? Asin => "ASIN({0})";
+    public virtual string? Atan => "ATAN({0})";
+    public virtual string? Cos => "COS({0})";
+    public virtual string? Sin => "SIN({0})";
+    public virtual string? Tan => "TAN({0})";
+    public virtual string? Cosh => "COSH({0})";
+    public virtual string? Sinh => "SINH({0})";
+    public virtual string? Tanh => "TANH({0})";
+    public virtual string? Exp => "EXP({0})";
+
+    /// <summary>The natural logarithm.</summary>
+    public virtual string? Ln => "LN({0})";
+
+    public virtual string? Log10 => "LOG10({0})";
+
+    /// <summary>The logarithm of <c>{0}</c> in base <c>{1}</c>.</summary>
+    public virtual string? LogBase => "LOG({1}, {0})";
+
+    /// <summary>The angle from the x-axis to the point (<c>{1}</c>, <c>{0}</c>): .NET's <c>Atan2(y, x)</c>.</summary>
+    public virtual string? Atan2 => null;
+
+    public virtual string? Acosh => null;
+    public virtual string? Asinh => null;
+    public virtual string? Atanh => null;
+    public virtual string? Log2 => null;
+
+    /// <summary>-1, 0 or 1, as an integer.</summary>
+    public virtual string? Sign => null;
+
+    /// <summary><c>{0}</c> with its fraction dropped, toward zero.</summary>
+    public virtual string? Truncate => null;
+
+    /// <summary><c>{0}</c> radians in degrees.</summary>
+    public virtual string? Degrees => null;
+
+    /// <summary><c>{0}</c> degrees in radians.</summary>
+    public virtual string? Radians => null;
+
+    /// <summary>The larger of <c>{0}</c> and <c>{1}</c>.</summary>
+    public virtual string? Greatest => null;
+
+    /// <summary>The smaller of <c>{0}</c> and <c>{1}</c>.</summary>
+    public virtual string? Least => null;
+
+    /// <summary>Integer <c>{0} &lt;&lt; {1}</c>; null where the database has no such operator.</summary>
+    public virtual string? LeftShift => null;
+
+    /// <summary>Integer <c>{0} &gt;&gt; {1}</c>; null where the database has no such operator.</summary>
+    public virtual string? RightShift => null;
+
+    /// <summary>The 1-based position of <c>{0}</c> in <c>{1}</c> from 1-based position <c>{2}</c>; 0 when absent.</summary>
+    public virtual string? PositionFrom => null;
+
+    /// <summary><c>{0}</c> with the single character <c>{1}</c> removed from both ends.</summary>
+    public virtual string? TrimCharacter => "TRIM(BOTH {1} FROM {0})";
+
+    /// <summary><c>{0}</c> with the single character <c>{1}</c> removed from its start.</summary>
+    public virtual string? TrimStartCharacter => "TRIM(LEADING {1} FROM {0})";
+
+    /// <summary><c>{0}</c> with the single character <c>{1}</c> removed from its end.</summary>
+    public virtual string? TrimEndCharacter => "TRIM(TRAILING {1} FROM {0})";
+
+    /// <summary>Whether <c>{0}</c> matches the regular expression <c>{1}</c>, case-sensitively as .NET's.</summary>
+    public virtual string? RegexIsMatch => null;
+
+    /// <summary>A new random GUID.</summary>
+    public virtual string? NewGuid => null;
+
+    /// <summary>The day of the year, from 1.</summary>
+    public virtual string? DayOfYear => null;
+
+    /// <summary>The day of the week, from 0 for Sunday, as .NET's <see cref="System.DayOfWeek" />.</summary>
+    public virtual string? DayOfWeek => null;
+
+    /// <summary>The milliseconds of the second, 0 to 999.</summary>
+    public virtual string? Millisecond => null;
+
+    /// <summary>The microseconds of the millisecond, 0 to 999.</summary>
+    public virtual string? Microsecond => null;
+
+    /// <summary>The nanoseconds of the microsecond, 0 to 999: 0 where the database keeps microseconds; null for null.</summary>
+    public virtual string? Nanosecond => null;
+
+    /// <summary>The date at midnight, of the same type.</summary>
+    public virtual string? DateOf => null;
+
+    /// <summary>The time of day, as a time span.</summary>
+    public virtual string? TimeOfDay => null;
+
+    /// <summary>The current local date and time.</summary>
+    public virtual string? Now => null;
+
+    /// <summary>The current date and time in UTC.</summary>
+    public virtual string? UtcNow => null;
+
+    /// <summary>The current local date.</summary>
+    public virtual string? Today => null;
+
+    /// <summary><c>{0}</c> plus <c>{1}</c> whole years.</summary>
+    public virtual string? AddYears => null;
+
+    /// <summary><c>{0}</c> plus <c>{1}</c> whole months.</summary>
+    public virtual string? AddMonths => null;
+
+    /// <summary><c>{0}</c> plus <c>{1}</c> whole days.</summary>
+    public virtual string? AddDays => null;
+
+    /// <summary>
+    ///     <c>{0}</c> plus <c>{1}</c> microseconds, rounded to whole ones. Hours, minutes, seconds and fractional days are
+    ///     added through it, so a fraction of any is kept.
+    /// </summary>
+    public virtual string? AddMicroseconds => null;
+
+    /// <summary>The day number of a date: days since 0001-01-01, as <see cref="DateOnly.DayNumber" />.</summary>
+    public virtual string? DayNumber => null;
+
+    /// <summary>The date of the date and time <c>{0}</c>.</summary>
+    public virtual string? DateFromDateTime => "CAST({0} AS DATE)";
+
+    /// <summary>The time of day of the date and time <c>{0}</c>.</summary>
+    public virtual string? TimeFromDateTime => null;
+
+    /// <summary>The time of day the time span <c>{0}</c> is.</summary>
+    public virtual string? TimeFromTimeSpan => null;
+
+    /// <summary>The date <c>{0}</c> at the time of day <c>{1}</c>.</summary>
+    public virtual string? DateAtTime => null;
+
+    /// <summary>The time of day <c>{0}</c> plus the time span <c>{1}</c>.</summary>
+    public virtual string? AddTime => null;
+
+    /// <summary>
+    ///     Whether the time of day <c>{0}</c> is at or after <c>{1}</c> and before <c>{2}</c>, wrapping past midnight when
+    ///     <c>{2}</c> is earlier, as <see cref="TimeOnly.IsBetween" />.
+    /// </summary>
+    public virtual string? TimeIsBetween => null;
+
+    /// <summary>Time of day <c>{0}</c> minus <c>{1}</c>, wrapping past midnight as .NET's <c>TimeOnly - TimeOnly</c>.</summary>
+    public virtual string? TimeDifference => null;
+
+    /// <summary>The current instant, as a date and time with an offset.</summary>
+    public virtual string? OffsetNow => null;
+
+    /// <summary>Whole seconds since 1970-01-01T00:00:00Z, as <see cref="DateTimeOffset.ToUnixTimeSeconds" />.</summary>
+    public virtual string? UnixSeconds => null;
+
+    /// <summary>Whole milliseconds since 1970-01-01T00:00:00Z, as <see cref="DateTimeOffset.ToUnixTimeMilliseconds" />.</summary>
+    public virtual string? UnixMilliseconds => null;
+
+    /// <summary>The length of binary <c>{0}</c> in bytes.</summary>
+    public virtual string? ByteLength => "OCTET_LENGTH({0})";
+
+    /// <summary>The byte of binary <c>{0}</c> at 1-based position <c>{1}</c>, as an integer.</summary>
+    public virtual string? ByteAt => null;
+
+    /// <summary>Whether binary <c>{0}</c> contains the byte <c>{1}</c>.</summary>
+    public virtual string? BytesContain => null;
+
+    // The parts of a time span: whole hours of the day (not the total), minutes of the hour, and so on.
+    public virtual string? TimeSpanHours => null;
+    public virtual string? TimeSpanMinutes => null;
+    public virtual string? TimeSpanSeconds => null;
+    public virtual string? TimeSpanMilliseconds => null;
+    public virtual string? TimeSpanMicroseconds => null;
+    public virtual string? TimeSpanNanoseconds => null;
+
     public virtual string? Year => "EXTRACT(YEAR FROM {0})";
     public virtual string? Month => "EXTRACT(MONTH FROM {0})";
     public virtual string? Day => "EXTRACT(DAY FROM {0})";
@@ -130,9 +298,33 @@ public class FunctionSyntax
             (nameof(TrimStart), TrimStart, 1), (nameof(TrimEnd), TrimEnd, 1), (nameof(Length), Length, 1),
             (nameof(Substring), Substring, 3), (nameof(SubstringFrom), SubstringFrom, 2), (nameof(Position), Position, 2),
             (nameof(Replace), Replace, 3), (nameof(Abs), Abs, 1), (nameof(Floor), Floor, 1), (nameof(Ceiling), Ceiling, 1),
-            (nameof(Round), Round, 1), (nameof(RoundDigits), RoundDigits, 2), (nameof(Power), Power, 2), (nameof(Modulo), Modulo, 2), (nameof(BitwiseAnd), BitwiseAnd, 2), (nameof(BitwiseOr), BitwiseOr, 2),
+            (nameof(Round), Round, 1), (nameof(RoundDigits), RoundDigits, 2), (nameof(Power), Power, 2),
+            (nameof(Modulo), Modulo, 2), (nameof(BitwiseAnd), BitwiseAnd, 2), (nameof(BitwiseOr), BitwiseOr, 2),
             (nameof(BitwiseNot), BitwiseNot, 1), (nameof(ExclusiveOr), ExclusiveOr, 2), (nameof(Sqrt), Sqrt, 1),
             (nameof(Year), Year, 1), (nameof(Month), Month, 1), (nameof(Day), Day, 1), (nameof(Hour), Hour, 1),
-            (nameof(Minute), Minute, 1), (nameof(Second), Second, 1), (nameof(OffsetDateTime), OffsetDateTime, 1)
+            (nameof(Minute), Minute, 1), (nameof(Second), Second, 1), (nameof(OffsetDateTime), OffsetDateTime, 1),
+            (nameof(Acos), Acos, 1), (nameof(Asin), Asin, 1), (nameof(Atan), Atan, 1), (nameof(Cos), Cos, 1),
+            (nameof(Sin), Sin, 1), (nameof(Tan), Tan, 1), (nameof(Cosh), Cosh, 1), (nameof(Sinh), Sinh, 1),
+            (nameof(Tanh), Tanh, 1), (nameof(Exp), Exp, 1), (nameof(Ln), Ln, 1), (nameof(Log10), Log10, 1),
+            (nameof(LogBase), LogBase, 2), (nameof(Atan2), Atan2, 2), (nameof(Acosh), Acosh, 1), (nameof(Asinh), Asinh, 1),
+            (nameof(Atanh), Atanh, 1), (nameof(Log2), Log2, 1), (nameof(Sign), Sign, 1), (nameof(Truncate), Truncate, 1),
+            (nameof(Degrees), Degrees, 1), (nameof(Radians), Radians, 1), (nameof(Greatest), Greatest, 2),
+            (nameof(Least), Least, 2), (nameof(LeftShift), LeftShift, 2), (nameof(RightShift), RightShift, 2),
+            (nameof(PositionFrom), PositionFrom, 3), (nameof(TrimCharacter), TrimCharacter, 2),
+            (nameof(TrimStartCharacter), TrimStartCharacter, 2), (nameof(TrimEndCharacter), TrimEndCharacter, 2),
+            (nameof(RegexIsMatch), RegexIsMatch, 2), (nameof(NewGuid), NewGuid, 0), (nameof(DayOfYear), DayOfYear, 1),
+            (nameof(DayOfWeek), DayOfWeek, 1), (nameof(Millisecond), Millisecond, 1), (nameof(Microsecond), Microsecond, 1),
+            (nameof(Nanosecond), Nanosecond, 1), (nameof(DateOf), DateOf, 1), (nameof(TimeOfDay), TimeOfDay, 1),
+            (nameof(Now), Now, 0), (nameof(UtcNow), UtcNow, 0), (nameof(Today), Today, 0), (nameof(AddYears), AddYears, 2),
+            (nameof(AddMonths), AddMonths, 2), (nameof(AddDays), AddDays, 2), (nameof(AddMicroseconds), AddMicroseconds, 2),
+            (nameof(DayNumber), DayNumber, 1), (nameof(DateFromDateTime), DateFromDateTime, 1),
+            (nameof(TimeFromDateTime), TimeFromDateTime, 1), (nameof(TimeFromTimeSpan), TimeFromTimeSpan, 1),
+            (nameof(DateAtTime), DateAtTime, 2), (nameof(AddTime), AddTime, 2), (nameof(TimeIsBetween), TimeIsBetween, 3),
+            (nameof(TimeSpanHours), TimeSpanHours, 1), (nameof(TimeSpanMinutes), TimeSpanMinutes, 1),
+            (nameof(TimeSpanSeconds), TimeSpanSeconds, 1), (nameof(TimeSpanMilliseconds), TimeSpanMilliseconds, 1),
+            (nameof(TimeSpanMicroseconds), TimeSpanMicroseconds, 1), (nameof(TimeSpanNanoseconds), TimeSpanNanoseconds, 1),
+            (nameof(TimeDifference), TimeDifference, 2), (nameof(OffsetNow), OffsetNow, 0),
+            (nameof(UnixSeconds), UnixSeconds, 1), (nameof(UnixMilliseconds), UnixMilliseconds, 1),
+            (nameof(ByteLength), ByteLength, 1), (nameof(ByteAt), ByteAt, 2), (nameof(BytesContain), BytesContain, 2)
         ];
 }

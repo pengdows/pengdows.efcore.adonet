@@ -207,4 +207,22 @@ public abstract class TranslationConformanceTests<TFixture>(TFixture fixture) : 
         await Server(b => b.CreatedAt.Second);
         await Matches(b => b.CreatedAt.Second == 8);
     }
+
+    // A fraction of an hour, day or minute is kept: Pomelo rounds AddHours(1.5) to two hours (UPSTREAM_ISSUES.md).
+    [Fact]
+    public async Task Date_arithmetic()
+    {
+        var functions = Fixture.ExpectedDialect.Sql.Functions;
+        if ((functions.AddMicroseconds == null) || (functions.AddMonths == null) || (functions.AddYears == null))
+        {
+            Fixture.SkipFor("no date arithmetic");
+        }
+
+        await Server(b => b.CreatedAt.AddHours(1.5));
+        await Server(b => b.CreatedAt.AddDays(0.25));
+        await Server(b => b.CreatedAt.AddMinutes(-90.5));
+        await Server(b => b.CreatedAt.AddMilliseconds(250));
+        await Server(b => b.CreatedAt.AddMonths(13));
+        await Server(b => b.CreatedAt.AddYears(-1));
+    }
 }

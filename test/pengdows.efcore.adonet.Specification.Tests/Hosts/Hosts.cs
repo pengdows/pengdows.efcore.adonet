@@ -19,6 +19,9 @@ namespace pengdows.efcore.adonet.Specification.Tests;
 /// <summary>A server: one container for the run, a database per test store, made by the server's own DDL.</summary>
 public abstract class ServerHost : IDatabaseHost
 {
+    public virtual TimeSpan TemporalResolution => TimeSpan.FromTicks(1);
+    public virtual bool KeepsOffsets => true;
+
     protected abstract string AdminConnectionString { get; }
     protected abstract IEnumerable<string> RecreateSql(string database);
     public abstract string ConnectionStringFor(string database);
@@ -72,6 +75,12 @@ public sealed class SqlServerHost : ServerHost
 
 public sealed class PostgreSqlHost : ServerHost
 {
+    // timestamp, time and interval keep microseconds.
+    public override TimeSpan TemporalResolution => TimeSpan.FromMicroseconds(1);
+
+    // A DateTimeOffset is a timestamptz instant, read back at offset zero.
+    public override bool KeepsOffsets => false;
+
     private static readonly RunContainer Container = new(() => new PostgreSqlBuilder("postgres:17").Build());
 
     protected override string AdminConnectionString => Container.ConnectionString;
@@ -94,6 +103,12 @@ public sealed class PostgreSqlHost : ServerHost
 
 public sealed class MySqlHost : ServerHost
 {
+    // DATETIME(6) and TIME(6) keep microseconds.
+    public override TimeSpan TemporalResolution => TimeSpan.FromMicroseconds(1);
+
+    // A DateTimeOffset is stored as its UTC instant in a DATETIME(6), read back at offset zero.
+    public override bool KeepsOffsets => false;
+
     private static readonly RunContainer Container = new(() => new MySqlBuilder("mysql:8.4").Build());
 
     // Root, so each test store can have its own database.
@@ -102,8 +117,11 @@ public sealed class MySqlHost : ServerHost
 
     public override IAdoNetDialect Dialect => MySqlDialect.Instance;
 
+    // Case- and accent-sensitive, as EF's expected results compare strings ordinally; the server's default collation
+    // (utf8mb4_0900_ai_ci) ignores both. Pomelo's test databases do the same. Behaviour reference (not copied):
+    // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/test/EFCore.MySql.FunctionalTests/TestUtilities/MySqlTestStore.cs
     protected override IEnumerable<string> RecreateSql(string database)
-        => [$"DROP DATABASE IF EXISTS `{database}`", $"CREATE DATABASE `{database}`"];
+        => [$"DROP DATABASE IF EXISTS `{database}`", $"CREATE DATABASE `{database}` CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_as_cs"];
 
     public override string ConnectionStringFor(string database)
         => new MySqlConnectionStringBuilder(AdminConnectionString) { Database = database }.ConnectionString;
@@ -120,6 +138,9 @@ public sealed class MySqlHost : ServerHost
 /// <summary>An embedded database: a file or folder per test store, under one temporary directory for the run.</summary>
 public abstract class FileHost : IDatabaseHost
 {
+    public virtual TimeSpan TemporalResolution => TimeSpan.FromTicks(1);
+    public virtual bool KeepsOffsets => true;
+
     protected static readonly string Root = Directory.CreateTempSubdirectory("adonet-spec-").FullName;
 
     public abstract string ConnectionStringFor(string database);
@@ -154,6 +175,12 @@ public sealed class SqliteHost : FileHost
 
 public sealed class DuckDbHost : FileHost
 {
+    // TIMESTAMP and TIME keep microseconds.
+    public override TimeSpan TemporalResolution => TimeSpan.FromMicroseconds(1);
+
+    // A DateTimeOffset is a TIMESTAMPTZ instant, read back at offset zero.
+    public override bool KeepsOffsets => false;
+
     public override IAdoNetDialect Dialect => DuckDbDialect.Instance;
 
     public override string ConnectionStringFor(string database) => $"Data Source={Path.Combine(Root, database + ".duckdb")}";
