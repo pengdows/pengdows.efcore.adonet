@@ -168,13 +168,15 @@ pengdows.efcore.adonet.SequenceKeyRetrieval.SequenceKeyRetrieval(System.Func<str
 pengdows.efcore.adonet.StoreTypeFacets
 pengdows.efcore.adonet.StoreTypeFacets.FixedLength.get -> bool
 pengdows.efcore.adonet.StoreTypeFacets.FixedLength.init -> void
+pengdows.efcore.adonet.StoreTypeFacets.KeyOrIndex.get -> bool
+pengdows.efcore.adonet.StoreTypeFacets.KeyOrIndex.init -> void
 pengdows.efcore.adonet.StoreTypeFacets.Precision.get -> int?
 pengdows.efcore.adonet.StoreTypeFacets.Precision.init -> void
 pengdows.efcore.adonet.StoreTypeFacets.Scale.get -> int?
 pengdows.efcore.adonet.StoreTypeFacets.Scale.init -> void
 pengdows.efcore.adonet.StoreTypeFacets.Size.get -> int?
 pengdows.efcore.adonet.StoreTypeFacets.Size.init -> void
-pengdows.efcore.adonet.StoreTypeFacets.StoreTypeFacets(int? Size = null, int? Precision = null, int? Scale = null, bool FixedLength = false, bool Unicode = true) -> void
+pengdows.efcore.adonet.StoreTypeFacets.StoreTypeFacets(int? Size = null, int? Precision = null, int? Scale = null, bool FixedLength = false, bool Unicode = true, bool KeyOrIndex = false) -> void
 pengdows.efcore.adonet.StoreTypeFacets.Unicode.get -> bool
 pengdows.efcore.adonet.StoreTypeFacets.Unicode.init -> void
 static pengdows.efcore.adonet.AdoNetBulkExtensions.BulkInsert<TEntity>(this Microsoft.EntityFrameworkCore.DbContext! context, System.Collections.Generic.IEnumerable<TEntity!>! entities) -> long

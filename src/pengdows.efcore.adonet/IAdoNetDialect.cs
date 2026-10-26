@@ -145,7 +145,11 @@ public interface ITypeMappingDialect
 /// <param name="Scale">The scale of a decimal.</param>
 /// <param name="FixedLength">Whether a string or binary column is padded to its length.</param>
 /// <param name="Unicode">Whether a string column holds Unicode text; true unless the model says otherwise.</param>
-public sealed record StoreTypeFacets(int? Size = null, int? Precision = null, int? Scale = null, bool FixedLength = false, bool Unicode = true);
+/// <param name="KeyOrIndex">
+///     Whether the column is in a key or an index, where some databases need a bounded type for a string or binary column.
+/// </param>
+public sealed record StoreTypeFacets(
+    int? Size = null, int? Precision = null, int? Scale = null, bool FixedLength = false, bool Unicode = true, bool KeyOrIndex = false);
 
 /// <summary>What the driver accepts, as opposed to what the SQL looks like.</summary>
 public interface IDatabaseCapabilities

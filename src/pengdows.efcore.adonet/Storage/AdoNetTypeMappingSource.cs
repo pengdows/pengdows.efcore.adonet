@@ -137,7 +137,12 @@ internal class AdoNetTypeMappingSource : RelationalTypeMappingSource
             }
 
             var facets = new StoreTypeFacets(
-                mappingInfo.Size, mappingInfo.Precision, mappingInfo.Scale, mappingInfo.IsFixedLength == true, mappingInfo.IsUnicode != false);
+                mappingInfo.Size,
+                mappingInfo.Precision,
+                mappingInfo.Scale,
+                mappingInfo.IsFixedLength == true,
+                mappingInfo.IsUnicode != false,
+                mappingInfo.IsKeyOrIndex);
             return _typeMappings.GetStoreType(clrType, facets) is { } sized
                 ? mapping.WithStoreTypeAndSize(sized, mappingInfo.Size)
                 : mapping;

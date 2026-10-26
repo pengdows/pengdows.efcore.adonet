@@ -215,18 +215,21 @@ internal sealed class SqlServerTypeMappings : AnsiTypeMappings
     public override IReadOnlyList<Type> GetClrTypes(string storeTypeBase)
         => ClrTypes.TryGetValue(storeTypeBase, out var types) ? types : base.GetClrTypes(storeTypeBase);
 
-    // nvarchar and nchar hold up to 4000 characters, varchar, char, varbinary and binary up to 8000 bytes; beyond, (max).
+    // nvarchar and nchar hold up to 4000 characters, varchar, char, varbinary and binary up to 8000 bytes; beyond, (max). An
+    // index key holds 900 bytes, so an unsized key or index column is nvarchar(450), varchar(900) or varbinary(900).
+    // Behaviour reference (not copied):
+    // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.SqlServer/Storage/Internal/SqlServerTypeMappingSource.cs
     public override string? GetStoreType(Type clrType, StoreTypeFacets facets)
         => clrType == typeof(string) ? StringType(facets)
-            : (clrType == typeof(byte[])) && (facets.Size is { } size)
+            : (clrType == typeof(byte[])) && ((facets.Size ?? (facets.KeyOrIndex ? 900 : null)) is { } size)
                 ? (size <= 8000 ? (facets.FixedLength ? $"binary({size})" : $"varbinary({size})") : "varbinary(max)")
             : (clrType == typeof(decimal)) && (facets.Precision is { } precision) ? $"decimal({precision},{facets.Scale ?? 0})"
             : base.GetStoreType(clrType, facets);
 
     private static string? StringType(StoreTypeFacets facets)
     {
-        var (prefix, bound) = facets.Unicode ? ("n", 4000) : ("", 8000);
-        if (facets.Size is not { } size)
+        var (prefix, bound, keySize) = facets.Unicode ? ("n", 4000, 450) : ("", 8000, 900);
+        if ((facets.Size ?? (facets.KeyOrIndex ? keySize : null)) is not { } size)
         {
             return facets.Unicode ? null : "varchar(max)";
         }

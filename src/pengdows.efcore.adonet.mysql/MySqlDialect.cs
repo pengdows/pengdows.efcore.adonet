@@ -108,6 +108,15 @@ internal sealed class MySqlTypeMappings : AnsiTypeMappings
 
     private static readonly TimeSpan MaxTime = new(838, 59, 59);
 
+    // TEXT and BLOB can't be keys or indexed without a prefix length, and InnoDB's index key holds 3072 bytes: an unsized key or
+    // index column is VARCHAR(255) (half the key at utf8mb4's 4 bytes a character, at most 255) or VARBINARY(3072).
+    // Behaviour reference (not copied):
+    // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Storage/Internal/MySqlTypeMappingSource.cs
+    public override string? GetStoreType(Type clrType, StoreTypeFacets facets)
+        => facets is { KeyOrIndex: true, Size: null }
+            ? (clrType == typeof(string) ? "VARCHAR(255)" : clrType == typeof(byte[]) ? "VARBINARY(3072)" : base.GetStoreType(clrType, facets))
+            : base.GetStoreType(clrType, facets);
+
     // TIME spans -838:59:59 to 838:59:59 and counts hours past a day; outside that MySQL would clip the value.
     public override string FormatLiteral(object value, string storeType, string literal)
     {
