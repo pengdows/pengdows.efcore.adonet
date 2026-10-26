@@ -98,6 +98,32 @@ internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = t
     public override string? SessionSetup
         => "SET SESSION sql_mode = CONCAT_WS(',', NULLIF(@@SESSION.sql_mode, ''), 'ANSI_QUOTES')";
     public override bool SupportsSchemas => false;
+
+    // Geometry columns hold MySQL's own format, a four-byte SRID before the WKB, which the drivers pass as bytes. Constants are
+    // read with x as longitude whatever the SRID. MySQL has no boundary, point-on-surface, relate or ring test, and keeps two
+    // dimensions only. Behaviour reference (not copied):
+    // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/tree/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql.NTS
+    public override SpatialSyntax Spatial { get; } = new()
+    {
+        Binary = SpatialBinary.SridPrefixedWkb,
+        StoresZAndM = false,
+        FromText = "ST_GeomFromText({0}, {1}, 'axis-order=long-lat')",
+        Functions = new Dictionary<string, string?>
+        {
+            ["Boundary"] = null,
+            ["PointOnSurface"] = null,
+            ["InteriorPoint"] = null,
+            ["Relate"] = null,
+            ["IsRing"] = null,
+            ["Z"] = null,
+            ["M"] = null,
+            ["GeometryType"] = "CASE ST_GeometryType({0}) WHEN 'POINT' THEN 'Point' WHEN 'LINESTRING' THEN 'LineString' "
+                + "WHEN 'POLYGON' THEN 'Polygon' WHEN 'MULTIPOINT' THEN 'MultiPoint' WHEN 'MULTILINESTRING' THEN 'MultiLineString' "
+                + "WHEN 'MULTIPOLYGON' THEN 'MultiPolygon' WHEN 'GEOMCOLLECTION' THEN 'GeometryCollection' END",
+            ["OgcGeometryType"] = "CASE ST_GeometryType({0}) WHEN 'POINT' THEN 1 WHEN 'LINESTRING' THEN 2 WHEN 'POLYGON' THEN 3 "
+                + "WHEN 'MULTIPOINT' THEN 4 WHEN 'MULTILINESTRING' THEN 5 WHEN 'MULTIPOLYGON' THEN 6 WHEN 'GEOMCOLLECTION' THEN 7 END"
+        }
+    };
     public override PagingSyntax Paging { get; } = PagingSyntax.LimitOffset(noLimitValue: "18446744073709551615").WithValueLimitsOnly();
     public override KeyRetrieval Keys { get; } = KeyRetrieval.SelectAfter("LAST_INSERT_ID()", "ROW_COUNT()");
     public override DmlSyntax Dml => DmlSyntax.MultiTable;

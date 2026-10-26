@@ -122,3 +122,15 @@ public static class Sprocs
         where THost : IDatabaseHost, new()
         => new THost().Procedures ?? throw new NotSupportedException($"{typeof(THost).Name} has no Northwind stored procedures.");
 }
+
+/// <summary>NetTopologySuite's types, on every database whose dialect has spatial columns.</summary>
+public static class SpatialTypes
+{
+    public static AdoNetDbContextOptionsBuilder Use(IDatabaseHost host, AdoNetDbContextOptionsBuilder options)
+        => host.Dialect.Sql.Spatial == null ? options : pengdows.efcore.adonet.NetTopologySuite.AdoNetNetTopologySuiteExtensions.UseNetTopologySuite(options);
+
+    public static IServiceCollection Add(IDatabaseHost host, IServiceCollection services)
+        => host.Dialect.Sql.Spatial == null
+            ? services
+            : pengdows.efcore.adonet.NetTopologySuite.AdoNetNetTopologySuiteExtensions.AddEntityFrameworkAdoNetNetTopologySuite(services);
+}

@@ -51,11 +51,5 @@ public abstract partial class SqlExecutorAdoNetTest<THost>
             base.OnModelCreating(modelBuilder, context);
             NorthwindProcedureSeeding.MapResults(modelBuilder);
         }
-
-        protected override async Task SeedAsync(NorthwindContext context)
-        {
-            await base.SeedAsync(context);
-            await NorthwindProcedureSeeding.CreateAsync<THost>(context);
-        }
     }
 }

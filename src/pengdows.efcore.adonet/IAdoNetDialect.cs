@@ -102,6 +102,9 @@ public interface ISqlDialect
     /// <summary>JSON columns and the functions over them; null when the dialect has none.</summary>
     JsonSyntax? Json { get; }
 
+    /// <summary>Spatial columns and their functions (with the NetTopologySuite package); null when the dialect has none.</summary>
+    SpatialSyntax? Spatial { get; }
+
     /// <summary>Whether tuple comparisons can be written as ISO row values, <c>(a, b) = (x, y)</c>.</summary>
     bool RowValues { get; }
 

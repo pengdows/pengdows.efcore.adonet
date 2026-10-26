@@ -36,7 +36,7 @@ public class AdoNetTestStore<THost> : RelationalTestStore
                 : Host.UseProvider(builder, Connection, Configure));
 
     private static void Configure(AdoNetDbContextOptionsBuilder options)
-        => options.UseQuerySplittingBehavior(QuerySplittingBehavior.SingleQuery).CommandTimeout(300);
+        => SpatialTypes.Use(Host, options.UseQuerySplittingBehavior(QuerySplittingBehavior.SingleQuery).CommandTimeout(300));
 
     // As EF's own stores: an empty database, then EnsureCreated, which creates the tables and runs the model's seeding
     // (UseSeeding/UseAsyncSeeding), then the test's own seed. Behaviour reference (not copied):
@@ -54,6 +54,12 @@ public class AdoNetTestStore<THost> : RelationalTestStore
         if (seed != null)
         {
             await seed(context);
+        }
+
+        // Northwind is shared by fixtures of several suites, whichever creates it first; its procedures come with it.
+        if (Name == "Northwind")
+        {
+            await NorthwindProcedureSeeding.CreateAsync<THost>(context);
         }
     }
 
@@ -110,5 +116,5 @@ public class AdoNetTestStoreFactory<THost> : RelationalTestStoreFactory
         => new AdoNetTestStore<THost>(storeName, shared: true);
 
     public override IServiceCollection AddProviderServices(IServiceCollection serviceCollection)
-        => serviceCollection.AddEntityFrameworkAdoNet(new THost().Dialect);
+        => SpatialTypes.Add(new THost(), serviceCollection.AddEntityFrameworkAdoNet(new THost().Dialect));
 }

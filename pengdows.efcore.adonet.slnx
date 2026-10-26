@@ -8,6 +8,7 @@
     <Project Path="src/pengdows.efcore.adonet.sqlserver/pengdows.efcore.adonet.sqlserver.csproj" />
     <Project Path="src/pengdows.efcore.adonet.mysql/pengdows.efcore.adonet.mysql.csproj" />
     <Project Path="src/pengdows.efcore.adonet.flatfile/pengdows.efcore.adonet.flatfile.csproj" />
+    <Project Path="src/pengdows.efcore.adonet.NetTopologySuite/pengdows.efcore.adonet.NetTopologySuite.csproj" />
   </Folder>
   <Folder Name="/test/">
     <Project Path="test/pengdows.efcore.adonet.Tests/pengdows.efcore.adonet.Tests.csproj" />

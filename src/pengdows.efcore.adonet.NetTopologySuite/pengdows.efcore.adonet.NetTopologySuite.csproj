@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>NetTopologySuite spatial types for pengdows.efcore.adonet, on any dialect with SpatialSyntax.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\pengdows.efcore.adonet\pengdows.efcore.adonet.csproj" />
+    <PackageReference Include="NetTopologySuite" />
+  </ItemGroup>
+</Project>

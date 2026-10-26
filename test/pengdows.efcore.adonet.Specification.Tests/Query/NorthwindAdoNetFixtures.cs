@@ -8,12 +8,6 @@ public class NorthwindQueryAdoNetFixture<THost> : NorthwindQueryRelationalFixtur
     protected override ITestStoreFactory TestStoreFactory
         => AdoNetTestStoreFactory<THost>.Instance;
 
-    // EF's data, then the database's Northwind procedures, which the raw-SQL suites call.
-    protected override async Task SeedAsync(NorthwindContext context)
-    {
-        await base.SeedAsync(context);
-        await NorthwindProcedureSeeding.CreateAsync<THost>(context);
-    }
 
     // The keyless types read from SQL, as each official provider's Northwind context maps them, written with this database's
     // quotes. Their schema has no Categories table, so the "Alphabetical list of products" view names each category as EF's
@@ -39,7 +33,7 @@ public class NorthwindQueryAdoNetFixture<THost> : NorthwindQueryRelationalFixtur
     }
 }
 
-/// <summary>Northwind's procedures, created after seeding, and the rows they return; shared by every Northwind fixture.</summary>
+/// <summary>Northwind's procedures, created with the shared Northwind store (AdoNetTestStore), and the rows they return.</summary>
 public static class NorthwindProcedureSeeding
 {
     public static async Task CreateAsync<THost>(DbContext context)

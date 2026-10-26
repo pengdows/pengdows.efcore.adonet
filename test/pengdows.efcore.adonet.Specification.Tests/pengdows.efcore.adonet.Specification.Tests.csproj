@@ -14,6 +14,7 @@
     <ProjectReference Include="..\..\src\pengdows.efcore.adonet.sqlite\pengdows.efcore.adonet.sqlite.csproj" />
     <ProjectReference Include="..\..\src\pengdows.efcore.adonet.duckdb\pengdows.efcore.adonet.duckdb.csproj" />
     <ProjectReference Include="..\..\src\pengdows.efcore.adonet.flatfile\pengdows.efcore.adonet.flatfile.csproj" />
+    <ProjectReference Include="..\..\src\pengdows.efcore.adonet.NetTopologySuite\pengdows.efcore.adonet.NetTopologySuite.csproj" />
     <PackageReference Include="DuckDB.NET.Data.Full" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" />
     <PackageReference Include="pengdows.crud.fakeDb" />

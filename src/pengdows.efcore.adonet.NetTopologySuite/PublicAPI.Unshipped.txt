@@ -1,0 +1,37 @@
+#nullable enable
+override pengdows.efcore.adonet.NetTopologySuite.AdoNetGeometryTypeMapping<TGeometry>.AsText(object! value) -> string!
+override pengdows.efcore.adonet.NetTopologySuite.AdoNetGeometryTypeMapping<TGeometry>.Clone(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters) -> Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping!
+override pengdows.efcore.adonet.NetTopologySuite.AdoNetGeometryTypeMapping<TGeometry>.GenerateNonNullSqlLiteral(object! value) -> string!
+override pengdows.efcore.adonet.NetTopologySuite.AdoNetGeometryTypeMapping<TGeometry>.GetDataReaderMethod() -> System.Reflection.MethodInfo!
+override pengdows.efcore.adonet.NetTopologySuite.AdoNetGeometryTypeMapping<TGeometry>.GetSrid(object! value) -> int
+override pengdows.efcore.adonet.NetTopologySuite.AdoNetGeometryTypeMapping<TGeometry>.WktReaderType.get -> System.Type!
+override pengdows.efcore.adonet.NetTopologySuite.JsonGeometryWktReaderWriter.ConstructorExpression.get -> System.Linq.Expressions.Expression!
+override pengdows.efcore.adonet.NetTopologySuite.JsonGeometryWktReaderWriter.FromJsonTyped(ref Microsoft.EntityFrameworkCore.Storage.Json.Utf8JsonReaderManager manager, object? existingObject = null) -> NetTopologySuite.Geometries.Geometry!
+override pengdows.efcore.adonet.NetTopologySuite.JsonGeometryWktReaderWriter.ToJsonTyped(System.Text.Json.Utf8JsonWriter! writer, NetTopologySuite.Geometries.Geometry! value) -> void
+pengdows.efcore.adonet.NetTopologySuite.AdoNetGeometryTypeMapping<TGeometry>
+pengdows.efcore.adonet.NetTopologySuite.AdoNetGeometryTypeMapping<TGeometry>.AdoNetGeometryTypeMapping(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters, Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<TGeometry!, byte[]!>? converter, pengdows.efcore.adonet.ISqlDialect! sql) -> void
+pengdows.efcore.adonet.NetTopologySuite.AdoNetGeometryTypeMapping<TGeometry>.AdoNetGeometryTypeMapping(NetTopologySuite.NtsGeometryServices! geometryServices, string! storeType, pengdows.efcore.adonet.ISqlDialect! sql) -> void
+pengdows.efcore.adonet.NetTopologySuite.AdoNetNetTopologySuiteExtensions
+pengdows.efcore.adonet.NetTopologySuite.AdoNetNetTopologySuiteOptionsExtension
+pengdows.efcore.adonet.NetTopologySuite.AdoNetNetTopologySuiteOptionsExtension.AdoNetNetTopologySuiteOptionsExtension() -> void
+pengdows.efcore.adonet.NetTopologySuite.AdoNetSpatialMemberTranslatorPlugin
+pengdows.efcore.adonet.NetTopologySuite.AdoNetSpatialMethodCallTranslatorPlugin
+pengdows.efcore.adonet.NetTopologySuite.AdoNetSpatialTranslator
+pengdows.efcore.adonet.NetTopologySuite.AdoNetSpatialTypeMappingSourcePlugin
+pengdows.efcore.adonet.NetTopologySuite.JsonGeometryWktReaderWriter
+static pengdows.efcore.adonet.NetTopologySuite.AdoNetNetTopologySuiteExtensions.AddEntityFrameworkAdoNetNetTopologySuite(this Microsoft.Extensions.DependencyInjection.IServiceCollection! serviceCollection) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static pengdows.efcore.adonet.NetTopologySuite.AdoNetNetTopologySuiteExtensions.UseNetTopologySuite(this pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder! optionsBuilder) -> pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!
+static pengdows.efcore.adonet.NetTopologySuite.JsonGeometryWktReaderWriter.Instance.get -> pengdows.efcore.adonet.NetTopologySuite.JsonGeometryWktReaderWriter!
+virtual pengdows.efcore.adonet.NetTopologySuite.AdoNetNetTopologySuiteOptionsExtension.ApplyServices(Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> void
+virtual pengdows.efcore.adonet.NetTopologySuite.AdoNetNetTopologySuiteOptionsExtension.Info.get -> Microsoft.EntityFrameworkCore.Infrastructure.DbContextOptionsExtensionInfo!
+virtual pengdows.efcore.adonet.NetTopologySuite.AdoNetNetTopologySuiteOptionsExtension.Validate(Microsoft.EntityFrameworkCore.Infrastructure.IDbContextOptions! options) -> void
+virtual pengdows.efcore.adonet.NetTopologySuite.AdoNetSpatialMemberTranslatorPlugin.Translators.get -> System.Collections.Generic.IEnumerable<Microsoft.EntityFrameworkCore.Query.IMemberTranslator!>!
+virtual pengdows.efcore.adonet.NetTopologySuite.AdoNetSpatialMethodCallTranslatorPlugin.Translators.get -> System.Collections.Generic.IEnumerable<Microsoft.EntityFrameworkCore.Query.IMethodCallTranslator!>!
+virtual pengdows.efcore.adonet.NetTopologySuite.AdoNetSpatialTranslator.Translate(Microsoft.EntityFrameworkCore.Query.SqlExpressions.SqlExpression? instance, System.Reflection.MemberInfo! member, System.Type! returnType, Microsoft.EntityFrameworkCore.Diagnostics.IDiagnosticsLogger<Microsoft.EntityFrameworkCore.DbLoggerCategory.Query!>! logger) -> Microsoft.EntityFrameworkCore.Query.SqlExpressions.SqlExpression?
+virtual pengdows.efcore.adonet.NetTopologySuite.AdoNetSpatialTranslator.Translate(Microsoft.EntityFrameworkCore.Query.SqlExpressions.SqlExpression? instance, System.Reflection.MethodInfo! method, System.Collections.Generic.IReadOnlyList<Microsoft.EntityFrameworkCore.Query.SqlExpressions.SqlExpression!>! arguments, Microsoft.EntityFrameworkCore.Diagnostics.IDiagnosticsLogger<Microsoft.EntityFrameworkCore.DbLoggerCategory.Query!>! logger) -> Microsoft.EntityFrameworkCore.Query.SqlExpressions.SqlExpression?
+virtual pengdows.efcore.adonet.NetTopologySuite.AdoNetSpatialTypeMappingSourcePlugin.FindMapping(in Microsoft.EntityFrameworkCore.Storage.RelationalTypeMappingInfo mappingInfo) -> Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping?
+pengdows.efcore.adonet.NetTopologySuite.AdoNetSpatialMemberTranslatorPlugin.AdoNetSpatialMemberTranslatorPlugin(Microsoft.EntityFrameworkCore.Query.ISqlExpressionFactory! sqlExpressionFactory, Microsoft.EntityFrameworkCore.Storage.IRelationalTypeMappingSource! typeMappingSource, pengdows.efcore.adonet.ISqlDialect! sql) -> void
+pengdows.efcore.adonet.NetTopologySuite.AdoNetSpatialMethodCallTranslatorPlugin.AdoNetSpatialMethodCallTranslatorPlugin(Microsoft.EntityFrameworkCore.Query.ISqlExpressionFactory! sqlExpressionFactory, Microsoft.EntityFrameworkCore.Storage.IRelationalTypeMappingSource! typeMappingSource, pengdows.efcore.adonet.ISqlDialect! sql) -> void
+pengdows.efcore.adonet.NetTopologySuite.AdoNetSpatialTranslator.AdoNetSpatialTranslator(Microsoft.EntityFrameworkCore.Query.ISqlExpressionFactory! sqlExpressionFactory, Microsoft.EntityFrameworkCore.Storage.IRelationalTypeMappingSource! typeMappingSource, pengdows.efcore.adonet.ISqlDialect! sql) -> void
+pengdows.efcore.adonet.NetTopologySuite.AdoNetSpatialTypeMappingSourcePlugin.AdoNetSpatialTypeMappingSourcePlugin(NetTopologySuite.NtsGeometryServices! geometryServices, pengdows.efcore.adonet.ISqlDialect! sql) -> void
+

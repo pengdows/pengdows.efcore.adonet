@@ -17,6 +17,7 @@
     <PackageVersion Include="Testcontainers.PostgreSql" Version="4.16.0" />
     <PackageVersion Include="Testcontainers.MsSql" Version="4.16.0" />
     <PackageVersion Include="MySqlConnector" Version="2.6.2" />
+    <PackageVersion Include="NetTopologySuite" Version="2.6.0" />
     <PackageVersion Include="MySql.Data" Version="26.10.0" />
     <PackageVersion Include="pengdows.crud.fakeDb" Version="2.0.5" />
     <PackageVersion Include="coverlet.collector" Version="10.1.0" />

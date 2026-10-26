@@ -486,3 +486,22 @@ pengdows.efcore.adonet.Design.AdoNetDesignTimeServices.Dialect.get -> pengdows.e
 virtual pengdows.efcore.adonet.Scaffolding.InformationSchemaReader.KeepsConstraintNames.get -> bool
 virtual pengdows.efcore.adonet.Scaffolding.InformationSchemaReader.ReadsIndexFilters.get -> bool
 virtual pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.FillNullsWithDefault(Microsoft.EntityFrameworkCore.Migrations.Operations.AlterColumnOperation! operation, Microsoft.EntityFrameworkCore.Migrations.MigrationCommandListBuilder! builder) -> void
+pengdows.efcore.adonet.ISqlDialect.Spatial.get -> pengdows.efcore.adonet.SpatialSyntax?
+virtual pengdows.efcore.adonet.AnsiSqlDialect.Spatial.get -> pengdows.efcore.adonet.SpatialSyntax?
+pengdows.efcore.adonet.SpatialBinary
+pengdows.efcore.adonet.SpatialBinary.Wkb = 0 -> pengdows.efcore.adonet.SpatialBinary
+pengdows.efcore.adonet.SpatialBinary.SridPrefixedWkb = 1 -> pengdows.efcore.adonet.SpatialBinary
+pengdows.efcore.adonet.SpatialSyntax
+pengdows.efcore.adonet.SpatialSyntax.SpatialSyntax() -> void
+static pengdows.efcore.adonet.SpatialSyntax.Iso.get -> pengdows.efcore.adonet.SpatialSyntax!
+pengdows.efcore.adonet.SpatialSyntax.Binary.get -> pengdows.efcore.adonet.SpatialBinary
+pengdows.efcore.adonet.SpatialSyntax.Binary.init -> void
+pengdows.efcore.adonet.SpatialSyntax.FromText.get -> string!
+pengdows.efcore.adonet.SpatialSyntax.FromText.init -> void
+pengdows.efcore.adonet.SpatialSyntax.StoreType.get -> System.Func<string!, string!>!
+pengdows.efcore.adonet.SpatialSyntax.StoreType.init -> void
+pengdows.efcore.adonet.SpatialSyntax.Functions.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string?>!
+pengdows.efcore.adonet.SpatialSyntax.Functions.init -> void
+pengdows.efcore.adonet.SpatialSyntax.Function(string! member) -> string?
+pengdows.efcore.adonet.SpatialSyntax.StoresZAndM.get -> bool
+pengdows.efcore.adonet.SpatialSyntax.StoresZAndM.init -> void
