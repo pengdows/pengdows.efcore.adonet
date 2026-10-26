@@ -5,6 +5,7 @@ abstract pengdows.efcore.adonet.PagingSyntax.GenerateLimitOffset(pengdows.efcore
 const pengdows.efcore.adonet.AdoNetAnnotationNames.Identity = "AdoNet:Identity" -> string!
 const pengdows.efcore.adonet.AdoNetAnnotationNames.IdentityColumns = "AdoNet:IdentityColumns" -> string!
 const pengdows.efcore.adonet.AdoNetAnnotationNames.Prefix = "AdoNet:" -> string!
+pengdows.efcore.adonet.AdoNetPropertyBuilderExtensions
 override pengdows.efcore.adonet.AdoNetDialect.ToString() -> string!
 override pengdows.efcore.adonet.AdoNetRetryingExecutionStrategy.ShouldRetryOn(System.Exception! exception) -> bool
 override pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.ApplyServices(Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> void
@@ -199,6 +200,8 @@ pengdows.efcore.adonet.StoreTypeFacets.Size.init -> void
 pengdows.efcore.adonet.StoreTypeFacets.StoreTypeFacets(int? Size = null, int? Precision = null, int? Scale = null, bool FixedLength = false, bool Unicode = true, bool KeyOrIndex = false) -> void
 pengdows.efcore.adonet.StoreTypeFacets.Unicode.get -> bool
 pengdows.efcore.adonet.StoreTypeFacets.Unicode.init -> void
+static pengdows.efcore.adonet.AdoNetPropertyBuilderExtensions.UseIdentityColumn(this Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder! propertyBuilder) -> Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder!
+static pengdows.efcore.adonet.AdoNetPropertyBuilderExtensions.UseIdentityColumn<TProperty>(this Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder<TProperty>! propertyBuilder) -> Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder<TProperty>!
 static pengdows.efcore.adonet.AdoNetBulkExtensions.BulkInsert<TEntity>(this Microsoft.EntityFrameworkCore.DbContext! context, System.Collections.Generic.IEnumerable<TEntity!>! entities) -> long
 static pengdows.efcore.adonet.AdoNetBulkExtensions.BulkInsertAsync<TEntity>(this Microsoft.EntityFrameworkCore.DbContext! context, System.Collections.Generic.IEnumerable<TEntity!>! entities, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<long>!
 static pengdows.efcore.adonet.AdoNetDbContextOptionsBuilderExtensions.UseAdoNet(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder! optionsBuilder, string! providerInvariantName, string! connectionString, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder!

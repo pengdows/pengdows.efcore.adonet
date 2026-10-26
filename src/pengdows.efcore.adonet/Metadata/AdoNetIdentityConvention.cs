@@ -22,9 +22,15 @@ internal class AdoNetIdentityConvention : IModelFinalizingConvention
         }
     }
 
+    // The type the database stores, after any value converter: an integer key stored as text or bytes can't be numbered.
+    // Behaviour reference (not copied):
+    // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.SqlServer/Metadata/Conventions/SqlServerValueGenerationStrategyConvention.cs
     private static bool IsIdentity(IConventionProperty property)
         => property.ValueGenerated == ValueGenerated.OnAdd
-            && (Nullable.GetUnderlyingType(property.ClrType) ?? property.ClrType) is var clrType
+            && (property.GetValueConverter()?.ProviderClrType ?? property.GetProviderClrType() ?? property.ClrType) is var storedType
+            && (Nullable.GetUnderlyingType(storedType) ?? storedType) is var unwrapped
+            // An enum without a converter is stored as its underlying integer.
+            && (unwrapped.IsEnum ? Enum.GetUnderlyingType(unwrapped) : unwrapped) is var clrType
             && (clrType == typeof(int) || clrType == typeof(long) || clrType == typeof(short))
             && !property.IsForeignKey()
             && property.GetValueGeneratorFactory() == null

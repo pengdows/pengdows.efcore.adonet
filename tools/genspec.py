@@ -120,7 +120,7 @@ for b in bases:
         params = ', '.join(ctor)
         args = ', '.join(p.split(' ')[-1] for p in ctor)
         declared = f', global::Xunit.IClassFixture<{shared}>' if abstract_fixture else ''
-        lines.append(f'public abstract class {cls}<THost>({params}) : {cs}({args}){declared}')
+        lines.append(f'public abstract partial class {cls}<THost>({params}) : {cs}({args}){declared}')
         lines.append('    where THost : IDatabaseHost, new()')
         lines.append('{')
         lines += members(b['abstracts'], name)
@@ -150,10 +150,10 @@ for b in bases:
         if not c.get('listLogger'):
             logger = []
         interface = ', global::Microsoft.EntityFrameworkCore.TestUtilities.ITestSqlLoggerFactory' if logger else ''
-        nested = ['', f'    public class AdoNetFixture : {base_fixture}{interface}', '    {'] + ['    ' + l for l in members(c['abstracts'], name, 'AdoNetFixture')] + logger + ['    }']
+        nested = ['', f'    public partial class AdoNetFixture : {base_fixture}{interface}', '    {'] + ['    ' + l for l in members(c['abstracts'], name, 'AdoNetFixture')] + logger + ['    }']
     params = f'{fixture} fixture' + (f', {extra}' if extra else '')
     args = 'fixture' + (f', {extra_args}' if extra_args else '')
-    lines.append(f'public abstract class {cls}<THost>({params}) : {cs.replace("<TFixture>", "<" + fixture + ">")}({args})')
+    lines.append(f'public abstract partial class {cls}<THost>({params}) : {cs.replace("<TFixture>", "<" + fixture + ">")}({args})')
     lines.append('    where THost : IDatabaseHost, new()')
     lines.append('{')
     lines += members(b['abstracts'], name, fixture)

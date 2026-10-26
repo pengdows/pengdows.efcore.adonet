@@ -51,3 +51,40 @@ public class SingleStoreSavepointTests
         Assert.Same(MySqlDialect.SingleStore, context.GetService<IAdoNetDialect>());
     }
 }
+
+/// <summary>
+///     MySQL takes no literal default on a TEXT, BLOB, JSON or GEOMETRY column, but since 8.0.13 takes an expression default:
+///     a default on one of those is written in parentheses; other columns keep the plain literal. Behaviour reference:
+///     Pomelo's MySqlMigrationsSqlGenerator.DefaultValue (adapted).
+/// </summary>
+public class MySqlDefaultValueTests
+{
+    private static string Sql(string columnType, object? defaultValue = null, string? defaultValueSql = null)
+    {
+        using var context = new BlogContext(new DbContextOptionsBuilder<BlogContext>().UseAdoNetMySql("Server=localhost").Options);
+        var operation = new Microsoft.EntityFrameworkCore.Migrations.Operations.AddColumnOperation
+        {
+            Table = "T", Name = "C", ClrType = typeof(string), ColumnType = columnType, DefaultValue = defaultValue, DefaultValueSql = defaultValueSql
+        };
+        return string.Join("", context.GetService<Microsoft.EntityFrameworkCore.Migrations.IMigrationsSqlGenerator>().Generate([operation]).Select(c => c.CommandText));
+    }
+
+    [Theory]
+    [InlineData("LONGTEXT")]
+    [InlineData("text")]
+    [InlineData("MEDIUMBLOB")]
+    [InlineData("JSON")]
+    public void A_default_on_a_text_blob_or_json_column_is_an_expression(string columnType)
+        => Assert.Contains($"{columnType} DEFAULT ('Banana Joe')", Sql(columnType, "Banana Joe"));
+
+    [Fact]
+    public void A_default_sql_on_a_text_column_is_parenthesized_once()
+    {
+        Assert.Contains("LONGTEXT DEFAULT (UUID())", Sql("LONGTEXT", defaultValueSql: "UUID()"));
+        Assert.Contains("LONGTEXT DEFAULT (UUID())", Sql("LONGTEXT", defaultValueSql: "(UUID())"));
+    }
+
+    [Fact]
+    public void Other_columns_keep_a_plain_literal_default()
+        => Assert.Contains("VARCHAR(20) DEFAULT 'Banana Joe'", Sql("VARCHAR(20)", "Banana Joe"));
+}
