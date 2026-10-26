@@ -130,6 +130,13 @@ internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = t
     public override FunctionSyntax Functions { get; } = new MySqlFunctions();
     public override string DefaultValues => "() VALUES ()";
     public override string ValuesRowPrefix => "ROW";
+
+    // Neither driver returns output parameters from a text CALL: each output goes through a user variable, which both
+    // drivers take for a missing parameter unless the connection allows user variables. As Pomelo does. Behaviour reference
+    // (not copied):
+    // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Storage/Internal/MySqlConnectionStringOptionsValidator.cs
+    public override string ProcedureOutputVariable => "@{0}";
+    public override IReadOnlyDictionary<string, string> ConnectionOptions { get; } = new Dictionary<string, string> { ["Allow User Variables"] = "true" };
     public override string CurrentSchema => "DATABASE()";
 
     // "This version of MySQL doesn't yet support 'LIMIT & IN/ALL/ANY/SOME subquery'"; a derived table may be paged.

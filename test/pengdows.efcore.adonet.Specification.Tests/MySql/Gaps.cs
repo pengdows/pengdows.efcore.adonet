@@ -113,3 +113,36 @@ public partial class SpatialMySqlTest
     public override void Translators_handle_static_members()
         => base.Translators_handle_static_members();
 }
+
+public partial class StoredProcedureUpdateMySqlTest
+{
+    [ConditionalTheory(Skip = "[SKIP:MySQL] A procedure's outputs come back as a result set, so it can't also return result columns")]
+    [MemberData(nameof(IsAsyncData))]
+    public override Task Insert_with_output_parameter_and_result_column(bool async)
+        => base.Insert_with_output_parameter_and_result_column(async);
+
+    [ConditionalTheory(Skip = "[SKIP:MySQL] A procedure's outputs come back as a result set, so it can't also return result columns")]
+    [MemberData(nameof(IsAsyncData))]
+    public override Task Update_with_output_parameter_and_rows_affected_result_column(bool async)
+        => base.Update_with_output_parameter_and_rows_affected_result_column(async);
+
+    [ConditionalTheory(Skip = "[SKIP:MySQL] A procedure's outputs come back as a result set, so it can't also return result columns")]
+    [MemberData(nameof(IsAsyncData))]
+    public override Task Update_with_output_parameter_and_rows_affected_result_column_concurrency_failure(bool async)
+        => base.Update_with_output_parameter_and_rows_affected_result_column_concurrency_failure(async);
+
+    [ConditionalTheory(Skip = "[SKIP:MySQL] A procedure's outputs come back as a result set, so it can't also return result columns")]
+    [MemberData(nameof(IsAsyncData))]
+    public override Task Tph(bool async)
+        => base.Tph(async);
+
+    [ConditionalTheory(Skip = "[SKIP:MySQL] MySQL procedures have no return value")]
+    [MemberData(nameof(IsAsyncData))]
+    public override Task Rows_affected_return_value(bool async)
+        => base.Rows_affected_return_value(async);
+
+    [ConditionalTheory(Skip = "[SKIP:MySQL] MySQL procedures have no return value")]
+    [MemberData(nameof(IsAsyncData))]
+    public override Task Rows_affected_return_value_and_concurrency_failure(bool async)
+        => base.Rows_affected_return_value_and_concurrency_failure(async);
+}

@@ -23,6 +23,7 @@ public abstract class ServerHost : IDatabaseHost
     public virtual bool KeepsOffsets => true;
     public virtual NorthwindProcedures? Procedures => null;
     public virtual string? NonDefaultCollation => null;
+    public virtual UpdateProcedures? UpdateProcedures => null;
 
     protected abstract string AdminConnectionString { get; }
     protected abstract IEnumerable<string> RecreateSql(string database);
@@ -114,6 +115,8 @@ public sealed class MySqlHost : ServerHost
     // The test databases are utf8mb4_0900_as_cs.
     public override string NonDefaultCollation => "utf8mb4_bin";
 
+    public override UpdateProcedures UpdateProcedures => MySqlUpdateProcedures.Instance;
+
     // As Pomelo's Northwind script defines them; the parameter's collation yields to the column's (as a _bin one does), where
     // the character set's default (utf8mb4_0900_ai_ci) would clash with it. CALL reports no rows affected. Behaviour reference
     // (not copied):
@@ -145,8 +148,10 @@ public sealed class MySqlHost : ServerHost
     protected override IEnumerable<string> RecreateSql(string database)
         => [$"DROP DATABASE IF EXISTS `{database}`", $"CREATE DATABASE `{database}` CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_as_cs"];
 
+    // With the user variables the dialect reads procedure outputs through, which a connection opened before the provider
+    // sees it must already allow.
     public override string ConnectionStringFor(string database)
-        => new MySqlConnectionStringBuilder(AdminConnectionString) { Database = database }.ConnectionString;
+        => new MySqlConnectionStringBuilder(AdminConnectionString) { Database = database, AllowUserVariables = true }.ConnectionString;
 
     public override DbConnection CreateConnection(string connectionString) => new MySqlConnection(connectionString);
 
@@ -164,6 +169,7 @@ public abstract class FileHost : IDatabaseHost
     public virtual bool KeepsOffsets => true;
     public virtual NorthwindProcedures? Procedures => null;
     public virtual string? NonDefaultCollation => null;
+    public virtual UpdateProcedures? UpdateProcedures => null;
 
     protected static readonly string Root = Directory.CreateTempSubdirectory("adonet-spec-").FullName;
 

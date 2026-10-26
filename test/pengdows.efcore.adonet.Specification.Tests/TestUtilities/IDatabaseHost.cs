@@ -31,7 +31,18 @@ public interface IDatabaseHost
 
     /// <summary>A collation other than the test databases' own, for the migrations suites; null where there is none to name.</summary>
     string? NonDefaultCollation { get; }
+
+    /// <summary>EF's stored-procedure update suite on this database; null where the database has no procedures.</summary>
+    UpdateProcedures? UpdateProcedures { get; }
 }
+
+/// <summary>
+///     What EF's stored-procedure update suite needs written for a database: each test's procedures, by test name (split on
+///     lines starting <c>GO</c>), and a store-generated concurrency token, the database's row version.
+/// </summary>
+public sealed record UpdateProcedures(
+    IReadOnlyDictionary<string, string> Sql,
+    Action<Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder, string> ConcurrencyToken);
 
 /// <summary>
 ///     The Northwind procedures EF's raw-SQL suites call: <see cref="Create" /> makes them after seeding; the calls are written

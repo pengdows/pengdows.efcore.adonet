@@ -1,6 +1,10 @@
+// Portions adapted from Pomelo's MySqlUpdateSqlGenerator.
+// Copyright (c) Pomelo Foundation. Licensed under the MIT license.
+
 using System.Globalization;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore.Update;
 
@@ -47,6 +51,90 @@ internal class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependenc
                 .Replace("{1}", dialect.Sql.StringLiteral(columnModification.JsonPath), StringComparison.Ordinal)
                 .Replace("{2}", isText ? json.FromText.Replace("{0}", value.ToString(), StringComparison.Ordinal) : value.ToString(), StringComparison.Ordinal));
     }
+
+    // Where the driver returns no output parameters from a text CALL, each output goes through a session variable: set before
+    // the call (an input-output one to its input), passed in the parameter's place, and selected back after it. With other
+    // outputs, a rows-affected one filters that row, so a procedure that changed no row returns none: a concurrency failure.
+    // Adapted from Pomelo's MySqlUpdateSqlGenerator (MIT, Pomelo Foundation):
+    // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Update/Internal/MySqlUpdateSqlGenerator.cs
+    public override ResultSetMapping AppendStoredProcedureCall(
+        StringBuilder commandStringBuilder,
+        IReadOnlyModificationCommand command,
+        int commandPosition,
+        out bool requiresTransaction)
+    {
+        var outputs = command.ColumnModifications.Where(AdoNetModificationCommand.IsOutput).ToList();
+        if ((dialect.Sql.ProcedureOutputVariable is not { } template) || (outputs.Count == 0))
+        {
+            return base.AppendStoredProcedureCall(commandStringBuilder, command, commandPosition, out requiresTransaction);
+        }
+
+        var procedure = command.StoreStoredProcedure!;
+        if (procedure.ResultColumns.Any() || (procedure.ReturnValue != null))
+        {
+            throw new InvalidOperationException(
+                $"The stored procedure '{procedure.SchemaQualifiedName}' has output parameters, which this dialect reads back as a "
+                + "result set, so it can have neither result columns nor a return value.");
+        }
+
+        var terminator = SqlGenerationHelper.StatementTerminator;
+        foreach (var output in outputs)
+        {
+            commandStringBuilder.Append("SET ").Append(Variable(template, output)).Append(" = ");
+            if (((IStoreStoredProcedureParameter)output.Column!).Direction.HasFlag(System.Data.ParameterDirection.Input))
+            {
+                SqlGenerationHelper.GenerateParameterNamePlaceholder(commandStringBuilder, ParameterName(output));
+            }
+            else
+            {
+                commandStringBuilder.Append("NULL");
+            }
+
+            commandStringBuilder.AppendLine(terminator);
+        }
+
+        commandStringBuilder.Append("CALL ");
+        SqlGenerationHelper.DelimitIdentifier(commandStringBuilder, procedure.Name, procedure.Schema);
+        commandStringBuilder.Append('(');
+        var first = true;
+        foreach (var modification in command.ColumnModifications.Where(m => m.Column is IStoreStoredProcedureParameter))
+        {
+            if (!first)
+            {
+                commandStringBuilder.Append(", ");
+            }
+
+            first = false;
+            if (AdoNetModificationCommand.IsOutput(modification))
+            {
+                commandStringBuilder.Append(Variable(template, modification));
+            }
+            else
+            {
+                SqlGenerationHelper.GenerateParameterNamePlaceholder(commandStringBuilder, ParameterName(modification));
+            }
+        }
+
+        commandStringBuilder.Append(')').AppendLine(terminator);
+        commandStringBuilder.Append("SELECT ").AppendJoin(", ", outputs.Select(o => Variable(template, o)));
+        var rowsAffected = outputs.FirstOrDefault(o => o.Column == command.RowsAffectedColumn);
+        if ((rowsAffected != null) && (outputs.Count > 1))
+        {
+            commandStringBuilder.AppendLine().Append("WHERE ").Append(Variable(template, rowsAffected)).Append(" = 1");
+        }
+
+        commandStringBuilder.AppendLine(terminator);
+        requiresTransaction = true;
+        return (rowsAffected != null) && (outputs.Count == 1)
+            ? ResultSetMapping.LastInResultSet | ResultSetMapping.ResultSetWithRowsAffectedOnly
+            : ResultSetMapping.LastInResultSet;
+    }
+
+    private static string ParameterName(IColumnModification modification)
+        => modification.UseOriginalValueParameter ? modification.OriginalParameterName! : modification.ParameterName!;
+
+    private static string Variable(string template, IColumnModification modification)
+        => template.Replace("{0}", "_out_" + ParameterName(modification), StringComparison.Ordinal);
 
     public override ResultSetMapping AppendInsertOperation(
         StringBuilder commandStringBuilder,

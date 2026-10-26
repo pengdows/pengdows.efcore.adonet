@@ -161,6 +161,18 @@ noted so they can be removed once the fix ships.
 - **Our handling:** savepoint support is the dialect's (`ISqlDialect.Savepoints`), never the driver's flag; where the
   dialect has none, all three savepoint methods throw `NotSupportedException`. `MySqlDialect.SingleStore` has none.
 
+### Output parameters only for `CommandType.StoredProcedure` (by design)
+
+- **Limitation:** an `Output` or `InputOutput` parameter on a text command (EF's `CALL p(@p0, @p1)`) throws; the driver
+  returns outputs only when it builds the call itself, from the procedure's metadata. MySQL's protocol has no output
+  parameters for a text query. As read in Pomelo's update batch, which works around it; not confirmed here separately, and
+  MySql.Data not checked.
+- **Status:** by design; not a defect to report.
+- **Our handling:** as Pomelo's: each output goes through a user variable (`ISqlDialect.ProcedureOutputVariable`), set
+  before the call, passed in the parameter's place and selected back after it. Both drivers read `@name` as a parameter
+  unless the connection allows user variables, so the dialect's `ConnectionOptions` adds `Allow User Variables=true` to
+  connection strings and closed connections, and refuses an open connection or a data source without it.
+
 ## mysql/mysql-connector-net (MySql.Data 26.10.0)
 
 Found by running the shared MySQL suites through Oracle's driver as well as MySqlConnector (the dialect is

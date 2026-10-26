@@ -274,7 +274,10 @@ internal class AdoNetDatabaseCreator(
     {
         Connection.Close();
         (lifecycle.ClearPool ?? DriverClearPool)(Connection.DbConnection);
-        if ((Connection.ConnectionString is { } connectionString) && dataSources.Evict(Factory(), connectionString))
+        if ((Connection.ConnectionString is { } connectionString)
+            && dataSources.Evict(
+                Factory(),
+                Connection is AdoNetRelationalConnection adoNet ? adoNet.DataSourceConnectionString(Factory(), connectionString) : connectionString))
         {
             // The context's connection came from that data source: let EF make a new one when it next needs it. Releasing
             // a connection also forgets its connection string, which still names the database.

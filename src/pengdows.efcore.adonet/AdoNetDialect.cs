@@ -43,6 +43,8 @@ public class AnsiSqlDialect : ISqlDialect
     public virtual string IdentifierQuotePrefix => "\"";
     public virtual string IdentifierQuoteSuffix => "\"";
     public virtual string? SessionSetup => null;
+    public virtual IReadOnlyDictionary<string, string> ConnectionOptions { get; } = new Dictionary<string, string>();
+    public virtual string? ProcedureOutputVariable => null;
 
     public virtual bool RequiresQuoting(string identifier)
         => true;

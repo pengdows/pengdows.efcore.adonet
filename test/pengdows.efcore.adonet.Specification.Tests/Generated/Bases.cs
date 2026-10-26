@@ -2021,63 +2021,63 @@ public abstract partial class StoredProcedureUpdateAdoNetTest<THost>(global::Mic
     where THost : IDatabaseHost, new()
 {
     public override global::System.Threading.Tasks.Task Insert_with_output_parameter(bool async)
-        => throw new NotSupportedException("Not yet provided by the base suite: Insert_with_output_parameter.");
+        => Insert_with_output_parameter(async, UpdateProcedureSql.Of<THost>("Insert_with_output_parameter"));
     public override global::System.Threading.Tasks.Task Insert_twice_with_output_parameter(bool async)
-        => throw new NotSupportedException("Not yet provided by the base suite: Insert_twice_with_output_parameter.");
+        => Insert_twice_with_output_parameter(async, UpdateProcedureSql.Of<THost>("Insert_twice_with_output_parameter"));
     public override global::System.Threading.Tasks.Task Insert_with_result_column(bool async)
-        => throw new NotSupportedException("Not yet provided by the base suite: Insert_with_result_column.");
+        => Insert_with_result_column(async, UpdateProcedureSql.Of<THost>("Insert_with_result_column"));
     public override global::System.Threading.Tasks.Task Insert_with_two_result_columns(bool async)
-        => throw new NotSupportedException("Not yet provided by the base suite: Insert_with_two_result_columns.");
+        => Insert_with_two_result_columns(async, UpdateProcedureSql.Of<THost>("Insert_with_two_result_columns"));
     public override global::System.Threading.Tasks.Task Insert_with_output_parameter_and_result_column(bool async)
-        => throw new NotSupportedException("Not yet provided by the base suite: Insert_with_output_parameter_and_result_column.");
+        => Insert_with_output_parameter_and_result_column(async, UpdateProcedureSql.Of<THost>("Insert_with_output_parameter_and_result_column"));
     public override global::System.Threading.Tasks.Task Update(bool async)
-        => throw new NotSupportedException("Not yet provided by the base suite: Update.");
+        => Update(async, UpdateProcedureSql.Of<THost>("Update"));
     public override global::System.Threading.Tasks.Task Update_partial(bool async)
-        => throw new NotSupportedException("Not yet provided by the base suite: Update_partial.");
+        => Update_partial(async, UpdateProcedureSql.Of<THost>("Update_partial"));
     public override global::System.Threading.Tasks.Task Update_with_output_parameter_and_rows_affected_result_column(bool async)
-        => throw new NotSupportedException("Not yet provided by the base suite: Update_with_output_parameter_and_rows_affected_result_column.");
+        => Update_with_output_parameter_and_rows_affected_result_column(async, UpdateProcedureSql.Of<THost>("Update_with_output_parameter_and_rows_affected_result_column"));
     public override global::System.Threading.Tasks.Task Update_with_output_parameter_and_rows_affected_result_column_concurrency_failure(bool async)
-        => throw new NotSupportedException("Not yet provided by the base suite: Update_with_output_parameter_and_rows_affected_result_column_concurrency_failure.");
+        => Update_with_output_parameter_and_rows_affected_result_column_concurrency_failure(async, UpdateProcedureSql.Of<THost>("Update_with_output_parameter_and_rows_affected_result_column_concurrency_failure"));
     public override global::System.Threading.Tasks.Task Delete(bool async)
-        => throw new NotSupportedException("Not yet provided by the base suite: Delete.");
+        => Delete(async, UpdateProcedureSql.Of<THost>("Delete"));
     public override global::System.Threading.Tasks.Task Delete_and_insert(bool async)
-        => throw new NotSupportedException("Not yet provided by the base suite: Delete_and_insert.");
+        => Delete_and_insert(async, UpdateProcedureSql.Of<THost>("Delete_and_insert"));
     public override global::System.Threading.Tasks.Task Rows_affected_parameter(bool async)
-        => throw new NotSupportedException("Not yet provided by the base suite: Rows_affected_parameter.");
+        => Rows_affected_parameter(async, UpdateProcedureSql.Of<THost>("Rows_affected_parameter"));
     public override global::System.Threading.Tasks.Task Rows_affected_parameter_and_concurrency_failure(bool async)
-        => throw new NotSupportedException("Not yet provided by the base suite: Rows_affected_parameter_and_concurrency_failure.");
+        => Rows_affected_parameter_and_concurrency_failure(async, UpdateProcedureSql.Of<THost>("Rows_affected_parameter_and_concurrency_failure"));
     public override global::System.Threading.Tasks.Task Rows_affected_result_column(bool async)
-        => throw new NotSupportedException("Not yet provided by the base suite: Rows_affected_result_column.");
+        => Rows_affected_result_column(async, UpdateProcedureSql.Of<THost>("Rows_affected_result_column"));
     public override global::System.Threading.Tasks.Task Rows_affected_result_column_and_concurrency_failure(bool async)
-        => throw new NotSupportedException("Not yet provided by the base suite: Rows_affected_result_column_and_concurrency_failure.");
+        => Rows_affected_result_column_and_concurrency_failure(async, UpdateProcedureSql.Of<THost>("Rows_affected_result_column_and_concurrency_failure"));
     public override global::System.Threading.Tasks.Task Rows_affected_return_value(bool async)
-        => throw new NotSupportedException("Not yet provided by the base suite: Rows_affected_return_value.");
+        => Rows_affected_return_value(async, UpdateProcedureSql.Of<THost>("Rows_affected_return_value"));
     public override global::System.Threading.Tasks.Task Rows_affected_return_value_and_concurrency_failure(bool async)
-        => throw new NotSupportedException("Not yet provided by the base suite: Rows_affected_return_value_and_concurrency_failure.");
+        => Rows_affected_return_value_and_concurrency_failure(async, UpdateProcedureSql.Of<THost>("Rows_affected_return_value_and_concurrency_failure"));
     public override global::System.Threading.Tasks.Task Store_generated_concurrency_token_as_in_out_parameter(bool async)
-        => throw new NotSupportedException("Not yet provided by the base suite: Store_generated_concurrency_token_as_in_out_parameter.");
+        => Store_generated_concurrency_token_as_in_out_parameter(async, UpdateProcedureSql.Of<THost>("Store_generated_concurrency_token_as_in_out_parameter"));
     public override global::System.Threading.Tasks.Task Store_generated_concurrency_token_as_two_parameters(bool async)
-        => throw new NotSupportedException("Not yet provided by the base suite: Store_generated_concurrency_token_as_two_parameters.");
+        => Store_generated_concurrency_token_as_two_parameters(async, UpdateProcedureSql.Of<THost>("Store_generated_concurrency_token_as_two_parameters"));
     public override global::System.Threading.Tasks.Task User_managed_concurrency_token(bool async)
-        => throw new NotSupportedException("Not yet provided by the base suite: User_managed_concurrency_token.");
+        => User_managed_concurrency_token(async, UpdateProcedureSql.Of<THost>("User_managed_concurrency_token"));
     public override global::System.Threading.Tasks.Task Original_and_current_value_on_non_concurrency_token(bool async)
-        => throw new NotSupportedException("Not yet provided by the base suite: Original_and_current_value_on_non_concurrency_token.");
+        => Original_and_current_value_on_non_concurrency_token(async, UpdateProcedureSql.Of<THost>("Original_and_current_value_on_non_concurrency_token"));
     public override global::System.Threading.Tasks.Task Input_or_output_parameter_with_input(bool async)
-        => throw new NotSupportedException("Not yet provided by the base suite: Input_or_output_parameter_with_input.");
+        => Input_or_output_parameter_with_input(async, UpdateProcedureSql.Of<THost>("Input_or_output_parameter_with_input"));
     public override global::System.Threading.Tasks.Task Input_or_output_parameter_with_output(bool async)
-        => throw new NotSupportedException("Not yet provided by the base suite: Input_or_output_parameter_with_output.");
+        => Input_or_output_parameter_with_output(async, UpdateProcedureSql.Of<THost>("Input_or_output_parameter_with_output"));
     public override global::System.Threading.Tasks.Task Tph(bool async)
-        => throw new NotSupportedException("Not yet provided by the base suite: Tph.");
+        => Tph(async, UpdateProcedureSql.Of<THost>("Tph"));
     public override global::System.Threading.Tasks.Task Tpt(bool async)
-        => throw new NotSupportedException("Not yet provided by the base suite: Tpt.");
+        => Tpt(async, UpdateProcedureSql.Of<THost>("Tpt"));
     public override global::System.Threading.Tasks.Task Tpt_mixed_sproc_and_non_sproc(bool async)
-        => throw new NotSupportedException("Not yet provided by the base suite: Tpt_mixed_sproc_and_non_sproc.");
+        => Tpt_mixed_sproc_and_non_sproc(async, UpdateProcedureSql.Of<THost>("Tpt_mixed_sproc_and_non_sproc"));
     public override global::System.Threading.Tasks.Task Tpc(bool async)
-        => throw new NotSupportedException("Not yet provided by the base suite: Tpc.");
+        => Tpc(async, UpdateProcedureSql.Of<THost>("Tpc"));
     public override global::System.Threading.Tasks.Task Non_sproc_followed_by_sproc_commands_in_the_same_batch(bool async)
-        => throw new NotSupportedException("Not yet provided by the base suite: Non_sproc_followed_by_sproc_commands_in_the_same_batch.");
+        => Non_sproc_followed_by_sproc_commands_in_the_same_batch(async, UpdateProcedureSql.Of<THost>("Non_sproc_followed_by_sproc_commands_in_the_same_batch"));
     protected override void ConfigureStoreGeneratedConcurrencyToken(global::Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder entityTypeBuilder, string propertyName)
-        => throw new NotSupportedException("Not yet provided by the base suite: ConfigureStoreGeneratedConcurrencyToken.");
+        => UpdateProcedureSql.ConcurrencyToken<THost>(entityTypeBuilder, propertyName);
     protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
 }
 

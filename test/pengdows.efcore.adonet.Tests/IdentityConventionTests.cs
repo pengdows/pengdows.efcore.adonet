@@ -46,6 +46,16 @@ public class IdentityConventionTests
         public int Lives { get; set; }
     }
 
+    public abstract class Vehicle
+    {
+        public int Id { get; set; }
+    }
+
+    public class Car : Vehicle
+    {
+        public string? Make { get; set; }
+    }
+
     public class Profile
     {
         public int Id { get; set; }
@@ -79,6 +89,8 @@ public class IdentityConventionTests
             modelBuilder.Entity<Kinded>().Property(e => e.Id).ValueGeneratedOnAdd();
             modelBuilder.Entity<Animal>().UseTptMappingStrategy();
             modelBuilder.Entity<Cat>();
+            modelBuilder.Entity<Vehicle>().UseTpcMappingStrategy().Property(e => e.Id).UseIdentityColumn();
+            modelBuilder.Entity<Car>();
             modelBuilder.Entity<Profile>().HasOne(p => p.Animal).WithOne().HasForeignKey<Profile>(p => p.Id);
             modelBuilder.Entity<Owner>().OwnsMany(o => o.Lines);
             modelBuilder.Entity<Paired>(b =>
@@ -129,6 +141,17 @@ public class IdentityConventionTests
         var derived = script[script.IndexOf("CREATE TABLE \"Cat\"", StringComparison.Ordinal)..];
         Assert.Contains("IDENTITY", root[..root.IndexOf(");", StringComparison.Ordinal)]);
         Assert.DoesNotContain("IDENTITY", derived[..derived.IndexOf(");", StringComparison.Ordinal)]);
+    }
+
+    // A table-per-concrete-type table holds whole rows, its key its own: each table numbers it, when asked to.
+    [Fact]
+    public void Each_table_of_a_table_per_concrete_type_hierarchy_numbers_its_key_when_asked()
+    {
+        using var context = new FakeDatabase().ContextOf<KeysContext>(AdoNetDialect.Ansi, o => new KeysContext(o));
+        var script = context.Database.GenerateCreateScript();
+
+        var table = script[script.IndexOf("CREATE TABLE \"Car\"", StringComparison.Ordinal)..];
+        Assert.Contains("IDENTITY", table[..table.IndexOf(");", StringComparison.Ordinal)]);
     }
 
     // A key that is also this entity's foreign key (a one-to-one sharing the principal's key) copies another row's key.

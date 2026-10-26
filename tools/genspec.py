@@ -95,6 +95,12 @@ def impl(m, base, fixture='TFixture'):
     # provider passes its own.
     if base == 'MigrationsTestBase' and n.endswith('_with_custom_default_value_sql_to_existing_table'):
         return meth(f'{n}_core(new THost().Dialect.Sql.StringLiteral("[3, 2, 1]"))')
+    # EF's stored-procedure update tests, each with the host's procedures for it.
+    if base == 'StoredProcedureUpdateTestBase':
+        if n == 'ConfigureStoreGeneratedConcurrencyToken':
+            return meth('UpdateProcedureSql.ConcurrencyToken<THost>(entityTypeBuilder, propertyName)')
+        if args == 'bool async':
+            return meth(f'{n}(async, UpdateProcedureSql.Of<THost>("{n}"))')
     # A fixture mapped to an EF fixture that implements the member (FIXTURE_BASES) keeps EF's.
     if (base, n) in INHERITED:
         return None

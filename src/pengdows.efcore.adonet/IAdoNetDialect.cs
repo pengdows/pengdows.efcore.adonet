@@ -43,6 +43,21 @@ public interface ISqlDialect
     /// </summary>
     string? SessionSetup { get; }
 
+    /// <summary>
+    ///     Connection string options the dialect's SQL relies on, by key: added to the connection string connections are made
+    ///     from and to a closed connection the provider is given; a data source or open connection without them is refused,
+    ///     as neither can be changed. Empty for none.
+    /// </summary>
+    IReadOnlyDictionary<string, string> ConnectionOptions { get; }
+
+    /// <summary>
+    ///     How a stored procedure's output parameters reach EF: null where the driver returns them as output parameters of
+    ///     the <c>CALL</c>; otherwise a session variable for each, named by this template from <c>{0}</c> (<c>@{0}</c>), which
+    ///     is set before the call (to the input, for an input-output parameter), passed in the parameter's place, and
+    ///     selected back after it.
+    /// </summary>
+    string? ProcedureOutputVariable { get; }
+
     /// <summary>Whether <paramref name="identifier" /> must be quoted to mean itself; quoting every one is always safe.</summary>
     bool RequiresQuoting(string identifier);
 

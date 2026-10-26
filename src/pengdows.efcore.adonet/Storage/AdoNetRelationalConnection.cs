@@ -17,9 +17,13 @@ internal class AdoNetRelationalConnection : RelationalConnection
     private readonly AdoNetDataSources _dataSources;
     private readonly IDatabaseCapabilities _capabilities;
     private readonly string? _sessionSetup;
+    private readonly IReadOnlyDictionary<string, string> _connectionOptions;
 
     // Connections whose sessions get the dialect's setup, with it; contexts can share one connection, which is watched once.
     private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<DbConnection, string> Watched = new();
+
+    // Connections already given the dialect's connection options, or found to have them.
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<DbConnection, object> Optioned = new();
 
     public AdoNetRelationalConnection(
         RelationalConnectionDependencies dependencies,
@@ -31,6 +35,7 @@ internal class AdoNetRelationalConnection : RelationalConnection
         _dataSources = dataSources;
         _capabilities = capabilities;
         _sessionSetup = sql.SessionSetup;
+        _connectionOptions = sql.ConnectionOptions;
         _extension = dependencies.ContextOptions.FindExtension<AdoNetOptionsExtension>()
             ?? throw new InvalidOperationException($"{nameof(AdoNetOptionsExtension)} is not configured.");
 
@@ -56,6 +61,11 @@ internal class AdoNetRelationalConnection : RelationalConnection
     {
         if (_extension.DataSource is { } dataSource)
         {
+            if (WithOptions(null, dataSource.ConnectionString) != null)
+            {
+                throw MissingOptions("data source");
+            }
+
             return dataSource.CreateConnection();
         }
 
@@ -74,8 +84,57 @@ internal class AdoNetRelationalConnection : RelationalConnection
                 "A DbProviderFactory requires a connection string: configure one, or call Database.SetConnectionString or Database.SetDbConnection first.");
         }
 
-        return _dataSources.GetOrCreate(factory, ConnectionString).CreateConnection();
+        return _dataSources.GetOrCreate(factory, DataSourceConnectionString(factory, ConnectionString)).CreateConnection();
     }
+
+    /// <summary>The connection string the data source for <paramref name="connectionString" /> is made from: with the dialect's options.</summary>
+    internal string DataSourceConnectionString(DbProviderFactory factory, string connectionString)
+        => WithOptions(factory, connectionString) ?? connectionString;
+
+    // The connection string with the dialect's options added, or null when it has them all already.
+    private string? WithOptions(DbProviderFactory? factory, string connectionString)
+    {
+        if (_connectionOptions.Count == 0)
+        {
+            return null;
+        }
+
+        var builder = factory?.CreateConnectionStringBuilder() ?? new DbConnectionStringBuilder();
+        builder.ConnectionString = connectionString;
+        var missing = false;
+        foreach (var (key, value) in _connectionOptions)
+        {
+            if (!builder.TryGetValue(key, out var current)
+                || !string.Equals(Convert.ToString(current, System.Globalization.CultureInfo.InvariantCulture), value, StringComparison.OrdinalIgnoreCase))
+            {
+                builder[key] = value;
+                missing = true;
+            }
+        }
+
+        return missing ? builder.ConnectionString : null;
+    }
+
+    // A connection the application gives the provider gets the options while it is closed; once open, it can't.
+    private void AddOptions(DbConnection connection)
+    {
+        if (WithOptions(DbProviderFactories.GetFactory(connection), connection.ConnectionString) is { } connectionString)
+        {
+            if (connection.State != ConnectionState.Closed)
+            {
+                throw MissingOptions("open connection");
+            }
+
+            connection.ConnectionString = connectionString;
+        }
+
+        Optioned.AddOrUpdate(connection, Optioned);
+    }
+
+    private InvalidOperationException MissingOptions(string source)
+        => new(
+            $"The {source} lacks connection string options this dialect's SQL relies on, and its connection string can't be changed: "
+            + "include " + string.Join(";", _connectionOptions.Select(o => o.Key + "=" + o.Value)) + " in it.");
 
     // The dialect's session setup runs as each connection opens, whoever opens it (EF, or the application), before anything
     // else can run on it; a connection already open when EF first sees it is set up then, in EF's transaction if it has one.
@@ -85,6 +144,11 @@ internal class AdoNetRelationalConnection : RelationalConnection
         get
         {
             var connection = base.DbConnection;
+            if ((_connectionOptions.Count > 0) && !Optioned.TryGetValue(connection, out _))
+            {
+                AddOptions(connection);
+            }
+
             if ((_sessionSetup != null) && !Watched.TryGetValue(connection, out _))
             {
                 Watch(connection, _sessionSetup, CurrentTransaction?.GetDbTransaction());

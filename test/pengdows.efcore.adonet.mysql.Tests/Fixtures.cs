@@ -15,6 +15,11 @@ public class MySqlFixture : ContainerFixture
     protected override void UseProvider(DbContextOptionsBuilder builder)
         => builder.UseAdoNetMySql(ConnectionString);
 
+    // A connection the application opens itself must already allow the user variables the dialect reads procedure outputs
+    // through; the provider adds the option only to connection strings and closed connections.
+    public override string ConnectionString
+        => base.ConnectionString + ";Allow User Variables=true";
+
     // MySQL's FLOAT stops at 3.402823466E+38, just below float.MaxValue (3.4028234663852886E+38).
     public override float LargestStorableFloat
         => MathF.BitDecrement(float.MaxValue);

@@ -134,3 +134,21 @@ public static class SpatialTypes
             ? services
             : pengdows.efcore.adonet.NetTopologySuite.AdoNetNetTopologySuiteExtensions.AddEntityFrameworkAdoNetNetTopologySuite(services);
 }
+
+/// <summary>The host's procedures for EF's stored-procedure update suite.</summary>
+public static class UpdateProcedureSql
+{
+    public static string Of<THost>(string test)
+        where THost : IDatabaseHost, new()
+        => Procedures<THost>().Sql.TryGetValue(test, out var sql)
+            ? sql
+            : throw new NotSupportedException($"{typeof(THost).Name} writes no procedures for {test}.");
+
+    public static void ConcurrencyToken<THost>(Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder entityTypeBuilder, string propertyName)
+        where THost : IDatabaseHost, new()
+        => Procedures<THost>().ConcurrencyToken(entityTypeBuilder, propertyName);
+
+    private static UpdateProcedures Procedures<THost>()
+        where THost : IDatabaseHost, new()
+        => new THost().UpdateProcedures ?? throw new NotSupportedException($"{typeof(THost).Name} has no stored procedures.");
+}

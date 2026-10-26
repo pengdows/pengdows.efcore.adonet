@@ -1,4 +1,11 @@
+// Portions adapted from Pomelo's MySqlModificationCommand.
+// Copyright (c) Pomelo Foundation. Licensed under the MIT license.
+
+using System.Data;
 using System.Diagnostics;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore.Update;
 
 namespace pengdows.efcore.adonet.Update;
@@ -13,15 +20,53 @@ namespace pengdows.efcore.adonet.Update;
 /// </remarks>
 internal sealed class AdoNetModificationCommand : ModificationCommand
 {
-    public AdoNetModificationCommand(in ModificationCommandParameters parameters)
+    private readonly bool _outputVariables;
+    private readonly bool _detailedErrorsEnabled;
+
+    public AdoNetModificationCommand(in ModificationCommandParameters parameters, bool outputVariables = false)
         : base(parameters)
     {
+        _outputVariables = outputVariables;
+        _detailedErrorsEnabled = parameters.DetailedErrorsEnabled;
     }
 
     public AdoNetModificationCommand(in NonTrackedModificationCommandParameters parameters)
         : base(parameters)
     {
     }
+
+    // Where a procedure's outputs come back through session variables (ISqlDialect.ProcedureOutputVariable), the row selected
+    // after the call holds each output, in parameter order; EF's own reading skips parameters, which elsewhere arrive as
+    // output parameters once the reader is closed. Adapted from Pomelo's MySqlModificationCommand (MIT, Pomelo Foundation):
+    // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Update/Internal/MySqlModificationCommand.cs
+    public override void PropagateResults(RelationalDataReader relationalReader)
+    {
+        if (!_outputVariables || (StoreStoredProcedure is null) || !ColumnModifications.Any(IsOutput))
+        {
+            base.PropagateResults(relationalReader);
+            return;
+        }
+
+        var ordinal = -1;
+        foreach (var columnModification in ColumnModifications)
+        {
+            if (!IsOutput(columnModification))
+            {
+                continue;
+            }
+
+            ordinal++;
+            if ((columnModification.Property is { } property) && columnModification.IsRead)
+            {
+#pragma warning disable EF1001 // EF's reader of a property's value, which its own PropagateResults uses.
+                columnModification.Value = property.GetReaderFieldValue(relationalReader, ordinal, _detailedErrorsEnabled);
+#pragma warning restore EF1001
+            }
+        }
+    }
+
+    internal static bool IsOutput(IColumnModification columnModification)
+        => columnModification.Column is IStoreStoredProcedureParameter parameter && parameter.Direction.HasFlag(ParameterDirection.Output);
 
 #pragma warning disable EF1001 // EF's provider-facing hook for JSON property updates, marked internal like the rest.
     protected override void ProcessSinglePropertyJsonUpdate(ref ColumnModificationParameters parameters)
@@ -48,10 +93,10 @@ internal sealed class AdoNetModificationCommand : ModificationCommand
 #pragma warning restore EF1001
 }
 
-internal sealed class AdoNetModificationCommandFactory : IModificationCommandFactory
+internal sealed class AdoNetModificationCommandFactory(ISqlDialect sql) : IModificationCommandFactory
 {
     public IModificationCommand CreateModificationCommand(in ModificationCommandParameters modificationCommandParameters)
-        => new AdoNetModificationCommand(modificationCommandParameters);
+        => new AdoNetModificationCommand(modificationCommandParameters, sql.ProcedureOutputVariable != null);
 
     public INonTrackedModificationCommand CreateNonTrackedModificationCommand(in NonTrackedModificationCommandParameters modificationCommandParameters)
         => new AdoNetModificationCommand(modificationCommandParameters);

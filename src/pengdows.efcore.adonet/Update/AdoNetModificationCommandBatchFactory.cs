@@ -1,12 +1,48 @@
+// Portions adapted from Pomelo's MySqlModificationCommandBatch.
+// Copyright (c) Pomelo Foundation. Licensed under the MIT license.
+
+using System.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore.Update;
 
 namespace pengdows.efcore.adonet.Update;
 
-internal class AdoNetModificationCommandBatch(ModificationCommandBatchFactoryDependencies dependencies, int maxBatchSize)
-    : AffectedCountModificationCommandBatch(dependencies, maxBatchSize);
+internal class AdoNetModificationCommandBatch(ModificationCommandBatchFactoryDependencies dependencies, int maxBatchSize, ISqlDialect sql)
+    : AffectedCountModificationCommandBatch(dependencies, maxBatchSize)
+{
+    // Where a procedure's outputs go through session variables (ISqlDialect.ProcedureOutputVariable), the command has no
+    // output parameters: an output-only one isn't sent, and an input-output one is sent as an input, the variable's start.
+    // Adapted from Pomelo's MySqlModificationCommandBatch (MIT, Pomelo Foundation):
+    // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Update/Internal/MySqlModificationCommandBatch.cs
+    protected override void AddParameter(IColumnModification columnModification)
+    {
+        if ((sql.ProcedureOutputVariable == null) || !AdoNetModificationCommand.IsOutput(columnModification))
+        {
+            base.AddParameter(columnModification);
+            return;
+        }
+
+        if (columnModification.Column is not IStoreStoredProcedureParameter { Direction: ParameterDirection.InputOutput })
+        {
+            return;
+        }
+
+        // EF adds the one parameter, its original value's where it has one, as input-output; it is replaced by an input.
+        base.AddParameter(columnModification);
+        var index = RelationalCommandBuilder.Parameters.Count - 1;
+        var name = RelationalCommandBuilder.Parameters[index].InvariantName;
+        RelationalCommandBuilder.RemoveParameterAt(index);
+        RelationalCommandBuilder.AddParameter(
+            name,
+            Dependencies.SqlGenerationHelper.GenerateParameterName(name),
+            columnModification.TypeMapping!,
+            columnModification.IsNullable,
+            ParameterDirection.Input);
+    }
+}
 
 /// <summary>
 ///     Commands whose affected row count is read from <see cref="System.Data.Common.DbDataReader.RecordsAffected" />
@@ -15,8 +51,9 @@ internal class AdoNetModificationCommandBatch(ModificationCommandBatchFactoryDep
 /// </summary>
 internal class AdoNetRecordsAffectedModificationCommandBatch(
     ModificationCommandBatchFactoryDependencies dependencies,
-    int maxBatchSize)
-    : AffectedCountModificationCommandBatch(dependencies, maxBatchSize)
+    int maxBatchSize,
+    ISqlDialect sql)
+    : AdoNetModificationCommandBatch(dependencies, maxBatchSize, sql)
 {
     protected override void Consume(RelationalDataReader reader)
     {
@@ -64,11 +101,7 @@ internal class AdoNetModificationCommandBatchFactory(
         : 1;
 
     public virtual ModificationCommandBatch Create()
-        => sql.Keys is SequenceKeyRetrieval && !capabilities.SupportsMultipleStatementsPerCommand
-            ? new AdoNetRecordsAffectedModificationCommandBatch(dependencies, 1)
-            : sql.Keys is SequenceKeyRetrieval
-                ? new AdoNetRecordsAffectedModificationCommandBatch(dependencies, _maxBatchSize)
-            : _maxBatchSize == 1
-                ? new SingularModificationCommandBatch(dependencies)
-                : new AdoNetModificationCommandBatch(dependencies, _maxBatchSize);
+        => sql.Keys is SequenceKeyRetrieval
+            ? new AdoNetRecordsAffectedModificationCommandBatch(dependencies, _maxBatchSize, sql)
+            : new AdoNetModificationCommandBatch(dependencies, _maxBatchSize, sql);
 }
