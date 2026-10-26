@@ -165,9 +165,10 @@ noted so they can be removed once the fix ships.
   `StringVectorDataReader.GetValidValue` on main after #377 (which added `GetBytes`).
 - **Found by:** `MigrationsConformanceTests.Unsized_key_and_index_columns_are_created_and_hold_long_values`, skipped on
   DuckDB (and 18 tests of EF's specification suites: value converters, binary keys, many-to-many joins).
-- **Status: pull request open,** [#384](https://github.com/Giorgi/DuckDB.NET/pull/384) "Return byte arrays from typed BLOB
-  reads": `GetFieldValue<byte[]>` materializes the bytes; `GetValue` and `GetStream` keep returning a stream. When it is
-  released, remove the skip in `test/pengdows.efcore.adonet.duckdb.Tests/Fixtures.cs`.
+- **Status: fixed upstream.** [#384](https://github.com/Giorgi/DuckDB.NET/pull/384) "Return byte arrays from typed BLOB
+  reads", merged 2026-10-26 (f86315d): `GetFieldValue<byte[]>` returns the bytes, also for a BLOB inside a struct, map or
+  list; `GetValue` and `GetStream` keep returning a stream. In the next release after 1.5.6.1: then remove the skip in
+  `test/pengdows.efcore.adonet.duckdb.Tests/Fixtures.cs`.
 
 ### Driver fixes merged upstream, not yet released (we pin 1.5.6.1)
 
@@ -185,6 +186,7 @@ failure in the specification suite that matches one of these is the driver's, no
 | [#378](https://github.com/Giorgi/DuckDB.NET/pull/378) | `Prepare()` requires an open connection | Command lifecycle |
 | [#380](https://github.com/Giorgi/DuckDB.NET/pull/380) | Unsupported savepoint operations fail consistently | Transaction suite (DuckDB has no savepoints; the dialect declares none) |
 | [#364](https://github.com/Giorgi/DuckDB.NET/pull/364) | ADO.NET schema data types and metadata | Scaffolding, once design-time services exist |
+| [#384](https://github.com/Giorgi/DuckDB.NET/pull/384) | `GetFieldValue<byte[]>` on a BLOB, also inside a struct, map or list | Value converters, binary keys, many-to-many (18 tests); the shared key-column test |
 | [#357](https://github.com/Giorgi/DuckDB.NET/pull/357) | Regression test for `CommandBehavior.CloseConnection` | (test only) |
 
 When the release ships: update `DuckDB.NET.Data` and `DuckDB.NET.Data.Full`, remove the test store's close-only-if-open
