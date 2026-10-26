@@ -174,7 +174,7 @@ public partial class MathTranslationsSqlServerTest(MathTranslationsAdoNetTest<Sq
 
 public partial class MigrationsInfrastructureSqlServerTest(MigrationsInfrastructureAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : MigrationsInfrastructureAdoNetTest<SqlServerHost>(fixture);
 
-public partial class MigrationsSqlGeneratorSqlServerTest(global::Microsoft.EntityFrameworkCore.TestUtilities.TestHelpers testHelpers, global::Microsoft.Extensions.DependencyInjection.IServiceCollection customServices, global::Microsoft.EntityFrameworkCore.DbContextOptions options) : MigrationsSqlGeneratorAdoNetTest<SqlServerHost>(testHelpers, customServices, options);
+public partial class MigrationsSqlGeneratorSqlServerTest() : MigrationsSqlGeneratorAdoNetTest<SqlServerHost>();
 
 public partial class MigrationsSqlServerTest(MigrationsAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : MigrationsAdoNetTest<SqlServerHost>(fixture);
 

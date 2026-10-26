@@ -1088,7 +1088,7 @@ public abstract partial class MigrationsInfrastructureAdoNetTest<THost>(Migratio
 }
 
 /// <summary>EF's MigrationsSqlGeneratorTestBase.</summary>
-public abstract partial class MigrationsSqlGeneratorAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.TestUtilities.TestHelpers testHelpers, global::Microsoft.Extensions.DependencyInjection.IServiceCollection customServices, global::Microsoft.EntityFrameworkCore.DbContextOptions options) : global::Microsoft.EntityFrameworkCore.Migrations.MigrationsSqlGeneratorTestBase(testHelpers, customServices, options)
+public abstract partial class MigrationsSqlGeneratorAdoNetTest<THost>() : global::Microsoft.EntityFrameworkCore.Migrations.MigrationsSqlGeneratorTestBase(AdoNetTestHelpers<THost>.Instance, new global::Microsoft.Extensions.DependencyInjection.ServiceCollection(), AdoNetTestHelpers<THost>.Instance.AddProviderOptions(new DbContextOptionsBuilder()).Options)
     where THost : IDatabaseHost, new()
 {
     protected override string GetGeometryCollectionStoreType()
@@ -1146,12 +1146,9 @@ public abstract partial class MonsterFixupAdoNetTest<THost>(MonsterFixupAdoNetTe
     where THost : IDatabaseHost, new()
 {
 
-    public partial class AdoNetFixture : global::Microsoft.EntityFrameworkCore.MonsterFixupTestBase<AdoNetFixture>.MonsterFixupFixtureBase, global::Microsoft.EntityFrameworkCore.TestUtilities.ITestSqlLoggerFactory
+    public partial class AdoNetFixture : global::Microsoft.EntityFrameworkCore.MonsterFixupTestBase<AdoNetFixture>.MonsterFixupChangedChangingFixtureBase, global::Microsoft.EntityFrameworkCore.TestUtilities.ITestSqlLoggerFactory
     {
-        public override global::Microsoft.EntityFrameworkCore.TestModels.MonsterContext CreateContext(global::Microsoft.EntityFrameworkCore.DbContextOptions options)
-        => throw new NotSupportedException("Not yet provided by the base suite: CreateContext.");
         public override string StoreName => "MonsterFixup";
-        public override bool UseDetectChanges => true;
         protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
         public global::Microsoft.EntityFrameworkCore.TestUtilities.TestSqlLoggerFactory TestSqlLoggerFactory
             => (global::Microsoft.EntityFrameworkCore.TestUtilities.TestSqlLoggerFactory)ListLoggerFactory;
@@ -1472,7 +1469,7 @@ public abstract partial class NullSemanticsQueryAdoNetTest<THost>(NullSemanticsQ
     where THost : IDatabaseHost, new()
 {
     protected override global::Microsoft.EntityFrameworkCore.TestModels.NullSemanticsModel.NullSemanticsContext CreateContext(bool useRelationalNulls)
-        => throw new NotSupportedException("Not yet provided by the base suite: CreateContext.");
+        => NullSemantics.CreateContext(Fixture, useRelationalNulls);
 
     public partial class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.NullSemanticsQueryFixtureBase, global::Microsoft.EntityFrameworkCore.TestUtilities.ITestSqlLoggerFactory
     {

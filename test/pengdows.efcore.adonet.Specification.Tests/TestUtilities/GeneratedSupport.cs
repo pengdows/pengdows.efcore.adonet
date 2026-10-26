@@ -92,3 +92,25 @@ public static class FailingConnection
         return connection;
     }
 }
+
+/// <summary>
+///     EF's null semantics context over the fixture's options, not tracking, with relational null semantics when asked. Behaviour
+///     reference (not copied): https://github.com/dotnet/efcore/blob/v10.0.11/test/EFCore.Sqlite.FunctionalTests/Query/NullSemanticsQuerySqliteTest.cs
+/// </summary>
+public static class NullSemantics
+{
+    public static Microsoft.EntityFrameworkCore.TestModels.NullSemanticsModel.NullSemanticsContext CreateContext(
+        Microsoft.EntityFrameworkCore.Query.NullSemanticsQueryFixtureBase fixture,
+        bool useRelationalNulls)
+    {
+        var options = new DbContextOptionsBuilder(fixture.CreateOptions());
+        if (useRelationalNulls)
+        {
+            new AdoNetDbContextOptionsBuilder(options).UseRelationalNulls();
+        }
+
+        var context = new Microsoft.EntityFrameworkCore.TestModels.NullSemanticsModel.NullSemanticsContext(options.Options);
+        context.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
+        return context;
+    }
+}

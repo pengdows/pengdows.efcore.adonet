@@ -260,7 +260,7 @@ public partial class MathTranslationsFlatFileTest(MathTranslationsAdoNetTest<Fla
 public partial class MigrationsInfrastructureFlatFileTest(MigrationsInfrastructureAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : MigrationsInfrastructureAdoNetTest<FlatFileHost>(fixture);
 
 [Collection(SingleWriter.FlatFile)]
-public partial class MigrationsSqlGeneratorFlatFileTest(global::Microsoft.EntityFrameworkCore.TestUtilities.TestHelpers testHelpers, global::Microsoft.Extensions.DependencyInjection.IServiceCollection customServices, global::Microsoft.EntityFrameworkCore.DbContextOptions options) : MigrationsSqlGeneratorAdoNetTest<FlatFileHost>(testHelpers, customServices, options);
+public partial class MigrationsSqlGeneratorFlatFileTest() : MigrationsSqlGeneratorAdoNetTest<FlatFileHost>();
 
 [Collection(SingleWriter.FlatFile)]
 public partial class MigrationsFlatFileTest(MigrationsAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : MigrationsAdoNetTest<FlatFileHost>(fixture);

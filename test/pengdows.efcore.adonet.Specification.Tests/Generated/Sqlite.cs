@@ -260,7 +260,7 @@ public partial class MathTranslationsSqliteTest(MathTranslationsAdoNetTest<Sqlit
 public partial class MigrationsInfrastructureSqliteTest(MigrationsInfrastructureAdoNetTest<SqliteHost>.AdoNetFixture fixture) : MigrationsInfrastructureAdoNetTest<SqliteHost>(fixture);
 
 [Collection(SingleWriter.Sqlite)]
-public partial class MigrationsSqlGeneratorSqliteTest(global::Microsoft.EntityFrameworkCore.TestUtilities.TestHelpers testHelpers, global::Microsoft.Extensions.DependencyInjection.IServiceCollection customServices, global::Microsoft.EntityFrameworkCore.DbContextOptions options) : MigrationsSqlGeneratorAdoNetTest<SqliteHost>(testHelpers, customServices, options);
+public partial class MigrationsSqlGeneratorSqliteTest() : MigrationsSqlGeneratorAdoNetTest<SqliteHost>();
 
 [Collection(SingleWriter.Sqlite)]
 public partial class MigrationsSqliteTest(MigrationsAdoNetTest<SqliteHost>.AdoNetFixture fixture) : MigrationsAdoNetTest<SqliteHost>(fixture);

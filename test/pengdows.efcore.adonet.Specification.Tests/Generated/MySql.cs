@@ -174,7 +174,7 @@ public partial class MathTranslationsMySqlTest(MathTranslationsAdoNetTest<MySqlH
 
 public partial class MigrationsInfrastructureMySqlTest(MigrationsInfrastructureAdoNetTest<MySqlHost>.AdoNetFixture fixture) : MigrationsInfrastructureAdoNetTest<MySqlHost>(fixture);
 
-public partial class MigrationsSqlGeneratorMySqlTest(global::Microsoft.EntityFrameworkCore.TestUtilities.TestHelpers testHelpers, global::Microsoft.Extensions.DependencyInjection.IServiceCollection customServices, global::Microsoft.EntityFrameworkCore.DbContextOptions options) : MigrationsSqlGeneratorAdoNetTest<MySqlHost>(testHelpers, customServices, options);
+public partial class MigrationsSqlGeneratorMySqlTest() : MigrationsSqlGeneratorAdoNetTest<MySqlHost>();
 
 public partial class MigrationsMySqlTest(MigrationsAdoNetTest<MySqlHost>.AdoNetFixture fixture) : MigrationsAdoNetTest<MySqlHost>(fixture);
 

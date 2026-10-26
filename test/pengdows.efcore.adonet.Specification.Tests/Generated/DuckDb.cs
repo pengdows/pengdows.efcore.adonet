@@ -260,7 +260,7 @@ public partial class MathTranslationsDuckDbTest(MathTranslationsAdoNetTest<DuckD
 public partial class MigrationsInfrastructureDuckDbTest(MigrationsInfrastructureAdoNetTest<DuckDbHost>.AdoNetFixture fixture) : MigrationsInfrastructureAdoNetTest<DuckDbHost>(fixture);
 
 [Collection(SingleWriter.DuckDb)]
-public partial class MigrationsSqlGeneratorDuckDbTest(global::Microsoft.EntityFrameworkCore.TestUtilities.TestHelpers testHelpers, global::Microsoft.Extensions.DependencyInjection.IServiceCollection customServices, global::Microsoft.EntityFrameworkCore.DbContextOptions options) : MigrationsSqlGeneratorAdoNetTest<DuckDbHost>(testHelpers, customServices, options);
+public partial class MigrationsSqlGeneratorDuckDbTest() : MigrationsSqlGeneratorAdoNetTest<DuckDbHost>();
 
 [Collection(SingleWriter.DuckDb)]
 public partial class MigrationsDuckDbTest(MigrationsAdoNetTest<DuckDbHost>.AdoNetFixture fixture) : MigrationsAdoNetTest<DuckDbHost>(fixture);

@@ -25,7 +25,13 @@ VIRTUAL_DEFAULTS = {
 # EF fixtures given a hand-written subclass (under Fixtures/) that the generated fixtures derive from instead.
 FIXTURE_BASES = {
     'global::Microsoft.EntityFrameworkCore.Query.Translations.BasicTypesQueryFixtureBase': 'BasicTypesAdoNetFixture<THost>',
+    # SQL Server's and Npgsql's variant (SQLite's is ChangedOnly); the abstract fixture leaves CreateContext to it.
+    'global::Microsoft.EntityFrameworkCore.MonsterFixupTestBase<AdoNetFixture>.MonsterFixupFixtureBase':
+        'global::Microsoft.EntityFrameworkCore.MonsterFixupTestBase<AdoNetFixture>.MonsterFixupChangedChangingFixtureBase',
 }
+# Members of a base the mapped EF fixture implements.
+INHERITED = {('MonsterFixupTestBase', 'CreateContext'), ('MonsterFixupTestBase', 'UseDetectChanges')}
+HELPER_CTOR = ['TestHelpers', 'IServiceCollection', 'DbContextOptions']
 HAND_WRITTEN = {'NorthwindWhereQueryAdoNetTest', 'NorthwindSelectQueryAdoNetTest', 'ProxyGraphUpdatesAdoNetTest'}
 NORTHWIND = re.compile(r'Northwind(Query(Relational)?Fixture|QueryFixtureBase)<global::Microsoft\.EntityFrameworkCore\.TestUtilities\.NoopModelCustomizer>$')
 NOT_YET = 'throw new NotSupportedException("Not yet provided by the base suite: {0}.")'
@@ -71,6 +77,12 @@ def impl(m, base, fixture='TFixture'):
         'ConfigureProvider': lambda: meth('new THost().UseProvider(optionsBuilder, new THost().ConnectionStringFor("Interception"), _ => { })'),
         'CreateBadUniverse': lambda: meth('new(\n            new THost().UseProvider(optionsBuilder, FailingConnection.Create(), _ => { }).Options)'),
     }
+    # NullSemantics: a context over the fixture's options, with relational nulls when asked (TestUtilities/GeneratedSupport.cs).
+    if n == 'CreateContext' and 'useRelationalNulls' in args:
+        return meth('NullSemantics.CreateContext(Fixture, useRelationalNulls)')
+    # A fixture mapped to an EF fixture that implements the member (FIXTURE_BASES) keeps EF's.
+    if (base, n) in INHERITED:
+        return None
     if n in table:
         return table[n]()
     body = NOT_YET.format(n)
@@ -84,7 +96,9 @@ def members(ms, base, fixture='TFixture'):
         if m['name'] in seen or m['generic']:
             continue
         seen.add(m['name'])
-        lines.append(impl(m, base, fixture))
+        code = impl(m, base, fixture)
+        if code is not None:
+            lines.append(code)
     return lines
 
 generated, skipped = [], []
@@ -123,6 +137,12 @@ for b in bases:
             ctor = [f'{shared} fixture' if p.split(' ')[0] == fixture_cs else p for p in ctor]
         params = ', '.join(ctor)
         args = ', '.join(p.split(' ')[-1] for p in ctor)
+        # Bases built from test helpers, services and options rather than a fixture (EF's providers pass their own): the
+        # host's, so the class needs no constructor parameters.
+        if [p.split(' ')[0].split('.')[-1] for p in ctor] == HELPER_CTOR:
+            ctor, params = [], ''
+            args = ('AdoNetTestHelpers<THost>.Instance, new global::Microsoft.Extensions.DependencyInjection.ServiceCollection(), '
+                    'AdoNetTestHelpers<THost>.Instance.AddProviderOptions(new DbContextOptionsBuilder()).Options')
         declared = f', global::Xunit.IClassFixture<{shared}>' if abstract_fixture else ''
         lines.append(f'public abstract partial class {cls}<THost>({params}) : {cs}({args}){declared}')
         lines.append('    where THost : IDatabaseHost, new()')

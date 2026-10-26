@@ -174,7 +174,7 @@ public partial class MathTranslationsPostgreSqlTest(MathTranslationsAdoNetTest<P
 
 public partial class MigrationsInfrastructurePostgreSqlTest(MigrationsInfrastructureAdoNetTest<PostgreSqlHost>.AdoNetFixture fixture) : MigrationsInfrastructureAdoNetTest<PostgreSqlHost>(fixture);
 
-public partial class MigrationsSqlGeneratorPostgreSqlTest(global::Microsoft.EntityFrameworkCore.TestUtilities.TestHelpers testHelpers, global::Microsoft.Extensions.DependencyInjection.IServiceCollection customServices, global::Microsoft.EntityFrameworkCore.DbContextOptions options) : MigrationsSqlGeneratorAdoNetTest<PostgreSqlHost>(testHelpers, customServices, options);
+public partial class MigrationsSqlGeneratorPostgreSqlTest() : MigrationsSqlGeneratorAdoNetTest<PostgreSqlHost>();
 
 public partial class MigrationsPostgreSqlTest(MigrationsAdoNetTest<PostgreSqlHost>.AdoNetFixture fixture) : MigrationsAdoNetTest<PostgreSqlHost>(fixture);
 
