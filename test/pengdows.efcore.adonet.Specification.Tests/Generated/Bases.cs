@@ -4,6 +4,92 @@
 
 namespace pengdows.efcore.adonet.Specification.Tests;
 
+/// <summary>EF's AdHocAdvancedMappingsQueryRelationalTestBase.</summary>
+public abstract class AdHocAdvancedMappingsQueryAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.AdHocAdvancedMappingsQueryRelationalTestBase(fixture)
+    where THost : IDatabaseHost, new()
+{
+    protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+}
+
+/// <summary>EF's AdHocComplexTypeQueryRelationalTestBase.</summary>
+public abstract class AdHocComplexTypeQueryAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.AdHocComplexTypeQueryRelationalTestBase(fixture)
+    where THost : IDatabaseHost, new()
+{
+    protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+}
+
+/// <summary>EF's AdHocJsonQueryRelationalTestBase.</summary>
+public abstract class AdHocJsonQueryAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.AdHocJsonQueryRelationalTestBase(fixture)
+    where THost : IDatabaseHost, new()
+{
+    protected override global::System.Threading.Tasks.Task Seed30028(global::Microsoft.EntityFrameworkCore.DbContext ctx)
+        => throw new NotSupportedException("Not yet provided by the base suite: Seed30028.");
+    protected override global::System.Threading.Tasks.Task Seed33046(global::Microsoft.EntityFrameworkCore.DbContext ctx)
+        => throw new NotSupportedException("Not yet provided by the base suite: Seed33046.");
+    protected override global::System.Threading.Tasks.Task SeedJunkInJson(global::Microsoft.EntityFrameworkCore.DbContext ctx)
+        => throw new NotSupportedException("Not yet provided by the base suite: SeedJunkInJson.");
+    protected override global::System.Threading.Tasks.Task SeedTrickyBuffering(global::Microsoft.EntityFrameworkCore.DbContext ctx)
+        => throw new NotSupportedException("Not yet provided by the base suite: SeedTrickyBuffering.");
+    protected override global::System.Threading.Tasks.Task SeedShadowProperties(global::Microsoft.EntityFrameworkCore.DbContext ctx)
+        => throw new NotSupportedException("Not yet provided by the base suite: SeedShadowProperties.");
+    protected override global::System.Threading.Tasks.Task SeedNotICollection(global::Microsoft.EntityFrameworkCore.DbContext ctx)
+        => throw new NotSupportedException("Not yet provided by the base suite: SeedNotICollection.");
+    protected override global::System.Threading.Tasks.Task SeedBadJsonProperties(global::Microsoft.EntityFrameworkCore.Query.AdHocJsonQueryTestBase.ContextBadJsonProperties ctx)
+        => throw new NotSupportedException("Not yet provided by the base suite: SeedBadJsonProperties.");
+    protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+}
+
+/// <summary>EF's AdHocManyToManyQueryRelationalTestBase.</summary>
+public abstract class AdHocManyToManyQueryAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.AdHocManyToManyQueryRelationalTestBase(fixture)
+    where THost : IDatabaseHost, new()
+{
+    protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+}
+
+/// <summary>EF's AdHocMiscellaneousQueryRelationalTestBase.</summary>
+public abstract class AdHocMiscellaneousQueryAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.AdHocMiscellaneousQueryRelationalTestBase(fixture)
+    where THost : IDatabaseHost, new()
+{
+    protected override global::Microsoft.EntityFrameworkCore.DbContextOptionsBuilder SetParameterizedCollectionMode(global::Microsoft.EntityFrameworkCore.DbContextOptionsBuilder optionsBuilder, global::Microsoft.EntityFrameworkCore.ParameterTranslationMode parameterizedCollectionMode)
+        => ParameterizedCollections.Set(optionsBuilder, parameterizedCollectionMode);
+    protected override global::System.Threading.Tasks.Task Seed2951(global::Microsoft.EntityFrameworkCore.Query.AdHocMiscellaneousQueryRelationalTestBase.Context2951 context)
+        => throw new NotSupportedException("Not yet provided by the base suite: Seed2951.");
+    protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+}
+
+/// <summary>EF's AdHocNavigationsQueryRelationalTestBase.</summary>
+public abstract class AdHocNavigationsQueryAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.AdHocNavigationsQueryRelationalTestBase(fixture)
+    where THost : IDatabaseHost, new()
+{
+    protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+}
+
+/// <summary>EF's AdHocPrecompiledQueryRelationalTestBase.</summary>
+public abstract class AdHocPrecompiledQueryAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.AdHocPrecompiledQueryRelationalTestBase(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+    protected override global::Microsoft.EntityFrameworkCore.TestUtilities.PrecompiledQueryTestHelpers PrecompiledQueryTestHelpers => throw new NotSupportedException("Not yet provided by the base suite: PrecompiledQueryTestHelpers.");
+    protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+}
+
+/// <summary>EF's AdHocQueryFiltersQueryRelationalTestBase.</summary>
+public abstract class AdHocQueryFiltersQueryAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.AdHocQueryFiltersQueryRelationalTestBase(fixture)
+    where THost : IDatabaseHost, new()
+{
+    protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+}
+
+/// <summary>EF's AdHocQuerySplittingQueryTestBase.</summary>
+public abstract class AdHocQuerySplittingQueryAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.AdHocQuerySplittingQueryTestBase(fixture)
+    where THost : IDatabaseHost, new()
+{
+    protected override global::Microsoft.EntityFrameworkCore.DbContextOptionsBuilder SetQuerySplittingBehavior(global::Microsoft.EntityFrameworkCore.DbContextOptionsBuilder optionsBuilder, global::Microsoft.EntityFrameworkCore.QuerySplittingBehavior splittingBehavior)
+        => QuerySplitting.Set(optionsBuilder, splittingBehavior);
+    protected override global::Microsoft.EntityFrameworkCore.DbContextOptionsBuilder ClearQuerySplittingBehavior(global::Microsoft.EntityFrameworkCore.DbContextOptionsBuilder optionsBuilder)
+        => QuerySplitting.Clear(optionsBuilder);
+    protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+}
+
 /// <summary>EF's ApiConsistencyTestBase.</summary>
 public abstract class ApiConsistencyAdoNetTest<THost>(ApiConsistencyAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.ApiConsistencyTestBase<ApiConsistencyAdoNetTest<THost>.AdoNetFixture>(fixture)
     where THost : IDatabaseHost, new()
@@ -14,6 +100,34 @@ public abstract class ApiConsistencyAdoNetTest<THost>(ApiConsistencyAdoNetTest<T
 
     public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.ApiConsistencyTestBase<AdoNetFixture>.ApiConsistencyFixtureBase
     {
+    }
+}
+
+/// <summary>EF's ArithmeticOperatorTranslationsTestBase.</summary>
+public abstract class ArithmeticOperatorTranslationsAdoNetTest<THost>(ArithmeticOperatorTranslationsAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.Translations.Operators.ArithmeticOperatorTranslationsTestBase<ArithmeticOperatorTranslationsAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Translations.BasicTypesQueryFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's BadDataJsonDeserializationTestBase.</summary>
+public abstract class BadDataJsonDeserializationAdoNetTest<THost>() : global::Microsoft.EntityFrameworkCore.BadDataJsonDeserializationTestBase()
+    where THost : IDatabaseHost, new()
+{
+}
+
+/// <summary>EF's BitwiseOperatorTranslationsTestBase.</summary>
+public abstract class BitwiseOperatorTranslationsAdoNetTest<THost>(BitwiseOperatorTranslationsAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.Translations.Operators.BitwiseOperatorTranslationsTestBase<BitwiseOperatorTranslationsAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Translations.BasicTypesQueryFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
     }
 }
 
@@ -36,10 +150,271 @@ public abstract class BuiltInDataTypesAdoNetTest<THost>(BuiltInDataTypesAdoNetTe
     }
 }
 
+/// <summary>EF's ByteArrayTranslationsTestBase.</summary>
+public abstract class ByteArrayTranslationsAdoNetTest<THost>(ByteArrayTranslationsAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.Translations.ByteArrayTranslationsTestBase<ByteArrayTranslationsAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Translations.BasicTypesQueryFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
 /// <summary>EF's CommandInterceptionTestBase.</summary>
 public abstract class CommandInterceptionAdoNetTest<THost>(AdoNetInterceptionFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.CommandInterceptionTestBase(fixture), global::Xunit.IClassFixture<AdoNetInterceptionFixture<THost>>
     where THost : IDatabaseHost, new()
 {
+}
+
+/// <summary>EF's ComparisonOperatorTranslationsTestBase.</summary>
+public abstract class ComparisonOperatorTranslationsAdoNetTest<THost>(ComparisonOperatorTranslationsAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.Translations.Operators.ComparisonOperatorTranslationsTestBase<ComparisonOperatorTranslationsAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Translations.BasicTypesQueryFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's CompiledModelRelationalTestBase.</summary>
+public abstract class CompiledModelAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : global::Microsoft.EntityFrameworkCore.Scaffolding.CompiledModelRelationalTestBase(fixture)
+    where THost : IDatabaseHost, new()
+{
+    protected override global::Microsoft.EntityFrameworkCore.TestUtilities.TestHelpers TestHelpers => AdoNetTestHelpers<THost>.Instance;
+    protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+}
+
+/// <summary>EF's ComplexCollectionJsonUpdateTestBase.</summary>
+public abstract class ComplexCollectionJsonUpdateAdoNetTest<THost>(ComplexCollectionJsonUpdateAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Update.ComplexCollectionJsonUpdateTestBase<ComplexCollectionJsonUpdateAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Update.ComplexCollectionJsonUpdateTestBase<AdoNetFixture>.ComplexCollectionJsonUpdateFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's ComplexJsonBulkUpdateRelationalTestBase.</summary>
+public abstract class ComplexJsonBulkUpdateAdoNetTest<THost>(ComplexJsonBulkUpdateAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.ComplexJson.ComplexJsonBulkUpdateRelationalTestBase<ComplexJsonBulkUpdateAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.ComplexJson.ComplexJsonRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's ComplexJsonCollectionRelationalTestBase.</summary>
+public abstract class ComplexJsonCollectionAdoNetTest<THost>(ComplexJsonCollectionAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.ComplexJson.ComplexJsonCollectionRelationalTestBase<ComplexJsonCollectionAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.ComplexJson.ComplexJsonRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's ComplexJsonMiscellaneousRelationalTestBase.</summary>
+public abstract class ComplexJsonMiscellaneousAdoNetTest<THost>(ComplexJsonMiscellaneousAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.ComplexJson.ComplexJsonMiscellaneousRelationalTestBase<ComplexJsonMiscellaneousAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.ComplexJson.ComplexJsonRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's ComplexJsonPrimitiveCollectionRelationalTestBase.</summary>
+public abstract class ComplexJsonPrimitiveCollectionAdoNetTest<THost>(ComplexJsonPrimitiveCollectionAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.ComplexJson.ComplexJsonPrimitiveCollectionRelationalTestBase<ComplexJsonPrimitiveCollectionAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.ComplexJson.ComplexJsonRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's ComplexJsonProjectionRelationalTestBase.</summary>
+public abstract class ComplexJsonProjectionAdoNetTest<THost>(ComplexJsonProjectionAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.ComplexJson.ComplexJsonProjectionRelationalTestBase<ComplexJsonProjectionAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.ComplexJson.ComplexJsonRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's ComplexJsonSetOperationsRelationalTestBase.</summary>
+public abstract class ComplexJsonSetOperationsAdoNetTest<THost>(ComplexJsonSetOperationsAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.ComplexJson.ComplexJsonSetOperationsRelationalTestBase<ComplexJsonSetOperationsAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.ComplexJson.ComplexJsonRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's ComplexJsonStructuralEqualityRelationalTestBase.</summary>
+public abstract class ComplexJsonStructuralEqualityAdoNetTest<THost>(ComplexJsonStructuralEqualityAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.ComplexJson.ComplexJsonStructuralEqualityRelationalTestBase<ComplexJsonStructuralEqualityAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.ComplexJson.ComplexJsonRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's ComplexNavigationsCollectionsQueryRelationalTestBase.</summary>
+public abstract class ComplexNavigationsCollectionsQueryAdoNetTest<THost>(ComplexNavigationsCollectionsQueryAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.ComplexNavigationsCollectionsQueryRelationalTestBase<ComplexNavigationsCollectionsQueryAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.ComplexNavigationsQueryFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's ComplexNavigationsCollectionsSharedTypeQueryRelationalTestBase.</summary>
+public abstract class ComplexNavigationsCollectionsSharedTypeQueryAdoNetTest<THost>(ComplexNavigationsCollectionsSharedTypeQueryAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.ComplexNavigationsCollectionsSharedTypeQueryRelationalTestBase<ComplexNavigationsCollectionsSharedTypeQueryAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.ComplexNavigationsSharedTypeQueryRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's ComplexNavigationsCollectionsSplitQueryRelationalTestBase.</summary>
+public abstract class ComplexNavigationsCollectionsSplitQueryAdoNetTest<THost>(ComplexNavigationsCollectionsSplitQueryAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.ComplexNavigationsCollectionsSplitQueryRelationalTestBase<ComplexNavigationsCollectionsSplitQueryAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.ComplexNavigationsQueryFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's ComplexNavigationsCollectionsSplitSharedTypeQueryRelationalTestBase.</summary>
+public abstract class ComplexNavigationsCollectionsSplitSharedTypeQueryAdoNetTest<THost>(ComplexNavigationsCollectionsSplitSharedTypeQueryAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.ComplexNavigationsCollectionsSplitSharedTypeQueryRelationalTestBase<ComplexNavigationsCollectionsSplitSharedTypeQueryAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.ComplexNavigationsSharedTypeQueryRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's ComplexNavigationsQueryRelationalTestBase.</summary>
+public abstract class ComplexNavigationsQueryAdoNetTest<THost>(ComplexNavigationsQueryAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.ComplexNavigationsQueryRelationalTestBase<ComplexNavigationsQueryAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.ComplexNavigationsQueryFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's ComplexNavigationsSharedTypeQueryRelationalTestBase.</summary>
+public abstract class ComplexNavigationsSharedTypeQueryAdoNetTest<THost>(ComplexNavigationsSharedTypeQueryAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.ComplexNavigationsSharedTypeQueryRelationalTestBase<ComplexNavigationsSharedTypeQueryAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.ComplexNavigationsSharedTypeQueryRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's ComplexTableSplittingBulkUpdateRelationalTestBase.</summary>
+public abstract class ComplexTableSplittingBulkUpdateAdoNetTest<THost>(ComplexTableSplittingBulkUpdateAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.ComplexTableSplitting.ComplexTableSplittingBulkUpdateRelationalTestBase<ComplexTableSplittingBulkUpdateAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.ComplexTableSplitting.ComplexTableSplittingRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's ComplexTableSplittingMiscellaneousRelationalTestBase.</summary>
+public abstract class ComplexTableSplittingMiscellaneousAdoNetTest<THost>(ComplexTableSplittingMiscellaneousAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.ComplexTableSplitting.ComplexTableSplittingMiscellaneousRelationalTestBase<ComplexTableSplittingMiscellaneousAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.ComplexTableSplitting.ComplexTableSplittingRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's ComplexTableSplittingPrimitiveCollectionRelationalTestBase.</summary>
+public abstract class ComplexTableSplittingPrimitiveCollectionAdoNetTest<THost>(ComplexTableSplittingPrimitiveCollectionAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.ComplexTableSplitting.ComplexTableSplittingPrimitiveCollectionRelationalTestBase<ComplexTableSplittingPrimitiveCollectionAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.ComplexTableSplitting.ComplexTableSplittingRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's ComplexTableSplittingProjectionRelationalTestBase.</summary>
+public abstract class ComplexTableSplittingProjectionAdoNetTest<THost>(ComplexTableSplittingProjectionAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.ComplexTableSplitting.ComplexTableSplittingProjectionRelationalTestBase<ComplexTableSplittingProjectionAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.ComplexTableSplitting.ComplexTableSplittingRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's ComplexTableSplittingStructuralEqualityRelationalTestBase.</summary>
+public abstract class ComplexTableSplittingStructuralEqualityAdoNetTest<THost>(ComplexTableSplittingStructuralEqualityAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.ComplexTableSplitting.ComplexTableSplittingStructuralEqualityRelationalTestBase<ComplexTableSplittingStructuralEqualityAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.ComplexTableSplitting.ComplexTableSplittingRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's ComplexTypeQueryRelationalTestBase.</summary>
+public abstract class ComplexTypeQueryAdoNetTest<THost>(ComplexTypeQueryAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.ComplexTypeQueryRelationalTestBase<ComplexTypeQueryAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.ComplexTypeQueryRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's ComplexTypesTrackingRelationalTestBase.</summary>
+public abstract class ComplexTypesTrackingAdoNetTest<THost>(ComplexTypesTrackingAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.ComplexTypesTrackingRelationalTestBase<ComplexTypesTrackingAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.ComplexTypesTrackingRelationalTestBase<AdoNetFixture>.RelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
 }
 
 /// <summary>EF's CompositeKeyEndToEndTestBase.</summary>
@@ -48,6 +423,28 @@ public abstract class CompositeKeyEndToEndAdoNetTest<THost>(CompositeKeyEndToEnd
 {
 
     public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.CompositeKeyEndToEndTestBase<AdoNetFixture>.CompositeKeyEndToEndFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's CompositeKeysQueryRelationalTestBase.</summary>
+public abstract class CompositeKeysQueryAdoNetTest<THost>(CompositeKeysQueryAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.CompositeKeysQueryRelationalTestBase<CompositeKeysQueryAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.CompositeKeysQueryFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's CompositeKeysSplitQueryRelationalTestBase.</summary>
+public abstract class CompositeKeysSplitQueryAdoNetTest<THost>(CompositeKeysSplitQueryAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.CompositeKeysSplitQueryRelationalTestBase<CompositeKeysSplitQueryAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.CompositeKeysQueryFixtureBase
     {
         protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
     }
@@ -148,6 +545,39 @@ public abstract class DataBindingAdoNetTest<THost>(DataBindingAdoNetTest<THost>.
     }
 }
 
+/// <summary>EF's DateOnlyTranslationsTestBase.</summary>
+public abstract class DateOnlyTranslationsAdoNetTest<THost>(DateOnlyTranslationsAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.Translations.Temporal.DateOnlyTranslationsTestBase<DateOnlyTranslationsAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Translations.BasicTypesQueryFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's DateTimeOffsetTranslationsTestBase.</summary>
+public abstract class DateTimeOffsetTranslationsAdoNetTest<THost>(DateTimeOffsetTranslationsAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.Translations.Temporal.DateTimeOffsetTranslationsTestBase<DateTimeOffsetTranslationsAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Translations.BasicTypesQueryFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's DateTimeTranslationsTestBase.</summary>
+public abstract class DateTimeTranslationsAdoNetTest<THost>(DateTimeTranslationsAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.Translations.Temporal.DateTimeTranslationsTestBase<DateTimeTranslationsAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Translations.BasicTypesQueryFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
 /// <summary>EF's DesignTimeTestBase.</summary>
 public abstract class DesignTimeAdoNetTest<THost>(DesignTimeAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.DesignTimeTestBase<DesignTimeAdoNetTest<THost>.AdoNetFixture>(fixture)
     where THost : IDatabaseHost, new()
@@ -155,600 +585,6 @@ public abstract class DesignTimeAdoNetTest<THost>(DesignTimeAdoNetTest<THost>.Ad
     protected override global::System.Reflection.Assembly ProviderAssembly => throw new NotSupportedException("Not yet provided by the base suite: ProviderAssembly.");
 
     public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.DesignTimeTestBase<AdoNetFixture>.DesignTimeFixtureBase
-    {
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's EntitySplittingTestBase.</summary>
-public abstract class EntitySplittingAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.EntitySplittingTestBase(fixture, testOutputHelper)
-    where THost : IDatabaseHost, new()
-{
-    protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-}
-
-/// <summary>EF's FieldsOnlyLoadTestBase.</summary>
-public abstract class FieldsOnlyLoadAdoNetTest<THost>(FieldsOnlyLoadAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.FieldsOnlyLoadTestBase<FieldsOnlyLoadAdoNetTest<THost>.AdoNetFixture>(fixture)
-    where THost : IDatabaseHost, new()
-{
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.FieldsOnlyLoadTestBase<AdoNetFixture>.FieldsOnlyLoadFixtureBase
-    {
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's FindTestBase.</summary>
-public abstract class FindAdoNetTest<THost>(FindAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.FindTestBase<FindAdoNetTest<THost>.AdoNetFixture>(fixture)
-    where THost : IDatabaseHost, new()
-{
-    protected override global::Microsoft.EntityFrameworkCore.FindTestBase<FindAdoNetTest<THost>.AdoNetFixture>.TestFinder Finder => new FindViaSetFinder();
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.FindTestBase<AdoNetFixture>.FindFixtureBase
-    {
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's KeysWithConvertersTestBase.</summary>
-public abstract class KeysWithConvertersAdoNetTest<THost>(KeysWithConvertersAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.KeysWithConvertersTestBase<KeysWithConvertersAdoNetTest<THost>.AdoNetFixture>(fixture)
-    where THost : IDatabaseHost, new()
-{
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.KeysWithConvertersTestBase<AdoNetFixture>.KeysWithConvertersFixtureBase
-    {
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's LoadTestBase.</summary>
-public abstract class LoadAdoNetTest<THost>(LoadAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.LoadTestBase<LoadAdoNetTest<THost>.AdoNetFixture>(fixture)
-    where THost : IDatabaseHost, new()
-{
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.LoadTestBase<AdoNetFixture>.LoadFixtureBase
-    {
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's ManyToManyFieldsLoadTestBase.</summary>
-public abstract class ManyToManyFieldsLoadAdoNetTest<THost>(ManyToManyFieldsLoadAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.ManyToManyFieldsLoadTestBase<ManyToManyFieldsLoadAdoNetTest<THost>.AdoNetFixture>(fixture)
-    where THost : IDatabaseHost, new()
-{
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.ManyToManyFieldsLoadTestBase<AdoNetFixture>.ManyToManyFieldsLoadFixtureBase
-    {
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's ManyToManyLoadTestBase.</summary>
-public abstract class ManyToManyLoadAdoNetTest<THost>(ManyToManyLoadAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.ManyToManyLoadTestBase<ManyToManyLoadAdoNetTest<THost>.AdoNetFixture>(fixture)
-    where THost : IDatabaseHost, new()
-{
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.ManyToManyLoadTestBase<AdoNetFixture>.ManyToManyLoadFixtureBase
-    {
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's ManyToManyTrackingRelationalTestBase.</summary>
-public abstract class ManyToManyTrackingAdoNetTest<THost>(ManyToManyTrackingAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.ManyToManyTrackingRelationalTestBase<ManyToManyTrackingAdoNetTest<THost>.AdoNetFixture>(fixture)
-    where THost : IDatabaseHost, new()
-{
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.ManyToManyTrackingRelationalTestBase<AdoNetFixture>.ManyToManyTrackingRelationalFixture
-    {
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's MonsterFixupTestBase.</summary>
-public abstract class MonsterFixupAdoNetTest<THost>(MonsterFixupAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.MonsterFixupTestBase<MonsterFixupAdoNetTest<THost>.AdoNetFixture>(fixture)
-    where THost : IDatabaseHost, new()
-{
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.MonsterFixupTestBase<AdoNetFixture>.MonsterFixupFixtureBase
-    {
-        public override global::Microsoft.EntityFrameworkCore.TestModels.MonsterContext CreateContext(global::Microsoft.EntityFrameworkCore.DbContextOptions options)
-        => throw new NotSupportedException("Not yet provided by the base suite: CreateContext.");
-        public override string StoreName => "MonsterFixup";
-        public override bool UseDetectChanges => true;
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's MusicStoreTestBase.</summary>
-public abstract class MusicStoreAdoNetTest<THost>(MusicStoreAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.MusicStoreTestBase<MusicStoreAdoNetTest<THost>.AdoNetFixture>(fixture)
-    where THost : IDatabaseHost, new()
-{
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.MusicStoreTestBase<AdoNetFixture>.MusicStoreFixtureBase
-    {
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's NotificationEntitiesTestBase.</summary>
-public abstract class NotificationEntitiesAdoNetTest<THost>(NotificationEntitiesAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.NotificationEntitiesTestBase<NotificationEntitiesAdoNetTest<THost>.AdoNetFixture>(fixture)
-    where THost : IDatabaseHost, new()
-{
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.NotificationEntitiesTestBase<AdoNetFixture>.NotificationEntitiesFixtureBase
-    {
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's OverzealousInitializationTestBase.</summary>
-public abstract class OverzealousInitializationAdoNetTest<THost>(OverzealousInitializationAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.OverzealousInitializationTestBase<OverzealousInitializationAdoNetTest<THost>.AdoNetFixture>(fixture)
-    where THost : IDatabaseHost, new()
-{
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.OverzealousInitializationTestBase<AdoNetFixture>.OverzealousInitializationFixtureBase
-    {
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's QueryExpressionInterceptionTestBase.</summary>
-public abstract class QueryExpressionInterceptionAdoNetTest<THost>(AdoNetInterceptionFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.QueryExpressionInterceptionTestBase(fixture), global::Xunit.IClassFixture<AdoNetInterceptionFixture<THost>>
-    where THost : IDatabaseHost, new()
-{
-}
-
-/// <summary>EF's RelationalComplianceTestBase.</summary>
-public abstract class RelationalComplianceAdoNetTest<THost>() : global::Microsoft.EntityFrameworkCore.RelationalComplianceTestBase()
-    where THost : IDatabaseHost, new()
-{
-    protected override global::System.Reflection.Assembly TargetAssembly => throw new NotSupportedException("Not yet provided by the base suite: TargetAssembly.");
-}
-
-/// <summary>EF's RelationalServiceCollectionExtensionsTestBase.</summary>
-public abstract class RelationalServiceCollectionExtensionsAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.TestUtilities.TestHelpers testHelpers) : global::Microsoft.EntityFrameworkCore.RelationalServiceCollectionExtensionsTestBase(testHelpers)
-    where THost : IDatabaseHost, new()
-{
-}
-
-/// <summary>EF's SaveChangesInterceptionTestBase.</summary>
-public abstract class SaveChangesInterceptionAdoNetTest<THost>(AdoNetInterceptionFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.SaveChangesInterceptionTestBase(fixture), global::Xunit.IClassFixture<AdoNetInterceptionFixture<THost>>
-    where THost : IDatabaseHost, new()
-{
-}
-
-/// <summary>EF's SerializationTestBase.</summary>
-public abstract class SerializationAdoNetTest<THost>(SerializationAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.SerializationTestBase<SerializationAdoNetTest<THost>.AdoNetFixture>(fixture)
-    where THost : IDatabaseHost, new()
-{
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.F1FixtureBase<global::System.Byte[]>
-    {
-        public override global::Microsoft.EntityFrameworkCore.TestUtilities.TestHelpers TestHelpers => AdoNetTestHelpers<THost>.Instance;
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's SpatialTestBase.</summary>
-public abstract class SpatialAdoNetTest<THost>(SpatialAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.SpatialTestBase<SpatialAdoNetTest<THost>.AdoNetFixture>(fixture)
-    where THost : IDatabaseHost, new()
-{
-    protected override void UseTransaction(global::Microsoft.EntityFrameworkCore.Infrastructure.DatabaseFacade facade, global::Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction transaction)
-        => facade.UseTransaction(global::Microsoft.EntityFrameworkCore.Storage.DbContextTransactionExtensions.GetDbTransaction(transaction));
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.SpatialFixtureBase
-    {
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's StoreGeneratedFixupRelationalTestBase.</summary>
-public abstract class StoreGeneratedFixupAdoNetTest<THost>(StoreGeneratedFixupAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.StoreGeneratedFixupRelationalTestBase<StoreGeneratedFixupAdoNetTest<THost>.AdoNetFixture>(fixture)
-    where THost : IDatabaseHost, new()
-{
-    protected override bool EnforcesFKs => true;
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.StoreGeneratedFixupRelationalTestBase<AdoNetFixture>.StoreGeneratedFixupRelationalFixtureBase
-    {
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's StoreGeneratedTestBase.</summary>
-public abstract class StoreGeneratedAdoNetTest<THost>(StoreGeneratedAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.StoreGeneratedTestBase<StoreGeneratedAdoNetTest<THost>.AdoNetFixture>(fixture)
-    where THost : IDatabaseHost, new()
-{
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.StoreGeneratedTestBase<AdoNetFixture>.StoreGeneratedFixtureBase
-    {
-        protected override string StoreName => "StoreGenerated";
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's TPTTableSplittingTestBase.</summary>
-public abstract class TPTTableSplittingAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.TPTTableSplittingTestBase(fixture, testOutputHelper)
-    where THost : IDatabaseHost, new()
-{
-    protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-}
-
-/// <summary>EF's TableSplittingTestBase.</summary>
-public abstract class TableSplittingAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.TableSplittingTestBase(fixture, testOutputHelper)
-    where THost : IDatabaseHost, new()
-{
-    protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-}
-
-/// <summary>EF's TransactionInterceptionTestBase.</summary>
-public abstract class TransactionInterceptionAdoNetTest<THost>(AdoNetInterceptionFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.TransactionInterceptionTestBase(fixture), global::Xunit.IClassFixture<AdoNetInterceptionFixture<THost>>
-    where THost : IDatabaseHost, new()
-{
-}
-
-/// <summary>EF's TransactionTestBase.</summary>
-public abstract class TransactionAdoNetTest<THost>(TransactionAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.TransactionTestBase<TransactionAdoNetTest<THost>.AdoNetFixture>(fixture)
-    where THost : IDatabaseHost, new()
-{
-    protected override global::Microsoft.EntityFrameworkCore.DbContext CreateContextWithConnectionString()
-        => new DbContext(Fixture.AddOptions(new THost().UseProvider(new DbContextOptionsBuilder(), ((RelationalTestStore)Fixture.TestStore).ConnectionString, _ => { })).UseInternalServiceProvider(Fixture.ServiceProvider).Options);
-    protected override bool SnapshotSupported => false;
-    protected override bool AmbientTransactionsSupported => new THost().Dialect.Capabilities.SupportsAmbientTransactions;
-    protected override bool SavepointsSupported => new THost().Dialect.Sql.Savepoints != null;
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.TransactionTestBase<AdoNetFixture>.TransactionFixtureBase
-    {
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's ValueConvertersEndToEndTestBase.</summary>
-public abstract class ValueConvertersEndToEndAdoNetTest<THost>(ValueConvertersEndToEndAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.ValueConvertersEndToEndTestBase<ValueConvertersEndToEndAdoNetTest<THost>.AdoNetFixture>(fixture)
-    where THost : IDatabaseHost, new()
-{
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.ValueConvertersEndToEndTestBase<AdoNetFixture>.ValueConvertersEndToEndFixtureBase
-    {
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's WithConstructorsTestBase.</summary>
-public abstract class WithConstructorsAdoNetTest<THost>(WithConstructorsAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.WithConstructorsTestBase<WithConstructorsAdoNetTest<THost>.AdoNetFixture>(fixture)
-    where THost : IDatabaseHost, new()
-{
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.WithConstructorsTestBase<AdoNetFixture>.WithConstructorsFixtureBase
-    {
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's NonSharedModelBulkUpdatesRelationalTestBase.</summary>
-public abstract class NonSharedModelBulkUpdatesAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : global::Microsoft.EntityFrameworkCore.BulkUpdates.NonSharedModelBulkUpdatesRelationalTestBase(fixture)
-    where THost : IDatabaseHost, new()
-{
-    protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-}
-
-/// <summary>EF's NorthwindBulkUpdatesRelationalTestBase.</summary>
-public abstract class NorthwindBulkUpdatesAdoNetTest<THost>(NorthwindBulkUpdatesAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.BulkUpdates.NorthwindBulkUpdatesRelationalTestBase<NorthwindBulkUpdatesAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
-    where THost : IDatabaseHost, new()
-{
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.BulkUpdates.NorthwindBulkUpdatesRelationalFixture<global::Microsoft.EntityFrameworkCore.TestUtilities.NoopModelCustomizer>
-    {
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's TPCFiltersInheritanceBulkUpdatesTestBase.</summary>
-public abstract class TPCFiltersInheritanceBulkUpdatesAdoNetTest<THost>(TPCFiltersInheritanceBulkUpdatesAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.BulkUpdates.TPCFiltersInheritanceBulkUpdatesTestBase<TPCFiltersInheritanceBulkUpdatesAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
-    where THost : IDatabaseHost, new()
-{
-    protected override void ClearLog()
-        => Fixture.TestSqlLoggerFactory.Clear();
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.BulkUpdates.TPCInheritanceBulkUpdatesFixture
-    {
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's TPCInheritanceBulkUpdatesTestBase.</summary>
-public abstract class TPCInheritanceBulkUpdatesAdoNetTest<THost>(TPCInheritanceBulkUpdatesAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.BulkUpdates.TPCInheritanceBulkUpdatesTestBase<TPCInheritanceBulkUpdatesAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
-    where THost : IDatabaseHost, new()
-{
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.BulkUpdates.TPCInheritanceBulkUpdatesFixture
-    {
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's TPHInheritanceBulkUpdatesTestBase.</summary>
-public abstract class TPHInheritanceBulkUpdatesAdoNetTest<THost>(TPHInheritanceBulkUpdatesAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.BulkUpdates.TPHInheritanceBulkUpdatesTestBase<TPHInheritanceBulkUpdatesAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
-    where THost : IDatabaseHost, new()
-{
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.BulkUpdates.InheritanceBulkUpdatesRelationalFixtureBase
-    {
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's TPTFiltersInheritanceBulkUpdatesTestBase.</summary>
-public abstract class TPTFiltersInheritanceBulkUpdatesAdoNetTest<THost>(TPTFiltersInheritanceBulkUpdatesAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.BulkUpdates.TPTFiltersInheritanceBulkUpdatesTestBase<TPTFiltersInheritanceBulkUpdatesAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
-    where THost : IDatabaseHost, new()
-{
-    protected override void ClearLog()
-        => Fixture.TestSqlLoggerFactory.Clear();
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.BulkUpdates.TPTInheritanceBulkUpdatesFixture
-    {
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's TPTInheritanceBulkUpdatesTestBase.</summary>
-public abstract class TPTInheritanceBulkUpdatesAdoNetTest<THost>(TPTInheritanceBulkUpdatesAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.BulkUpdates.TPTInheritanceBulkUpdatesTestBase<TPTInheritanceBulkUpdatesAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
-    where THost : IDatabaseHost, new()
-{
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.BulkUpdates.TPTInheritanceBulkUpdatesFixture
-    {
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's MigrationsInfrastructureTestBase.</summary>
-public abstract class MigrationsInfrastructureAdoNetTest<THost>(MigrationsInfrastructureAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Migrations.MigrationsInfrastructureTestBase<MigrationsInfrastructureAdoNetTest<THost>.AdoNetFixture>(fixture)
-    where THost : IDatabaseHost, new()
-{
-    public override void Can_diff_against_2_2_model()
-        => throw new NotSupportedException("Not yet provided by the base suite: Can_diff_against_2_2_model.");
-    public override void Can_diff_against_3_0_ASP_NET_Identity_model()
-        => throw new NotSupportedException("Not yet provided by the base suite: Can_diff_against_3_0_ASP_NET_Identity_model.");
-    public override void Can_diff_against_2_2_ASP_NET_Identity_model()
-        => throw new NotSupportedException("Not yet provided by the base suite: Can_diff_against_2_2_ASP_NET_Identity_model.");
-    public override void Can_diff_against_2_1_ASP_NET_Identity_model()
-        => throw new NotSupportedException("Not yet provided by the base suite: Can_diff_against_2_1_ASP_NET_Identity_model.");
-    protected override global::System.Threading.Tasks.Task ExecuteSqlAsync(string value)
-        => throw new NotSupportedException("Not yet provided by the base suite: ExecuteSqlAsync.");
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Migrations.MigrationsInfrastructureFixtureBase
-    {
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's MigrationsTestBase.</summary>
-public abstract class MigrationsAdoNetTest<THost>(MigrationsAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Migrations.MigrationsTestBase<MigrationsAdoNetTest<THost>.AdoNetFixture>(fixture)
-    where THost : IDatabaseHost, new()
-{
-    public override global::System.Threading.Tasks.Task Add_required_primitive_collection_with_custom_default_value_sql_to_existing_table()
-        => throw new NotSupportedException("Not yet provided by the base suite: Add_required_primitive_collection_with_custom_default_value_sql_to_existing_table.");
-    public override global::System.Threading.Tasks.Task Add_required_primitve_collection_with_custom_default_value_sql_to_existing_table()
-        => throw new NotSupportedException("Not yet provided by the base suite: Add_required_primitve_collection_with_custom_default_value_sql_to_existing_table.");
-    protected override string NonDefaultCollation => throw new NotSupportedException("Not yet provided by the base suite: NonDefaultCollation.");
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Migrations.MigrationsTestBase<AdoNetFixture>.MigrationsFixtureBase
-    {
-        public override global::Microsoft.EntityFrameworkCore.TestUtilities.RelationalTestHelpers TestHelpers => AdoNetTestHelpers<THost>.Instance;
-        protected override string StoreName => "Migrations";
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's RelationalComplexTypeTestBase.</summary>
-public abstract class RelationalComplexTypeAdoNetTest<THost>(AdoNetRelationalModelBuilderFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.ModelBuilding.RelationalModelBuilderTest.RelationalComplexTypeTestBase(fixture), global::Xunit.IClassFixture<AdoNetRelationalModelBuilderFixture<THost>>
-    where THost : IDatabaseHost, new()
-{
-    protected override global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.TestModelBuilder CreateModelBuilder(global::System.Action<global::Microsoft.EntityFrameworkCore.ModelConfigurationBuilder> configure)
-        => new global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.GenericTestModelBuilder(Fixture, configure);
-}
-
-/// <summary>EF's RelationalInheritanceTestBase.</summary>
-public abstract class RelationalInheritanceAdoNetTest<THost>(AdoNetRelationalModelBuilderFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.ModelBuilding.RelationalModelBuilderTest.RelationalInheritanceTestBase(fixture), global::Xunit.IClassFixture<AdoNetRelationalModelBuilderFixture<THost>>
-    where THost : IDatabaseHost, new()
-{
-    protected override global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.TestModelBuilder CreateModelBuilder(global::System.Action<global::Microsoft.EntityFrameworkCore.ModelConfigurationBuilder> configure)
-        => new global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.GenericTestModelBuilder(Fixture, configure);
-}
-
-/// <summary>EF's RelationalManyToManyTestBase.</summary>
-public abstract class RelationalManyToManyAdoNetTest<THost>(AdoNetRelationalModelBuilderFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.ModelBuilding.RelationalModelBuilderTest.RelationalManyToManyTestBase(fixture), global::Xunit.IClassFixture<AdoNetRelationalModelBuilderFixture<THost>>
-    where THost : IDatabaseHost, new()
-{
-    protected override global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.TestModelBuilder CreateModelBuilder(global::System.Action<global::Microsoft.EntityFrameworkCore.ModelConfigurationBuilder> configure)
-        => new global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.GenericTestModelBuilder(Fixture, configure);
-}
-
-/// <summary>EF's RelationalManyToOneTestBase.</summary>
-public abstract class RelationalManyToOneAdoNetTest<THost>(AdoNetRelationalModelBuilderFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.ModelBuilding.RelationalModelBuilderTest.RelationalManyToOneTestBase(fixture), global::Xunit.IClassFixture<AdoNetRelationalModelBuilderFixture<THost>>
-    where THost : IDatabaseHost, new()
-{
-    protected override global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.TestModelBuilder CreateModelBuilder(global::System.Action<global::Microsoft.EntityFrameworkCore.ModelConfigurationBuilder> configure)
-        => new global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.GenericTestModelBuilder(Fixture, configure);
-}
-
-/// <summary>EF's RelationalNonRelationshipTestBase.</summary>
-public abstract class RelationalNonRelationshipAdoNetTest<THost>(AdoNetRelationalModelBuilderFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.ModelBuilding.RelationalModelBuilderTest.RelationalNonRelationshipTestBase(fixture), global::Xunit.IClassFixture<AdoNetRelationalModelBuilderFixture<THost>>
-    where THost : IDatabaseHost, new()
-{
-    protected override global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.TestModelBuilder CreateModelBuilder(global::System.Action<global::Microsoft.EntityFrameworkCore.ModelConfigurationBuilder> configure)
-        => new global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.GenericTestModelBuilder(Fixture, configure);
-}
-
-/// <summary>EF's RelationalOneToManyTestBase.</summary>
-public abstract class RelationalOneToManyAdoNetTest<THost>(AdoNetRelationalModelBuilderFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.ModelBuilding.RelationalModelBuilderTest.RelationalOneToManyTestBase(fixture), global::Xunit.IClassFixture<AdoNetRelationalModelBuilderFixture<THost>>
-    where THost : IDatabaseHost, new()
-{
-    protected override global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.TestModelBuilder CreateModelBuilder(global::System.Action<global::Microsoft.EntityFrameworkCore.ModelConfigurationBuilder> configure)
-        => new global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.GenericTestModelBuilder(Fixture, configure);
-}
-
-/// <summary>EF's RelationalOneToOneTestBase.</summary>
-public abstract class RelationalOneToOneAdoNetTest<THost>(AdoNetRelationalModelBuilderFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.ModelBuilding.RelationalModelBuilderTest.RelationalOneToOneTestBase(fixture), global::Xunit.IClassFixture<AdoNetRelationalModelBuilderFixture<THost>>
-    where THost : IDatabaseHost, new()
-{
-    protected override global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.TestModelBuilder CreateModelBuilder(global::System.Action<global::Microsoft.EntityFrameworkCore.ModelConfigurationBuilder> configure)
-        => new global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.GenericTestModelBuilder(Fixture, configure);
-}
-
-/// <summary>EF's RelationalOwnedTypesTestBase.</summary>
-public abstract class RelationalOwnedTypesAdoNetTest<THost>(AdoNetRelationalModelBuilderFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.ModelBuilding.RelationalModelBuilderTest.RelationalOwnedTypesTestBase(fixture), global::Xunit.IClassFixture<AdoNetRelationalModelBuilderFixture<THost>>
-    where THost : IDatabaseHost, new()
-{
-    protected override global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.TestModelBuilder CreateModelBuilder(global::System.Action<global::Microsoft.EntityFrameworkCore.ModelConfigurationBuilder> configure)
-        => new global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.GenericTestModelBuilder(Fixture, configure);
-}
-
-/// <summary>EF's AdHocAdvancedMappingsQueryRelationalTestBase.</summary>
-public abstract class AdHocAdvancedMappingsQueryAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.AdHocAdvancedMappingsQueryRelationalTestBase(fixture)
-    where THost : IDatabaseHost, new()
-{
-    protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-}
-
-/// <summary>EF's AdHocManyToManyQueryRelationalTestBase.</summary>
-public abstract class AdHocManyToManyQueryAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.AdHocManyToManyQueryRelationalTestBase(fixture)
-    where THost : IDatabaseHost, new()
-{
-    protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-}
-
-/// <summary>EF's AdHocMiscellaneousQueryRelationalTestBase.</summary>
-public abstract class AdHocMiscellaneousQueryAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.AdHocMiscellaneousQueryRelationalTestBase(fixture)
-    where THost : IDatabaseHost, new()
-{
-    protected override global::Microsoft.EntityFrameworkCore.DbContextOptionsBuilder SetParameterizedCollectionMode(global::Microsoft.EntityFrameworkCore.DbContextOptionsBuilder optionsBuilder, global::Microsoft.EntityFrameworkCore.ParameterTranslationMode parameterizedCollectionMode)
-        => ParameterizedCollections.Set(optionsBuilder, parameterizedCollectionMode);
-    protected override global::System.Threading.Tasks.Task Seed2951(global::Microsoft.EntityFrameworkCore.Query.AdHocMiscellaneousQueryRelationalTestBase.Context2951 context)
-        => throw new NotSupportedException("Not yet provided by the base suite: Seed2951.");
-    protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-}
-
-/// <summary>EF's AdHocNavigationsQueryRelationalTestBase.</summary>
-public abstract class AdHocNavigationsQueryAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.AdHocNavigationsQueryRelationalTestBase(fixture)
-    where THost : IDatabaseHost, new()
-{
-    protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-}
-
-/// <summary>EF's AdHocQueryFiltersQueryRelationalTestBase.</summary>
-public abstract class AdHocQueryFiltersQueryAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.AdHocQueryFiltersQueryRelationalTestBase(fixture)
-    where THost : IDatabaseHost, new()
-{
-    protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-}
-
-/// <summary>EF's AdHocQuerySplittingQueryTestBase.</summary>
-public abstract class AdHocQuerySplittingQueryAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.AdHocQuerySplittingQueryTestBase(fixture)
-    where THost : IDatabaseHost, new()
-{
-    protected override global::Microsoft.EntityFrameworkCore.DbContextOptionsBuilder SetQuerySplittingBehavior(global::Microsoft.EntityFrameworkCore.DbContextOptionsBuilder optionsBuilder, global::Microsoft.EntityFrameworkCore.QuerySplittingBehavior splittingBehavior)
-        => QuerySplitting.Set(optionsBuilder, splittingBehavior);
-    protected override global::Microsoft.EntityFrameworkCore.DbContextOptionsBuilder ClearQuerySplittingBehavior(global::Microsoft.EntityFrameworkCore.DbContextOptionsBuilder optionsBuilder)
-        => QuerySplitting.Clear(optionsBuilder);
-    protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-}
-
-/// <summary>EF's ComplexNavigationsCollectionsQueryRelationalTestBase.</summary>
-public abstract class ComplexNavigationsCollectionsQueryAdoNetTest<THost>(ComplexNavigationsCollectionsQueryAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.ComplexNavigationsCollectionsQueryRelationalTestBase<ComplexNavigationsCollectionsQueryAdoNetTest<THost>.AdoNetFixture>(fixture)
-    where THost : IDatabaseHost, new()
-{
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.ComplexNavigationsQueryFixtureBase
-    {
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's ComplexNavigationsCollectionsSharedTypeQueryRelationalTestBase.</summary>
-public abstract class ComplexNavigationsCollectionsSharedTypeQueryAdoNetTest<THost>(ComplexNavigationsCollectionsSharedTypeQueryAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.ComplexNavigationsCollectionsSharedTypeQueryRelationalTestBase<ComplexNavigationsCollectionsSharedTypeQueryAdoNetTest<THost>.AdoNetFixture>(fixture)
-    where THost : IDatabaseHost, new()
-{
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.ComplexNavigationsSharedTypeQueryRelationalFixtureBase
-    {
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's ComplexNavigationsCollectionsSplitQueryRelationalTestBase.</summary>
-public abstract class ComplexNavigationsCollectionsSplitQueryAdoNetTest<THost>(ComplexNavigationsCollectionsSplitQueryAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.ComplexNavigationsCollectionsSplitQueryRelationalTestBase<ComplexNavigationsCollectionsSplitQueryAdoNetTest<THost>.AdoNetFixture>(fixture)
-    where THost : IDatabaseHost, new()
-{
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.ComplexNavigationsQueryFixtureBase
-    {
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's ComplexNavigationsCollectionsSplitSharedTypeQueryRelationalTestBase.</summary>
-public abstract class ComplexNavigationsCollectionsSplitSharedTypeQueryAdoNetTest<THost>(ComplexNavigationsCollectionsSplitSharedTypeQueryAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.ComplexNavigationsCollectionsSplitSharedTypeQueryRelationalTestBase<ComplexNavigationsCollectionsSplitSharedTypeQueryAdoNetTest<THost>.AdoNetFixture>(fixture)
-    where THost : IDatabaseHost, new()
-{
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.ComplexNavigationsSharedTypeQueryRelationalFixtureBase
-    {
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's ComplexNavigationsQueryRelationalTestBase.</summary>
-public abstract class ComplexNavigationsQueryAdoNetTest<THost>(ComplexNavigationsQueryAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.ComplexNavigationsQueryRelationalTestBase<ComplexNavigationsQueryAdoNetTest<THost>.AdoNetFixture>(fixture)
-    where THost : IDatabaseHost, new()
-{
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.ComplexNavigationsQueryFixtureBase
-    {
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's ComplexNavigationsSharedTypeQueryRelationalTestBase.</summary>
-public abstract class ComplexNavigationsSharedTypeQueryAdoNetTest<THost>(ComplexNavigationsSharedTypeQueryAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.ComplexNavigationsSharedTypeQueryRelationalTestBase<ComplexNavigationsSharedTypeQueryAdoNetTest<THost>.AdoNetFixture>(fixture)
-    where THost : IDatabaseHost, new()
-{
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.ComplexNavigationsSharedTypeQueryRelationalFixtureBase
-    {
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's ComplexTypeQueryRelationalTestBase.</summary>
-public abstract class ComplexTypeQueryAdoNetTest<THost>(ComplexTypeQueryAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.ComplexTypeQueryRelationalTestBase<ComplexTypeQueryAdoNetTest<THost>.AdoNetFixture>(fixture)
-    where THost : IDatabaseHost, new()
-{
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.ComplexTypeQueryRelationalFixtureBase
-    {
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's CompositeKeysQueryRelationalTestBase.</summary>
-public abstract class CompositeKeysQueryAdoNetTest<THost>(CompositeKeysQueryAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.CompositeKeysQueryRelationalTestBase<CompositeKeysQueryAdoNetTest<THost>.AdoNetFixture>(fixture)
-    where THost : IDatabaseHost, new()
-{
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.CompositeKeysQueryFixtureBase
-    {
-        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-    }
-}
-
-/// <summary>EF's CompositeKeysSplitQueryRelationalTestBase.</summary>
-public abstract class CompositeKeysSplitQueryAdoNetTest<THost>(CompositeKeysSplitQueryAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.CompositeKeysSplitQueryRelationalTestBase<CompositeKeysSplitQueryAdoNetTest<THost>.AdoNetFixture>(fixture)
-    where THost : IDatabaseHost, new()
-{
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.CompositeKeysQueryFixtureBase
     {
         protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
     }
@@ -772,12 +608,85 @@ public abstract class EntitySplittingQueryAdoNetTest<THost>(global::Microsoft.En
     protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
 }
 
+/// <summary>EF's EntitySplittingTestBase.</summary>
+public abstract class EntitySplittingAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.EntitySplittingTestBase(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+    protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+}
+
+/// <summary>EF's EnumTranslationsTestBase.</summary>
+public abstract class EnumTranslationsAdoNetTest<THost>(EnumTranslationsAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.Translations.EnumTranslationsTestBase<EnumTranslationsAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Translations.BasicTypesQueryFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's FieldsOnlyLoadTestBase.</summary>
+public abstract class FieldsOnlyLoadAdoNetTest<THost>(FieldsOnlyLoadAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.FieldsOnlyLoadTestBase<FieldsOnlyLoadAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.FieldsOnlyLoadTestBase<AdoNetFixture>.FieldsOnlyLoadFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's FiltersInheritanceBulkUpdatesRelationalTestBase.</summary>
+public abstract class FiltersInheritanceBulkUpdatesAdoNetTest<THost>(FiltersInheritanceBulkUpdatesAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.BulkUpdates.FiltersInheritanceBulkUpdatesRelationalTestBase<FiltersInheritanceBulkUpdatesAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+    protected override void ClearLog()
+        => Fixture.TestSqlLoggerFactory.Clear();
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.BulkUpdates.InheritanceBulkUpdatesRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's FiltersInheritanceQueryTestBase.</summary>
+public abstract class FiltersInheritanceQueryAdoNetTest<THost>(FiltersInheritanceQueryAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.FiltersInheritanceQueryTestBase<FiltersInheritanceQueryAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.InheritanceQueryFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's FindTestBase.</summary>
+public abstract class FindAdoNetTest<THost>(FindAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.FindTestBase<FindAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+    protected override global::Microsoft.EntityFrameworkCore.FindTestBase<FindAdoNetTest<THost>.AdoNetFixture>.TestFinder Finder => new FindViaSetFinder();
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.FindTestBase<AdoNetFixture>.FindFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
 /// <summary>EF's FromSqlQueryTestBase.</summary>
 public abstract class FromSqlQueryAdoNetTest<THost>(NorthwindQueryAdoNetFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.Query.FromSqlQueryTestBase<NorthwindQueryAdoNetFixture<THost>>(fixture)
     where THost : IDatabaseHost, new()
 {
     protected override global::System.Data.Common.DbParameter CreateDbParameter(string name, object value)
         => DbParameters.Create(new THost(), name, value);
+}
+
+/// <summary>EF's FromSqlSprocQueryTestBase.</summary>
+public abstract class FromSqlSprocQueryAdoNetTest<THost>(NorthwindQueryAdoNetFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.Query.FromSqlSprocQueryTestBase<NorthwindQueryAdoNetFixture<THost>>(fixture)
+    where THost : IDatabaseHost, new()
+{
+    protected override string TenMostExpensiveProductsSproc => throw new NotSupportedException("Not yet provided by the base suite: TenMostExpensiveProductsSproc.");
+    protected override string CustomerOrderHistorySproc => throw new NotSupportedException("Not yet provided by the base suite: CustomerOrderHistorySproc.");
 }
 
 /// <summary>EF's FunkyDataQueryTestBase.</summary>
@@ -813,12 +722,143 @@ public abstract class GearsOfWarQueryAdoNetTest<THost>(GearsOfWarQueryAdoNetTest
     }
 }
 
+/// <summary>EF's GraphUpdatesTestBase.</summary>
+public abstract class GraphUpdatesAdoNetTest<THost>(GraphUpdatesAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.GraphUpdatesTestBase<GraphUpdatesAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.GraphUpdatesTestBase<AdoNetFixture>.GraphUpdatesFixtureBase
+    {
+        protected override string StoreName => "GraphUpdates";
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's GuidTranslationsTestBase.</summary>
+public abstract class GuidTranslationsAdoNetTest<THost>(GuidTranslationsAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.Translations.GuidTranslationsTestBase<GuidTranslationsAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Translations.BasicTypesQueryFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
 /// <summary>EF's IncludeOneToOneTestBase.</summary>
 public abstract class IncludeOneToOneAdoNetTest<THost>(IncludeOneToOneAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.IncludeOneToOneTestBase<IncludeOneToOneAdoNetTest<THost>.AdoNetFixture>(fixture)
     where THost : IDatabaseHost, new()
 {
 
     public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.IncludeOneToOneTestBase<AdoNetFixture>.OneToOneQueryFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's InheritanceRelationshipsQueryRelationalTestBase.</summary>
+public abstract class InheritanceRelationshipsQueryAdoNetTest<THost>(InheritanceRelationshipsQueryAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.InheritanceRelationshipsQueryRelationalTestBase<InheritanceRelationshipsQueryAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.InheritanceRelationshipsQueryRelationalFixture
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's JsonQueryRelationalTestBase.</summary>
+public abstract class JsonQueryAdoNetTest<THost>(JsonQueryAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.JsonQueryRelationalTestBase<JsonQueryAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.JsonQueryRelationalFixture
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's JsonTypesRelationalTestBase.</summary>
+public abstract class JsonTypesAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : global::Microsoft.EntityFrameworkCore.JsonTypesRelationalTestBase(fixture)
+    where THost : IDatabaseHost, new()
+{
+    protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+}
+
+/// <summary>EF's JsonUpdateTestBase.</summary>
+public abstract class JsonUpdateAdoNetTest<THost>(JsonUpdateAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Update.JsonUpdateTestBase<JsonUpdateAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+    protected override void ClearLog()
+        => Fixture.TestSqlLoggerFactory.Clear();
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Update.JsonUpdateFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's KeysWithConvertersTestBase.</summary>
+public abstract class KeysWithConvertersAdoNetTest<THost>(KeysWithConvertersAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.KeysWithConvertersTestBase<KeysWithConvertersAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.KeysWithConvertersTestBase<AdoNetFixture>.KeysWithConvertersFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's LazyLoadProxyRelationalTestBase.</summary>
+public abstract class LazyLoadProxyAdoNetTest<THost>(LazyLoadProxyAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.LazyLoadProxyRelationalTestBase<LazyLoadProxyAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.LazyLoadProxyRelationalTestBase<AdoNetFixture>.LoadRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's LoadTestBase.</summary>
+public abstract class LoadAdoNetTest<THost>(LoadAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.LoadTestBase<LoadAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.LoadTestBase<AdoNetFixture>.LoadFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's LogicalOperatorTranslationsTestBase.</summary>
+public abstract class LogicalOperatorTranslationsAdoNetTest<THost>(LogicalOperatorTranslationsAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.Translations.Operators.LogicalOperatorTranslationsTestBase<LogicalOperatorTranslationsAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Translations.BasicTypesQueryFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's ManyToManyFieldsLoadTestBase.</summary>
+public abstract class ManyToManyFieldsLoadAdoNetTest<THost>(ManyToManyFieldsLoadAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.ManyToManyFieldsLoadTestBase<ManyToManyFieldsLoadAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.ManyToManyFieldsLoadTestBase<AdoNetFixture>.ManyToManyFieldsLoadFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's ManyToManyLoadTestBase.</summary>
+public abstract class ManyToManyLoadAdoNetTest<THost>(ManyToManyLoadAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.ManyToManyLoadTestBase<ManyToManyLoadAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.ManyToManyLoadTestBase<AdoNetFixture>.ManyToManyLoadFixtureBase
     {
         protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
     }
@@ -846,6 +886,17 @@ public abstract class ManyToManyQueryAdoNetTest<THost>(ManyToManyQueryAdoNetTest
     }
 }
 
+/// <summary>EF's ManyToManyTrackingRelationalTestBase.</summary>
+public abstract class ManyToManyTrackingAdoNetTest<THost>(ManyToManyTrackingAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.ManyToManyTrackingRelationalTestBase<ManyToManyTrackingAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.ManyToManyTrackingRelationalTestBase<AdoNetFixture>.ManyToManyTrackingRelationalFixture
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
 /// <summary>EF's MappingQueryTestBase.</summary>
 public abstract class MappingQueryAdoNetTest<THost>(MappingQueryAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.MappingQueryTestBase<MappingQueryAdoNetTest<THost>.AdoNetFixture>(fixture)
     where THost : IDatabaseHost, new()
@@ -856,6 +907,203 @@ public abstract class MappingQueryAdoNetTest<THost>(MappingQueryAdoNetTest<THost
         protected override string DatabaseSchema => throw new NotSupportedException("Not yet provided by the base suite: DatabaseSchema.");
         protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
     }
+}
+
+/// <summary>EF's MathTranslationsTestBase.</summary>
+public abstract class MathTranslationsAdoNetTest<THost>(MathTranslationsAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.Translations.MathTranslationsTestBase<MathTranslationsAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Translations.BasicTypesQueryFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's MigrationsInfrastructureTestBase.</summary>
+public abstract class MigrationsInfrastructureAdoNetTest<THost>(MigrationsInfrastructureAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Migrations.MigrationsInfrastructureTestBase<MigrationsInfrastructureAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+    public override void Can_diff_against_2_2_model()
+        => throw new NotSupportedException("Not yet provided by the base suite: Can_diff_against_2_2_model.");
+    public override void Can_diff_against_3_0_ASP_NET_Identity_model()
+        => throw new NotSupportedException("Not yet provided by the base suite: Can_diff_against_3_0_ASP_NET_Identity_model.");
+    public override void Can_diff_against_2_2_ASP_NET_Identity_model()
+        => throw new NotSupportedException("Not yet provided by the base suite: Can_diff_against_2_2_ASP_NET_Identity_model.");
+    public override void Can_diff_against_2_1_ASP_NET_Identity_model()
+        => throw new NotSupportedException("Not yet provided by the base suite: Can_diff_against_2_1_ASP_NET_Identity_model.");
+    protected override global::System.Threading.Tasks.Task ExecuteSqlAsync(string value)
+        => throw new NotSupportedException("Not yet provided by the base suite: ExecuteSqlAsync.");
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Migrations.MigrationsInfrastructureFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's MigrationsSqlGeneratorTestBase.</summary>
+public abstract class MigrationsSqlGeneratorAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.TestUtilities.TestHelpers testHelpers, global::Microsoft.Extensions.DependencyInjection.IServiceCollection customServices, global::Microsoft.EntityFrameworkCore.DbContextOptions options) : global::Microsoft.EntityFrameworkCore.Migrations.MigrationsSqlGeneratorTestBase(testHelpers, customServices, options)
+    where THost : IDatabaseHost, new()
+{
+    protected override string GetGeometryCollectionStoreType()
+        => throw new NotSupportedException("Not yet provided by the base suite: GetGeometryCollectionStoreType.");
+}
+
+/// <summary>EF's MigrationsTestBase.</summary>
+public abstract class MigrationsAdoNetTest<THost>(MigrationsAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Migrations.MigrationsTestBase<MigrationsAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+    public override global::System.Threading.Tasks.Task Add_required_primitive_collection_with_custom_default_value_sql_to_existing_table()
+        => throw new NotSupportedException("Not yet provided by the base suite: Add_required_primitive_collection_with_custom_default_value_sql_to_existing_table.");
+    public override global::System.Threading.Tasks.Task Add_required_primitve_collection_with_custom_default_value_sql_to_existing_table()
+        => throw new NotSupportedException("Not yet provided by the base suite: Add_required_primitve_collection_with_custom_default_value_sql_to_existing_table.");
+    protected override string NonDefaultCollation => throw new NotSupportedException("Not yet provided by the base suite: NonDefaultCollation.");
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Migrations.MigrationsTestBase<AdoNetFixture>.MigrationsFixtureBase
+    {
+        public override global::Microsoft.EntityFrameworkCore.TestUtilities.RelationalTestHelpers TestHelpers => AdoNetTestHelpers<THost>.Instance;
+        protected override string StoreName => "Migrations";
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's MiscellaneousOperatorTranslationsTestBase.</summary>
+public abstract class MiscellaneousOperatorTranslationsAdoNetTest<THost>(MiscellaneousOperatorTranslationsAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.Translations.Operators.MiscellaneousOperatorTranslationsTestBase<MiscellaneousOperatorTranslationsAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Translations.BasicTypesQueryFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's MiscellaneousTranslationsRelationalTestBase.</summary>
+public abstract class MiscellaneousTranslationsAdoNetTest<THost>(MiscellaneousTranslationsAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.Translations.MiscellaneousTranslationsRelationalTestBase<MiscellaneousTranslationsAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Translations.BasicTypesQueryFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's MonsterFixupTestBase.</summary>
+public abstract class MonsterFixupAdoNetTest<THost>(MonsterFixupAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.MonsterFixupTestBase<MonsterFixupAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.MonsterFixupTestBase<AdoNetFixture>.MonsterFixupFixtureBase
+    {
+        public override global::Microsoft.EntityFrameworkCore.TestModels.MonsterContext CreateContext(global::Microsoft.EntityFrameworkCore.DbContextOptions options)
+        => throw new NotSupportedException("Not yet provided by the base suite: CreateContext.");
+        public override string StoreName => "MonsterFixup";
+        public override bool UseDetectChanges => true;
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's MusicStoreTestBase.</summary>
+public abstract class MusicStoreAdoNetTest<THost>(MusicStoreAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.MusicStoreTestBase<MusicStoreAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.MusicStoreTestBase<AdoNetFixture>.MusicStoreFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's NavigationsCollectionRelationalTestBase.</summary>
+public abstract class NavigationsCollectionAdoNetTest<THost>(NavigationsCollectionAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.Navigations.NavigationsCollectionRelationalTestBase<NavigationsCollectionAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.Navigations.NavigationsRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's NavigationsIncludeRelationalTestBase.</summary>
+public abstract class NavigationsIncludeAdoNetTest<THost>(NavigationsIncludeAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.Navigations.NavigationsIncludeRelationalTestBase<NavigationsIncludeAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.Navigations.NavigationsRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's NavigationsMiscellaneousRelationalTestBase.</summary>
+public abstract class NavigationsMiscellaneousAdoNetTest<THost>(NavigationsMiscellaneousAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.Navigations.NavigationsMiscellaneousRelationalTestBase<NavigationsMiscellaneousAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.Navigations.NavigationsRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's NavigationsPrimitiveCollectionRelationalTestBase.</summary>
+public abstract class NavigationsPrimitiveCollectionAdoNetTest<THost>(NavigationsPrimitiveCollectionAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.Navigations.NavigationsPrimitiveCollectionRelationalTestBase<NavigationsPrimitiveCollectionAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.Navigations.NavigationsRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's NavigationsProjectionRelationalTestBase.</summary>
+public abstract class NavigationsProjectionAdoNetTest<THost>(NavigationsProjectionAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.Navigations.NavigationsProjectionRelationalTestBase<NavigationsProjectionAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.Navigations.NavigationsRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's NavigationsSetOperationsRelationalTestBase.</summary>
+public abstract class NavigationsSetOperationsAdoNetTest<THost>(NavigationsSetOperationsAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.Navigations.NavigationsSetOperationsRelationalTestBase<NavigationsSetOperationsAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.Navigations.NavigationsRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's NavigationsStructuralEqualityRelationalTestBase.</summary>
+public abstract class NavigationsStructuralEqualityAdoNetTest<THost>(NavigationsStructuralEqualityAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.Navigations.NavigationsStructuralEqualityRelationalTestBase<NavigationsStructuralEqualityAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.Navigations.NavigationsRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's NonSharedModelBulkUpdatesRelationalTestBase.</summary>
+public abstract class NonSharedModelBulkUpdatesAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : global::Microsoft.EntityFrameworkCore.BulkUpdates.NonSharedModelBulkUpdatesRelationalTestBase(fixture)
+    where THost : IDatabaseHost, new()
+{
+    protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+}
+
+/// <summary>EF's NonSharedModelUpdatesTestBase.</summary>
+public abstract class NonSharedModelUpdatesAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : global::Microsoft.EntityFrameworkCore.Update.NonSharedModelUpdatesTestBase(fixture)
+    where THost : IDatabaseHost, new()
+{
+    protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
 }
 
 /// <summary>EF's NonSharedPrimitiveCollectionsQueryRelationalTestBase.</summary>
@@ -883,6 +1131,17 @@ public abstract class NorthwindAsNoTrackingQueryAdoNetTest<THost>(NorthwindQuery
 public abstract class NorthwindAsTrackingQueryAdoNetTest<THost>(NorthwindQueryAdoNetFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.Query.NorthwindAsTrackingQueryTestBase<NorthwindQueryAdoNetFixture<THost>>(fixture)
     where THost : IDatabaseHost, new()
 {
+}
+
+/// <summary>EF's NorthwindBulkUpdatesRelationalTestBase.</summary>
+public abstract class NorthwindBulkUpdatesAdoNetTest<THost>(NorthwindBulkUpdatesAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.BulkUpdates.NorthwindBulkUpdatesRelationalTestBase<NorthwindBulkUpdatesAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.BulkUpdates.NorthwindBulkUpdatesRelationalFixture<global::Microsoft.EntityFrameworkCore.TestUtilities.NoopModelCustomizer>
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
 }
 
 /// <summary>EF's NorthwindChangeTrackingQueryTestBase.</summary>
@@ -1008,6 +1267,17 @@ public abstract class NorthwindStringIncludeQueryAdoNetTest<THost>(NorthwindQuer
 {
 }
 
+/// <summary>EF's NotificationEntitiesTestBase.</summary>
+public abstract class NotificationEntitiesAdoNetTest<THost>(NotificationEntitiesAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.NotificationEntitiesTestBase<NotificationEntitiesAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.NotificationEntitiesTestBase<AdoNetFixture>.NotificationEntitiesFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
 /// <summary>EF's NullKeysTestBase.</summary>
 public abstract class NullKeysAdoNetTest<THost>(NullKeysAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.NullKeysTestBase<NullKeysAdoNetTest<THost>.AdoNetFixture>(fixture)
     where THost : IDatabaseHost, new()
@@ -1050,11 +1320,154 @@ public abstract class OptionalDependentQueryAdoNetTest<THost>(OptionalDependentQ
     }
 }
 
+/// <summary>EF's OverzealousInitializationTestBase.</summary>
+public abstract class OverzealousInitializationAdoNetTest<THost>(OverzealousInitializationAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.OverzealousInitializationTestBase<OverzealousInitializationAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.OverzealousInitializationTestBase<AdoNetFixture>.OverzealousInitializationFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
 /// <summary>EF's OwnedEntityQueryRelationalTestBase.</summary>
 public abstract class OwnedEntityQueryAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.OwnedEntityQueryRelationalTestBase(fixture)
     where THost : IDatabaseHost, new()
 {
     protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+}
+
+/// <summary>EF's OwnedJsonBulkUpdateRelationalTestBase.</summary>
+public abstract class OwnedJsonBulkUpdateAdoNetTest<THost>(OwnedJsonBulkUpdateAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.OwnedJson.OwnedJsonBulkUpdateRelationalTestBase<OwnedJsonBulkUpdateAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.OwnedJson.OwnedJsonRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's OwnedJsonCollectionRelationalTestBase.</summary>
+public abstract class OwnedJsonCollectionAdoNetTest<THost>(OwnedJsonCollectionAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.OwnedJson.OwnedJsonCollectionRelationalTestBase<OwnedJsonCollectionAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.OwnedJson.OwnedJsonRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's OwnedJsonMiscellaneousRelationalTestBase.</summary>
+public abstract class OwnedJsonMiscellaneousAdoNetTest<THost>(OwnedJsonMiscellaneousAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.OwnedJson.OwnedJsonMiscellaneousRelationalTestBase<OwnedJsonMiscellaneousAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.OwnedJson.OwnedJsonRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's OwnedJsonPrimitiveCollectionRelationalTestBase.</summary>
+public abstract class OwnedJsonPrimitiveCollectionAdoNetTest<THost>(OwnedJsonPrimitiveCollectionAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.OwnedJson.OwnedJsonPrimitiveCollectionRelationalTestBase<OwnedJsonPrimitiveCollectionAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.OwnedJson.OwnedJsonRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's OwnedJsonProjectionRelationalTestBase.</summary>
+public abstract class OwnedJsonProjectionAdoNetTest<THost>(OwnedJsonProjectionAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.OwnedJson.OwnedJsonProjectionRelationalTestBase<OwnedJsonProjectionAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.OwnedJson.OwnedJsonRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's OwnedJsonStructuralEqualityRelationalTestBase.</summary>
+public abstract class OwnedJsonStructuralEqualityAdoNetTest<THost>(OwnedJsonStructuralEqualityAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.OwnedJson.OwnedJsonStructuralEqualityRelationalTestBase<OwnedJsonStructuralEqualityAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.OwnedJson.OwnedJsonRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's OwnedNavigationsCollectionRelationalTestBase.</summary>
+public abstract class OwnedNavigationsCollectionAdoNetTest<THost>(OwnedNavigationsCollectionAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.OwnedNavigations.OwnedNavigationsCollectionRelationalTestBase<OwnedNavigationsCollectionAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.OwnedNavigations.OwnedNavigationsRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's OwnedNavigationsMiscellaneousRelationalTestBase.</summary>
+public abstract class OwnedNavigationsMiscellaneousAdoNetTest<THost>(OwnedNavigationsMiscellaneousAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.OwnedNavigations.OwnedNavigationsMiscellaneousRelationalTestBase<OwnedNavigationsMiscellaneousAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.OwnedNavigations.OwnedNavigationsRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's OwnedNavigationsPrimitiveCollectionRelationalTestBase.</summary>
+public abstract class OwnedNavigationsPrimitiveCollectionAdoNetTest<THost>(OwnedNavigationsPrimitiveCollectionAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.OwnedNavigations.OwnedNavigationsPrimitiveCollectionRelationalTestBase<OwnedNavigationsPrimitiveCollectionAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.OwnedNavigations.OwnedNavigationsRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's OwnedNavigationsProjectionRelationalTestBase.</summary>
+public abstract class OwnedNavigationsProjectionAdoNetTest<THost>(OwnedNavigationsProjectionAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.OwnedNavigations.OwnedNavigationsProjectionRelationalTestBase<OwnedNavigationsProjectionAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.OwnedNavigations.OwnedNavigationsRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's OwnedNavigationsSetOperationsRelationalTestBase.</summary>
+public abstract class OwnedNavigationsSetOperationsAdoNetTest<THost>(OwnedNavigationsSetOperationsAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.OwnedNavigations.OwnedNavigationsSetOperationsRelationalTestBase<OwnedNavigationsSetOperationsAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.OwnedNavigations.OwnedNavigationsRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's OwnedNavigationsStructuralEqualityRelationalTestBase.</summary>
+public abstract class OwnedNavigationsStructuralEqualityAdoNetTest<THost>(OwnedNavigationsStructuralEqualityAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.OwnedNavigations.OwnedNavigationsStructuralEqualityRelationalTestBase<OwnedNavigationsStructuralEqualityAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.OwnedNavigations.OwnedNavigationsRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
 }
 
 /// <summary>EF's OwnedQueryRelationalTestBase.</summary>
@@ -1063,6 +1476,50 @@ public abstract class OwnedQueryAdoNetTest<THost>(OwnedQueryAdoNetTest<THost>.Ad
 {
 
     public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.OwnedQueryRelationalTestBase<AdoNetFixture>.RelationalOwnedQueryFixture
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's OwnedTableSplittingMiscellaneousRelationalTestBase.</summary>
+public abstract class OwnedTableSplittingMiscellaneousAdoNetTest<THost>(OwnedTableSplittingMiscellaneousAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.OwnedTableSplitting.OwnedTableSplittingMiscellaneousRelationalTestBase<OwnedTableSplittingMiscellaneousAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.OwnedTableSplitting.OwnedTableSplittingRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's OwnedTableSplittingPrimitiveCollectionRelationalTestBase.</summary>
+public abstract class OwnedTableSplittingPrimitiveCollectionAdoNetTest<THost>(OwnedTableSplittingPrimitiveCollectionAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.OwnedTableSplitting.OwnedTableSplittingPrimitiveCollectionRelationalTestBase<OwnedTableSplittingPrimitiveCollectionAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.OwnedTableSplitting.OwnedTableSplittingRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's OwnedTableSplittingProjectionRelationalTestBase.</summary>
+public abstract class OwnedTableSplittingProjectionAdoNetTest<THost>(OwnedTableSplittingProjectionAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.OwnedTableSplitting.OwnedTableSplittingProjectionRelationalTestBase<OwnedTableSplittingProjectionAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.OwnedTableSplitting.OwnedTableSplittingRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's OwnedTableSplittingStructuralEqualityRelationalTestBase.</summary>
+public abstract class OwnedTableSplittingStructuralEqualityAdoNetTest<THost>(OwnedTableSplittingStructuralEqualityAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.Associations.OwnedTableSplitting.OwnedTableSplittingStructuralEqualityRelationalTestBase<OwnedTableSplittingStructuralEqualityAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Associations.OwnedTableSplitting.OwnedTableSplittingRelationalFixtureBase
     {
         protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
     }
@@ -1077,6 +1534,37 @@ public abstract class PrimitiveCollectionsQueryAdoNetTest<THost>(PrimitiveCollec
     {
         protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
     }
+}
+
+/// <summary>EF's PropertyValuesRelationalTestBase.</summary>
+public abstract class PropertyValuesAdoNetTest<THost>(PropertyValuesAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.PropertyValuesRelationalTestBase<PropertyValuesAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.PropertyValuesRelationalTestBase<AdoNetFixture>.PropertyValuesRelationalFixture
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's ProxyGraphUpdatesTestBase.</summary>
+public abstract class ProxyGraphUpdatesAdoNetTest<THost>(ProxyGraphUpdatesAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.ProxyGraphUpdatesTestBase<ProxyGraphUpdatesAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+    protected override bool DoesLazyLoading => throw new NotSupportedException("Not yet provided by the base suite: DoesLazyLoading.");
+    protected override bool DoesChangeTracking => throw new NotSupportedException("Not yet provided by the base suite: DoesChangeTracking.");
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.ProxyGraphUpdatesTestBase<AdoNetFixture>.ProxyGraphUpdatesFixtureBase
+    {
+        protected override string StoreName => "ProxyGraphUpdates";
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's QueryExpressionInterceptionTestBase.</summary>
+public abstract class QueryExpressionInterceptionAdoNetTest<THost>(AdoNetInterceptionFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.QueryExpressionInterceptionTestBase(fixture), global::Xunit.IClassFixture<AdoNetInterceptionFixture<THost>>
+    where THost : IDatabaseHost, new()
+{
 }
 
 /// <summary>EF's QueryFilterFuncletizationTestBase.</summary>
@@ -1094,6 +1582,118 @@ public abstract class QueryFilterFuncletizationAdoNetTest<THost>(QueryFilterFunc
 public abstract class QueryNoClientEvalAdoNetTest<THost>(NorthwindQueryAdoNetFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.Query.QueryNoClientEvalTestBase<NorthwindQueryAdoNetFixture<THost>>(fixture)
     where THost : IDatabaseHost, new()
 {
+}
+
+/// <summary>EF's RelationalComplexCollectionTestBase.</summary>
+public abstract class RelationalComplexCollectionAdoNetTest<THost>(AdoNetRelationalModelBuilderFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.ModelBuilding.RelationalModelBuilderTest.RelationalComplexCollectionTestBase(fixture), global::Xunit.IClassFixture<AdoNetRelationalModelBuilderFixture<THost>>
+    where THost : IDatabaseHost, new()
+{
+    protected override global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.TestModelBuilder CreateModelBuilder(global::System.Action<global::Microsoft.EntityFrameworkCore.ModelConfigurationBuilder> configure)
+        => new global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.GenericTestModelBuilder(Fixture, configure);
+}
+
+/// <summary>EF's RelationalComplexTypeTestBase.</summary>
+public abstract class RelationalComplexTypeAdoNetTest<THost>(AdoNetRelationalModelBuilderFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.ModelBuilding.RelationalModelBuilderTest.RelationalComplexTypeTestBase(fixture), global::Xunit.IClassFixture<AdoNetRelationalModelBuilderFixture<THost>>
+    where THost : IDatabaseHost, new()
+{
+    protected override global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.TestModelBuilder CreateModelBuilder(global::System.Action<global::Microsoft.EntityFrameworkCore.ModelConfigurationBuilder> configure)
+        => new global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.GenericTestModelBuilder(Fixture, configure);
+}
+
+/// <summary>EF's RelationalComplianceTestBase.</summary>
+public abstract class RelationalComplianceAdoNetTest<THost>() : global::Microsoft.EntityFrameworkCore.RelationalComplianceTestBase()
+    where THost : IDatabaseHost, new()
+{
+    protected override global::System.Reflection.Assembly TargetAssembly => throw new NotSupportedException("Not yet provided by the base suite: TargetAssembly.");
+}
+
+/// <summary>EF's RelationalInheritanceTestBase.</summary>
+public abstract class RelationalInheritanceAdoNetTest<THost>(AdoNetRelationalModelBuilderFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.ModelBuilding.RelationalModelBuilderTest.RelationalInheritanceTestBase(fixture), global::Xunit.IClassFixture<AdoNetRelationalModelBuilderFixture<THost>>
+    where THost : IDatabaseHost, new()
+{
+    protected override global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.TestModelBuilder CreateModelBuilder(global::System.Action<global::Microsoft.EntityFrameworkCore.ModelConfigurationBuilder> configure)
+        => new global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.GenericTestModelBuilder(Fixture, configure);
+}
+
+/// <summary>EF's RelationalManyToManyTestBase.</summary>
+public abstract class RelationalManyToManyAdoNetTest<THost>(AdoNetRelationalModelBuilderFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.ModelBuilding.RelationalModelBuilderTest.RelationalManyToManyTestBase(fixture), global::Xunit.IClassFixture<AdoNetRelationalModelBuilderFixture<THost>>
+    where THost : IDatabaseHost, new()
+{
+    protected override global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.TestModelBuilder CreateModelBuilder(global::System.Action<global::Microsoft.EntityFrameworkCore.ModelConfigurationBuilder> configure)
+        => new global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.GenericTestModelBuilder(Fixture, configure);
+}
+
+/// <summary>EF's RelationalManyToOneTestBase.</summary>
+public abstract class RelationalManyToOneAdoNetTest<THost>(AdoNetRelationalModelBuilderFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.ModelBuilding.RelationalModelBuilderTest.RelationalManyToOneTestBase(fixture), global::Xunit.IClassFixture<AdoNetRelationalModelBuilderFixture<THost>>
+    where THost : IDatabaseHost, new()
+{
+    protected override global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.TestModelBuilder CreateModelBuilder(global::System.Action<global::Microsoft.EntityFrameworkCore.ModelConfigurationBuilder> configure)
+        => new global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.GenericTestModelBuilder(Fixture, configure);
+}
+
+/// <summary>EF's RelationalNonRelationshipTestBase.</summary>
+public abstract class RelationalNonRelationshipAdoNetTest<THost>(AdoNetRelationalModelBuilderFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.ModelBuilding.RelationalModelBuilderTest.RelationalNonRelationshipTestBase(fixture), global::Xunit.IClassFixture<AdoNetRelationalModelBuilderFixture<THost>>
+    where THost : IDatabaseHost, new()
+{
+    protected override global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.TestModelBuilder CreateModelBuilder(global::System.Action<global::Microsoft.EntityFrameworkCore.ModelConfigurationBuilder> configure)
+        => new global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.GenericTestModelBuilder(Fixture, configure);
+}
+
+/// <summary>EF's RelationalOneToManyTestBase.</summary>
+public abstract class RelationalOneToManyAdoNetTest<THost>(AdoNetRelationalModelBuilderFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.ModelBuilding.RelationalModelBuilderTest.RelationalOneToManyTestBase(fixture), global::Xunit.IClassFixture<AdoNetRelationalModelBuilderFixture<THost>>
+    where THost : IDatabaseHost, new()
+{
+    protected override global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.TestModelBuilder CreateModelBuilder(global::System.Action<global::Microsoft.EntityFrameworkCore.ModelConfigurationBuilder> configure)
+        => new global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.GenericTestModelBuilder(Fixture, configure);
+}
+
+/// <summary>EF's RelationalOneToOneTestBase.</summary>
+public abstract class RelationalOneToOneAdoNetTest<THost>(AdoNetRelationalModelBuilderFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.ModelBuilding.RelationalModelBuilderTest.RelationalOneToOneTestBase(fixture), global::Xunit.IClassFixture<AdoNetRelationalModelBuilderFixture<THost>>
+    where THost : IDatabaseHost, new()
+{
+    protected override global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.TestModelBuilder CreateModelBuilder(global::System.Action<global::Microsoft.EntityFrameworkCore.ModelConfigurationBuilder> configure)
+        => new global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.GenericTestModelBuilder(Fixture, configure);
+}
+
+/// <summary>EF's RelationalOwnedTypesTestBase.</summary>
+public abstract class RelationalOwnedTypesAdoNetTest<THost>(AdoNetRelationalModelBuilderFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.ModelBuilding.RelationalModelBuilderTest.RelationalOwnedTypesTestBase(fixture), global::Xunit.IClassFixture<AdoNetRelationalModelBuilderFixture<THost>>
+    where THost : IDatabaseHost, new()
+{
+    protected override global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.TestModelBuilder CreateModelBuilder(global::System.Action<global::Microsoft.EntityFrameworkCore.ModelConfigurationBuilder> configure)
+        => new global::Microsoft.EntityFrameworkCore.ModelBuilding.ModelBuilderTest.GenericTestModelBuilder(Fixture, configure);
+}
+
+/// <summary>EF's RelationalServiceCollectionExtensionsTestBase.</summary>
+public abstract class RelationalServiceCollectionExtensionsAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.TestUtilities.TestHelpers testHelpers) : global::Microsoft.EntityFrameworkCore.RelationalServiceCollectionExtensionsTestBase(testHelpers)
+    where THost : IDatabaseHost, new()
+{
+}
+
+/// <summary>EF's SaveChangesInterceptionTestBase.</summary>
+public abstract class SaveChangesInterceptionAdoNetTest<THost>(AdoNetInterceptionFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.SaveChangesInterceptionTestBase(fixture), global::Xunit.IClassFixture<AdoNetInterceptionFixture<THost>>
+    where THost : IDatabaseHost, new()
+{
+}
+
+/// <summary>EF's SeedingTestBase.</summary>
+public abstract class SeedingAdoNetTest<THost>() : global::Microsoft.EntityFrameworkCore.SeedingTestBase()
+    where THost : IDatabaseHost, new()
+{
+    protected override global::Microsoft.EntityFrameworkCore.SeedingTestBase.SeedingContext CreateContextWithEmptyDatabase(string testId)
+        => throw new NotSupportedException("Not yet provided by the base suite: CreateContextWithEmptyDatabase.");
+    protected override global::Microsoft.EntityFrameworkCore.TestUtilities.TestStore TestStore => throw new NotSupportedException("Not yet provided by the base suite: TestStore.");
+}
+
+/// <summary>EF's SerializationTestBase.</summary>
+public abstract class SerializationAdoNetTest<THost>(SerializationAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.SerializationTestBase<SerializationAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.F1FixtureBase<global::System.Byte[]>
+    {
+        public override global::Microsoft.EntityFrameworkCore.TestUtilities.TestHelpers TestHelpers => AdoNetTestHelpers<THost>.Instance;
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
 }
 
 /// <summary>EF's SharedTypeQueryRelationalTestBase.</summary>
@@ -1114,12 +1714,165 @@ public abstract class SpatialQueryAdoNetTest<THost>(SpatialQueryAdoNetTest<THost
     }
 }
 
+/// <summary>EF's SpatialTestBase.</summary>
+public abstract class SpatialAdoNetTest<THost>(SpatialAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.SpatialTestBase<SpatialAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+    protected override void UseTransaction(global::Microsoft.EntityFrameworkCore.Infrastructure.DatabaseFacade facade, global::Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction transaction)
+        => facade.UseTransaction(global::Microsoft.EntityFrameworkCore.Storage.DbContextTransactionExtensions.GetDbTransaction(transaction));
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.SpatialFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's SqlExecutorTestBase.</summary>
+public abstract class SqlExecutorAdoNetTest<THost>(SqlExecutorAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.SqlExecutorTestBase<SqlExecutorAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+    protected override global::System.Data.Common.DbParameter CreateDbParameter(string name, object value)
+        => DbParameters.Create(new THost(), name, value);
+    protected override string TenMostExpensiveProductsSproc => throw new NotSupportedException("Not yet provided by the base suite: TenMostExpensiveProductsSproc.");
+    protected override string CustomerOrderHistorySproc => throw new NotSupportedException("Not yet provided by the base suite: CustomerOrderHistorySproc.");
+    protected override string CustomerOrderHistoryWithGeneratedParameterSproc => throw new NotSupportedException("Not yet provided by the base suite: CustomerOrderHistoryWithGeneratedParameterSproc.");
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.NorthwindQueryRelationalFixture<global::Microsoft.EntityFrameworkCore.Query.SqlExecutorModelCustomizer>
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
 /// <summary>EF's SqlQueryTestBase.</summary>
 public abstract class SqlQueryAdoNetTest<THost>(NorthwindQueryAdoNetFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.Query.SqlQueryTestBase<NorthwindQueryAdoNetFixture<THost>>(fixture)
     where THost : IDatabaseHost, new()
 {
     protected override global::System.Data.Common.DbParameter CreateDbParameter(string name, object value)
         => DbParameters.Create(new THost(), name, value);
+}
+
+/// <summary>EF's StoreGeneratedFixupRelationalTestBase.</summary>
+public abstract class StoreGeneratedFixupAdoNetTest<THost>(StoreGeneratedFixupAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.StoreGeneratedFixupRelationalTestBase<StoreGeneratedFixupAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+    protected override bool EnforcesFKs => true;
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.StoreGeneratedFixupRelationalTestBase<AdoNetFixture>.StoreGeneratedFixupRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's StoreGeneratedTestBase.</summary>
+public abstract class StoreGeneratedAdoNetTest<THost>(StoreGeneratedAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.StoreGeneratedTestBase<StoreGeneratedAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.StoreGeneratedTestBase<AdoNetFixture>.StoreGeneratedFixtureBase
+    {
+        protected override string StoreName => "StoreGenerated";
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's StoreValueGenerationTestBase.</summary>
+public abstract class StoreValueGenerationAdoNetTest<THost>(StoreValueGenerationAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Update.StoreValueGenerationTestBase<StoreValueGenerationAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Update.StoreValueGenerationFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's StoredProcedureUpdateTestBase.</summary>
+public abstract class StoredProcedureUpdateAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : global::Microsoft.EntityFrameworkCore.Update.StoredProcedureUpdateTestBase(fixture)
+    where THost : IDatabaseHost, new()
+{
+    public override global::System.Threading.Tasks.Task Insert_with_output_parameter(bool async)
+        => throw new NotSupportedException("Not yet provided by the base suite: Insert_with_output_parameter.");
+    public override global::System.Threading.Tasks.Task Insert_twice_with_output_parameter(bool async)
+        => throw new NotSupportedException("Not yet provided by the base suite: Insert_twice_with_output_parameter.");
+    public override global::System.Threading.Tasks.Task Insert_with_result_column(bool async)
+        => throw new NotSupportedException("Not yet provided by the base suite: Insert_with_result_column.");
+    public override global::System.Threading.Tasks.Task Insert_with_two_result_columns(bool async)
+        => throw new NotSupportedException("Not yet provided by the base suite: Insert_with_two_result_columns.");
+    public override global::System.Threading.Tasks.Task Insert_with_output_parameter_and_result_column(bool async)
+        => throw new NotSupportedException("Not yet provided by the base suite: Insert_with_output_parameter_and_result_column.");
+    public override global::System.Threading.Tasks.Task Update(bool async)
+        => throw new NotSupportedException("Not yet provided by the base suite: Update.");
+    public override global::System.Threading.Tasks.Task Update_partial(bool async)
+        => throw new NotSupportedException("Not yet provided by the base suite: Update_partial.");
+    public override global::System.Threading.Tasks.Task Update_with_output_parameter_and_rows_affected_result_column(bool async)
+        => throw new NotSupportedException("Not yet provided by the base suite: Update_with_output_parameter_and_rows_affected_result_column.");
+    public override global::System.Threading.Tasks.Task Update_with_output_parameter_and_rows_affected_result_column_concurrency_failure(bool async)
+        => throw new NotSupportedException("Not yet provided by the base suite: Update_with_output_parameter_and_rows_affected_result_column_concurrency_failure.");
+    public override global::System.Threading.Tasks.Task Delete(bool async)
+        => throw new NotSupportedException("Not yet provided by the base suite: Delete.");
+    public override global::System.Threading.Tasks.Task Delete_and_insert(bool async)
+        => throw new NotSupportedException("Not yet provided by the base suite: Delete_and_insert.");
+    public override global::System.Threading.Tasks.Task Rows_affected_parameter(bool async)
+        => throw new NotSupportedException("Not yet provided by the base suite: Rows_affected_parameter.");
+    public override global::System.Threading.Tasks.Task Rows_affected_parameter_and_concurrency_failure(bool async)
+        => throw new NotSupportedException("Not yet provided by the base suite: Rows_affected_parameter_and_concurrency_failure.");
+    public override global::System.Threading.Tasks.Task Rows_affected_result_column(bool async)
+        => throw new NotSupportedException("Not yet provided by the base suite: Rows_affected_result_column.");
+    public override global::System.Threading.Tasks.Task Rows_affected_result_column_and_concurrency_failure(bool async)
+        => throw new NotSupportedException("Not yet provided by the base suite: Rows_affected_result_column_and_concurrency_failure.");
+    public override global::System.Threading.Tasks.Task Rows_affected_return_value(bool async)
+        => throw new NotSupportedException("Not yet provided by the base suite: Rows_affected_return_value.");
+    public override global::System.Threading.Tasks.Task Rows_affected_return_value_and_concurrency_failure(bool async)
+        => throw new NotSupportedException("Not yet provided by the base suite: Rows_affected_return_value_and_concurrency_failure.");
+    public override global::System.Threading.Tasks.Task Store_generated_concurrency_token_as_in_out_parameter(bool async)
+        => throw new NotSupportedException("Not yet provided by the base suite: Store_generated_concurrency_token_as_in_out_parameter.");
+    public override global::System.Threading.Tasks.Task Store_generated_concurrency_token_as_two_parameters(bool async)
+        => throw new NotSupportedException("Not yet provided by the base suite: Store_generated_concurrency_token_as_two_parameters.");
+    public override global::System.Threading.Tasks.Task User_managed_concurrency_token(bool async)
+        => throw new NotSupportedException("Not yet provided by the base suite: User_managed_concurrency_token.");
+    public override global::System.Threading.Tasks.Task Original_and_current_value_on_non_concurrency_token(bool async)
+        => throw new NotSupportedException("Not yet provided by the base suite: Original_and_current_value_on_non_concurrency_token.");
+    public override global::System.Threading.Tasks.Task Input_or_output_parameter_with_input(bool async)
+        => throw new NotSupportedException("Not yet provided by the base suite: Input_or_output_parameter_with_input.");
+    public override global::System.Threading.Tasks.Task Input_or_output_parameter_with_output(bool async)
+        => throw new NotSupportedException("Not yet provided by the base suite: Input_or_output_parameter_with_output.");
+    public override global::System.Threading.Tasks.Task Tph(bool async)
+        => throw new NotSupportedException("Not yet provided by the base suite: Tph.");
+    public override global::System.Threading.Tasks.Task Tpt(bool async)
+        => throw new NotSupportedException("Not yet provided by the base suite: Tpt.");
+    public override global::System.Threading.Tasks.Task Tpt_mixed_sproc_and_non_sproc(bool async)
+        => throw new NotSupportedException("Not yet provided by the base suite: Tpt_mixed_sproc_and_non_sproc.");
+    public override global::System.Threading.Tasks.Task Tpc(bool async)
+        => throw new NotSupportedException("Not yet provided by the base suite: Tpc.");
+    public override global::System.Threading.Tasks.Task Non_sproc_followed_by_sproc_commands_in_the_same_batch(bool async)
+        => throw new NotSupportedException("Not yet provided by the base suite: Non_sproc_followed_by_sproc_commands_in_the_same_batch.");
+    protected override void ConfigureStoreGeneratedConcurrencyToken(global::Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder entityTypeBuilder, string propertyName)
+        => throw new NotSupportedException("Not yet provided by the base suite: ConfigureStoreGeneratedConcurrencyToken.");
+    protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+}
+
+/// <summary>EF's StringTranslationsRelationalTestBase.</summary>
+public abstract class StringTranslationsAdoNetTest<THost>(StringTranslationsAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.Translations.StringTranslationsRelationalTestBase<StringTranslationsAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Translations.BasicTypesQueryFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's TPCFiltersInheritanceBulkUpdatesTestBase.</summary>
+public abstract class TPCFiltersInheritanceBulkUpdatesAdoNetTest<THost>(TPCFiltersInheritanceBulkUpdatesAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.BulkUpdates.TPCFiltersInheritanceBulkUpdatesTestBase<TPCFiltersInheritanceBulkUpdatesAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+    protected override void ClearLog()
+        => Fixture.TestSqlLoggerFactory.Clear();
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.BulkUpdates.TPCInheritanceBulkUpdatesFixture
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
 }
 
 /// <summary>EF's TPCFiltersInheritanceQueryTestBase.</summary>
@@ -1139,6 +1892,17 @@ public abstract class TPCGearsOfWarQueryAdoNetTest<THost>(TPCGearsOfWarQueryAdoN
 {
 
     public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.TPCGearsOfWarQueryRelationalFixture
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's TPCInheritanceBulkUpdatesTestBase.</summary>
+public abstract class TPCInheritanceBulkUpdatesAdoNetTest<THost>(TPCInheritanceBulkUpdatesAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.BulkUpdates.TPCInheritanceBulkUpdatesTestBase<TPCInheritanceBulkUpdatesAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.BulkUpdates.TPCInheritanceBulkUpdatesFixture
     {
         protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
     }
@@ -1188,12 +1952,36 @@ public abstract class TPCRelationshipsQueryAdoNetTest<THost>(TPCRelationshipsQue
     }
 }
 
+/// <summary>EF's TPHInheritanceBulkUpdatesTestBase.</summary>
+public abstract class TPHInheritanceBulkUpdatesAdoNetTest<THost>(TPHInheritanceBulkUpdatesAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.BulkUpdates.TPHInheritanceBulkUpdatesTestBase<TPHInheritanceBulkUpdatesAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.BulkUpdates.InheritanceBulkUpdatesRelationalFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
 /// <summary>EF's TPHInheritanceQueryTestBase.</summary>
 public abstract class TPHInheritanceQueryAdoNetTest<THost>(TPHInheritanceQueryAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.Query.TPHInheritanceQueryTestBase<TPHInheritanceQueryAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
     where THost : IDatabaseHost, new()
 {
 
     public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.TPHInheritanceQueryFixture
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's TPTFiltersInheritanceBulkUpdatesTestBase.</summary>
+public abstract class TPTFiltersInheritanceBulkUpdatesAdoNetTest<THost>(TPTFiltersInheritanceBulkUpdatesAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.BulkUpdates.TPTFiltersInheritanceBulkUpdatesTestBase<TPTFiltersInheritanceBulkUpdatesAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+    protected override void ClearLog()
+        => Fixture.TestSqlLoggerFactory.Clear();
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.BulkUpdates.TPTInheritanceBulkUpdatesFixture
     {
         protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
     }
@@ -1216,6 +2004,17 @@ public abstract class TPTGearsOfWarQueryAdoNetTest<THost>(TPTGearsOfWarQueryAdoN
 {
 
     public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.TPTGearsOfWarQueryRelationalFixture
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's TPTInheritanceBulkUpdatesTestBase.</summary>
+public abstract class TPTInheritanceBulkUpdatesAdoNetTest<THost>(TPTInheritanceBulkUpdatesAdoNetTest<THost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.BulkUpdates.TPTInheritanceBulkUpdatesTestBase<TPTInheritanceBulkUpdatesAdoNetTest<THost>.AdoNetFixture>(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.BulkUpdates.TPTInheritanceBulkUpdatesFixture
     {
         protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
     }
@@ -1265,6 +2064,42 @@ public abstract class TPTRelationshipsQueryAdoNetTest<THost>(TPTRelationshipsQue
     }
 }
 
+/// <summary>EF's TPTTableSplittingTestBase.</summary>
+public abstract class TPTTableSplittingAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.TPTTableSplittingTestBase(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+    protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+}
+
+/// <summary>EF's TableSplittingTestBase.</summary>
+public abstract class TableSplittingAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : global::Microsoft.EntityFrameworkCore.TableSplittingTestBase(fixture, testOutputHelper)
+    where THost : IDatabaseHost, new()
+{
+    protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+}
+
+/// <summary>EF's TimeOnlyTranslationsTestBase.</summary>
+public abstract class TimeOnlyTranslationsAdoNetTest<THost>(TimeOnlyTranslationsAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.Translations.Temporal.TimeOnlyTranslationsTestBase<TimeOnlyTranslationsAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Translations.BasicTypesQueryFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's TimeSpanTranslationsTestBase.</summary>
+public abstract class TimeSpanTranslationsAdoNetTest<THost>(TimeSpanTranslationsAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.Translations.Temporal.TimeSpanTranslationsTestBase<TimeSpanTranslationsAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.Translations.BasicTypesQueryFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
 /// <summary>EF's ToSqlQueryTestBase.</summary>
 public abstract class ToSqlQueryAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : global::Microsoft.EntityFrameworkCore.Query.ToSqlQueryTestBase(fixture)
     where THost : IDatabaseHost, new()
@@ -1272,28 +2107,58 @@ public abstract class ToSqlQueryAdoNetTest<THost>(global::Microsoft.EntityFramew
     protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
 }
 
-/// <summary>EF's WarningsTestBase.</summary>
-public abstract class WarningsAdoNetTest<THost>(NorthwindQueryAdoNetFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.Query.WarningsTestBase<NorthwindQueryAdoNetFixture<THost>>(fixture)
+/// <summary>EF's TransactionInterceptionTestBase.</summary>
+public abstract class TransactionInterceptionAdoNetTest<THost>(AdoNetInterceptionFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.TransactionInterceptionTestBase(fixture), global::Xunit.IClassFixture<AdoNetInterceptionFixture<THost>>
     where THost : IDatabaseHost, new()
 {
 }
 
-/// <summary>EF's NonSharedModelUpdatesTestBase.</summary>
-public abstract class NonSharedModelUpdatesAdoNetTest<THost>(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : global::Microsoft.EntityFrameworkCore.Update.NonSharedModelUpdatesTestBase(fixture)
+/// <summary>EF's TransactionTestBase.</summary>
+public abstract class TransactionAdoNetTest<THost>(TransactionAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.TransactionTestBase<TransactionAdoNetTest<THost>.AdoNetFixture>(fixture)
     where THost : IDatabaseHost, new()
 {
-    protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
-}
+    protected override global::Microsoft.EntityFrameworkCore.DbContext CreateContextWithConnectionString()
+        => new DbContext(Fixture.AddOptions(new THost().UseProvider(new DbContextOptionsBuilder(), ((RelationalTestStore)Fixture.TestStore).ConnectionString, _ => { })).UseInternalServiceProvider(Fixture.ServiceProvider).Options);
+    protected override bool SnapshotSupported => false;
+    protected override bool AmbientTransactionsSupported => new THost().Dialect.Capabilities.SupportsAmbientTransactions;
+    protected override bool SavepointsSupported => new THost().Dialect.Sql.Savepoints != null;
 
-/// <summary>EF's StoreValueGenerationTestBase.</summary>
-public abstract class StoreValueGenerationAdoNetTest<THost>(StoreValueGenerationAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.Update.StoreValueGenerationTestBase<StoreValueGenerationAdoNetTest<THost>.AdoNetFixture>(fixture)
-    where THost : IDatabaseHost, new()
-{
-
-    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Update.StoreValueGenerationFixtureBase
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.TransactionTestBase<AdoNetFixture>.TransactionFixtureBase
     {
         protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
     }
+}
+
+/// <summary>EF's UpdateSqlGeneratorTestBase.</summary>
+public abstract class UpdateSqlGeneratorAdoNetTest<THost>() : global::Microsoft.EntityFrameworkCore.Update.UpdateSqlGeneratorTestBase()
+    where THost : IDatabaseHost, new()
+{
+    protected override void AppendDeleteOperation_creates_full_delete_command_text_verification(global::System.Text.StringBuilder stringBuilder)
+        => throw new NotSupportedException("Not yet provided by the base suite: AppendDeleteOperation_creates_full_delete_command_text_verification.");
+    protected override void AppendDeleteOperation_creates_full_delete_command_text_with_concurrency_check_verification(global::System.Text.StringBuilder stringBuilder)
+        => throw new NotSupportedException("Not yet provided by the base suite: AppendDeleteOperation_creates_full_delete_command_text_with_concurrency_check_verification.");
+    protected override void AppendInsertOperation_insert_if_store_generated_columns_exist_verification(global::System.Text.StringBuilder stringBuilder)
+        => throw new NotSupportedException("Not yet provided by the base suite: AppendInsertOperation_insert_if_store_generated_columns_exist_verification.");
+    protected override void AppendInsertOperation_for_store_generated_columns_but_no_identity_verification(global::System.Text.StringBuilder stringBuilder)
+        => throw new NotSupportedException("Not yet provided by the base suite: AppendInsertOperation_for_store_generated_columns_but_no_identity_verification.");
+    protected override void AppendInsertOperation_for_only_identity_verification(global::System.Text.StringBuilder stringBuilder)
+        => throw new NotSupportedException("Not yet provided by the base suite: AppendInsertOperation_for_only_identity_verification.");
+    protected override void AppendInsertOperation_for_all_store_generated_columns_verification(global::System.Text.StringBuilder stringBuilder)
+        => throw new NotSupportedException("Not yet provided by the base suite: AppendInsertOperation_for_all_store_generated_columns_verification.");
+    protected override void AppendInsertOperation_for_only_single_identity_columns_verification(global::System.Text.StringBuilder stringBuilder)
+        => throw new NotSupportedException("Not yet provided by the base suite: AppendInsertOperation_for_only_single_identity_columns_verification.");
+    protected override void AppendUpdateOperation_if_store_generated_columns_exist_verification(global::System.Text.StringBuilder stringBuilder)
+        => throw new NotSupportedException("Not yet provided by the base suite: AppendUpdateOperation_if_store_generated_columns_exist_verification.");
+    protected override void AppendUpdateOperation_if_store_generated_columns_dont_exist_verification(global::System.Text.StringBuilder stringBuilder)
+        => throw new NotSupportedException("Not yet provided by the base suite: AppendUpdateOperation_if_store_generated_columns_dont_exist_verification.");
+    protected override void AppendUpdateOperation_appends_where_for_concurrency_token_verification(global::System.Text.StringBuilder stringBuilder)
+        => throw new NotSupportedException("Not yet provided by the base suite: AppendUpdateOperation_appends_where_for_concurrency_token_verification.");
+    protected override void AppendUpdateOperation_for_computed_property_verification(global::System.Text.StringBuilder stringBuilder)
+        => throw new NotSupportedException("Not yet provided by the base suite: AppendUpdateOperation_for_computed_property_verification.");
+    protected override global::Microsoft.EntityFrameworkCore.Update.IUpdateSqlGenerator CreateSqlGenerator()
+        => throw new NotSupportedException("Not yet provided by the base suite: CreateSqlGenerator.");
+    protected override string RowsAffected => throw new NotSupportedException("Not yet provided by the base suite: RowsAffected.");
+    protected override global::Microsoft.EntityFrameworkCore.TestUtilities.TestHelpers TestHelpers => AdoNetTestHelpers<THost>.Instance;
 }
 
 /// <summary>EF's UpdatesRelationalTestBase.</summary>
@@ -1304,6 +2169,34 @@ public abstract class UpdatesAdoNetTest<THost>(UpdatesAdoNetTest<THost>.AdoNetFi
         => throw new NotSupportedException("Not yet provided by the base suite: Identifiers_are_generated_correctly.");
 
     public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Update.UpdatesRelationalTestBase<AdoNetFixture>.UpdatesRelationalFixture
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's ValueConvertersEndToEndTestBase.</summary>
+public abstract class ValueConvertersEndToEndAdoNetTest<THost>(ValueConvertersEndToEndAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.ValueConvertersEndToEndTestBase<ValueConvertersEndToEndAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.ValueConvertersEndToEndTestBase<AdoNetFixture>.ValueConvertersEndToEndFixtureBase
+    {
+        protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
+    }
+}
+
+/// <summary>EF's WarningsTestBase.</summary>
+public abstract class WarningsAdoNetTest<THost>(NorthwindQueryAdoNetFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.Query.WarningsTestBase<NorthwindQueryAdoNetFixture<THost>>(fixture)
+    where THost : IDatabaseHost, new()
+{
+}
+
+/// <summary>EF's WithConstructorsTestBase.</summary>
+public abstract class WithConstructorsAdoNetTest<THost>(WithConstructorsAdoNetTest<THost>.AdoNetFixture fixture) : global::Microsoft.EntityFrameworkCore.WithConstructorsTestBase<WithConstructorsAdoNetTest<THost>.AdoNetFixture>(fixture)
+    where THost : IDatabaseHost, new()
+{
+
+    public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.WithConstructorsTestBase<AdoNetFixture>.WithConstructorsFixtureBase
     {
         protected override global::Microsoft.EntityFrameworkCore.TestUtilities.ITestStoreFactory TestStoreFactory => AdoNetTestStoreFactory<THost>.Instance;
     }

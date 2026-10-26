@@ -4,13 +4,89 @@
 
 namespace pengdows.efcore.adonet.Specification.Tests.SqlServer;
 
+public partial class AdHocAdvancedMappingsQuerySqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocAdvancedMappingsQueryAdoNetTest<SqlServerHost>(fixture);
+
+public partial class AdHocComplexTypeQuerySqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocComplexTypeQueryAdoNetTest<SqlServerHost>(fixture);
+
+public partial class AdHocJsonQuerySqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocJsonQueryAdoNetTest<SqlServerHost>(fixture);
+
+public partial class AdHocManyToManyQuerySqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocManyToManyQueryAdoNetTest<SqlServerHost>(fixture);
+
+public partial class AdHocMiscellaneousQuerySqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocMiscellaneousQueryAdoNetTest<SqlServerHost>(fixture);
+
+public partial class AdHocNavigationsQuerySqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocNavigationsQueryAdoNetTest<SqlServerHost>(fixture);
+
+public partial class AdHocPrecompiledQuerySqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : AdHocPrecompiledQueryAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class AdHocQueryFiltersQuerySqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocQueryFiltersQueryAdoNetTest<SqlServerHost>(fixture);
+
+public partial class AdHocQuerySplittingQuerySqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocQuerySplittingQueryAdoNetTest<SqlServerHost>(fixture);
+
 public partial class ApiConsistencySqlServerTest(ApiConsistencyAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : ApiConsistencyAdoNetTest<SqlServerHost>(fixture);
+
+public partial class ArithmeticOperatorTranslationsSqlServerTest(ArithmeticOperatorTranslationsAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : ArithmeticOperatorTranslationsAdoNetTest<SqlServerHost>(fixture);
+
+public partial class BadDataJsonDeserializationSqlServerTest() : BadDataJsonDeserializationAdoNetTest<SqlServerHost>();
+
+public partial class BitwiseOperatorTranslationsSqlServerTest(BitwiseOperatorTranslationsAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : BitwiseOperatorTranslationsAdoNetTest<SqlServerHost>(fixture);
 
 public partial class BuiltInDataTypesSqlServerTest(BuiltInDataTypesAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : BuiltInDataTypesAdoNetTest<SqlServerHost>(fixture);
 
+public partial class ByteArrayTranslationsSqlServerTest(ByteArrayTranslationsAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : ByteArrayTranslationsAdoNetTest<SqlServerHost>(fixture);
+
 public partial class CommandInterceptionSqlServerTest(AdoNetInterceptionFixture<SqlServerHost> fixture) : CommandInterceptionAdoNetTest<SqlServerHost>(fixture);
 
+public partial class ComparisonOperatorTranslationsSqlServerTest(ComparisonOperatorTranslationsAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : ComparisonOperatorTranslationsAdoNetTest<SqlServerHost>(fixture);
+
+public partial class CompiledModelSqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : CompiledModelAdoNetTest<SqlServerHost>(fixture);
+
+public partial class ComplexCollectionJsonUpdateSqlServerTest(ComplexCollectionJsonUpdateAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : ComplexCollectionJsonUpdateAdoNetTest<SqlServerHost>(fixture);
+
+public partial class ComplexJsonBulkUpdateSqlServerTest(ComplexJsonBulkUpdateAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexJsonBulkUpdateAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class ComplexJsonCollectionSqlServerTest(ComplexJsonCollectionAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexJsonCollectionAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class ComplexJsonMiscellaneousSqlServerTest(ComplexJsonMiscellaneousAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexJsonMiscellaneousAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class ComplexJsonPrimitiveCollectionSqlServerTest(ComplexJsonPrimitiveCollectionAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexJsonPrimitiveCollectionAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class ComplexJsonProjectionSqlServerTest(ComplexJsonProjectionAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexJsonProjectionAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class ComplexJsonSetOperationsSqlServerTest(ComplexJsonSetOperationsAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexJsonSetOperationsAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class ComplexJsonStructuralEqualitySqlServerTest(ComplexJsonStructuralEqualityAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexJsonStructuralEqualityAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class ComplexNavigationsCollectionsQuerySqlServerTest(ComplexNavigationsCollectionsQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : ComplexNavigationsCollectionsQueryAdoNetTest<SqlServerHost>(fixture);
+
+public partial class ComplexNavigationsCollectionsSharedTypeQuerySqlServerTest(ComplexNavigationsCollectionsSharedTypeQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : ComplexNavigationsCollectionsSharedTypeQueryAdoNetTest<SqlServerHost>(fixture);
+
+public partial class ComplexNavigationsCollectionsSplitQuerySqlServerTest(ComplexNavigationsCollectionsSplitQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : ComplexNavigationsCollectionsSplitQueryAdoNetTest<SqlServerHost>(fixture);
+
+public partial class ComplexNavigationsCollectionsSplitSharedTypeQuerySqlServerTest(ComplexNavigationsCollectionsSplitSharedTypeQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : ComplexNavigationsCollectionsSplitSharedTypeQueryAdoNetTest<SqlServerHost>(fixture);
+
+public partial class ComplexNavigationsQuerySqlServerTest(ComplexNavigationsQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : ComplexNavigationsQueryAdoNetTest<SqlServerHost>(fixture);
+
+public partial class ComplexNavigationsSharedTypeQuerySqlServerTest(ComplexNavigationsSharedTypeQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : ComplexNavigationsSharedTypeQueryAdoNetTest<SqlServerHost>(fixture);
+
+public partial class ComplexTableSplittingBulkUpdateSqlServerTest(ComplexTableSplittingBulkUpdateAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexTableSplittingBulkUpdateAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class ComplexTableSplittingMiscellaneousSqlServerTest(ComplexTableSplittingMiscellaneousAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexTableSplittingMiscellaneousAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class ComplexTableSplittingPrimitiveCollectionSqlServerTest(ComplexTableSplittingPrimitiveCollectionAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexTableSplittingPrimitiveCollectionAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class ComplexTableSplittingProjectionSqlServerTest(ComplexTableSplittingProjectionAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexTableSplittingProjectionAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class ComplexTableSplittingStructuralEqualitySqlServerTest(ComplexTableSplittingStructuralEqualityAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexTableSplittingStructuralEqualityAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class ComplexTypeQuerySqlServerTest(ComplexTypeQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : ComplexTypeQueryAdoNetTest<SqlServerHost>(fixture);
+
+public partial class ComplexTypesTrackingSqlServerTest(ComplexTypesTrackingAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexTypesTrackingAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
 public partial class CompositeKeyEndToEndSqlServerTest(CompositeKeyEndToEndAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : CompositeKeyEndToEndAdoNetTest<SqlServerHost>(fixture);
+
+public partial class CompositeKeysQuerySqlServerTest(CompositeKeysQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : CompositeKeysQueryAdoNetTest<SqlServerHost>(fixture);
+
+public partial class CompositeKeysSplitQuerySqlServerTest(CompositeKeysSplitQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : CompositeKeysSplitQueryAdoNetTest<SqlServerHost>(fixture);
 
 public partial class ConcurrencyDetectorDisabledSqlServerTest(ConcurrencyDetectorDisabledAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : ConcurrencyDetectorDisabledAdoNetTest<SqlServerHost>(fixture);
 
@@ -26,129 +102,33 @@ public partial class DataAnnotationSqlServerTest(DataAnnotationAdoNetTest<SqlSer
 
 public partial class DataBindingSqlServerTest(DataBindingAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : DataBindingAdoNetTest<SqlServerHost>(fixture);
 
+public partial class DateOnlyTranslationsSqlServerTest(DateOnlyTranslationsAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : DateOnlyTranslationsAdoNetTest<SqlServerHost>(fixture);
+
+public partial class DateTimeOffsetTranslationsSqlServerTest(DateTimeOffsetTranslationsAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : DateTimeOffsetTranslationsAdoNetTest<SqlServerHost>(fixture);
+
+public partial class DateTimeTranslationsSqlServerTest(DateTimeTranslationsAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : DateTimeTranslationsAdoNetTest<SqlServerHost>(fixture);
+
 public partial class DesignTimeSqlServerTest(DesignTimeAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : DesignTimeAdoNetTest<SqlServerHost>(fixture);
-
-public partial class EntitySplittingSqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : EntitySplittingAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
-
-public partial class FieldsOnlyLoadSqlServerTest(FieldsOnlyLoadAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : FieldsOnlyLoadAdoNetTest<SqlServerHost>(fixture);
-
-public partial class FindSqlServerTest(FindAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : FindAdoNetTest<SqlServerHost>(fixture);
-
-public partial class KeysWithConvertersSqlServerTest(KeysWithConvertersAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : KeysWithConvertersAdoNetTest<SqlServerHost>(fixture);
-
-public partial class LoadSqlServerTest(LoadAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : LoadAdoNetTest<SqlServerHost>(fixture);
-
-public partial class ManyToManyFieldsLoadSqlServerTest(ManyToManyFieldsLoadAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : ManyToManyFieldsLoadAdoNetTest<SqlServerHost>(fixture);
-
-public partial class ManyToManyLoadSqlServerTest(ManyToManyLoadAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : ManyToManyLoadAdoNetTest<SqlServerHost>(fixture);
-
-public partial class ManyToManyTrackingSqlServerTest(ManyToManyTrackingAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : ManyToManyTrackingAdoNetTest<SqlServerHost>(fixture);
-
-public partial class MonsterFixupSqlServerTest(MonsterFixupAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : MonsterFixupAdoNetTest<SqlServerHost>(fixture);
-
-public partial class MusicStoreSqlServerTest(MusicStoreAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : MusicStoreAdoNetTest<SqlServerHost>(fixture);
-
-public partial class NotificationEntitiesSqlServerTest(NotificationEntitiesAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : NotificationEntitiesAdoNetTest<SqlServerHost>(fixture);
-
-public partial class OverzealousInitializationSqlServerTest(OverzealousInitializationAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : OverzealousInitializationAdoNetTest<SqlServerHost>(fixture);
-
-public partial class QueryExpressionInterceptionSqlServerTest(AdoNetInterceptionFixture<SqlServerHost> fixture) : QueryExpressionInterceptionAdoNetTest<SqlServerHost>(fixture);
-
-public partial class RelationalComplianceSqlServerTest() : RelationalComplianceAdoNetTest<SqlServerHost>();
-
-public partial class RelationalServiceCollectionExtensionsSqlServerTest(global::Microsoft.EntityFrameworkCore.TestUtilities.TestHelpers testHelpers) : RelationalServiceCollectionExtensionsAdoNetTest<SqlServerHost>(testHelpers);
-
-public partial class SaveChangesInterceptionSqlServerTest(AdoNetInterceptionFixture<SqlServerHost> fixture) : SaveChangesInterceptionAdoNetTest<SqlServerHost>(fixture);
-
-public partial class SerializationSqlServerTest(SerializationAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : SerializationAdoNetTest<SqlServerHost>(fixture);
-
-public partial class SpatialSqlServerTest(SpatialAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : SpatialAdoNetTest<SqlServerHost>(fixture);
-
-public partial class StoreGeneratedFixupSqlServerTest(StoreGeneratedFixupAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : StoreGeneratedFixupAdoNetTest<SqlServerHost>(fixture);
-
-public partial class StoreGeneratedSqlServerTest(StoreGeneratedAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : StoreGeneratedAdoNetTest<SqlServerHost>(fixture);
-
-public partial class TPTTableSplittingSqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPTTableSplittingAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
-
-public partial class TableSplittingSqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TableSplittingAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
-
-public partial class TransactionInterceptionSqlServerTest(AdoNetInterceptionFixture<SqlServerHost> fixture) : TransactionInterceptionAdoNetTest<SqlServerHost>(fixture);
-
-public partial class TransactionSqlServerTest(TransactionAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : TransactionAdoNetTest<SqlServerHost>(fixture);
-
-public partial class ValueConvertersEndToEndSqlServerTest(ValueConvertersEndToEndAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : ValueConvertersEndToEndAdoNetTest<SqlServerHost>(fixture);
-
-public partial class WithConstructorsSqlServerTest(WithConstructorsAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : WithConstructorsAdoNetTest<SqlServerHost>(fixture);
-
-public partial class NonSharedModelBulkUpdatesSqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : NonSharedModelBulkUpdatesAdoNetTest<SqlServerHost>(fixture);
-
-public partial class NorthwindBulkUpdatesSqlServerTest(NorthwindBulkUpdatesAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : NorthwindBulkUpdatesAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
-
-public partial class TPCFiltersInheritanceBulkUpdatesSqlServerTest(TPCFiltersInheritanceBulkUpdatesAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPCFiltersInheritanceBulkUpdatesAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
-
-public partial class TPCInheritanceBulkUpdatesSqlServerTest(TPCInheritanceBulkUpdatesAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPCInheritanceBulkUpdatesAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
-
-public partial class TPHInheritanceBulkUpdatesSqlServerTest(TPHInheritanceBulkUpdatesAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPHInheritanceBulkUpdatesAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
-
-public partial class TPTFiltersInheritanceBulkUpdatesSqlServerTest(TPTFiltersInheritanceBulkUpdatesAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPTFiltersInheritanceBulkUpdatesAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
-
-public partial class TPTInheritanceBulkUpdatesSqlServerTest(TPTInheritanceBulkUpdatesAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPTInheritanceBulkUpdatesAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
-
-public partial class MigrationsInfrastructureSqlServerTest(MigrationsInfrastructureAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : MigrationsInfrastructureAdoNetTest<SqlServerHost>(fixture);
-
-public partial class MigrationsSqlServerTest(MigrationsAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : MigrationsAdoNetTest<SqlServerHost>(fixture);
-
-public partial class RelationalComplexTypeSqlServerTest(AdoNetRelationalModelBuilderFixture<SqlServerHost> fixture) : RelationalComplexTypeAdoNetTest<SqlServerHost>(fixture);
-
-public partial class RelationalInheritanceSqlServerTest(AdoNetRelationalModelBuilderFixture<SqlServerHost> fixture) : RelationalInheritanceAdoNetTest<SqlServerHost>(fixture);
-
-public partial class RelationalManyToManySqlServerTest(AdoNetRelationalModelBuilderFixture<SqlServerHost> fixture) : RelationalManyToManyAdoNetTest<SqlServerHost>(fixture);
-
-public partial class RelationalManyToOneSqlServerTest(AdoNetRelationalModelBuilderFixture<SqlServerHost> fixture) : RelationalManyToOneAdoNetTest<SqlServerHost>(fixture);
-
-public partial class RelationalNonRelationshipSqlServerTest(AdoNetRelationalModelBuilderFixture<SqlServerHost> fixture) : RelationalNonRelationshipAdoNetTest<SqlServerHost>(fixture);
-
-public partial class RelationalOneToManySqlServerTest(AdoNetRelationalModelBuilderFixture<SqlServerHost> fixture) : RelationalOneToManyAdoNetTest<SqlServerHost>(fixture);
-
-public partial class RelationalOneToOneSqlServerTest(AdoNetRelationalModelBuilderFixture<SqlServerHost> fixture) : RelationalOneToOneAdoNetTest<SqlServerHost>(fixture);
-
-public partial class RelationalOwnedTypesSqlServerTest(AdoNetRelationalModelBuilderFixture<SqlServerHost> fixture) : RelationalOwnedTypesAdoNetTest<SqlServerHost>(fixture);
-
-public partial class AdHocAdvancedMappingsQuerySqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocAdvancedMappingsQueryAdoNetTest<SqlServerHost>(fixture);
-
-public partial class AdHocManyToManyQuerySqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocManyToManyQueryAdoNetTest<SqlServerHost>(fixture);
-
-public partial class AdHocMiscellaneousQuerySqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocMiscellaneousQueryAdoNetTest<SqlServerHost>(fixture);
-
-public partial class AdHocNavigationsQuerySqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocNavigationsQueryAdoNetTest<SqlServerHost>(fixture);
-
-public partial class AdHocQueryFiltersQuerySqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocQueryFiltersQueryAdoNetTest<SqlServerHost>(fixture);
-
-public partial class AdHocQuerySplittingQuerySqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocQuerySplittingQueryAdoNetTest<SqlServerHost>(fixture);
-
-public partial class ComplexNavigationsCollectionsQuerySqlServerTest(ComplexNavigationsCollectionsQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : ComplexNavigationsCollectionsQueryAdoNetTest<SqlServerHost>(fixture);
-
-public partial class ComplexNavigationsCollectionsSharedTypeQuerySqlServerTest(ComplexNavigationsCollectionsSharedTypeQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : ComplexNavigationsCollectionsSharedTypeQueryAdoNetTest<SqlServerHost>(fixture);
-
-public partial class ComplexNavigationsCollectionsSplitQuerySqlServerTest(ComplexNavigationsCollectionsSplitQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : ComplexNavigationsCollectionsSplitQueryAdoNetTest<SqlServerHost>(fixture);
-
-public partial class ComplexNavigationsCollectionsSplitSharedTypeQuerySqlServerTest(ComplexNavigationsCollectionsSplitSharedTypeQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : ComplexNavigationsCollectionsSplitSharedTypeQueryAdoNetTest<SqlServerHost>(fixture);
-
-public partial class ComplexNavigationsQuerySqlServerTest(ComplexNavigationsQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : ComplexNavigationsQueryAdoNetTest<SqlServerHost>(fixture);
-
-public partial class ComplexNavigationsSharedTypeQuerySqlServerTest(ComplexNavigationsSharedTypeQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : ComplexNavigationsSharedTypeQueryAdoNetTest<SqlServerHost>(fixture);
-
-public partial class ComplexTypeQuerySqlServerTest(ComplexTypeQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : ComplexTypeQueryAdoNetTest<SqlServerHost>(fixture);
-
-public partial class CompositeKeysQuerySqlServerTest(CompositeKeysQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : CompositeKeysQueryAdoNetTest<SqlServerHost>(fixture);
-
-public partial class CompositeKeysSplitQuerySqlServerTest(CompositeKeysSplitQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : CompositeKeysSplitQueryAdoNetTest<SqlServerHost>(fixture);
 
 public partial class Ef6GroupBySqlServerTest(Ef6GroupByAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : Ef6GroupByAdoNetTest<SqlServerHost>(fixture);
 
 public partial class EntitySplittingQuerySqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : EntitySplittingQueryAdoNetTest<SqlServerHost>(fixture);
 
+public partial class EntitySplittingSqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : EntitySplittingAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class EnumTranslationsSqlServerTest(EnumTranslationsAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : EnumTranslationsAdoNetTest<SqlServerHost>(fixture);
+
+public partial class FieldsOnlyLoadSqlServerTest(FieldsOnlyLoadAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : FieldsOnlyLoadAdoNetTest<SqlServerHost>(fixture);
+
+public partial class FiltersInheritanceBulkUpdatesSqlServerTest(FiltersInheritanceBulkUpdatesAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : FiltersInheritanceBulkUpdatesAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class FiltersInheritanceQuerySqlServerTest(FiltersInheritanceQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : FiltersInheritanceQueryAdoNetTest<SqlServerHost>(fixture);
+
+public partial class FindSqlServerTest(FindAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : FindAdoNetTest<SqlServerHost>(fixture);
+
 public partial class FromSqlQuerySqlServerTest(NorthwindQueryAdoNetFixture<SqlServerHost> fixture) : FromSqlQueryAdoNetTest<SqlServerHost>(fixture);
+
+public partial class FromSqlSprocQuerySqlServerTest(NorthwindQueryAdoNetFixture<SqlServerHost> fixture) : FromSqlSprocQueryAdoNetTest<SqlServerHost>(fixture);
 
 public partial class FunkyDataQuerySqlServerTest(FunkyDataQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : FunkyDataQueryAdoNetTest<SqlServerHost>(fixture);
 
@@ -156,13 +136,73 @@ public partial class GearsOfWarFromSqlQuerySqlServerTest(GearsOfWarFromSqlQueryA
 
 public partial class GearsOfWarQuerySqlServerTest(GearsOfWarQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : GearsOfWarQueryAdoNetTest<SqlServerHost>(fixture);
 
+public partial class GraphUpdatesSqlServerTest(GraphUpdatesAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : GraphUpdatesAdoNetTest<SqlServerHost>(fixture);
+
+public partial class GuidTranslationsSqlServerTest(GuidTranslationsAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : GuidTranslationsAdoNetTest<SqlServerHost>(fixture);
+
 public partial class IncludeOneToOneSqlServerTest(IncludeOneToOneAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : IncludeOneToOneAdoNetTest<SqlServerHost>(fixture);
+
+public partial class InheritanceRelationshipsQuerySqlServerTest(InheritanceRelationshipsQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : InheritanceRelationshipsQueryAdoNetTest<SqlServerHost>(fixture);
+
+public partial class JsonQuerySqlServerTest(JsonQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : JsonQueryAdoNetTest<SqlServerHost>(fixture);
+
+public partial class JsonTypesSqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : JsonTypesAdoNetTest<SqlServerHost>(fixture);
+
+public partial class JsonUpdateSqlServerTest(JsonUpdateAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : JsonUpdateAdoNetTest<SqlServerHost>(fixture);
+
+public partial class KeysWithConvertersSqlServerTest(KeysWithConvertersAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : KeysWithConvertersAdoNetTest<SqlServerHost>(fixture);
+
+public partial class LazyLoadProxySqlServerTest(LazyLoadProxyAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : LazyLoadProxyAdoNetTest<SqlServerHost>(fixture);
+
+public partial class LoadSqlServerTest(LoadAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : LoadAdoNetTest<SqlServerHost>(fixture);
+
+public partial class LogicalOperatorTranslationsSqlServerTest(LogicalOperatorTranslationsAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : LogicalOperatorTranslationsAdoNetTest<SqlServerHost>(fixture);
+
+public partial class ManyToManyFieldsLoadSqlServerTest(ManyToManyFieldsLoadAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : ManyToManyFieldsLoadAdoNetTest<SqlServerHost>(fixture);
+
+public partial class ManyToManyLoadSqlServerTest(ManyToManyLoadAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : ManyToManyLoadAdoNetTest<SqlServerHost>(fixture);
 
 public partial class ManyToManyNoTrackingQuerySqlServerTest(ManyToManyNoTrackingQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : ManyToManyNoTrackingQueryAdoNetTest<SqlServerHost>(fixture);
 
 public partial class ManyToManyQuerySqlServerTest(ManyToManyQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : ManyToManyQueryAdoNetTest<SqlServerHost>(fixture);
 
+public partial class ManyToManyTrackingSqlServerTest(ManyToManyTrackingAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : ManyToManyTrackingAdoNetTest<SqlServerHost>(fixture);
+
 public partial class MappingQuerySqlServerTest(MappingQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : MappingQueryAdoNetTest<SqlServerHost>(fixture);
+
+public partial class MathTranslationsSqlServerTest(MathTranslationsAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : MathTranslationsAdoNetTest<SqlServerHost>(fixture);
+
+public partial class MigrationsInfrastructureSqlServerTest(MigrationsInfrastructureAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : MigrationsInfrastructureAdoNetTest<SqlServerHost>(fixture);
+
+public partial class MigrationsSqlGeneratorSqlServerTest(global::Microsoft.EntityFrameworkCore.TestUtilities.TestHelpers testHelpers, global::Microsoft.Extensions.DependencyInjection.IServiceCollection customServices, global::Microsoft.EntityFrameworkCore.DbContextOptions options) : MigrationsSqlGeneratorAdoNetTest<SqlServerHost>(testHelpers, customServices, options);
+
+public partial class MigrationsSqlServerTest(MigrationsAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : MigrationsAdoNetTest<SqlServerHost>(fixture);
+
+public partial class MiscellaneousOperatorTranslationsSqlServerTest(MiscellaneousOperatorTranslationsAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : MiscellaneousOperatorTranslationsAdoNetTest<SqlServerHost>(fixture);
+
+public partial class MiscellaneousTranslationsSqlServerTest(MiscellaneousTranslationsAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : MiscellaneousTranslationsAdoNetTest<SqlServerHost>(fixture);
+
+public partial class MonsterFixupSqlServerTest(MonsterFixupAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : MonsterFixupAdoNetTest<SqlServerHost>(fixture);
+
+public partial class MusicStoreSqlServerTest(MusicStoreAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : MusicStoreAdoNetTest<SqlServerHost>(fixture);
+
+public partial class NavigationsCollectionSqlServerTest(NavigationsCollectionAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : NavigationsCollectionAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class NavigationsIncludeSqlServerTest(NavigationsIncludeAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : NavigationsIncludeAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class NavigationsMiscellaneousSqlServerTest(NavigationsMiscellaneousAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : NavigationsMiscellaneousAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class NavigationsPrimitiveCollectionSqlServerTest(NavigationsPrimitiveCollectionAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : NavigationsPrimitiveCollectionAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class NavigationsProjectionSqlServerTest(NavigationsProjectionAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : NavigationsProjectionAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class NavigationsSetOperationsSqlServerTest(NavigationsSetOperationsAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : NavigationsSetOperationsAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class NavigationsStructuralEqualitySqlServerTest(NavigationsStructuralEqualityAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : NavigationsStructuralEqualityAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class NonSharedModelBulkUpdatesSqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : NonSharedModelBulkUpdatesAdoNetTest<SqlServerHost>(fixture);
+
+public partial class NonSharedModelUpdatesSqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : NonSharedModelUpdatesAdoNetTest<SqlServerHost>(fixture);
 
 public partial class NonSharedPrimitiveCollectionsQuerySqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : NonSharedPrimitiveCollectionsQueryAdoNetTest<SqlServerHost>(fixture);
 
@@ -171,6 +211,8 @@ public partial class NorthwindAggregateOperatorsQuerySqlServerTest(NorthwindQuer
 public partial class NorthwindAsNoTrackingQuerySqlServerTest(NorthwindQueryAdoNetFixture<SqlServerHost> fixture) : NorthwindAsNoTrackingQueryAdoNetTest<SqlServerHost>(fixture);
 
 public partial class NorthwindAsTrackingQuerySqlServerTest(NorthwindQueryAdoNetFixture<SqlServerHost> fixture) : NorthwindAsTrackingQueryAdoNetTest<SqlServerHost>(fixture);
+
+public partial class NorthwindBulkUpdatesSqlServerTest(NorthwindBulkUpdatesAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : NorthwindBulkUpdatesAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
 
 public partial class NorthwindChangeTrackingQuerySqlServerTest(NorthwindQueryAdoNetFixture<SqlServerHost> fixture) : NorthwindChangeTrackingQueryAdoNetTest<SqlServerHost>(fixture);
 
@@ -210,6 +252,8 @@ public partial class NorthwindSqlQuerySqlServerTest(NorthwindQueryAdoNetFixture<
 
 public partial class NorthwindStringIncludeQuerySqlServerTest(NorthwindQueryAdoNetFixture<SqlServerHost> fixture) : NorthwindStringIncludeQueryAdoNetTest<SqlServerHost>(fixture);
 
+public partial class NotificationEntitiesSqlServerTest(NotificationEntitiesAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : NotificationEntitiesAdoNetTest<SqlServerHost>(fixture);
+
 public partial class NullKeysSqlServerTest(NullKeysAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : NullKeysAdoNetTest<SqlServerHost>(fixture);
 
 public partial class NullSemanticsQuerySqlServerTest(NullSemanticsQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : NullSemanticsQueryAdoNetTest<SqlServerHost>(fixture);
@@ -218,25 +262,111 @@ public partial class OperatorsQuerySqlServerTest(global::Microsoft.EntityFramewo
 
 public partial class OptionalDependentQuerySqlServerTest(OptionalDependentQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : OptionalDependentQueryAdoNetTest<SqlServerHost>(fixture);
 
+public partial class OverzealousInitializationSqlServerTest(OverzealousInitializationAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : OverzealousInitializationAdoNetTest<SqlServerHost>(fixture);
+
 public partial class OwnedEntityQuerySqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : OwnedEntityQueryAdoNetTest<SqlServerHost>(fixture);
+
+public partial class OwnedJsonBulkUpdateSqlServerTest(OwnedJsonBulkUpdateAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedJsonBulkUpdateAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class OwnedJsonCollectionSqlServerTest(OwnedJsonCollectionAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedJsonCollectionAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class OwnedJsonMiscellaneousSqlServerTest(OwnedJsonMiscellaneousAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedJsonMiscellaneousAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class OwnedJsonPrimitiveCollectionSqlServerTest(OwnedJsonPrimitiveCollectionAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedJsonPrimitiveCollectionAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class OwnedJsonProjectionSqlServerTest(OwnedJsonProjectionAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedJsonProjectionAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class OwnedJsonStructuralEqualitySqlServerTest(OwnedJsonStructuralEqualityAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedJsonStructuralEqualityAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class OwnedNavigationsCollectionSqlServerTest(OwnedNavigationsCollectionAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedNavigationsCollectionAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class OwnedNavigationsMiscellaneousSqlServerTest(OwnedNavigationsMiscellaneousAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedNavigationsMiscellaneousAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class OwnedNavigationsPrimitiveCollectionSqlServerTest(OwnedNavigationsPrimitiveCollectionAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedNavigationsPrimitiveCollectionAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class OwnedNavigationsProjectionSqlServerTest(OwnedNavigationsProjectionAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedNavigationsProjectionAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class OwnedNavigationsSetOperationsSqlServerTest(OwnedNavigationsSetOperationsAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedNavigationsSetOperationsAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class OwnedNavigationsStructuralEqualitySqlServerTest(OwnedNavigationsStructuralEqualityAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedNavigationsStructuralEqualityAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
 
 public partial class OwnedQuerySqlServerTest(OwnedQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : OwnedQueryAdoNetTest<SqlServerHost>(fixture);
 
+public partial class OwnedTableSplittingMiscellaneousSqlServerTest(OwnedTableSplittingMiscellaneousAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedTableSplittingMiscellaneousAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class OwnedTableSplittingPrimitiveCollectionSqlServerTest(OwnedTableSplittingPrimitiveCollectionAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedTableSplittingPrimitiveCollectionAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class OwnedTableSplittingProjectionSqlServerTest(OwnedTableSplittingProjectionAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedTableSplittingProjectionAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class OwnedTableSplittingStructuralEqualitySqlServerTest(OwnedTableSplittingStructuralEqualityAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedTableSplittingStructuralEqualityAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
 public partial class PrimitiveCollectionsQuerySqlServerTest(PrimitiveCollectionsQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : PrimitiveCollectionsQueryAdoNetTest<SqlServerHost>(fixture);
+
+public partial class PropertyValuesSqlServerTest(PropertyValuesAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : PropertyValuesAdoNetTest<SqlServerHost>(fixture);
+
+public partial class ProxyGraphUpdatesSqlServerTest(ProxyGraphUpdatesAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : ProxyGraphUpdatesAdoNetTest<SqlServerHost>(fixture);
+
+public partial class QueryExpressionInterceptionSqlServerTest(AdoNetInterceptionFixture<SqlServerHost> fixture) : QueryExpressionInterceptionAdoNetTest<SqlServerHost>(fixture);
 
 public partial class QueryFilterFuncletizationSqlServerTest(QueryFilterFuncletizationAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : QueryFilterFuncletizationAdoNetTest<SqlServerHost>(fixture);
 
 public partial class QueryNoClientEvalSqlServerTest(NorthwindQueryAdoNetFixture<SqlServerHost> fixture) : QueryNoClientEvalAdoNetTest<SqlServerHost>(fixture);
 
+public partial class RelationalComplexCollectionSqlServerTest(AdoNetRelationalModelBuilderFixture<SqlServerHost> fixture) : RelationalComplexCollectionAdoNetTest<SqlServerHost>(fixture);
+
+public partial class RelationalComplexTypeSqlServerTest(AdoNetRelationalModelBuilderFixture<SqlServerHost> fixture) : RelationalComplexTypeAdoNetTest<SqlServerHost>(fixture);
+
+public partial class RelationalComplianceSqlServerTest() : RelationalComplianceAdoNetTest<SqlServerHost>();
+
+public partial class RelationalInheritanceSqlServerTest(AdoNetRelationalModelBuilderFixture<SqlServerHost> fixture) : RelationalInheritanceAdoNetTest<SqlServerHost>(fixture);
+
+public partial class RelationalManyToManySqlServerTest(AdoNetRelationalModelBuilderFixture<SqlServerHost> fixture) : RelationalManyToManyAdoNetTest<SqlServerHost>(fixture);
+
+public partial class RelationalManyToOneSqlServerTest(AdoNetRelationalModelBuilderFixture<SqlServerHost> fixture) : RelationalManyToOneAdoNetTest<SqlServerHost>(fixture);
+
+public partial class RelationalNonRelationshipSqlServerTest(AdoNetRelationalModelBuilderFixture<SqlServerHost> fixture) : RelationalNonRelationshipAdoNetTest<SqlServerHost>(fixture);
+
+public partial class RelationalOneToManySqlServerTest(AdoNetRelationalModelBuilderFixture<SqlServerHost> fixture) : RelationalOneToManyAdoNetTest<SqlServerHost>(fixture);
+
+public partial class RelationalOneToOneSqlServerTest(AdoNetRelationalModelBuilderFixture<SqlServerHost> fixture) : RelationalOneToOneAdoNetTest<SqlServerHost>(fixture);
+
+public partial class RelationalOwnedTypesSqlServerTest(AdoNetRelationalModelBuilderFixture<SqlServerHost> fixture) : RelationalOwnedTypesAdoNetTest<SqlServerHost>(fixture);
+
+public partial class RelationalServiceCollectionExtensionsSqlServerTest(global::Microsoft.EntityFrameworkCore.TestUtilities.TestHelpers testHelpers) : RelationalServiceCollectionExtensionsAdoNetTest<SqlServerHost>(testHelpers);
+
+public partial class SaveChangesInterceptionSqlServerTest(AdoNetInterceptionFixture<SqlServerHost> fixture) : SaveChangesInterceptionAdoNetTest<SqlServerHost>(fixture);
+
+public partial class SeedingSqlServerTest() : SeedingAdoNetTest<SqlServerHost>();
+
+public partial class SerializationSqlServerTest(SerializationAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : SerializationAdoNetTest<SqlServerHost>(fixture);
+
 public partial class SharedTypeQuerySqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : SharedTypeQueryAdoNetTest<SqlServerHost>(fixture);
 
 public partial class SpatialQuerySqlServerTest(SpatialQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : SpatialQueryAdoNetTest<SqlServerHost>(fixture);
 
+public partial class SpatialSqlServerTest(SpatialAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : SpatialAdoNetTest<SqlServerHost>(fixture);
+
+public partial class SqlExecutorSqlServerTest(SqlExecutorAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : SqlExecutorAdoNetTest<SqlServerHost>(fixture);
+
 public partial class SqlQuerySqlServerTest(NorthwindQueryAdoNetFixture<SqlServerHost> fixture) : SqlQueryAdoNetTest<SqlServerHost>(fixture);
+
+public partial class StoreGeneratedFixupSqlServerTest(StoreGeneratedFixupAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : StoreGeneratedFixupAdoNetTest<SqlServerHost>(fixture);
+
+public partial class StoreGeneratedSqlServerTest(StoreGeneratedAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : StoreGeneratedAdoNetTest<SqlServerHost>(fixture);
+
+public partial class StoreValueGenerationSqlServerTest(StoreValueGenerationAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : StoreValueGenerationAdoNetTest<SqlServerHost>(fixture);
+
+public partial class StoredProcedureUpdateSqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : StoredProcedureUpdateAdoNetTest<SqlServerHost>(fixture);
+
+public partial class StringTranslationsSqlServerTest(StringTranslationsAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : StringTranslationsAdoNetTest<SqlServerHost>(fixture);
+
+public partial class TPCFiltersInheritanceBulkUpdatesSqlServerTest(TPCFiltersInheritanceBulkUpdatesAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPCFiltersInheritanceBulkUpdatesAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
 
 public partial class TPCFiltersInheritanceQuerySqlServerTest(TPCFiltersInheritanceQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : TPCFiltersInheritanceQueryAdoNetTest<SqlServerHost>(fixture);
 
 public partial class TPCGearsOfWarQuerySqlServerTest(TPCGearsOfWarQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : TPCGearsOfWarQueryAdoNetTest<SqlServerHost>(fixture);
+
+public partial class TPCInheritanceBulkUpdatesSqlServerTest(TPCInheritanceBulkUpdatesAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPCInheritanceBulkUpdatesAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
 
 public partial class TPCInheritanceQuerySqlServerTest(TPCInheritanceQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPCInheritanceQueryAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
 
@@ -246,11 +376,17 @@ public partial class TPCManyToManyQuerySqlServerTest(TPCManyToManyQueryAdoNetTes
 
 public partial class TPCRelationshipsQuerySqlServerTest(TPCRelationshipsQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : TPCRelationshipsQueryAdoNetTest<SqlServerHost>(fixture);
 
+public partial class TPHInheritanceBulkUpdatesSqlServerTest(TPHInheritanceBulkUpdatesAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPHInheritanceBulkUpdatesAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
 public partial class TPHInheritanceQuerySqlServerTest(TPHInheritanceQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPHInheritanceQueryAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class TPTFiltersInheritanceBulkUpdatesSqlServerTest(TPTFiltersInheritanceBulkUpdatesAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPTFiltersInheritanceBulkUpdatesAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
 
 public partial class TPTFiltersInheritanceQuerySqlServerTest(TPTFiltersInheritanceQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : TPTFiltersInheritanceQueryAdoNetTest<SqlServerHost>(fixture);
 
 public partial class TPTGearsOfWarQuerySqlServerTest(TPTGearsOfWarQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : TPTGearsOfWarQueryAdoNetTest<SqlServerHost>(fixture);
+
+public partial class TPTInheritanceBulkUpdatesSqlServerTest(TPTInheritanceBulkUpdatesAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPTInheritanceBulkUpdatesAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
 
 public partial class TPTInheritanceQuerySqlServerTest(TPTInheritanceQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPTInheritanceQueryAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
 
@@ -260,13 +396,27 @@ public partial class TPTManyToManyQuerySqlServerTest(TPTManyToManyQueryAdoNetTes
 
 public partial class TPTRelationshipsQuerySqlServerTest(TPTRelationshipsQueryAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : TPTRelationshipsQueryAdoNetTest<SqlServerHost>(fixture);
 
+public partial class TPTTableSplittingSqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPTTableSplittingAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class TableSplittingSqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TableSplittingAdoNetTest<SqlServerHost>(fixture, testOutputHelper);
+
+public partial class TimeOnlyTranslationsSqlServerTest(TimeOnlyTranslationsAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : TimeOnlyTranslationsAdoNetTest<SqlServerHost>(fixture);
+
+public partial class TimeSpanTranslationsSqlServerTest(TimeSpanTranslationsAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : TimeSpanTranslationsAdoNetTest<SqlServerHost>(fixture);
+
 public partial class ToSqlQuerySqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : ToSqlQueryAdoNetTest<SqlServerHost>(fixture);
+
+public partial class TransactionInterceptionSqlServerTest(AdoNetInterceptionFixture<SqlServerHost> fixture) : TransactionInterceptionAdoNetTest<SqlServerHost>(fixture);
+
+public partial class TransactionSqlServerTest(TransactionAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : TransactionAdoNetTest<SqlServerHost>(fixture);
+
+public partial class UpdateSqlGeneratorSqlServerTest() : UpdateSqlGeneratorAdoNetTest<SqlServerHost>();
+
+public partial class UpdatesSqlServerTest(UpdatesAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : UpdatesAdoNetTest<SqlServerHost>(fixture);
+
+public partial class ValueConvertersEndToEndSqlServerTest(ValueConvertersEndToEndAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : ValueConvertersEndToEndAdoNetTest<SqlServerHost>(fixture);
 
 public partial class WarningsSqlServerTest(NorthwindQueryAdoNetFixture<SqlServerHost> fixture) : WarningsAdoNetTest<SqlServerHost>(fixture);
 
-public partial class NonSharedModelUpdatesSqlServerTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : NonSharedModelUpdatesAdoNetTest<SqlServerHost>(fixture);
-
-public partial class StoreValueGenerationSqlServerTest(StoreValueGenerationAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : StoreValueGenerationAdoNetTest<SqlServerHost>(fixture);
-
-public partial class UpdatesSqlServerTest(UpdatesAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : UpdatesAdoNetTest<SqlServerHost>(fixture);
+public partial class WithConstructorsSqlServerTest(WithConstructorsAdoNetTest<SqlServerHost>.AdoNetFixture fixture) : WithConstructorsAdoNetTest<SqlServerHost>(fixture);
 

@@ -5,16 +5,130 @@
 namespace pengdows.efcore.adonet.Specification.Tests.FlatFile;
 
 [Collection(SingleWriter.FlatFile)]
+public partial class AdHocAdvancedMappingsQueryFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocAdvancedMappingsQueryAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class AdHocComplexTypeQueryFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocComplexTypeQueryAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class AdHocJsonQueryFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocJsonQueryAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class AdHocManyToManyQueryFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocManyToManyQueryAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class AdHocMiscellaneousQueryFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocMiscellaneousQueryAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class AdHocNavigationsQueryFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocNavigationsQueryAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class AdHocPrecompiledQueryFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : AdHocPrecompiledQueryAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class AdHocQueryFiltersQueryFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocQueryFiltersQueryAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class AdHocQuerySplittingQueryFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocQuerySplittingQueryAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
 public partial class ApiConsistencyFlatFileTest(ApiConsistencyAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : ApiConsistencyAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class ArithmeticOperatorTranslationsFlatFileTest(ArithmeticOperatorTranslationsAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : ArithmeticOperatorTranslationsAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class BadDataJsonDeserializationFlatFileTest() : BadDataJsonDeserializationAdoNetTest<FlatFileHost>();
+
+[Collection(SingleWriter.FlatFile)]
+public partial class BitwiseOperatorTranslationsFlatFileTest(BitwiseOperatorTranslationsAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : BitwiseOperatorTranslationsAdoNetTest<FlatFileHost>(fixture);
 
 [Collection(SingleWriter.FlatFile)]
 public partial class BuiltInDataTypesFlatFileTest(BuiltInDataTypesAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : BuiltInDataTypesAdoNetTest<FlatFileHost>(fixture);
 
 [Collection(SingleWriter.FlatFile)]
+public partial class ByteArrayTranslationsFlatFileTest(ByteArrayTranslationsAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : ByteArrayTranslationsAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
 public partial class CommandInterceptionFlatFileTest(AdoNetInterceptionFixture<FlatFileHost> fixture) : CommandInterceptionAdoNetTest<FlatFileHost>(fixture);
 
 [Collection(SingleWriter.FlatFile)]
+public partial class ComparisonOperatorTranslationsFlatFileTest(ComparisonOperatorTranslationsAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : ComparisonOperatorTranslationsAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class CompiledModelFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : CompiledModelAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class ComplexCollectionJsonUpdateFlatFileTest(ComplexCollectionJsonUpdateAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : ComplexCollectionJsonUpdateAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class ComplexJsonBulkUpdateFlatFileTest(ComplexJsonBulkUpdateAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexJsonBulkUpdateAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class ComplexJsonCollectionFlatFileTest(ComplexJsonCollectionAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexJsonCollectionAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class ComplexJsonMiscellaneousFlatFileTest(ComplexJsonMiscellaneousAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexJsonMiscellaneousAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class ComplexJsonPrimitiveCollectionFlatFileTest(ComplexJsonPrimitiveCollectionAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexJsonPrimitiveCollectionAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class ComplexJsonProjectionFlatFileTest(ComplexJsonProjectionAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexJsonProjectionAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class ComplexJsonSetOperationsFlatFileTest(ComplexJsonSetOperationsAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexJsonSetOperationsAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class ComplexJsonStructuralEqualityFlatFileTest(ComplexJsonStructuralEqualityAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexJsonStructuralEqualityAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class ComplexNavigationsCollectionsQueryFlatFileTest(ComplexNavigationsCollectionsQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : ComplexNavigationsCollectionsQueryAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class ComplexNavigationsCollectionsSharedTypeQueryFlatFileTest(ComplexNavigationsCollectionsSharedTypeQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : ComplexNavigationsCollectionsSharedTypeQueryAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class ComplexNavigationsCollectionsSplitQueryFlatFileTest(ComplexNavigationsCollectionsSplitQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : ComplexNavigationsCollectionsSplitQueryAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class ComplexNavigationsCollectionsSplitSharedTypeQueryFlatFileTest(ComplexNavigationsCollectionsSplitSharedTypeQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : ComplexNavigationsCollectionsSplitSharedTypeQueryAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class ComplexNavigationsQueryFlatFileTest(ComplexNavigationsQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : ComplexNavigationsQueryAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class ComplexNavigationsSharedTypeQueryFlatFileTest(ComplexNavigationsSharedTypeQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : ComplexNavigationsSharedTypeQueryAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class ComplexTableSplittingBulkUpdateFlatFileTest(ComplexTableSplittingBulkUpdateAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexTableSplittingBulkUpdateAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class ComplexTableSplittingMiscellaneousFlatFileTest(ComplexTableSplittingMiscellaneousAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexTableSplittingMiscellaneousAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class ComplexTableSplittingPrimitiveCollectionFlatFileTest(ComplexTableSplittingPrimitiveCollectionAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexTableSplittingPrimitiveCollectionAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class ComplexTableSplittingProjectionFlatFileTest(ComplexTableSplittingProjectionAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexTableSplittingProjectionAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class ComplexTableSplittingStructuralEqualityFlatFileTest(ComplexTableSplittingStructuralEqualityAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexTableSplittingStructuralEqualityAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class ComplexTypeQueryFlatFileTest(ComplexTypeQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : ComplexTypeQueryAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class ComplexTypesTrackingFlatFileTest(ComplexTypesTrackingAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexTypesTrackingAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
 public partial class CompositeKeyEndToEndFlatFileTest(CompositeKeyEndToEndAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : CompositeKeyEndToEndAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class CompositeKeysQueryFlatFileTest(CompositeKeysQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : CompositeKeysQueryAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class CompositeKeysSplitQueryFlatFileTest(CompositeKeysSplitQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : CompositeKeysSplitQueryAdoNetTest<FlatFileHost>(fixture);
 
 [Collection(SingleWriter.FlatFile)]
 public partial class ConcurrencyDetectorDisabledFlatFileTest(ConcurrencyDetectorDisabledAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : ConcurrencyDetectorDisabledAdoNetTest<FlatFileHost>(fixture);
@@ -38,181 +152,16 @@ public partial class DataAnnotationFlatFileTest(DataAnnotationAdoNetTest<FlatFil
 public partial class DataBindingFlatFileTest(DataBindingAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : DataBindingAdoNetTest<FlatFileHost>(fixture);
 
 [Collection(SingleWriter.FlatFile)]
+public partial class DateOnlyTranslationsFlatFileTest(DateOnlyTranslationsAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : DateOnlyTranslationsAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class DateTimeOffsetTranslationsFlatFileTest(DateTimeOffsetTranslationsAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : DateTimeOffsetTranslationsAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class DateTimeTranslationsFlatFileTest(DateTimeTranslationsAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : DateTimeTranslationsAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
 public partial class DesignTimeFlatFileTest(DesignTimeAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : DesignTimeAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class EntitySplittingFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : EntitySplittingAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class FieldsOnlyLoadFlatFileTest(FieldsOnlyLoadAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : FieldsOnlyLoadAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class FindFlatFileTest(FindAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : FindAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class KeysWithConvertersFlatFileTest(KeysWithConvertersAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : KeysWithConvertersAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class LoadFlatFileTest(LoadAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : LoadAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class ManyToManyFieldsLoadFlatFileTest(ManyToManyFieldsLoadAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : ManyToManyFieldsLoadAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class ManyToManyLoadFlatFileTest(ManyToManyLoadAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : ManyToManyLoadAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class ManyToManyTrackingFlatFileTest(ManyToManyTrackingAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : ManyToManyTrackingAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class MonsterFixupFlatFileTest(MonsterFixupAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : MonsterFixupAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class MusicStoreFlatFileTest(MusicStoreAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : MusicStoreAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class NotificationEntitiesFlatFileTest(NotificationEntitiesAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : NotificationEntitiesAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class OverzealousInitializationFlatFileTest(OverzealousInitializationAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : OverzealousInitializationAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class QueryExpressionInterceptionFlatFileTest(AdoNetInterceptionFixture<FlatFileHost> fixture) : QueryExpressionInterceptionAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class RelationalComplianceFlatFileTest() : RelationalComplianceAdoNetTest<FlatFileHost>();
-
-[Collection(SingleWriter.FlatFile)]
-public partial class RelationalServiceCollectionExtensionsFlatFileTest(global::Microsoft.EntityFrameworkCore.TestUtilities.TestHelpers testHelpers) : RelationalServiceCollectionExtensionsAdoNetTest<FlatFileHost>(testHelpers);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class SaveChangesInterceptionFlatFileTest(AdoNetInterceptionFixture<FlatFileHost> fixture) : SaveChangesInterceptionAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class SerializationFlatFileTest(SerializationAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : SerializationAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class SpatialFlatFileTest(SpatialAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : SpatialAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class StoreGeneratedFixupFlatFileTest(StoreGeneratedFixupAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : StoreGeneratedFixupAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class StoreGeneratedFlatFileTest(StoreGeneratedAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : StoreGeneratedAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class TPTTableSplittingFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPTTableSplittingAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class TableSplittingFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TableSplittingAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class TransactionInterceptionFlatFileTest(AdoNetInterceptionFixture<FlatFileHost> fixture) : TransactionInterceptionAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class TransactionFlatFileTest(TransactionAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : TransactionAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class ValueConvertersEndToEndFlatFileTest(ValueConvertersEndToEndAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : ValueConvertersEndToEndAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class WithConstructorsFlatFileTest(WithConstructorsAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : WithConstructorsAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class NonSharedModelBulkUpdatesFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : NonSharedModelBulkUpdatesAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class NorthwindBulkUpdatesFlatFileTest(NorthwindBulkUpdatesAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : NorthwindBulkUpdatesAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class TPCFiltersInheritanceBulkUpdatesFlatFileTest(TPCFiltersInheritanceBulkUpdatesAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPCFiltersInheritanceBulkUpdatesAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class TPCInheritanceBulkUpdatesFlatFileTest(TPCInheritanceBulkUpdatesAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPCInheritanceBulkUpdatesAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class TPHInheritanceBulkUpdatesFlatFileTest(TPHInheritanceBulkUpdatesAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPHInheritanceBulkUpdatesAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class TPTFiltersInheritanceBulkUpdatesFlatFileTest(TPTFiltersInheritanceBulkUpdatesAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPTFiltersInheritanceBulkUpdatesAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class TPTInheritanceBulkUpdatesFlatFileTest(TPTInheritanceBulkUpdatesAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPTInheritanceBulkUpdatesAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class MigrationsInfrastructureFlatFileTest(MigrationsInfrastructureAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : MigrationsInfrastructureAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class MigrationsFlatFileTest(MigrationsAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : MigrationsAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class RelationalComplexTypeFlatFileTest(AdoNetRelationalModelBuilderFixture<FlatFileHost> fixture) : RelationalComplexTypeAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class RelationalInheritanceFlatFileTest(AdoNetRelationalModelBuilderFixture<FlatFileHost> fixture) : RelationalInheritanceAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class RelationalManyToManyFlatFileTest(AdoNetRelationalModelBuilderFixture<FlatFileHost> fixture) : RelationalManyToManyAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class RelationalManyToOneFlatFileTest(AdoNetRelationalModelBuilderFixture<FlatFileHost> fixture) : RelationalManyToOneAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class RelationalNonRelationshipFlatFileTest(AdoNetRelationalModelBuilderFixture<FlatFileHost> fixture) : RelationalNonRelationshipAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class RelationalOneToManyFlatFileTest(AdoNetRelationalModelBuilderFixture<FlatFileHost> fixture) : RelationalOneToManyAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class RelationalOneToOneFlatFileTest(AdoNetRelationalModelBuilderFixture<FlatFileHost> fixture) : RelationalOneToOneAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class RelationalOwnedTypesFlatFileTest(AdoNetRelationalModelBuilderFixture<FlatFileHost> fixture) : RelationalOwnedTypesAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class AdHocAdvancedMappingsQueryFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocAdvancedMappingsQueryAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class AdHocManyToManyQueryFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocManyToManyQueryAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class AdHocMiscellaneousQueryFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocMiscellaneousQueryAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class AdHocNavigationsQueryFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocNavigationsQueryAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class AdHocQueryFiltersQueryFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocQueryFiltersQueryAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class AdHocQuerySplittingQueryFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocQuerySplittingQueryAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class ComplexNavigationsCollectionsQueryFlatFileTest(ComplexNavigationsCollectionsQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : ComplexNavigationsCollectionsQueryAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class ComplexNavigationsCollectionsSharedTypeQueryFlatFileTest(ComplexNavigationsCollectionsSharedTypeQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : ComplexNavigationsCollectionsSharedTypeQueryAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class ComplexNavigationsCollectionsSplitQueryFlatFileTest(ComplexNavigationsCollectionsSplitQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : ComplexNavigationsCollectionsSplitQueryAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class ComplexNavigationsCollectionsSplitSharedTypeQueryFlatFileTest(ComplexNavigationsCollectionsSplitSharedTypeQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : ComplexNavigationsCollectionsSplitSharedTypeQueryAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class ComplexNavigationsQueryFlatFileTest(ComplexNavigationsQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : ComplexNavigationsQueryAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class ComplexNavigationsSharedTypeQueryFlatFileTest(ComplexNavigationsSharedTypeQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : ComplexNavigationsSharedTypeQueryAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class ComplexTypeQueryFlatFileTest(ComplexTypeQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : ComplexTypeQueryAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class CompositeKeysQueryFlatFileTest(CompositeKeysQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : CompositeKeysQueryAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class CompositeKeysSplitQueryFlatFileTest(CompositeKeysSplitQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : CompositeKeysSplitQueryAdoNetTest<FlatFileHost>(fixture);
 
 [Collection(SingleWriter.FlatFile)]
 public partial class Ef6GroupByFlatFileTest(Ef6GroupByAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : Ef6GroupByAdoNetTest<FlatFileHost>(fixture);
@@ -221,7 +170,28 @@ public partial class Ef6GroupByFlatFileTest(Ef6GroupByAdoNetTest<FlatFileHost>.A
 public partial class EntitySplittingQueryFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : EntitySplittingQueryAdoNetTest<FlatFileHost>(fixture);
 
 [Collection(SingleWriter.FlatFile)]
+public partial class EntitySplittingFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : EntitySplittingAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class EnumTranslationsFlatFileTest(EnumTranslationsAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : EnumTranslationsAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class FieldsOnlyLoadFlatFileTest(FieldsOnlyLoadAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : FieldsOnlyLoadAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class FiltersInheritanceBulkUpdatesFlatFileTest(FiltersInheritanceBulkUpdatesAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : FiltersInheritanceBulkUpdatesAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class FiltersInheritanceQueryFlatFileTest(FiltersInheritanceQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : FiltersInheritanceQueryAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class FindFlatFileTest(FindAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : FindAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
 public partial class FromSqlQueryFlatFileTest(NorthwindQueryAdoNetFixture<FlatFileHost> fixture) : FromSqlQueryAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class FromSqlSprocQueryFlatFileTest(NorthwindQueryAdoNetFixture<FlatFileHost> fixture) : FromSqlSprocQueryAdoNetTest<FlatFileHost>(fixture);
 
 [Collection(SingleWriter.FlatFile)]
 public partial class FunkyDataQueryFlatFileTest(FunkyDataQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : FunkyDataQueryAdoNetTest<FlatFileHost>(fixture);
@@ -233,7 +203,43 @@ public partial class GearsOfWarFromSqlQueryFlatFileTest(GearsOfWarFromSqlQueryAd
 public partial class GearsOfWarQueryFlatFileTest(GearsOfWarQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : GearsOfWarQueryAdoNetTest<FlatFileHost>(fixture);
 
 [Collection(SingleWriter.FlatFile)]
+public partial class GraphUpdatesFlatFileTest(GraphUpdatesAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : GraphUpdatesAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class GuidTranslationsFlatFileTest(GuidTranslationsAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : GuidTranslationsAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
 public partial class IncludeOneToOneFlatFileTest(IncludeOneToOneAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : IncludeOneToOneAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class InheritanceRelationshipsQueryFlatFileTest(InheritanceRelationshipsQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : InheritanceRelationshipsQueryAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class JsonQueryFlatFileTest(JsonQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : JsonQueryAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class JsonTypesFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : JsonTypesAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class JsonUpdateFlatFileTest(JsonUpdateAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : JsonUpdateAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class KeysWithConvertersFlatFileTest(KeysWithConvertersAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : KeysWithConvertersAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class LazyLoadProxyFlatFileTest(LazyLoadProxyAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : LazyLoadProxyAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class LoadFlatFileTest(LoadAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : LoadAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class LogicalOperatorTranslationsFlatFileTest(LogicalOperatorTranslationsAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : LogicalOperatorTranslationsAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class ManyToManyFieldsLoadFlatFileTest(ManyToManyFieldsLoadAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : ManyToManyFieldsLoadAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class ManyToManyLoadFlatFileTest(ManyToManyLoadAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : ManyToManyLoadAdoNetTest<FlatFileHost>(fixture);
 
 [Collection(SingleWriter.FlatFile)]
 public partial class ManyToManyNoTrackingQueryFlatFileTest(ManyToManyNoTrackingQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : ManyToManyNoTrackingQueryAdoNetTest<FlatFileHost>(fixture);
@@ -242,7 +248,61 @@ public partial class ManyToManyNoTrackingQueryFlatFileTest(ManyToManyNoTrackingQ
 public partial class ManyToManyQueryFlatFileTest(ManyToManyQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : ManyToManyQueryAdoNetTest<FlatFileHost>(fixture);
 
 [Collection(SingleWriter.FlatFile)]
+public partial class ManyToManyTrackingFlatFileTest(ManyToManyTrackingAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : ManyToManyTrackingAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
 public partial class MappingQueryFlatFileTest(MappingQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : MappingQueryAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class MathTranslationsFlatFileTest(MathTranslationsAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : MathTranslationsAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class MigrationsInfrastructureFlatFileTest(MigrationsInfrastructureAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : MigrationsInfrastructureAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class MigrationsSqlGeneratorFlatFileTest(global::Microsoft.EntityFrameworkCore.TestUtilities.TestHelpers testHelpers, global::Microsoft.Extensions.DependencyInjection.IServiceCollection customServices, global::Microsoft.EntityFrameworkCore.DbContextOptions options) : MigrationsSqlGeneratorAdoNetTest<FlatFileHost>(testHelpers, customServices, options);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class MigrationsFlatFileTest(MigrationsAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : MigrationsAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class MiscellaneousOperatorTranslationsFlatFileTest(MiscellaneousOperatorTranslationsAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : MiscellaneousOperatorTranslationsAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class MiscellaneousTranslationsFlatFileTest(MiscellaneousTranslationsAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : MiscellaneousTranslationsAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class MonsterFixupFlatFileTest(MonsterFixupAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : MonsterFixupAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class MusicStoreFlatFileTest(MusicStoreAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : MusicStoreAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class NavigationsCollectionFlatFileTest(NavigationsCollectionAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : NavigationsCollectionAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class NavigationsIncludeFlatFileTest(NavigationsIncludeAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : NavigationsIncludeAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class NavigationsMiscellaneousFlatFileTest(NavigationsMiscellaneousAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : NavigationsMiscellaneousAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class NavigationsPrimitiveCollectionFlatFileTest(NavigationsPrimitiveCollectionAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : NavigationsPrimitiveCollectionAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class NavigationsProjectionFlatFileTest(NavigationsProjectionAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : NavigationsProjectionAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class NavigationsSetOperationsFlatFileTest(NavigationsSetOperationsAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : NavigationsSetOperationsAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class NavigationsStructuralEqualityFlatFileTest(NavigationsStructuralEqualityAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : NavigationsStructuralEqualityAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class NonSharedModelBulkUpdatesFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : NonSharedModelBulkUpdatesAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class NonSharedModelUpdatesFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : NonSharedModelUpdatesAdoNetTest<FlatFileHost>(fixture);
 
 [Collection(SingleWriter.FlatFile)]
 public partial class NonSharedPrimitiveCollectionsQueryFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : NonSharedPrimitiveCollectionsQueryAdoNetTest<FlatFileHost>(fixture);
@@ -255,6 +315,9 @@ public partial class NorthwindAsNoTrackingQueryFlatFileTest(NorthwindQueryAdoNet
 
 [Collection(SingleWriter.FlatFile)]
 public partial class NorthwindAsTrackingQueryFlatFileTest(NorthwindQueryAdoNetFixture<FlatFileHost> fixture) : NorthwindAsTrackingQueryAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class NorthwindBulkUpdatesFlatFileTest(NorthwindBulkUpdatesAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : NorthwindBulkUpdatesAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
 
 [Collection(SingleWriter.FlatFile)]
 public partial class NorthwindChangeTrackingQueryFlatFileTest(NorthwindQueryAdoNetFixture<FlatFileHost> fixture) : NorthwindChangeTrackingQueryAdoNetTest<FlatFileHost>(fixture);
@@ -314,6 +377,9 @@ public partial class NorthwindSqlQueryFlatFileTest(NorthwindQueryAdoNetFixture<F
 public partial class NorthwindStringIncludeQueryFlatFileTest(NorthwindQueryAdoNetFixture<FlatFileHost> fixture) : NorthwindStringIncludeQueryAdoNetTest<FlatFileHost>(fixture);
 
 [Collection(SingleWriter.FlatFile)]
+public partial class NotificationEntitiesFlatFileTest(NotificationEntitiesAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : NotificationEntitiesAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
 public partial class NullKeysFlatFileTest(NullKeysAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : NullKeysAdoNetTest<FlatFileHost>(fixture);
 
 [Collection(SingleWriter.FlatFile)]
@@ -326,13 +392,73 @@ public partial class OperatorsQueryFlatFileTest(global::Microsoft.EntityFramewor
 public partial class OptionalDependentQueryFlatFileTest(OptionalDependentQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : OptionalDependentQueryAdoNetTest<FlatFileHost>(fixture);
 
 [Collection(SingleWriter.FlatFile)]
+public partial class OverzealousInitializationFlatFileTest(OverzealousInitializationAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : OverzealousInitializationAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
 public partial class OwnedEntityQueryFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : OwnedEntityQueryAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class OwnedJsonBulkUpdateFlatFileTest(OwnedJsonBulkUpdateAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedJsonBulkUpdateAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class OwnedJsonCollectionFlatFileTest(OwnedJsonCollectionAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedJsonCollectionAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class OwnedJsonMiscellaneousFlatFileTest(OwnedJsonMiscellaneousAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedJsonMiscellaneousAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class OwnedJsonPrimitiveCollectionFlatFileTest(OwnedJsonPrimitiveCollectionAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedJsonPrimitiveCollectionAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class OwnedJsonProjectionFlatFileTest(OwnedJsonProjectionAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedJsonProjectionAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class OwnedJsonStructuralEqualityFlatFileTest(OwnedJsonStructuralEqualityAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedJsonStructuralEqualityAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class OwnedNavigationsCollectionFlatFileTest(OwnedNavigationsCollectionAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedNavigationsCollectionAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class OwnedNavigationsMiscellaneousFlatFileTest(OwnedNavigationsMiscellaneousAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedNavigationsMiscellaneousAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class OwnedNavigationsPrimitiveCollectionFlatFileTest(OwnedNavigationsPrimitiveCollectionAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedNavigationsPrimitiveCollectionAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class OwnedNavigationsProjectionFlatFileTest(OwnedNavigationsProjectionAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedNavigationsProjectionAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class OwnedNavigationsSetOperationsFlatFileTest(OwnedNavigationsSetOperationsAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedNavigationsSetOperationsAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class OwnedNavigationsStructuralEqualityFlatFileTest(OwnedNavigationsStructuralEqualityAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedNavigationsStructuralEqualityAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
 
 [Collection(SingleWriter.FlatFile)]
 public partial class OwnedQueryFlatFileTest(OwnedQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : OwnedQueryAdoNetTest<FlatFileHost>(fixture);
 
 [Collection(SingleWriter.FlatFile)]
+public partial class OwnedTableSplittingMiscellaneousFlatFileTest(OwnedTableSplittingMiscellaneousAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedTableSplittingMiscellaneousAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class OwnedTableSplittingPrimitiveCollectionFlatFileTest(OwnedTableSplittingPrimitiveCollectionAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedTableSplittingPrimitiveCollectionAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class OwnedTableSplittingProjectionFlatFileTest(OwnedTableSplittingProjectionAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedTableSplittingProjectionAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class OwnedTableSplittingStructuralEqualityFlatFileTest(OwnedTableSplittingStructuralEqualityAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedTableSplittingStructuralEqualityAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
 public partial class PrimitiveCollectionsQueryFlatFileTest(PrimitiveCollectionsQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : PrimitiveCollectionsQueryAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class PropertyValuesFlatFileTest(PropertyValuesAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : PropertyValuesAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class ProxyGraphUpdatesFlatFileTest(ProxyGraphUpdatesAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : ProxyGraphUpdatesAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class QueryExpressionInterceptionFlatFileTest(AdoNetInterceptionFixture<FlatFileHost> fixture) : QueryExpressionInterceptionAdoNetTest<FlatFileHost>(fixture);
 
 [Collection(SingleWriter.FlatFile)]
 public partial class QueryFilterFuncletizationFlatFileTest(QueryFilterFuncletizationAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : QueryFilterFuncletizationAdoNetTest<FlatFileHost>(fixture);
@@ -341,19 +467,88 @@ public partial class QueryFilterFuncletizationFlatFileTest(QueryFilterFuncletiza
 public partial class QueryNoClientEvalFlatFileTest(NorthwindQueryAdoNetFixture<FlatFileHost> fixture) : QueryNoClientEvalAdoNetTest<FlatFileHost>(fixture);
 
 [Collection(SingleWriter.FlatFile)]
+public partial class RelationalComplexCollectionFlatFileTest(AdoNetRelationalModelBuilderFixture<FlatFileHost> fixture) : RelationalComplexCollectionAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class RelationalComplexTypeFlatFileTest(AdoNetRelationalModelBuilderFixture<FlatFileHost> fixture) : RelationalComplexTypeAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class RelationalComplianceFlatFileTest() : RelationalComplianceAdoNetTest<FlatFileHost>();
+
+[Collection(SingleWriter.FlatFile)]
+public partial class RelationalInheritanceFlatFileTest(AdoNetRelationalModelBuilderFixture<FlatFileHost> fixture) : RelationalInheritanceAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class RelationalManyToManyFlatFileTest(AdoNetRelationalModelBuilderFixture<FlatFileHost> fixture) : RelationalManyToManyAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class RelationalManyToOneFlatFileTest(AdoNetRelationalModelBuilderFixture<FlatFileHost> fixture) : RelationalManyToOneAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class RelationalNonRelationshipFlatFileTest(AdoNetRelationalModelBuilderFixture<FlatFileHost> fixture) : RelationalNonRelationshipAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class RelationalOneToManyFlatFileTest(AdoNetRelationalModelBuilderFixture<FlatFileHost> fixture) : RelationalOneToManyAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class RelationalOneToOneFlatFileTest(AdoNetRelationalModelBuilderFixture<FlatFileHost> fixture) : RelationalOneToOneAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class RelationalOwnedTypesFlatFileTest(AdoNetRelationalModelBuilderFixture<FlatFileHost> fixture) : RelationalOwnedTypesAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class RelationalServiceCollectionExtensionsFlatFileTest(global::Microsoft.EntityFrameworkCore.TestUtilities.TestHelpers testHelpers) : RelationalServiceCollectionExtensionsAdoNetTest<FlatFileHost>(testHelpers);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class SaveChangesInterceptionFlatFileTest(AdoNetInterceptionFixture<FlatFileHost> fixture) : SaveChangesInterceptionAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class SeedingFlatFileTest() : SeedingAdoNetTest<FlatFileHost>();
+
+[Collection(SingleWriter.FlatFile)]
+public partial class SerializationFlatFileTest(SerializationAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : SerializationAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
 public partial class SharedTypeQueryFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : SharedTypeQueryAdoNetTest<FlatFileHost>(fixture);
 
 [Collection(SingleWriter.FlatFile)]
 public partial class SpatialQueryFlatFileTest(SpatialQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : SpatialQueryAdoNetTest<FlatFileHost>(fixture);
 
 [Collection(SingleWriter.FlatFile)]
+public partial class SpatialFlatFileTest(SpatialAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : SpatialAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class SqlExecutorFlatFileTest(SqlExecutorAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : SqlExecutorAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
 public partial class SqlQueryFlatFileTest(NorthwindQueryAdoNetFixture<FlatFileHost> fixture) : SqlQueryAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class StoreGeneratedFixupFlatFileTest(StoreGeneratedFixupAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : StoreGeneratedFixupAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class StoreGeneratedFlatFileTest(StoreGeneratedAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : StoreGeneratedAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class StoreValueGenerationFlatFileTest(StoreValueGenerationAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : StoreValueGenerationAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class StoredProcedureUpdateFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : StoredProcedureUpdateAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class StringTranslationsFlatFileTest(StringTranslationsAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : StringTranslationsAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class TPCFiltersInheritanceBulkUpdatesFlatFileTest(TPCFiltersInheritanceBulkUpdatesAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPCFiltersInheritanceBulkUpdatesAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
 
 [Collection(SingleWriter.FlatFile)]
 public partial class TPCFiltersInheritanceQueryFlatFileTest(TPCFiltersInheritanceQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : TPCFiltersInheritanceQueryAdoNetTest<FlatFileHost>(fixture);
 
 [Collection(SingleWriter.FlatFile)]
 public partial class TPCGearsOfWarQueryFlatFileTest(TPCGearsOfWarQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : TPCGearsOfWarQueryAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class TPCInheritanceBulkUpdatesFlatFileTest(TPCInheritanceBulkUpdatesAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPCInheritanceBulkUpdatesAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
 
 [Collection(SingleWriter.FlatFile)]
 public partial class TPCInheritanceQueryFlatFileTest(TPCInheritanceQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPCInheritanceQueryAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
@@ -368,13 +563,22 @@ public partial class TPCManyToManyQueryFlatFileTest(TPCManyToManyQueryAdoNetTest
 public partial class TPCRelationshipsQueryFlatFileTest(TPCRelationshipsQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : TPCRelationshipsQueryAdoNetTest<FlatFileHost>(fixture);
 
 [Collection(SingleWriter.FlatFile)]
+public partial class TPHInheritanceBulkUpdatesFlatFileTest(TPHInheritanceBulkUpdatesAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPHInheritanceBulkUpdatesAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
 public partial class TPHInheritanceQueryFlatFileTest(TPHInheritanceQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPHInheritanceQueryAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class TPTFiltersInheritanceBulkUpdatesFlatFileTest(TPTFiltersInheritanceBulkUpdatesAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPTFiltersInheritanceBulkUpdatesAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
 
 [Collection(SingleWriter.FlatFile)]
 public partial class TPTFiltersInheritanceQueryFlatFileTest(TPTFiltersInheritanceQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : TPTFiltersInheritanceQueryAdoNetTest<FlatFileHost>(fixture);
 
 [Collection(SingleWriter.FlatFile)]
 public partial class TPTGearsOfWarQueryFlatFileTest(TPTGearsOfWarQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : TPTGearsOfWarQueryAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class TPTInheritanceBulkUpdatesFlatFileTest(TPTInheritanceBulkUpdatesAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPTInheritanceBulkUpdatesAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
 
 [Collection(SingleWriter.FlatFile)]
 public partial class TPTInheritanceQueryFlatFileTest(TPTInheritanceQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPTInheritanceQueryAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
@@ -389,17 +593,38 @@ public partial class TPTManyToManyQueryFlatFileTest(TPTManyToManyQueryAdoNetTest
 public partial class TPTRelationshipsQueryFlatFileTest(TPTRelationshipsQueryAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : TPTRelationshipsQueryAdoNetTest<FlatFileHost>(fixture);
 
 [Collection(SingleWriter.FlatFile)]
+public partial class TPTTableSplittingFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPTTableSplittingAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class TableSplittingFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TableSplittingAdoNetTest<FlatFileHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class TimeOnlyTranslationsFlatFileTest(TimeOnlyTranslationsAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : TimeOnlyTranslationsAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class TimeSpanTranslationsFlatFileTest(TimeSpanTranslationsAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : TimeSpanTranslationsAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
 public partial class ToSqlQueryFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : ToSqlQueryAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class TransactionInterceptionFlatFileTest(AdoNetInterceptionFixture<FlatFileHost> fixture) : TransactionInterceptionAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class TransactionFlatFileTest(TransactionAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : TransactionAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class UpdateSqlGeneratorFlatFileTest() : UpdateSqlGeneratorAdoNetTest<FlatFileHost>();
+
+[Collection(SingleWriter.FlatFile)]
+public partial class UpdatesFlatFileTest(UpdatesAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : UpdatesAdoNetTest<FlatFileHost>(fixture);
+
+[Collection(SingleWriter.FlatFile)]
+public partial class ValueConvertersEndToEndFlatFileTest(ValueConvertersEndToEndAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : ValueConvertersEndToEndAdoNetTest<FlatFileHost>(fixture);
 
 [Collection(SingleWriter.FlatFile)]
 public partial class WarningsFlatFileTest(NorthwindQueryAdoNetFixture<FlatFileHost> fixture) : WarningsAdoNetTest<FlatFileHost>(fixture);
 
 [Collection(SingleWriter.FlatFile)]
-public partial class NonSharedModelUpdatesFlatFileTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : NonSharedModelUpdatesAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class StoreValueGenerationFlatFileTest(StoreValueGenerationAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : StoreValueGenerationAdoNetTest<FlatFileHost>(fixture);
-
-[Collection(SingleWriter.FlatFile)]
-public partial class UpdatesFlatFileTest(UpdatesAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : UpdatesAdoNetTest<FlatFileHost>(fixture);
+public partial class WithConstructorsFlatFileTest(WithConstructorsAdoNetTest<FlatFileHost>.AdoNetFixture fixture) : WithConstructorsAdoNetTest<FlatFileHost>(fixture);
 

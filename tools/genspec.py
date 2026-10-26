@@ -1,4 +1,4 @@
-"""Generates the base suite's classes for EF's shared specification test bases (see docs/upstream-baselines/INTERSECTION.md)."""
+"""Generates the base suite's classes for every EF specification test base an upstream provider runs (docs/upstream-tests/spec-bases.tsv)."""
 import json, os, re, sys
 
 bases = json.load(open(sys.argv[1]))
@@ -100,9 +100,13 @@ for b in bases:
     ctor = b['ctors'][0] if b['ctors'] else []
     has_output = any('ITestOutputHelper' in p for p in ctor)
     lines = []
+    abstract_fixture = next((f for f in b.get('ctorFixtures') or [] if f['isAbstract']), None) if not gens else None
+    if abstract_fixture and abstract_fixture['cs'].split('.')[-1] not in SHARED_FIXTURES:
+        # Its fixture isn't made concrete in TestUtilities/GeneratedSupport.cs yet: listed, so it isn't silently dropped.
+        skipped.append((b['name'], 'fixture not provided yet: ' + abstract_fixture['cs'].split('.')[-1]))
+        continue
     if not gens:
         # A non-generic base: its constructor takes a fixture, which, when abstract, is made concrete here and declared.
-        abstract_fixture = next((f for f in b.get('ctorFixtures') or [] if f['isAbstract']), None)
         shared = None
         if abstract_fixture:
             fixture_cs = abstract_fixture['cs']

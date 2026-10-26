@@ -198,5 +198,5 @@ public sealed class FlatFileHost : FileHost
         => builder.UseAdoNetFlatFile(connectionString, configure);
 
     public override DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, DbConnection connection, Action<AdoNetDbContextOptionsBuilder> configure)
-        => builder.UseAdoNetFlatFile(connection, contextOwnsConnection: false, configure).LogTo(l => File.AppendAllText("/tmp/claude-1000/-home-alaricd-prj-pengdows-pengdows-efcore-adonet/8bab3069-a6a4-4047-9db2-be218a4cc71f/scratchpad/ffhang2.log", l + "\n====\n"), [Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.CommandExecuting]);
+        => builder.UseAdoNetFlatFile(connection, contextOwnsConnection: false, configure);
 }
