@@ -1,3 +1,5 @@
+using pengdows.efcore.adonet.Infrastructure;
+
 namespace pengdows.efcore.adonet.Specification.Tests;
 
 /// <summary>
@@ -25,11 +27,15 @@ public class AdoNetTestStore<THost> : RelationalTestStore
     protected override TestStoreIndex GetTestStoreIndex(IServiceProvider? serviceProvider)
         => Index;
 
+    // As EF's own test stores: the store's connection, which every context shares (so a nested context can join the outer
+    // one's transaction), unless a test asks for a connection string.
     public override DbContextOptionsBuilder AddProviderOptions(DbContextOptionsBuilder builder)
-        => Host.UseProvider(
-            builder,
-            ConnectionString,
-            o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SingleQuery).CommandTimeout(300));
+        => UseConnectionString
+            ? Host.UseProvider(builder, ConnectionString, Configure)
+            : Host.UseProvider(builder, Connection, Configure);
+
+    private static void Configure(AdoNetDbContextOptionsBuilder options)
+        => options.UseQuerySplittingBehavior(QuerySplittingBehavior.SingleQuery).CommandTimeout(300);
 
     protected override async Task InitializeAsync(Func<DbContext> createContext, Func<DbContext, Task>? seed, Func<DbContext, Task>? clean)
     {
@@ -46,7 +52,7 @@ public class AdoNetTestStore<THost> : RelationalTestStore
         Func<DbContext, Task>? clean = null)
     {
         await base.InitializeAsync(serviceProvider, createContext, seed, clean);
-        CloseConnection();
+        CloseIfOpen();
         return this;
     }
 
@@ -58,9 +64,23 @@ public class AdoNetTestStore<THost> : RelationalTestStore
     protected override string CloseDelimiter
         => Host.Dialect.Sql.IdentifierQuoteSuffix;
 
-    // The database starts empty: the schema is the model's, created by the provider.
+    // Only an open connection: DuckDB.NET throws on closing a closed one (UPSTREAM_ISSUES).
+    private void CloseIfOpen()
+    {
+        if (ConnectionState != System.Data.ConnectionState.Closed)
+        {
+            CloseConnection();
+        }
+    }
+
+    // The database starts empty, as when a test reseeds it: the schema is the model's, created by the provider.
     public override async Task CleanAsync(DbContext context)
-        => await context.GetService<IRelationalDatabaseCreator>().CreateTablesAsync();
+    {
+        // The store's connection, which the context shares, may be open: a test opened it.
+        CloseIfOpen();
+        await Host.CreateEmptyDatabaseAsync(DatabaseName(Name));
+        await context.GetService<IRelationalDatabaseCreator>().CreateTablesAsync();
+    }
 }
 
 public class AdoNetTestStoreFactory<THost> : RelationalTestStoreFactory

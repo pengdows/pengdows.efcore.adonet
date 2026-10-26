@@ -24,6 +24,7 @@ public abstract class ServerHost : IDatabaseHost
     public abstract string ConnectionStringFor(string database);
     public abstract DbConnection CreateConnection(string connectionString);
     public abstract DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, string connectionString, Action<AdoNetDbContextOptionsBuilder> configure);
+    public abstract DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, DbConnection connection, Action<AdoNetDbContextOptionsBuilder> configure);
     public abstract IAdoNetDialect Dialect { get; }
 
     public async Task CreateEmptyDatabaseAsync(string database)
@@ -55,14 +56,18 @@ public sealed class SqlServerHost : ServerHost
     public override DbConnection CreateConnection(string connectionString) => new SqlConnection(connectionString);
 
     public override DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, string connectionString, Action<AdoNetDbContextOptionsBuilder> configure)
-        => builder.UseAdoNetSqlServer(
-                connectionString,
-                o =>
-                {
-                    configure(o);
-                    o.MaxBatchSize(1);
-                })
-            .AddInterceptors(SqlServerIdentityInsert.Instance);
+        => builder.UseAdoNetSqlServer(connectionString, OneInsertPerCommand(configure)).AddInterceptors(SqlServerIdentityInsert.Instance);
+
+    public override DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, DbConnection connection, Action<AdoNetDbContextOptionsBuilder> configure)
+        => builder.UseAdoNetSqlServer(connection, contextOwnsConnection: false, OneInsertPerCommand(configure)).AddInterceptors(SqlServerIdentityInsert.Instance);
+
+    // SqlServerIdentityInsert turns IDENTITY_INSERT on for one table at a time.
+    private static Action<AdoNetDbContextOptionsBuilder> OneInsertPerCommand(Action<AdoNetDbContextOptionsBuilder> configure)
+        => o =>
+        {
+            configure(o);
+            o.MaxBatchSize(1);
+        };
 }
 
 public sealed class PostgreSqlHost : ServerHost
@@ -76,12 +81,15 @@ public sealed class PostgreSqlHost : ServerHost
         => [$"DROP DATABASE IF EXISTS \"{database}\" WITH (FORCE)", $"CREATE DATABASE \"{database}\""];
 
     public override string ConnectionStringFor(string database)
-        => new Npgsql.NpgsqlConnectionStringBuilder(Container.ConnectionString) { Database = database }.ConnectionString;
+        => new Npgsql.NpgsqlConnectionStringBuilder(Container.ConnectionString) { Database = database, MaxPoolSize = 22 }.ConnectionString;
 
     public override DbConnection CreateConnection(string connectionString) => new Npgsql.NpgsqlConnection(connectionString);
 
     public override DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, string connectionString, Action<AdoNetDbContextOptionsBuilder> configure)
         => builder.UseAdoNetPostgreSql(connectionString, configure);
+
+    public override DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, DbConnection connection, Action<AdoNetDbContextOptionsBuilder> configure)
+        => builder.UseAdoNetPostgreSql(connection, contextOwnsConnection: false, configure);
 }
 
 public sealed class MySqlHost : ServerHost
@@ -104,6 +112,9 @@ public sealed class MySqlHost : ServerHost
 
     public override DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, string connectionString, Action<AdoNetDbContextOptionsBuilder> configure)
         => builder.UseAdoNetMySql(connectionString, configure);
+
+    public override DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, DbConnection connection, Action<AdoNetDbContextOptionsBuilder> configure)
+        => builder.UseAdoNetMySql(connection, contextOwnsConnection: false, configure);
 }
 
 /// <summary>An embedded database: a file or folder per test store, under one temporary directory for the run.</summary>
@@ -115,6 +126,7 @@ public abstract class FileHost : IDatabaseHost
     public abstract Task CreateEmptyDatabaseAsync(string database);
     public abstract DbConnection CreateConnection(string connectionString);
     public abstract DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, string connectionString, Action<AdoNetDbContextOptionsBuilder> configure);
+    public abstract DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, DbConnection connection, Action<AdoNetDbContextOptionsBuilder> configure);
     public abstract IAdoNetDialect Dialect { get; }
 }
 
@@ -135,6 +147,9 @@ public sealed class SqliteHost : FileHost
 
     public override DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, string connectionString, Action<AdoNetDbContextOptionsBuilder> configure)
         => builder.UseAdoNetSqlite(connectionString, configure);
+
+    public override DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, DbConnection connection, Action<AdoNetDbContextOptionsBuilder> configure)
+        => builder.UseAdoNetSqlite(connection, contextOwnsConnection: false, configure);
 }
 
 public sealed class DuckDbHost : FileHost
@@ -154,6 +169,9 @@ public sealed class DuckDbHost : FileHost
 
     public override DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, string connectionString, Action<AdoNetDbContextOptionsBuilder> configure)
         => builder.UseAdoNetDuckDb(connectionString, configure);
+
+    public override DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, DbConnection connection, Action<AdoNetDbContextOptionsBuilder> configure)
+        => builder.UseAdoNetDuckDb(connection, contextOwnsConnection: false, configure);
 }
 
 public sealed class FlatFileHost : FileHost
@@ -178,4 +196,7 @@ public sealed class FlatFileHost : FileHost
 
     public override DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, string connectionString, Action<AdoNetDbContextOptionsBuilder> configure)
         => builder.UseAdoNetFlatFile(connectionString, configure);
+
+    public override DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, DbConnection connection, Action<AdoNetDbContextOptionsBuilder> configure)
+        => builder.UseAdoNetFlatFile(connection, contextOwnsConnection: false, configure).LogTo(l => File.AppendAllText("/tmp/claude-1000/-home-alaricd-prj-pengdows-pengdows-efcore-adonet/8bab3069-a6a4-4047-9db2-be218a4cc71f/scratchpad/ffhang2.log", l + "\n====\n"), [Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.CommandExecuting]);
 }

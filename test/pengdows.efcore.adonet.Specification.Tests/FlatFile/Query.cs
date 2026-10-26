@@ -1,7 +1,9 @@
 namespace pengdows.efcore.adonet.Specification.Tests.FlatFile;
 
+[Collection(SingleWriter.FlatFile)]
 public class NorthwindWhereQueryFlatFileTest(NorthwindQueryAdoNetFixture<FlatFileHost> fixture) : NorthwindWhereQueryAdoNetTest<FlatFileHost>(fixture);
 
+[Collection(SingleWriter.FlatFile)]
 public class NorthwindSelectQueryFlatFileTest(NorthwindQueryAdoNetFixture<FlatFileHost> fixture) : NorthwindSelectQueryAdoNetTest<FlatFileHost>(fixture)
 {
     // Three LEFT JOINs of derived tables over OrderDetails and Products: under a second elsewhere, unfinished after 90 seconds.

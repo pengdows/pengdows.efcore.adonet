@@ -15,5 +15,8 @@ public interface IDatabaseHost
 
     DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, string connectionString, Action<AdoNetDbContextOptionsBuilder> configure);
 
+    /// <summary>Configures a context on an existing connection, which the context doesn't own.</summary>
+    DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, DbConnection connection, Action<AdoNetDbContextOptionsBuilder> configure);
+
     IAdoNetDialect Dialect { get; }
 }

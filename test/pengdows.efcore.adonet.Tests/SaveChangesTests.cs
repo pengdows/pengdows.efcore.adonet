@@ -144,6 +144,29 @@ public class SaveChangesTests
         Assert.DoesNotContain("RETURNING", _db.Commands[1]);
     }
 
+    // EF caches value generators across contexts: each key must still come from the connection of the context saving it,
+    // inside its transaction, never from the connection of the context that first asked for a generator.
+    [Fact]
+    public async Task Sequence_keys_come_from_the_saving_contexts_own_connection()
+    {
+        var other = new FakeDatabase();
+        await using (var first = _db.Context(TestDialects.Sequence))
+        {
+            _db.Connection.EnqueueScalarResult(42);
+            first.Add(NewItem());
+        }
+
+        await using var second = other.Context(TestDialects.Sequence);
+        other.Connection.EnqueueScalarResult(43);
+        var item = NewItem();
+
+        second.Add(item);
+
+        Assert.Equal(43, item.Id);
+        Assert.Single(_db.Commands);
+        Assert.EndsWith("VALUES (NEXT VALUE FOR \"Items_Id_seq\")", Assert.Single(other.Commands));
+    }
+
     [Fact]
     public void Sequence_works_synchronously_too()
     {
