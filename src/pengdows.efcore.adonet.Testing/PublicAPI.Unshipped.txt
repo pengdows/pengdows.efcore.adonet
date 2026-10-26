@@ -409,3 +409,4 @@ virtual pengdows.efcore.adonet.Testing.ProviderFixture.LargestStorableFloat.get 
 virtual pengdows.efcore.adonet.Testing.ProviderFixture.ModelSequences.get -> System.Collections.Generic.IReadOnlyList<string!>!
 virtual pengdows.efcore.adonet.Testing.ProviderFixture.StorableOffset.get -> System.TimeSpan
 virtual pengdows.efcore.adonet.Testing.ProviderFixture.UseProvider(Microsoft.EntityFrameworkCore.DbContextOptionsBuilder! builder) -> void
+pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Date_arithmetic() -> System.Threading.Tasks.Task!

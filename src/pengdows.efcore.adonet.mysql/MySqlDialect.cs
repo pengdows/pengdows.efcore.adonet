@@ -78,11 +78,12 @@ internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = t
     public override string IdentifierQuotePrefix => "`";
     public override string IdentifierQuoteSuffix => "`";
     public override bool SupportsSchemas => false;
-    public override PagingSyntax Paging { get; } = PagingSyntax.LimitOffset(noLimitValue: "18446744073709551615");
+    public override PagingSyntax Paging { get; } = PagingSyntax.LimitOffset(noLimitValue: "18446744073709551615").WithValueLimitsOnly();
     public override KeyRetrieval Keys { get; } = KeyRetrieval.SelectAfter("LAST_INSERT_ID()", "ROW_COUNT()");
     public override DmlSyntax Dml => DmlSyntax.MultiTable;
     public override FunctionSyntax Functions { get; } = new MySqlFunctions();
     public override string DefaultValues => "() VALUES ()";
+    public override string ValuesRowPrefix => "ROW";
     public override string CurrentSchema => "DATABASE()";
 
     // "This version of MySQL doesn't yet support 'LIMIT & IN/ALL/ANY/SOME subquery'"; a derived table may be paged.

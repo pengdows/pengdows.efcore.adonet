@@ -440,3 +440,7 @@ virtual pengdows.efcore.adonet.FunctionSyntax.OffsetNow.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.TimeDifference.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.UnixMilliseconds.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.UnixSeconds.get -> string?
+pengdows.efcore.adonet.PagingSyntax.ComputesLimits.get -> bool
+pengdows.efcore.adonet.PagingSyntax.WithValueLimitsOnly() -> pengdows.efcore.adonet.PagingSyntax!
+pengdows.efcore.adonet.ISqlDialect.ValuesRowPrefix.get -> string!
+virtual pengdows.efcore.adonet.AnsiSqlDialect.ValuesRowPrefix.get -> string!

@@ -50,6 +50,20 @@ public abstract class PagingSyntax
         return copy;
     }
 
+    /// <summary>
+    ///     False where a limit must be a value (a constant or parameter), not an expression: <c>Take(a).Take(b)</c> is then a
+    ///     subquery, where it would otherwise be limited to <c>LEAST(a, b)</c>.
+    /// </summary>
+    public bool ComputesLimits { get; private set; } = true;
+
+    /// <summary>A copy for databases whose limit takes only a constant or parameter.</summary>
+    public PagingSyntax WithValueLimitsOnly()
+    {
+        var copy = (PagingSyntax)MemberwiseClone();
+        copy.ComputesLimits = false;
+        return copy;
+    }
+
     /// <summary>Written right after <c>SELECT</c> (and <c>DISTINCT</c>).</summary>
     public virtual void GenerateTop(IQuerySqlWriter sql, SelectExpression select)
     {

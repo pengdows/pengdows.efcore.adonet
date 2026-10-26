@@ -97,6 +97,12 @@ public interface ISqlDialect
     bool RowValues { get; }
 
     /// <summary>
+    ///     Written before each row of a table value constructor: empty for ISO's <c>VALUES (1), (2)</c>, <c>ROW</c> where the
+    ///     database writes <c>VALUES ROW(1), ROW(2)</c>.
+    /// </summary>
+    string ValuesRowPrefix { get; }
+
+    /// <summary>
     ///     Whether an <c>IN (subquery)</c> may page its subquery. Where it can't, the subquery is read through a derived
     ///     table, which may page: <c>x IN (SELECT t.c FROM (subquery) AS t)</c> (an uncorrelated subquery only).
     /// </summary>

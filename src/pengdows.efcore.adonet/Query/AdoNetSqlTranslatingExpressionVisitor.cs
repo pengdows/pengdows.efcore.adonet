@@ -17,18 +17,21 @@ internal class AdoNetSqlTranslatingExpressionVisitor : RelationalSqlTranslatingE
     private readonly QueryCompilationContext _queryCompilationContext;
     private readonly FunctionSyntax _functions;
     private readonly bool _rowValues;
+    private readonly bool _computesLimits;
 
     public AdoNetSqlTranslatingExpressionVisitor(
         RelationalSqlTranslatingExpressionVisitorDependencies dependencies,
         QueryCompilationContext queryCompilationContext,
         QueryableMethodTranslatingExpressionVisitor queryableMethodTranslatingExpressionVisitor,
         FunctionSyntax functions,
-        bool rowValues)
+        bool rowValues,
+        bool computesLimits)
         : base(dependencies, queryCompilationContext, queryableMethodTranslatingExpressionVisitor)
     {
         _queryCompilationContext = queryCompilationContext;
         _functions = functions;
         _rowValues = rowValues;
+        _computesLimits = computesLimits;
     }
 
     private static readonly MethodInfo PatternMethod
@@ -174,8 +177,13 @@ internal class AdoNetSqlTranslatingExpressionVisitor : RelationalSqlTranslatingE
     public override SqlExpression? GenerateGreatest(IReadOnlyList<SqlExpression> expressions, Type resultType)
         => Nest(_functions.Greatest, expressions, resultType);
 
+    // EF also combines two row limits (Take(a).Take(b), Take(a).Single()) as LEAST(a, b), and pushes the query down into a
+    // subquery when there is no LEAST. Only then are all the values constants and parameters (EF evaluates such an expression
+    // on the client anywhere else), so where a limit takes only values, that combination is left to the subquery.
     public override SqlExpression? GenerateLeast(IReadOnlyList<SqlExpression> expressions, Type resultType)
-        => Nest(_functions.Least, expressions, resultType);
+        => !_computesLimits && expressions.All(e => e is SqlConstantExpression or SqlParameterExpression)
+            ? null
+            : Nest(_functions.Least, expressions, resultType);
 
     private SqlExpression? Nest(string? template, IReadOnlyList<SqlExpression> expressions, Type resultType)
     {
@@ -272,5 +280,6 @@ internal class AdoNetSqlTranslatingExpressionVisitorFactory(RelationalSqlTransla
         QueryCompilationContext queryCompilationContext,
         QueryableMethodTranslatingExpressionVisitor queryableMethodTranslatingExpressionVisitor)
         => new AdoNetSqlTranslatingExpressionVisitor(
-            dependencies, queryCompilationContext, queryableMethodTranslatingExpressionVisitor, dialect.Functions, dialect.RowValues);
+            dependencies, queryCompilationContext, queryableMethodTranslatingExpressionVisitor, dialect.Functions, dialect.RowValues,
+            dialect.Paging.ComputesLimits);
 }

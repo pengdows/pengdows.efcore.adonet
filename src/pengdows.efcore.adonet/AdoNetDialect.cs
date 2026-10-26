@@ -67,6 +67,7 @@ public class AnsiSqlDialect : ISqlDialect
     // A dialect says which JSON functions its database has; ISO's are JsonSyntax.Iso.
     public virtual JsonSyntax? Json => null;
     public virtual bool RowValues => true;
+    public virtual string ValuesRowPrefix => "";
     public virtual bool LimitInPredicateSubqueries => true;
     public virtual LateralJoinSyntax? LateralJoins => LateralJoinSyntax.Iso;
 

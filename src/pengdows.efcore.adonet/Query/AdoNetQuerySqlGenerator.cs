@@ -17,6 +17,40 @@ internal class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencie
     protected override Expression VisitUpdate(UpdateExpression updateExpression)
         => dialect.Dml.TryGenerateUpdate(this, updateExpression) ? updateExpression : base.VisitUpdate(updateExpression);
 
+    // EF's SELECT 1 AS "Value" UNION ALL VALUES (2), (3), with the dialect's prefix before each row after the first.
+    protected override void GenerateValues(ValuesExpression valuesExpression)
+    {
+        if ((dialect.ValuesRowPrefix.Length == 0) || (valuesExpression.RowValues is not { Count: > 1 } rows))
+        {
+            base.GenerateValues(valuesExpression);
+            return;
+        }
+
+        Sql.Append("SELECT ");
+        for (var i = 0; i < rows[0].Values.Count; i++)
+        {
+            if (i > 0)
+            {
+                Sql.Append(", ");
+            }
+
+            Visit(rows[0].Values[i]);
+            Sql.Append(AliasSeparator).Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(valuesExpression.ColumnNames[i]));
+        }
+
+        Sql.Append(" UNION ALL VALUES ");
+        for (var j = 1; j < rows.Count; j++)
+        {
+            if (j > 1)
+            {
+                Sql.Append(", ");
+            }
+
+            Sql.Append(dialect.ValuesRowPrefix);
+            Visit(rows[j]);
+        }
+    }
+
     protected override Expression VisitColumn(ColumnExpression columnExpression)
     {
         if (_qualifyWithTableName is { } table && columnExpression.TableAlias == table.Alias)

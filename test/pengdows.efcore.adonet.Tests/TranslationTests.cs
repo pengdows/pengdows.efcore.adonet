@@ -341,16 +341,13 @@ public class TranslationTests
 
     public static TheoryData<string, Expression<Func<Item, bool>>> OtherOverloads => new()
     {
-        { "Trim(char)", i => i.Name!.Trim('x') == "a" },
-        { "IndexOf(char)", i => i.Name!.IndexOf('a') > 1 },
-        { "Replace(char, char)", i => i.Name!.Replace('a', 'b') == "a" },
-        { "Contains(char)", i => i.Name!.Contains('a') },
+        { "Trim(char[]) of two", i => i.Name!.Trim('x', 'y') == "a" },
         { "PadLeft", i => i.Name!.PadLeft(3) == "a" },
         { "string.Join", i => string.Join(",", new[] { i.Name, i.Name }) == "a" },
         { "Round(MidpointRounding)", i => System.Math.Round(i.Double, MidpointRounding.ToEven) > 1 },
-        { "Math.Log", i => System.Math.Log(i.Double) > 1 },
+        { "Math.Sign (not ISO)", i => System.Math.Sign(i.Double) > 0 },
         { "DayOfYear", i => i.At.DayOfYear > 1 },
-        { "TimeOnly.Hour", i => i.Time.Hour > 1 },
+        { "AddHours (not ISO)", i => i.At.AddHours(1.5) > i.At },
         { "Guid.ToByteArray", i => i.Uid.ToByteArray().Length > 1 }
     };
 
@@ -358,6 +355,23 @@ public class TranslationTests
     [MemberData(nameof(OtherOverloads))]
     public void Other_members_are_left_to_other_translators(string _, Expression<Func<Item, bool>> predicate)
         => Assert.Contains("could not be translated", Assert.Throws<InvalidOperationException>(() => Ansi(c => c.Items.Where(predicate))).Message);
+
+    // A char is a one-character string; the trigonometric, logarithmic and time-of-day functions are ISO's.
+    public static TheoryData<string, Expression<Func<Item, bool>>, string> IsoTranslations => new()
+    {
+        { "Trim(char)", i => i.Name!.Trim('x') == "a", "TRIM(BOTH 'x' FROM \"i\".\"Name\")" },
+        { "IndexOf(char)", i => i.Name!.IndexOf('a') > 1, "POSITION('a' IN \"i\".\"Name\")" },
+        { "Replace(char, char)", i => i.Name!.Replace('a', 'b') == "a", "REPLACE(\"i\".\"Name\", 'a', 'b')" },
+        { "Contains(char)", i => i.Name!.Contains('a'), "\"i\".\"Name\" LIKE '%a%'" },
+        { "Math.Log", i => System.Math.Log(i.Double) > 1, "LN(\"i\".\"Double\")" },
+        { "Math.Log(base)", i => System.Math.Log(i.Double, 2) > 1, "LOG(2.0, \"i\".\"Double\")" },
+        { "TimeOnly.Hour", i => i.Time.Hour > 1, "EXTRACT(HOUR FROM \"i\".\"Time\")" }
+    };
+
+    [Theory]
+    [MemberData(nameof(IsoTranslations))]
+    public void Iso_functions_are_translated(string _, Expression<Func<Item, bool>> predicate, string expected)
+        => Assert.Contains(expected, Ansi(c => c.Items.Where(predicate)));
 
     [Fact]
     public void Template_functions_run_and_read_their_results()
