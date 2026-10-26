@@ -37,10 +37,23 @@ public class AdoNetTestStore<THost> : RelationalTestStore
     private static void Configure(AdoNetDbContextOptionsBuilder options)
         => options.UseQuerySplittingBehavior(QuerySplittingBehavior.SingleQuery).CommandTimeout(300);
 
+    // As EF's own stores: an empty database, then EnsureCreated, which creates the tables and runs the model's seeding
+    // (UseSeeding/UseAsyncSeeding), then the test's own seed. Behaviour reference (not copied):
+    // https://github.com/dotnet/efcore/blob/v10.0.11/test/EFCore.Sqlite.FunctionalTests/TestUtilities/SqliteTestStore.cs
     protected override async Task InitializeAsync(Func<DbContext> createContext, Func<DbContext, Task>? seed, Func<DbContext, Task>? clean)
     {
         await Host.CreateEmptyDatabaseAsync(DatabaseName(Name));
-        await base.InitializeAsync(createContext, seed, clean);
+        await using var context = createContext();
+        if (clean != null)
+        {
+            await clean(context);
+        }
+
+        await context.Database.EnsureCreatedAsync();
+        if (seed != null)
+        {
+            await seed(context);
+        }
     }
 
     // EF's relational store leaves its own connection open after setup. Closed here, as every context's is between uses: a
@@ -79,6 +92,7 @@ public class AdoNetTestStore<THost> : RelationalTestStore
         // The store's connection, which the context shares, may be open: a test opened it.
         CloseIfOpen();
         await Host.CreateEmptyDatabaseAsync(DatabaseName(Name));
+        // EF's database cleaner drops everything and creates the tables again: an empty schema, ready to seed.
         await context.GetService<IRelationalDatabaseCreator>().CreateTablesAsync();
     }
 }
