@@ -99,13 +99,24 @@ noted so they can be removed once the fix ships.
 
 ## mysql-net/MySqlConnector (2.6.2)
 
-### `MySqlTransaction.SupportsSavepoints` reads false in our runs
+### `MySqlTransaction.SupportsSavepoints` is false although its savepoints work
 
-- **Defect (suspected):** MySQL has `SAVEPOINT`, `ROLLBACK TO SAVEPOINT` and `RELEASE SAVEPOINT`, but
-  `GetDbTransaction().SupportsSavepoints` was false in the same conformance test against MySQL 8.4.
-- **Before filing:** confirm on a bare `MySqlTransaction` (outside EF) and read MySqlConnector's source; it may be
-  deliberate or configuration-dependent. Unverified as a bug.
-- **Our work-around:** the core's ISO `SavepointSyntax` applies to MySQL.
+- **Defect:** `MySqlTransaction` implements `Save`, `Rollback(string)` and `Release`, which work, but inherits
+  `DbTransaction.SupportsSavepoints == false`.
+- **Status: accepted upstream.** Reported as [#1676](https://github.com/mysql-net/MySqlConnector/issues/1676), closed as
+  completed ("an oversight when the .NET 5 DbTransaction interface was added"); a later release reports true.
+- **Effect here:** none. Whether there are savepoints is the dialect's to say; MySQL's dialect has ISO savepoints, used
+  through the driver's methods where it reports them and as SQL until then.
+
+### SingleStore: savepoints succeed and do nothing (declined)
+
+- **Defect:** on SingleStore, `Save` and `Rollback(savepoint)` return normally and roll nothing back, so work rolled back to
+  a savepoint is committed.
+- **Status: declined.** [#1677](https://github.com/mysql-net/MySqlConnector/issues/1677), closed as not planned: the
+  maintainer reads `SupportsSavepoints` as "the driver implements the methods", not "the server supports them". Once
+  #1676 ships, MySqlConnector reports savepoints on SingleStore too.
+- **Our handling:** savepoint support is the dialect's (`ISqlDialect.Savepoints`), never the driver's flag; where the
+  dialect has none, all three savepoint methods throw `NotSupportedException`. `MySqlDialect.SingleStore` has none.
 
 ## Giorgi/DuckDB.NET (DuckDB.NET.Data 1.5.6.1)
 

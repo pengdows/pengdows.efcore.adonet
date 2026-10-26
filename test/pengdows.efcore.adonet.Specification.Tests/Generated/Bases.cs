@@ -395,6 +395,7 @@ public abstract class TransactionAdoNetTest<THost>(TransactionAdoNetTest<THost>.
         => new DbContext(Fixture.AddOptions(new THost().UseProvider(new DbContextOptionsBuilder(), ((RelationalTestStore)Fixture.TestStore).ConnectionString, _ => { })).UseInternalServiceProvider(Fixture.ServiceProvider).Options);
     protected override bool SnapshotSupported => false;
     protected override bool AmbientTransactionsSupported => new THost().Dialect.Capabilities.SupportsAmbientTransactions;
+    protected override bool SavepointsSupported => new THost().Dialect.Sql.Savepoints != null;
 
     public class AdoNetFixture : global::Microsoft.EntityFrameworkCore.TransactionTestBase<AdoNetFixture>.TransactionFixtureBase
     {

@@ -80,7 +80,11 @@ public interface ISqlDialect
     /// </summary>
     string? CurrentSchema { get; }
 
-    /// <summary>Savepoints as SQL, where the driver's transactions have none; null when the database has none.</summary>
+    /// <summary>
+    ///     The database's savepoints, as SQL for drivers whose transactions don't offer them; null when the database has none.
+    ///     This decides whether there are savepoints, not the driver: <c>DbTransaction.SupportsSavepoints</c> says whether the
+    ///     driver implements the methods, and a driver may report them on a server that ignores them.
+    /// </summary>
     SavepointSyntax? Savepoints { get; }
 
     /// <summary>Whether tuple comparisons can be written as ISO row values, <c>(a, b) = (x, y)</c>.</summary>

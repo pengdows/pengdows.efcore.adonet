@@ -17,3 +17,4 @@ static pengdows.efcore.adonet.mysql.MySqlDbContextOptionsBuilderExtensions.UseAd
 static pengdows.efcore.adonet.mysql.MySqlDbContextOptionsBuilderExtensions.UseAdoNetMySql<TContext>(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>! optionsBuilder, System.Data.Common.DbDataSource! dataSource, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>!
 static readonly pengdows.efcore.adonet.mysql.MySqlDialect.Instance -> pengdows.efcore.adonet.mysql.MySqlDialect!
 static readonly pengdows.efcore.adonet.mysql.MySqlDialect.NoBackslashEscapes -> pengdows.efcore.adonet.mysql.MySqlDialect!
+static readonly pengdows.efcore.adonet.mysql.MySqlDialect.SingleStore -> pengdows.efcore.adonet.mysql.MySqlDialect!

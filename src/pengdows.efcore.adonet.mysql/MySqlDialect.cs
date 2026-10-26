@@ -16,10 +16,18 @@ public sealed class MySqlDialect : AdoNetDialect
     /// <summary>For servers whose sql_mode has NO_BACKSLASH_ESCAPES, where a backslash in a string is just a backslash.</summary>
     public static readonly MySqlDialect NoBackslashEscapes = new(backslashEscapes: false);
 
-    private MySqlDialect(bool backslashEscapes)
+    /// <summary>
+    ///     SingleStore, which speaks MySQL but accepts <c>SAVEPOINT</c> and <c>ROLLBACK TO SAVEPOINT</c> and ignores them, so
+    ///     work rolled back to a savepoint would be committed: this dialect has no savepoints. MySqlConnector reports them
+    ///     there anyway, since its <c>SupportsSavepoints</c> describes the driver, not the server
+    ///     (https://github.com/mysql-net/MySqlConnector/issues/1677).
+    /// </summary>
+    public static readonly MySqlDialect SingleStore = new(backslashEscapes: true, savepoints: false, name: "SingleStore");
+
+    private MySqlDialect(bool backslashEscapes, bool savepoints = true, string? name = null)
     {
-        Name = backslashEscapes ? "MySQL" : "MySQL (NO_BACKSLASH_ESCAPES)";
-        Sql = new MySqlSql(backslashEscapes);
+        Name = name ?? (backslashEscapes ? "MySQL" : "MySQL (NO_BACKSLASH_ESCAPES)");
+        Sql = new MySqlSql(backslashEscapes, savepoints);
     }
 
     public override string Name { get; }
@@ -43,8 +51,11 @@ public sealed class MySqlDialect : AdoNetDialect
             .TryAdd<IHistoryRepository, MySqlHistoryRepository>();
 }
 
-internal sealed class MySqlSql(bool backslashEscapes = true) : AnsiSqlDialect
+internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = true) : AnsiSqlDialect
 {
+    public override SavepointSyntax? Savepoints
+        => savepoints ? SavepointSyntax.Iso : null;
+
     public override string IdentifierQuotePrefix => "`";
     public override string IdentifierQuoteSuffix => "`";
     public override bool SupportsSchemas => false;

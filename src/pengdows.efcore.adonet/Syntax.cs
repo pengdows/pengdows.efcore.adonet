@@ -167,8 +167,8 @@ public abstract class BooleanSyntax
 }
 
 /// <summary>
-///     Savepoints as SQL, for drivers whose transactions don't offer them (<see cref="System.Data.Common.DbTransaction.SupportsSavepoints" />
-///     false). <c>{0}</c> is the delimited savepoint name.
+///     A database's savepoints, written as SQL for drivers whose transactions don't offer them
+///     (<see cref="System.Data.Common.DbTransaction.SupportsSavepoints" /> false). <c>{0}</c> is the delimited savepoint name.
 /// </summary>
 /// <param name="create">Sets a savepoint.</param>
 /// <param name="rollbackTo">Undoes the work since it.</param>

@@ -243,11 +243,13 @@ public abstract class ProviderConformanceTests<TFixture>(TFixture fixture) : ICl
         {
             await using var transaction = await context.Database.BeginTransactionAsync(Ct);
 
-            Assert.Equal(
-                transaction.GetDbTransaction().SupportsSavepoints || (Fixture.ExpectedDialect.Sql.Savepoints != null),
-                transaction.SupportsSavepoints);
+            // The dialect says whether the database has savepoints; the driver's flag only says whether it implements them.
+            Assert.Equal(Fixture.ExpectedDialect.Sql.Savepoints != null, transaction.SupportsSavepoints);
             if (!transaction.SupportsSavepoints)
             {
+                await Assert.ThrowsAsync<NotSupportedException>(() => transaction.CreateSavepointAsync("before_discard", Ct));
+                await Assert.ThrowsAsync<NotSupportedException>(() => transaction.RollbackToSavepointAsync("before_discard", Ct));
+                await Assert.ThrowsAsync<NotSupportedException>(() => transaction.ReleaseSavepointAsync("before_discard", Ct));
                 Fixture.SkipFor("no savepoints");
             }
 

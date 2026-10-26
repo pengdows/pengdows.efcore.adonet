@@ -163,8 +163,12 @@ public class LifecycleTests
         Assert.Equal(ConnectionState.Closed, db.Connection.State);
     }
 
+    // Whether the database has savepoints is the dialect's to say, not the driver's: DbTransaction.SupportsSavepoints says
+    // whether the driver implements the methods, not whether the server keeps them (MySqlConnector reports them on
+    // SingleStore, which accepts SAVEPOINT and ROLLBACK TO and ignores them). Without savepoints all three refuse, as
+    // DbTransaction specifies for SupportsSavepoints false.
     [Fact]
-    public void Savepoints_go_to_the_driver_and_failures_are_logged()
+    public void A_dialect_without_savepoints_refuses_all_three_and_logs_it()
     {
         var failures = new TransactionFailures();
         var db = new FakeDatabase();
@@ -176,18 +180,17 @@ public class LifecycleTests
                 .Options);
         using var transaction = context.Database.BeginTransaction();
 
-        // fakeDb reports no savepoint support and the dialect has no SQL for them: Save and Rollback(name) throw, Release is
-        // DbTransaction's no-op.
         Assert.False(transaction.SupportsSavepoints);
-        Assert.Throws<NotSupportedException>(() => transaction.CreateSavepoint("s1"));
+        Assert.Contains("No savepoints", Assert.Throws<NotSupportedException>(() => transaction.CreateSavepoint("s1")).Message);
         Assert.Throws<NotSupportedException>(() => transaction.RollbackToSavepoint("s1"));
-        transaction.ReleaseSavepoint("s1");
+        Assert.Throws<NotSupportedException>(() => transaction.ReleaseSavepoint("s1"));
 
-        Assert.Equal(["CreateSavepoint", "RollbackToSavepoint"], failures.Actions);
+        Assert.Equal(["CreateSavepoint", "RollbackToSavepoint", "ReleaseSavepoint"], failures.Actions);
+        Assert.Empty(db.Commands);
     }
 
     [Fact]
-    public async Task Savepoints_work_asynchronously_too()
+    public async Task A_dialect_without_savepoints_refuses_them_asynchronously_too()
     {
         var db = new FakeDatabase();
         await using var context = db.Context(TestDialects.NoSavepoints);
@@ -195,7 +198,26 @@ public class LifecycleTests
 
         await Assert.ThrowsAsync<NotSupportedException>(() => transaction.CreateSavepointAsync("s1", Ct));
         await Assert.ThrowsAsync<NotSupportedException>(() => transaction.RollbackToSavepointAsync("s1", Ct));
-        await transaction.ReleaseSavepointAsync("s1", Ct);
+        await Assert.ThrowsAsync<NotSupportedException>(() => transaction.ReleaseSavepointAsync("s1", Ct));
+    }
+
+    // Microsoft.Data.Sqlite implements savepoints (SupportsSavepoints true); a dialect for a server that ignores them must
+    // still refuse, not hand them to the driver.
+    [Fact]
+    public async Task A_dialect_without_savepoints_has_none_even_where_the_driver_has_them()
+    {
+        await using var connection = new Microsoft.Data.Sqlite.SqliteConnection("Data Source=:memory:");
+        await using var context = new ItemContext(new DbContextOptionsBuilder<ItemContext>()
+            .UseAdoNet(connection, contextOwnsConnection: false, o => o.UseDialect(TestDialects.NoSavepoints))
+            .AllowManyDialects()
+            .Options);
+        await using var transaction = await context.Database.BeginTransactionAsync(Ct);
+
+        Assert.True(transaction.GetDbTransaction().SupportsSavepoints);
+        Assert.False(transaction.SupportsSavepoints);
+        await Assert.ThrowsAsync<NotSupportedException>(() => transaction.CreateSavepointAsync("s1", Ct));
+        Assert.Throws<NotSupportedException>(() => transaction.RollbackToSavepoint("s1"));
+        Assert.Throws<NotSupportedException>(() => transaction.ReleaseSavepoint("s1"));
     }
 
     [Fact]

@@ -8,10 +8,14 @@ using Microsoft.EntityFrameworkCore.Storage;
 namespace pengdows.efcore.adonet.Storage;
 
 /// <summary>
-///     Savepoints go through <see cref="DbTransaction.Save" />, <see cref="DbTransaction.Rollback(string)" /> and
-///     <see cref="DbTransaction.Release" /> where the driver offers them, so it uses its own syntax; otherwise through the
-///     dialect's <see cref="SavepointSyntax" />, as commands in the transaction; with neither, EF skips savepoints.
-///     Logging and interception match EF's base implementation.
+///     Whether the database has savepoints is the dialect's to say: <see cref="DbTransaction.SupportsSavepoints" /> says
+///     whether the driver implements the methods, not whether the server keeps them (a driver may report them on a server
+///     that accepts the statements and ignores them). Where the dialect has them, they go through
+///     <see cref="DbTransaction.Save" />, <see cref="DbTransaction.Rollback(string)" /> and <see cref="DbTransaction.Release" />
+///     if the driver offers them, so it uses its own syntax, and otherwise through the dialect's <see cref="SavepointSyntax" />,
+///     as commands in the transaction. Where it has none, all three throw <see cref="NotSupportedException" />, as
+///     <see cref="DbTransaction" /> specifies when savepoints aren't supported, and EF skips them. Logging and interception
+///     match EF's base implementation.
 /// </summary>
 internal class AdoNetRelationalTransaction(
     IRelationalConnection connection,
@@ -20,7 +24,7 @@ internal class AdoNetRelationalTransaction(
     IDiagnosticsLogger<DbLoggerCategory.Database.Transaction> logger,
     bool transactionOwned,
     ISqlGenerationHelper sqlGenerationHelper,
-    SavepointSyntax? savepoints)
+    IAdoNetDialect dialect)
     : RelationalTransaction(connection, transaction, transactionId, logger, transactionOwned, sqlGenerationHelper)
 {
     private readonly ISqlGenerationHelper _sqlGenerationHelper = sqlGenerationHelper;
@@ -28,12 +32,12 @@ internal class AdoNetRelationalTransaction(
     private DbTransaction DbTransaction
         => this.GetDbTransaction();
 
-    // The driver's savepoints, or else the dialect's SQL.
+    // The driver's savepoints, or else the dialect's SQL; only called where the dialect has savepoints.
     private SavepointSyntax? Sql
-        => DbTransaction.SupportsSavepoints ? null : savepoints;
+        => DbTransaction.SupportsSavepoints ? null : dialect.Sql.Savepoints;
 
     public override bool SupportsSavepoints
-        => DbTransaction.SupportsSavepoints || (savepoints != null);
+        => dialect.Sql.Savepoints != null;
 
     public override void CreateSavepoint(string name)
         => Execute(
@@ -81,6 +85,7 @@ internal class AdoNetRelationalTransaction(
     // pipeline (logged and intercepted like any command) on this connection, which enlists it in this transaction.
     private void Run(string? template, string name, Action driver)
     {
+        RequireSavepoints();
         if (template == null)
         {
             driver();
@@ -95,12 +100,21 @@ internal class AdoNetRelationalTransaction(
 
     private Task RunAsync(string? template, string name, Func<Task> driver, CancellationToken cancellationToken)
     {
+        RequireSavepoints();
         if (template == null)
         {
             return driver();
         }
 
         return template.Length > 0 ? Command(template, name).ExecuteNonQueryAsync(Parameters(), cancellationToken) : Task.CompletedTask;
+    }
+
+    private void RequireSavepoints()
+    {
+        if (!SupportsSavepoints)
+        {
+            throw new NotSupportedException($"{dialect.Name} has no savepoints.");
+        }
     }
 
     private IRelationalCommand Command(string template, string name)
@@ -162,7 +176,7 @@ internal class AdoNetRelationalTransaction(
     }
 }
 
-internal class AdoNetRelationalTransactionFactory(RelationalTransactionFactoryDependencies dependencies, ISqlDialect dialect)
+internal class AdoNetRelationalTransactionFactory(RelationalTransactionFactoryDependencies dependencies, IAdoNetDialect dialect)
     : RelationalTransactionFactory(dependencies)
 {
     public override RelationalTransaction Create(
@@ -172,5 +186,5 @@ internal class AdoNetRelationalTransactionFactory(RelationalTransactionFactoryDe
         IDiagnosticsLogger<DbLoggerCategory.Database.Transaction> logger,
         bool transactionOwned)
         => new AdoNetRelationalTransaction(
-            connection, transaction, transactionId, logger, transactionOwned, Dependencies.SqlGenerationHelper, dialect.Savepoints);
+            connection, transaction, transactionId, logger, transactionOwned, Dependencies.SqlGenerationHelper, dialect);
 }

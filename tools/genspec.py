@@ -15,7 +15,7 @@ SHARED_FIXTURES = {
 
 # Virtual members of a base whose value is the database's: overridden from its dialect.
 VIRTUALS = {
-    'TransactionTestBase': ['    protected override bool AmbientTransactionsSupported => new THost().Dialect.Capabilities.SupportsAmbientTransactions;'],
+    'TransactionTestBase': ['    protected override bool AmbientTransactionsSupported => new THost().Dialect.Capabilities.SupportsAmbientTransactions;', '    protected override bool SavepointsSupported => new THost().Dialect.Sql.Savepoints != null;'],
 }
 HAND_WRITTEN = {'NorthwindWhereQueryAdoNetTest', 'NorthwindSelectQueryAdoNetTest'}
 NORTHWIND = re.compile(r'Northwind(Query(Relational)?Fixture|QueryFixtureBase)<global::Microsoft\.EntityFrameworkCore\.TestUtilities\.NoopModelCustomizer>$')
