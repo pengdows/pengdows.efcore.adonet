@@ -51,8 +51,8 @@ public sealed class DatabaseLifecycle
     public Func<DbConnectionStringBuilder, bool> IsInMemory { get; private init; } = _ => false;
 
     /// <summary>
-    ///     Releases pooled connections to the database (the driver's <c>ClearPool</c>), before it is deleted, so none still
-    ///     holds it.
+    ///     Releases pooled connections to the database before it is deleted, so none still holds it. When null, the driver's
+    ///     static <c>ClearPool(TheirConnection)</c> is found by convention.
     /// </summary>
     public Action<DbConnection>? ClearPool { get; private init; }
 

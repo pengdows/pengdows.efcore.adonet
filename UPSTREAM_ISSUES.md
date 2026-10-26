@@ -139,6 +139,32 @@ noted so they can be removed once the fix ships.
 - **Our handling:** savepoint support is the dialect's (`ISqlDialect.Savepoints`), never the driver's flag; where the
   dialect has none, all three savepoint methods throw `NotSupportedException`. `MySqlDialect.SingleStore` has none.
 
+## mysql/mysql-connector-net (MySql.Data 26.10.0)
+
+Found by running the shared MySQL suites through Oracle's driver as well as MySqlConnector (the dialect is
+driver-neutral). Checked against the user's open pull requests there (#95-#115) and fork (pengdows/mysql-connector-net
+#1-#5): neither is covered.
+
+### `DbType.DateTime2` maps to `MySqlDbType.Blob`
+
+- **Defect:** `new MySqlParameter { DbType = DbType.DateTime2, Value = DateTime }` becomes `MySqlDbType.Blob`, and the value is
+  sent as current-culture text (`'1/2/2026 3:04:05\u202FAM'`), which MySQL rejects ("Incorrect datetime value"). `DateTime`,
+  `Date`, `Time` and `DateTimeOffset` map to date/time types; `DateTime2` should map to `MySqlDbType.DateTime`.
+- **Confirmed:** directly, reading `MySqlParameter.MySqlDbType` after setting each `DbType`.
+- **Effect here:** none now. Oracle's own EF provider binds DateTime as `DbType.DateTime`, and so does the MySQL dialect
+  (`ITypeMappingDialect.DateTimeDbType`); before that, 78 of 113 shared tests failed through MySql.Data.
+- **Status:** not reported; a pull request candidate.
+
+### `MySqlConnection.DisposeAsync` doesn't dispose
+
+- **Defect:** `Dispose()` raises `Component.Disposed` and leaves the connection disposed; `DisposeAsync()` does neither (the
+  event doesn't fire and the connection opens again). EF disposes a connection the context owns asynchronously.
+- **Confirmed:** directly (the `Disposed` event, sync and async).
+- **Effect here:** none now. The core closes an owned connection asynchronously and then disposes it synchronously
+  (`AdoNetRelationalConnection.DisposeDbConnectionAsync`), which every driver gets right; this also covers Npgsql, whose
+  connection never raises `Disposed`.
+- **Status:** not reported; a pull request candidate.
+
 ## Giorgi/DuckDB.NET (DuckDB.NET.Data 1.5.6.1)
 
 ### `DuckDBConnection.Close()` throws on a connection that isn't open

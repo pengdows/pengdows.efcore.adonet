@@ -56,8 +56,7 @@ internal class SqliteSql : AnsiSqlDialect
         ["-wal", "-shm"],
         "PRAGMA journal_mode = 'wal';",
         isInMemory: b => string.Equals(Convert.ToString(b.TryGetValue("Data Source", out var path) ? path : null, CultureInfo.InvariantCulture), ":memory:", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(Convert.ToString(b.TryGetValue("Mode", out var mode) ? mode : null, CultureInfo.InvariantCulture), "Memory", StringComparison.OrdinalIgnoreCase),
-        clearPool: c => Microsoft.Data.Sqlite.SqliteConnection.ClearPool((Microsoft.Data.Sqlite.SqliteConnection)c));
+            || string.Equals(Convert.ToString(b.TryGetValue("Mode", out var mode) ? mode : null, CultureInfo.InvariantCulture), "Memory", StringComparison.OrdinalIgnoreCase));
 
     public override bool SupportsSchemas => false;
 

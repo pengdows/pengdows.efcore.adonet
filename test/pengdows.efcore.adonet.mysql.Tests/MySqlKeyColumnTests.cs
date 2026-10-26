@@ -74,3 +74,21 @@ public class MySqlLongColumnTests
     public void Sized_columns_too_long_for_a_row_are_unbounded(Type clrType, int size, string expected)
         => Assert.Equal(expected, MySqlDialect.Instance.TypeMappings.GetStoreType(clrType, new StoreTypeFacets(Size: size)));
 }
+
+/// <summary>
+///     MySQL has one datetime type, so a DateTime parameter binds as DbType.DateTime, as both MySQL EF providers bind it.
+///     DbType.DateTime2 is right elsewhere, but Oracle's MySql.Data maps it to a BLOB and sends current-culture text
+///     (UPSTREAM_ISSUES.md), so this keeps the dialect working with either driver.
+/// </summary>
+public class MySqlDateTimeParameterTests
+{
+    [Fact]
+    public void A_date_time_parameter_binds_as_DateTime()
+    {
+        using var context = new pengdows.efcore.adonet.Testing.BlogContext(new DbContextOptionsBuilder<pengdows.efcore.adonet.Testing.BlogContext>().UseAdoNetMySql("Server=localhost").Options);
+
+        var mapping = context.GetService<Microsoft.EntityFrameworkCore.Storage.IRelationalTypeMappingSource>().FindMapping(typeof(DateTime))!;
+
+        Assert.Equal(System.Data.DbType.DateTime, mapping.DbType);
+    }
+}

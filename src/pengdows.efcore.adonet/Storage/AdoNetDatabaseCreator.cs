@@ -273,7 +273,7 @@ internal class AdoNetDatabaseCreator(
     private void ClearPool(DatabaseLifecycle lifecycle)
     {
         Connection.Close();
-        lifecycle.ClearPool?.Invoke(Connection.DbConnection);
+        (lifecycle.ClearPool ?? DriverClearPool)(Connection.DbConnection);
         if ((Connection.ConnectionString is { } connectionString) && dataSources.Evict(Factory(), connectionString))
         {
             // The context's connection came from that data source: let EF make a new one when it next needs it. Releasing
@@ -282,6 +282,14 @@ internal class AdoNetDatabaseCreator(
             Connection.ConnectionString = connectionString;
         }
     }
+
+    // ADO.NET drivers clear a connection's pool with a static ClearPool(TheirConnection); found by that convention, so a
+    // dialect needn't name its driver's connection type and works with any driver for its database. A driver without one
+    // pools per data source (evicted above) or not at all.
+    private static void DriverClearPool(DbConnection connection)
+        => connection.GetType()
+            .GetMethod("ClearPool", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static, [connection.GetType()])
+            ?.Invoke(null, [connection]);
 
     private IRelationalConnection AdminConnection(DatabaseLifecycle lifecycle, out string name)
     {

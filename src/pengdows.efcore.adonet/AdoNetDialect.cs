@@ -161,6 +161,10 @@ public class AnsiTypeMappings : ITypeMappingDialect
         return $"INTERVAL '{text}' {day} TO {second}";
     }
 
+    // DateTime2 means "no offset" everywhere; some drivers read DbType.DateTime as a time with a zone.
+    public virtual System.Data.DbType DateTimeDbType
+        => System.Data.DbType.DateTime2;
+
     public virtual string CastTarget(string storeType)
         => storeType;
 

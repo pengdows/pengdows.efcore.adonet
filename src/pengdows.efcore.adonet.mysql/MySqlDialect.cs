@@ -57,8 +57,7 @@ internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = t
     // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Storage/Internal/MySqlDatabaseCreator.cs
     public override DatabaseLifecycle Databases { get; } = DatabaseLifecycle.Server(
         "Database",
-        adminDatabase: null,
-        clearPool: c => MySqlConnector.MySqlConnection.ClearPool((MySqlConnector.MySqlConnection)c));
+        adminDatabase: null);
 
     public override SavepointSyntax? Savepoints
         => savepoints ? SavepointSyntax.Iso : null;
@@ -138,6 +137,11 @@ internal sealed class MySqlTypeMappings : AnsiTypeMappings
     };
 
     private static readonly TimeSpan MaxTime = new(838, 59, 59);
+
+    // One datetime type: bound as DbType.DateTime, as both MySQL EF providers bind it. Oracle's MySql.Data maps
+    // DbType.DateTime2 to a BLOB and sends current-culture text (UPSTREAM_ISSUES.md); MySqlConnector takes either.
+    public override System.Data.DbType DateTimeDbType
+        => System.Data.DbType.DateTime;
 
     // TEXT and BLOB can't be keys or indexed without a prefix length, and InnoDB's index key holds 3072 bytes: an unsized key or
     // index column is VARCHAR(255) (half the key at utf8mb4's 4 bytes a character, at most 255) or VARBINARY(3072).

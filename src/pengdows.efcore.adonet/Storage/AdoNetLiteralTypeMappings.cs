@@ -161,7 +161,7 @@ internal class AdoNetDateTimeTypeMapping : DateTimeTypeMapping
     private readonly ITypeMappingDialect _dialect;
 
     public AdoNetDateTimeTypeMapping(string storeType, ITypeMappingDialect dialect)
-        : base(storeType, System.Data.DbType.DateTime2)
+        : base(storeType, dialect.DateTimeDbType)
         => _dialect = dialect;
 
     protected AdoNetDateTimeTypeMapping(RelationalTypeMappingParameters parameters, ITypeMappingDialect dialect)

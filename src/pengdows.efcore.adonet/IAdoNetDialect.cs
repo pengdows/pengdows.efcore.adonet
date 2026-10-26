@@ -147,6 +147,12 @@ public interface ITypeMappingDialect
     ///     database whose CAST takes only its own target names (SIGNED, CHAR...) maps to them.
     /// </summary>
     string CastTarget(string storeType);
+
+    /// <summary>
+    ///     The DbType a DateTime parameter binds as: DateTime2 (a date and time with no offset) unless the database has one
+    ///     datetime type its drivers bind as DbType.DateTime.
+    /// </summary>
+    System.Data.DbType DateTimeDbType { get; }
 }
 
 /// <summary>The facets of a property that can change its store type.</summary>

@@ -7,7 +7,7 @@ using pengdows.efcore.adonet.Testing;
 
 namespace pengdows.efcore.adonet.mysql.Tests;
 
-public sealed class MySqlFixture : ContainerFixture
+public class MySqlFixture : ContainerFixture
 {
     public override DbProviderFactory Factory => MySqlConnectorFactory.Instance;
     public override IAdoNetDialect ExpectedDialect => MySqlDialect.Instance;
@@ -59,3 +59,35 @@ public class MySqlDatabaseCreatorConformanceTests(MySqlFixture fixture) : Databa
 public class MySqlConnectionConformanceTests(MySqlFixture fixture) : ConnectionConformanceTests<MySqlFixture>(fixture);
 
 public class MySqlExecutionStrategyConformanceTests(MySqlFixture fixture) : ExecutionStrategyConformanceTests<MySqlFixture>(fixture);
+
+/// <summary>
+///     The same MySQL dialect through Oracle's MySql.Data instead of MySqlConnector: the core speaks only ADO.NET and the
+///     dialect only SQL, so the driver is the application's choice. Test-only: MySql.Data is GPL and never shipped.
+/// </summary>
+public sealed class MySqlDataFixture : MySqlFixture
+{
+    public override DbProviderFactory Factory => MySql.Data.MySqlClient.MySqlClientFactory.Instance;
+
+    // MySql.Data refuses MySQL 8's caching_sha2_password key exchange over plain TCP unless asked.
+    public override string ConnectionString
+        => base.ConnectionString + ";AllowPublicKeyRetrieval=true";
+
+    protected override void UseProvider(DbContextOptionsBuilder builder)
+        => builder.UseAdoNet(Factory, ConnectionString, MySqlDialect.Instance);
+}
+
+public class MySqlDataConformanceTests(MySqlDataFixture fixture) : ProviderConformanceTests<MySqlDataFixture>(fixture);
+
+public class MySqlDataMigrationsConformanceTests(MySqlDataFixture fixture) : MigrationsConformanceTests<MySqlDataFixture>(fixture);
+
+public class MySqlDataBulkConformanceTests(MySqlDataFixture fixture) : BulkConformanceTests<MySqlDataFixture>(fixture);
+
+public class MySqlDataTranslationConformanceTests(MySqlDataFixture fixture) : TranslationConformanceTests<MySqlDataFixture>(fixture);
+
+public class MySqlDataLiteralConformanceTests(MySqlDataFixture fixture) : LiteralConformanceTests<MySqlDataFixture>(fixture);
+
+public class MySqlDataDatabaseCreatorConformanceTests(MySqlDataFixture fixture) : DatabaseCreatorConformanceTests<MySqlDataFixture>(fixture);
+
+public class MySqlDataConnectionConformanceTests(MySqlDataFixture fixture) : ConnectionConformanceTests<MySqlDataFixture>(fixture);
+
+public class MySqlDataExecutionStrategyConformanceTests(MySqlDataFixture fixture) : ExecutionStrategyConformanceTests<MySqlDataFixture>(fixture);

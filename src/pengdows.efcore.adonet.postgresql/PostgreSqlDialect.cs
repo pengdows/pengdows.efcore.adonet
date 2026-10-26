@@ -41,8 +41,7 @@ internal sealed class PostgreSqlSql : AnsiSqlDialect
     public override DatabaseLifecycle Databases { get; } = DatabaseLifecycle.Server(
         "Database",
         "postgres",
-        dropSql: ["DROP DATABASE {0} WITH (FORCE)"],
-        clearPool: c => NpgsqlConnection.ClearPool((NpgsqlConnection)c));
+        dropSql: ["DROP DATABASE {0} WITH (FORCE)"]);
 
     // The reserved words as Npgsql lists them, which is where the official provider takes them from too.
     private static readonly Lazy<HashSet<string>> ReservedWords = new(() =>

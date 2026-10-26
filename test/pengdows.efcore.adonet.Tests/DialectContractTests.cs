@@ -90,7 +90,8 @@ public class DialectContractTests
         Assert.Same(ComposedDialect.Instance, nonGeneric.GetService<IAdoNetDialect>());
     }
 
-    // Raw ADO.NET objects don't leave the library (REVIEW_POLICY 4D), except where docs/PUBLIC_API.md records why.
+    // Raw ADO.NET objects don't leave the library (REVIEW_POLICY 4D), except where docs/PUBLIC_API.md records why. DbType is
+    // an enum, not an object.
     [Fact]
     public void Public_api_hands_out_no_raw_ado_net_objects_but_the_recorded_ones()
     {
@@ -106,7 +107,7 @@ public class DialectContractTests
         var handedOut = Directory.EnumerateFiles(src, "PublicAPI.*.txt", SearchOption.AllDirectories)
             .SelectMany(File.ReadLines)
             .Where(l => l.Contains(" -> System.Data.", StringComparison.Ordinal)
-                && System.Text.RegularExpressions.Regex.IsMatch(l, @"-> System\.Data\.(Common\.)?(I?Db\w*|DbDataSource)[!?]?$"))
+                && System.Text.RegularExpressions.Regex.IsMatch(l, @"-> System\.Data\.(Common\.)?(I?Db(?!Type\b)\w*|DbDataSource)[!?]?$"))
             .Except(recorded)
             .ToList();
 

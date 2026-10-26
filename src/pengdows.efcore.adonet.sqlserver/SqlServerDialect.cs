@@ -50,8 +50,7 @@ internal sealed class SqlServerSql : AnsiSqlDialect
     public override DatabaseLifecycle Databases { get; } = DatabaseLifecycle.Server(
         "Initial Catalog",
         "master",
-        dropSql: ["ALTER DATABASE {0} SET SINGLE_USER WITH ROLLBACK IMMEDIATE", "DROP DATABASE {0}"],
-        clearPool: c => Microsoft.Data.SqlClient.SqlConnection.ClearPool((Microsoft.Data.SqlClient.SqlConnection)c));
+        dropSql: ["ALTER DATABASE {0} SET SINGLE_USER WITH ROLLBACK IMMEDIATE", "DROP DATABASE {0}"]);
 
     public override string IdentifierQuotePrefix => "[";
     public override string IdentifierQuoteSuffix => "]";

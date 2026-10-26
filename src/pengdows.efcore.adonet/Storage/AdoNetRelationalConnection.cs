@@ -101,6 +101,32 @@ internal class AdoNetRelationalConnection : RelationalConnection
         }
     }
 
+    // Some drivers' DisposeAsync skips what Dispose does (one neither raises Disposed nor disposes, another raises nothing):
+    // close asynchronously, which does the I/O, then dispose synchronously, which every driver gets right and which costs
+    // nothing on a closed connection.
+    // Logged and intercepted as EF's base does. Behaviour reference (not copied):
+    // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Relational/Storage/RelationalConnection.cs
+    protected override async ValueTask DisposeDbConnectionAsync()
+    {
+        await CloseDbConnectionAsync();
+
+        var logger = Dependencies.ConnectionLogger;
+        var startTime = DateTimeOffset.UtcNow;
+        if (!logger.ShouldLogConnectionDispose(startTime))
+        {
+            DbConnection.Dispose();
+            return;
+        }
+
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        if (!(await logger.ConnectionDisposingAsync(this, startTime)).IsSuppressed)
+        {
+            DbConnection.Dispose();
+        }
+
+        await logger.ConnectionDisposedAsync(this, startTime, stopwatch.Elapsed);
+    }
+
     // DbConnection.Close is documented as safe to call on a closed connection and EF relies on that,
     // but not every driver honors it (some throw), so only close what is open.
     protected override void CloseDbConnection()

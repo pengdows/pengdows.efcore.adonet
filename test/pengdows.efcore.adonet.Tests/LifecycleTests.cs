@@ -314,6 +314,35 @@ public class LifecycleTests
         Assert.Equal(ConnectionState.Closed, db.Connection.State);
     }
 
+    // Some drivers' DisposeAsync skips what Dispose does (MySql.Data neither raises Disposed nor disposes; Npgsql raises
+    // nothing): a connection the context owns is closed asynchronously, which does the I/O, then disposed synchronously,
+    // which every driver gets right and costs nothing once closed.
+    [Fact]
+    public async Task An_owned_connection_is_disposed_even_where_the_drivers_DisposeAsync_falls_short()
+    {
+        var connection = new AsyncDisposeSkipping { ConnectionString = "Data Source=fake;EmulatedProduct=PostgreSql" };
+        var disposed = false;
+        connection.Disposed += (_, _) => disposed = true;
+
+        await using (var context = new ItemContext(new DbContextOptionsBuilder<ItemContext>()
+                         .UseAdoNet(connection, contextOwnsConnection: true, o => o.UseDialect(AdoNetDialect.Ansi))
+                         .AllowManyDialects()
+                         .Options))
+        {
+            await context.Database.OpenConnectionAsync(Ct);
+        }
+
+        Assert.True(disposed);
+        Assert.Equal(ConnectionState.Closed, connection.State);
+    }
+
+    /// <summary>A fakeDb connection whose DisposeAsync does nothing, as MySql.Data's skips Dispose's work.</summary>
+    private sealed class AsyncDisposeSkipping : fakeDbConnection
+    {
+        public override ValueTask DisposeAsync()
+            => ValueTask.CompletedTask;
+    }
+
     [Fact]
     public async Task Closing_a_closed_connection_never_reaches_the_driver()
     {

@@ -7,6 +7,8 @@
     <ProjectReference Include="..\..\src\pengdows.efcore.adonet.mysql\pengdows.efcore.adonet.mysql.csproj" />
     <ProjectReference Include="..\..\src\pengdows.efcore.adonet.Testing\pengdows.efcore.adonet.Testing.csproj" />
     <PackageReference Include="Testcontainers.MySql" />
+    <!-- Oracle's driver (GPL-2 with the FOSS exception), test-only: the same dialect must work through it. Never shipped. -->
+    <PackageReference Include="MySql.Data" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit.runner.visualstudio" />

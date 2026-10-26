@@ -92,4 +92,32 @@ public class DatabaseCreatorTests
         Assert.False(Directory.Exists(path));
         Assert.Contains("does not exist", (await Assert.ThrowsAsync<InvalidOperationException>(() => creator.DeleteAsync(Ct))).Message);
     }
+
+    // Most ADO.NET drivers clear a pool with a static ClearPool(TheirConnection) (SqlClient, Npgsql, MySqlConnector,
+    // MySql.Data, Microsoft.Data.Sqlite): found by that convention, so no dialect names its driver's connection type and a
+    // dialect works with any driver for its database.
+    [Fact]
+    public async Task A_drivers_static_ClearPool_is_found_by_convention()
+    {
+        PoolingConnection.Cleared = 0;
+        await using var connection = new PoolingConnection { ConnectionString = ConnectionString };
+        var dialect = new PartsDialect("Pooling", new PartsSql(databases: DatabaseLifecycle.Server("Database", "postgres")));
+        await using var context = new ItemContext(new DbContextOptionsBuilder<ItemContext>()
+            .UseAdoNet(connection, contextOwnsConnection: false, o => o.UseDialect(dialect))
+            .AllowManyDialects()
+            .Options);
+
+        await Assert.ThrowsAnyAsync<Exception>(() => context.GetService<IRelationalDatabaseCreator>().DeleteAsync(Ct));
+
+        Assert.Equal(1, PoolingConnection.Cleared);
+    }
+
+    /// <summary>A fakeDb connection whose type declares a driver's static ClearPool.</summary>
+    private sealed class PoolingConnection : fakeDbConnection
+    {
+        public static int Cleared;
+
+        public static void ClearPool(PoolingConnection connection)
+            => Cleared++;
+    }
 }
