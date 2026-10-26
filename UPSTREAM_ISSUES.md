@@ -143,7 +143,10 @@ noted so they can be removed once the fix ships.
 - **Confirmed:** directly, outside EF: `SELECT '\x01\x02'::BLOB`, then `GetFieldValue<byte[]>(0)`. Still in
   `StringVectorDataReader.GetValidValue` on main after #377 (which added `GetBytes`).
 - **Found by:** `MigrationsConformanceTests.Unsized_key_and_index_columns_are_created_and_hold_long_values`, skipped on
-  DuckDB. **Status:** open; no pull request yet.
+  DuckDB (and 18 tests of EF's specification suites: value converters, binary keys, many-to-many joins).
+- **Status: pull request open,** [#384](https://github.com/Giorgi/DuckDB.NET/pull/384) "Return byte arrays from typed BLOB
+  reads": `GetFieldValue<byte[]>` materializes the bytes; `GetValue` and `GetStream` keep returning a stream. When it is
+  released, remove the skip in `test/pengdows.efcore.adonet.duckdb.Tests/Fixtures.cs`.
 
 ### Driver fixes merged upstream, not yet released (we pin 1.5.6.1)
 
