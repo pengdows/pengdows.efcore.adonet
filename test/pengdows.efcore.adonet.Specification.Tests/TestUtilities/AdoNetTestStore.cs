@@ -30,9 +30,10 @@ public class AdoNetTestStore<THost> : RelationalTestStore
     // As EF's own test stores: the store's connection, which every context shares (so a nested context can join the outer
     // one's transaction), unless a test asks for a connection string.
     public override DbContextOptionsBuilder AddProviderOptions(DbContextOptionsBuilder builder)
-        => UseConnectionString
-            ? Host.UseProvider(builder, ConnectionString, Configure)
-            : Host.UseProvider(builder, Connection, Configure);
+        => SqlLog.AddTo(
+            UseConnectionString
+                ? Host.UseProvider(builder, ConnectionString, Configure)
+                : Host.UseProvider(builder, Connection, Configure));
 
     private static void Configure(AdoNetDbContextOptionsBuilder options)
         => options.UseQuerySplittingBehavior(QuerySplittingBehavior.SingleQuery).CommandTimeout(300);

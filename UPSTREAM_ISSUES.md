@@ -94,6 +94,16 @@ noted so they can be removed once the fix ships.
   not yet run against Microsoft's SQLite provider.
 - **Our fix:** the core writes a float constant as its exact double value.
 
+### Relational: a multi-row VALUES as a set-operation operand changes the result
+
+- **Defect:** `QuerySqlGenerator.GenerateValues` writes several rows as `SELECT ... UNION ALL VALUES (...), (...)`, and
+  `GenerateSetOperationOperand` writes such an operand unparenthesized, so in `x UNION <values>` the inner `UNION ALL`
+  applies to the whole union and keeps its duplicates (`c.Ints.Skip(1).Union(ints).Count()` counted 4, not 3, on MySQL).
+- **Effect upstream:** none seen in Microsoft's providers: SQL Server writes a real `VALUES` and SQLite overrides
+  `GenerateSetOperationOperand`. It reaches any provider that keeps the base `GenerateValues`.
+- **Here:** a set-operation operand over a multi-row VALUES is parenthesized.
+- **Status:** not reported.
+
 ## dotnet/SqlClient (Microsoft.Data.SqlClient 7.1.1)
 
 ### `SqlTransaction.SupportsSavepoints` is false although it has savepoints
@@ -117,6 +127,18 @@ noted so they can be removed once the fix ships.
 - **Found by:** `ConnectionConformanceTests.An_owned_connection_in_OnConfiguring_is_disposed_with_the_context`, which now
   accepts either the event or a refusal to reopen (Npgsql refuses), since some drivers reopen a disposed connection.
 - **Status:** read in source, not yet reported; no pull request.
+
+## MySQL Server (8.4.11)
+
+### JSON_TABLE over an outer column reads it as empty in a semijoin or a merged lateral table
+
+- **Defect:** `WHERE x IN (SELECT ... FROM JSON_TABLE(t.col, ...))`, the same under `EXISTS`, and `CROSS JOIN LATERAL
+  (SELECT ... FROM JSON_TABLE(t.col, ...) WHERE ...)` fail with "Invalid JSON text in argument 1 to function json_table:
+  The document is empty", although every row holds a valid array; the same JSON_TABLE in a scalar subquery or a plain join
+  works. The optimizer's semijoin and derived-table merge evaluate the argument without the outer row.
+- **Status:** the EXISTS case is [Bug #114897](https://bugs.mysql.com/bug.php?id=114897), fixed in 9.3.0; 8.4 (LTS) has it.
+- **Here:** a query block that reads a JSON array table carries `/*+ NO_SEMIJOIN() NO_MERGE() */`
+  (`JsonSyntax.ArrayElementsHint`).
 
 ## mysql-net/MySqlConnector (2.6.2)
 

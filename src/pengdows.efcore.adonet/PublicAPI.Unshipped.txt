@@ -444,3 +444,11 @@ pengdows.efcore.adonet.PagingSyntax.ComputesLimits.get -> bool
 pengdows.efcore.adonet.PagingSyntax.WithValueLimitsOnly() -> pengdows.efcore.adonet.PagingSyntax!
 pengdows.efcore.adonet.ISqlDialect.ValuesRowPrefix.get -> string!
 virtual pengdows.efcore.adonet.AnsiSqlDialect.ValuesRowPrefix.get -> string!
+pengdows.efcore.adonet.JsonSyntax.ArrayElements.get -> string?
+pengdows.efcore.adonet.JsonSyntax.ArrayElements.init -> void
+pengdows.efcore.adonet.JsonSyntax.ArrayElementsHint.get -> string?
+pengdows.efcore.adonet.JsonSyntax.ArrayElementsHint.init -> void
+pengdows.efcore.adonet.JsonSyntax.ArrayElementsTextType.get -> string?
+pengdows.efcore.adonet.JsonSyntax.ArrayElementsTextType.init -> void
+pengdows.efcore.adonet.JsonSyntax.ArrayElementsBinaryValue.get -> string?
+pengdows.efcore.adonet.JsonSyntax.ArrayElementsBinaryValue.init -> void

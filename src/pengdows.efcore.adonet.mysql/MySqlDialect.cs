@@ -73,7 +73,22 @@ internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = t
         "CASE JSON_EXTRACT({0}, {1}) WHEN CAST('true' AS JSON) THEN TRUE WHEN CAST('false' AS JSON) THEN FALSE END",
         "CONCAT({0}, {1})",
         "JSON_SET({0}, {1}, {2})",
-        "CAST({0} AS JSON)");
+        "CAST({0} AS JSON)")
+    {
+        // FOR ORDINALITY numbers the elements in array order.
+        ArrayElements = "JSON_TABLE({0}, '$[*]' COLUMNS ({1} FOR ORDINALITY, {2} {3} PATH '$'))",
+
+        // A JSON_TABLE text column takes the connection's collation as strongly as a table column takes its own, so comparing the
+        // two fails when they differ ("Illegal mix of collations"); a _bin collation yields to neither and compares ordinally,
+        // as .NET does.
+        ArrayElementsTextType = "{0} CHARACTER SET utf8mb4 COLLATE utf8mb4_bin",
+        ArrayElementsBinaryValue = "FROM_BASE64({0})",
+
+        // An IN or EXISTS subquery turned into a semijoin, or a lateral derived table merged into its query, over a JSON_TABLE of
+        // an outer column reads the column as empty ("The document is empty"); the semijoin case is fixed in 9.3.0
+        // (https://bugs.mysql.com/bug.php?id=114897, UPSTREAM_ISSUES.md).
+        ArrayElementsHint = "/*+ NO_SEMIJOIN() NO_MERGE() */"
+    };
 
     public override string IdentifierQuotePrefix => "`";
     public override string IdentifierQuoteSuffix => "`";

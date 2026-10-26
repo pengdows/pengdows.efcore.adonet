@@ -51,6 +51,21 @@ internal class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencie
         }
     }
 
+    // VALUES of several rows is written SELECT ... UNION ALL VALUES ...; as an operand of another set operation it is
+    // parenthesized, or its UNION ALL would apply to the whole operation (a UNION would keep duplicates).
+    protected override void GenerateSetOperationOperand(SetOperationBase setOperation, SelectExpression operand)
+    {
+        if (operand.Tables is not [ValuesExpression { RowValues.Count: > 1 }])
+        {
+            base.GenerateSetOperationOperand(setOperation, operand);
+            return;
+        }
+
+        Sql.Append("(");
+        base.GenerateSetOperationOperand(setOperation, operand);
+        Sql.Append(")");
+    }
+
     protected override Expression VisitColumn(ColumnExpression columnExpression)
     {
         if (_qualifyWithTableName is { } table && columnExpression.TableAlias == table.Alias)
@@ -159,6 +174,19 @@ internal class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencie
 
     protected override Expression VisitExtension(Expression extensionExpression)
     {
+        if (extensionExpression is JsonArrayTableExpression table)
+        {
+            var helper = Dependencies.SqlGenerationHelper;
+            WriteTemplate(
+                dialect.Json!.ArrayElements!,
+                () => Visit(table.Json),
+                () => Sql.Append(helper.DelimitIdentifier(JsonArrayTableExpression.OrdinalColumn)),
+                () => Sql.Append(helper.DelimitIdentifier(JsonArrayTableExpression.ValueColumn)),
+                () => Sql.Append(ArrayElementType(table.ElementTypeMapping!)));
+            Sql.Append(AliasSeparator).Append(helper.DelimitIdentifier(table.Alias));
+            return table;
+        }
+
         if (extensionExpression is not RowValueSqlExpression rowValue)
         {
             return base.VisitExtension(extensionExpression);
@@ -194,9 +222,10 @@ internal class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencie
         return outerApplyExpression;
     }
 
+    // A table function sees the tables before it without LATERAL (ISO's rule, and some databases refuse the keyword there).
     private void VisitLateral(TableExpressionBase table)
     {
-        if (table is not TableExpression)
+        if (table is not (TableExpression or TableValuedFunctionExpression))
         {
             Sql.Append(dialect.LateralJoins?.Lateral ?? throw new InvalidOperationException("A lateral join was not refused at translation."));
         }
@@ -221,8 +250,13 @@ internal class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencie
 
         const string Alias = "limited";
         Visit(inExpression.Item);
-        Sql.Append(negated ? " NOT IN (SELECT " : " IN (SELECT ")
-            .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(subquery.Projection[0].Alias, Alias))
+        Sql.Append(negated ? " NOT IN (SELECT " : " IN (SELECT ");
+        if ((dialect.Json?.ArrayElementsHint is { } hint) && ReadsArrayElements(subquery))
+        {
+            Sql.Append(hint).Append(" ");
+        }
+
+        Sql.Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(subquery.Projection[0].Alias, Alias))
             .AppendLine(" FROM (");
         using (Sql.Indent())
         {
@@ -358,7 +392,37 @@ internal class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencie
     }
 
     protected override void GenerateTop(SelectExpression selectExpression)
-        => dialect.Paging.GenerateTop(this, selectExpression);
+    {
+        if ((dialect.Json?.ArrayElementsHint is { } hint) && ReadsArrayElements(selectExpression))
+        {
+            Sql.Append(hint).Append(" ");
+        }
+
+        dialect.Paging.GenerateTop(this, selectExpression);
+    }
+
+    // Text elements in the dialect's text form; binary ones are read as their base64 text, then decoded.
+    private string ArrayElementType(RelationalTypeMapping element)
+    {
+        var json = dialect.Json!;
+        var storeType = (element.ClrType == typeof(byte[])) && (json.ArrayElementsBinaryValue != null)
+            ? typeMappings.GetStoreType(typeof(string))!
+            : element.StoreType;
+        return ((element.ClrType == typeof(string)) || (storeType != element.StoreType)) && (json.ArrayElementsTextType is { } textType)
+            ? textType.Replace("{0}", storeType, StringComparison.Ordinal)
+            : storeType;
+    }
+
+    // A JSON array table in the query's own FROM, or in a derived table there.
+    private static bool ReadsArrayElements(SelectExpression select)
+        => select.Tables.Any(t => t switch
+        {
+            JsonArrayTableExpression => true,
+            SelectExpression derived => ReadsArrayElements(derived),
+            JoinExpressionBase { Table: var joined } => joined is JsonArrayTableExpression
+                || ((joined is SelectExpression joinedSelect) && ReadsArrayElements(joinedSelect)),
+            _ => false
+        });
 
     protected override void GenerateOrderings(SelectExpression selectExpression)
     {

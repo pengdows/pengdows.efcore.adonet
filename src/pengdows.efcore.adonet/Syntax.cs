@@ -434,4 +434,26 @@ public sealed class JsonSyntax(
     public string Concatenate { get; } = concatenate;
     public string Set { get; } = set;
     public string FromText { get; } = fromText;
+
+    /// <summary>
+    ///     The elements of the JSON array <c>{0}</c> as a table, for querying a primitive collection: a column named <c>{1}</c>
+    ///     that orders the elements, and one named <c>{2}</c> holding each element as the store type <c>{3}</c>. The table's alias
+    ///     follows it. Null where the dialect can't; a collection is then queried only as a whole.
+    /// </summary>
+    public string? ArrayElements { get; init; }
+
+    /// <summary>
+    ///     The <c>{3}</c> of <see cref="ArrayElements" /> for text elements, from the element's store type <c>{0}</c>; null to use
+    ///     the store type as it is.
+    /// </summary>
+    public string? ArrayElementsTextType { get; init; }
+
+    /// <summary>
+    ///     Decodes a binary element <c>{0}</c> of <see cref="ArrayElements" />, which JSON holds as base64 text; null where binary
+    ///     elements can't be read. The element column is then declared as text.
+    /// </summary>
+    public string? ArrayElementsBinaryValue { get; init; }
+
+    /// <summary>An optimizer hint written after <c>SELECT</c> in a query that reads <see cref="ArrayElements" />; null for none.</summary>
+    public string? ArrayElementsHint { get; init; }
 }
