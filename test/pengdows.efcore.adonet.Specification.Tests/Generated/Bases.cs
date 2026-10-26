@@ -554,7 +554,7 @@ public abstract partial class ConvertToProviderTypesAdoNetTest<THost>(ConvertToP
     where THost : IDatabaseHost, new()
 {
 
-    public partial class AdoNetFixture : global::Microsoft.EntityFrameworkCore.BuiltInDataTypesTestBase<AdoNetFixture>.BuiltInDataTypesFixtureBase, global::Microsoft.EntityFrameworkCore.TestUtilities.ITestSqlLoggerFactory
+    public partial class AdoNetFixture : global::Microsoft.EntityFrameworkCore.ConvertToProviderTypesTestBase<AdoNetFixture>.ConvertToProviderTypesFixtureBase, global::Microsoft.EntityFrameworkCore.TestUtilities.ITestSqlLoggerFactory
     {
         public override bool StrictEquality => true;
         public override bool SupportsAnsi => false;
@@ -575,7 +575,7 @@ public abstract partial class CustomConvertersAdoNetTest<THost>(CustomConverters
     where THost : IDatabaseHost, new()
 {
 
-    public partial class AdoNetFixture : global::Microsoft.EntityFrameworkCore.BuiltInDataTypesTestBase<AdoNetFixture>.BuiltInDataTypesFixtureBase, global::Microsoft.EntityFrameworkCore.TestUtilities.ITestSqlLoggerFactory
+    public partial class AdoNetFixture : global::Microsoft.EntityFrameworkCore.CustomConvertersTestBase<AdoNetFixture>.CustomConvertersFixtureBase, global::Microsoft.EntityFrameworkCore.TestUtilities.ITestSqlLoggerFactory
     {
         public override bool StrictEquality => true;
         public override bool SupportsAnsi => false;

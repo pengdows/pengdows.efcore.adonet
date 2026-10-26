@@ -56,3 +56,21 @@ public class MySqlKeyColumnTests
             });
     }
 }
+
+/// <summary>
+///     MySQL counts every VARCHAR and VARBINARY byte toward a 65,535-byte row: a string longer than fits (16,383 characters at
+///     utf8mb4's 4 bytes) is LONGTEXT, and binary of 8,000 bytes or more is LONGBLOB, as Pomelo maps them. Behaviour
+///     reference: Pomelo's MySqlTypeMappingSource and MySqlByteArrayTypeMapping (adapted).
+/// </summary>
+public class MySqlLongColumnTests
+{
+    [Theory]
+    [InlineData(typeof(string), 255, "VARCHAR(255)")]
+    [InlineData(typeof(string), 16383, "VARCHAR(16383)")]
+    [InlineData(typeof(string), 16384, "LONGTEXT")]
+    [InlineData(typeof(byte[]), 7999, "VARBINARY(7999)")]
+    [InlineData(typeof(byte[]), 8000, "LONGBLOB")]
+    [InlineData(typeof(byte[]), 9000, "LONGBLOB")]
+    public void Sized_columns_too_long_for_a_row_are_unbounded(Type clrType, int size, string expected)
+        => Assert.Equal(expected, MySqlDialect.Instance.TypeMappings.GetStoreType(clrType, new StoreTypeFacets(Size: size)));
+}

@@ -40,6 +40,17 @@ object Member(MemberInfo m) => m switch
 IEnumerable<MemberInfo> Abstracts(Type x) => x.GetMembers(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
     .Where(m => (m is MethodInfo mi && mi.IsAbstract && !mi.IsSpecialName && (mi.IsPublic || mi.IsFamily || mi.IsFamilyOrAssembly)) || (m is PropertyInfo pi && (pi.GetMethod?.IsAbstract ?? false)));
 
+static HashSet<string> BaseNames(Type type)
+{
+    var names = new HashSet<string>();
+    for (var b = type.BaseType; b != null; b = b.BaseType)
+    {
+        names.Add(b.Name.Split('`')[0]);
+    }
+
+    return names;
+}
+
 var result = new List<object>();
 foreach (var name in names)
 {
@@ -59,6 +70,12 @@ foreach (var name in names)
             && types.FirstOrDefault(x => x.Name == name.Replace("TestBase", "") + "Fixture" && x.IsPublic && !x.IsGenericTypeDefinition) is { } preferred
             && generics[0].GetGenericParameterConstraints().Where(c => c.IsClass).All(c => !c.ContainsGenericParameters && c.IsAssignableFrom(preferred))
                 ? Cs(preferred) : null,
+        // A fixture nested in the base itself (CustomConvertersTestBase<T>.CustomConvertersFixtureBase), which upstream
+        // providers derive from: it adds the base's own model to the fixture its constraint names.
+        nestedFixture = generics.Length == 1
+            && t.GetNestedTypes(BindingFlags.Public).FirstOrDefault(n => n.Name.EndsWith("FixtureBase", StringComparison.Ordinal) && n.IsClass) is { } nested
+            && generics[0].GetGenericParameterConstraints().Where(c => c.IsClass).All(c => BaseNames(nested).Contains(c.Name.Split('`')[0]))
+                ? nested.Name.Split('`')[0] : null,
         generic = generics.Select(g => new { g.Name, constraints = g.GetGenericParameterConstraints().Select(c => new { cs = Cs(c), isClass = c.IsClass, isAbstract = c.IsAbstract, abstracts = c.IsClass ? Abstracts(c).Select(Member).ToArray() : [], listLogger = c.IsClass && (c.GetProperty("ListLoggerFactory", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance) != null) }).ToArray() }).ToArray(),
         ctors = t.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).Where(c => !c.IsPrivate).Select(c => c.GetParameters().Select(p => Cs(p.ParameterType) + " " + p.Name).ToArray()).ToArray(),
         ctorFixtures = t.IsGenericTypeDefinition ? [] : t.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).Where(c => !c.IsPrivate)

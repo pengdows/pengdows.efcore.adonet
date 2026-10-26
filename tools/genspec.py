@@ -143,7 +143,9 @@ for b in bases:
     else:
         fixture = f'{cls}<THost>.AdoNetFixture'
         # EF's own fixture for the base when it has one (its own store name), else the one the constraint names.
-        base_fixture = b.get('preferredFixture') or c['cs'].replace('<TFixture>', '<AdoNetFixture>')
+        base_fixture = (b.get('preferredFixture')
+                        or (f"{cs.replace('<TFixture>', '<AdoNetFixture>')}.{b['nestedFixture']}" if b.get('nestedFixture') else None)
+                        or c['cs'].replace('<TFixture>', '<AdoNetFixture>'))
         # EF's query asserter casts the fixture to ITestSqlLoggerFactory to show a failed query's SQL; without it a
         # failure is reported as an InvalidCastException.
         logger = ['        public global::Microsoft.EntityFrameworkCore.TestUtilities.TestSqlLoggerFactory TestSqlLoggerFactory',

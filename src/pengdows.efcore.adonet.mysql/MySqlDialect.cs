@@ -144,9 +144,20 @@ internal sealed class MySqlTypeMappings : AnsiTypeMappings
     // Behaviour reference (not copied):
     // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Storage/Internal/MySqlTypeMappingSource.cs
     public override string? GetStoreType(Type clrType, StoreTypeFacets facets)
-        => facets is { KeyOrIndex: true, Size: null }
-            ? (clrType == typeof(string) ? "VARCHAR(255)" : clrType == typeof(byte[]) ? "VARBINARY(3072)" : base.GetStoreType(clrType, facets))
-            : base.GetStoreType(clrType, facets);
+        => facets switch
+        {
+            { KeyOrIndex: true, Size: null } when clrType == typeof(string) => "VARCHAR(255)",
+            { KeyOrIndex: true, Size: null } when clrType == typeof(byte[]) => "VARBINARY(3072)",
+            // Every VARCHAR and VARBINARY byte counts toward a 65,535-byte row: a string longer than fits at utf8mb4's 4 bytes
+            // a character is LONGTEXT, and binary of 8,000 bytes or more LONGBLOB. Adapted from Pomelo's MySqlTypeMappingSource
+            // and MySqlByteArrayTypeMapping (MIT, Pomelo Foundation).
+            { Size: > MaxVarcharCharacters } when clrType == typeof(string) => "LONGTEXT",
+            { Size: >= MinBlobBytes } when clrType == typeof(byte[]) => "LONGBLOB",
+            _ => base.GetStoreType(clrType, facets)
+        };
+
+    private const int MaxVarcharCharacters = 65_535 / 4;
+    private const int MinBlobBytes = 8000;
 
     // TIME spans -838:59:59 to 838:59:59 and counts hours past a day; outside that MySQL would clip the value.
     public override string FormatLiteral(object value, string storeType, string literal)
