@@ -39,6 +39,89 @@ internal class AdoNetQueryableMethodTranslatingExpressionVisitor : RelationalQue
     protected override QueryableMethodTranslatingExpressionVisitor CreateSubqueryVisitor()
         => new AdoNetQueryableMethodTranslatingExpressionVisitor(this);
 
+    // A collection of structural types inside a JSON column, queried as a table: one row per element, ordered as the array is,
+    // each property read from the element's JSON as it is from a JSON column. A collection at a path is read from there first.
+    // Adapted from EF Core's SQLite provider (MIT, .NET Foundation):
+    // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.Core/Query/Internal/SqliteQueryableMethodTranslatingExpressionVisitor.cs
+#pragma warning disable EF1001 // CreateSelect: EF's provider-facing helper for a JSON collection's select, marked internal like the rest of its provider API.
+    protected override ShapedQueryExpression TransformJsonQueryToTable(JsonQueryExpression jsonQueryExpression)
+    {
+        if (_dialect.Json?.ArrayElements == null)
+        {
+            return base.TransformJsonQueryToTable(jsonQueryExpression)!;
+        }
+
+        var type = jsonQueryExpression.StructuralType;
+        var jsonMapping = _typeMappingSource.FindMapping(typeof(JsonTypePlaceholder))!;
+        var stringMapping = _typeMappingSource.FindMapping(typeof(string))!;
+        var intMapping = _typeMappingSource.FindMapping(typeof(int))!;
+        SqlExpression source = jsonQueryExpression.Path.Count == 0
+            ? jsonQueryExpression.JsonColumn
+            : new JsonScalarExpression(jsonQueryExpression.JsonColumn, jsonQueryExpression.Path, typeof(string), jsonMapping, jsonQueryExpression.IsNullable);
+
+        var name = jsonQueryExpression.Path.LastOrDefault(p => p.PropertyName != null).PropertyName ?? jsonQueryExpression.JsonColumn.Name;
+        var table = new JsonArrayTableExpression(_sqlAliasManager.GenerateTableAlias(name), source, jsonMapping);
+        var select = CreateSelect(jsonQueryExpression, table, JsonArrayTableExpression.OrdinalColumn, typeof(int), intMapping);
+        select.AppendOrdering(new OrderingExpression(
+            select.CreateColumnExpression(table, JsonArrayTableExpression.OrdinalColumn, typeof(int), intMapping, columnNullable: false), ascending: true));
+
+        var element = select.CreateColumnExpression(table, JsonArrayTableExpression.ValueColumn, typeof(string), jsonMapping, columnNullable: null);
+        var projection = new Dictionary<ProjectionMember, Expression>();
+        foreach (var property in type.GetPropertiesInHierarchy())
+        {
+            if (property.GetJsonPropertyName() is { } jsonName)
+            {
+                projection[new ProjectionMember().Append(new JsonMember(jsonName))] = new JsonScalarExpression(
+                    element, [new PathSegment(jsonName)], System.Nullable.GetUnderlyingType(property.ClrType) ?? property.ClrType,
+                    property.GetRelationalTypeMapping(), property.IsNullable);
+            }
+        }
+
+        // Owned and complex members are JSON themselves, read as text.
+        if (type is Microsoft.EntityFrameworkCore.Metadata.IEntityType entityType)
+        {
+            foreach (var navigation in entityType.GetNavigationsInHierarchy()
+                         .Where(n => n.ForeignKey.IsOwnership && n.TargetEntityType.IsMappedToJson() && (n.ForeignKey.PrincipalToDependent == n)))
+            {
+                var jsonName = navigation.TargetEntityType.GetJsonPropertyName()!;
+                projection[new ProjectionMember().Append(new JsonMember(jsonName))] = new JsonScalarExpression(
+                    element, [new PathSegment(jsonName)], typeof(string), stringMapping, !navigation.ForeignKey.IsRequiredDependent);
+            }
+        }
+
+        foreach (var complexProperty in type.GetComplexProperties())
+        {
+            var jsonName = complexProperty.ComplexType.GetJsonPropertyName()!;
+            projection[new ProjectionMember().Append(new JsonMember(jsonName))] = new JsonScalarExpression(
+                element, [new PathSegment(jsonName)], typeof(string), stringMapping, jsonQueryExpression.IsNullable || complexProperty.IsNullable);
+        }
+
+        select.ReplaceProjection(projection);
+        select.PushdownIntoSubquery();
+        var subquery = select.Tables[0];
+        var outer = CreateSelect(jsonQueryExpression, subquery, JsonArrayTableExpression.OrdinalColumn, typeof(int), intMapping);
+        outer.AppendOrdering(new OrderingExpression(
+            select.CreateColumnExpression(subquery, JsonArrayTableExpression.OrdinalColumn, typeof(int), intMapping, columnNullable: false), ascending: true));
+
+        return new ShapedQueryExpression(
+            outer,
+            new RelationalStructuralTypeShaperExpression(
+                type, new ProjectionBindingExpression(outer, new ProjectionMember(), typeof(ValueBuffer)), nullable: false));
+    }
+#pragma warning restore EF1001
+
+    // A projection member named for a JSON property, which has no CLR member of its own.
+    private sealed class JsonMember(string name) : System.Reflection.MemberInfo
+    {
+        public override Type? DeclaringType => throw new NotSupportedException();
+        public override System.Reflection.MemberTypes MemberType => throw new NotSupportedException();
+        public override string Name { get; } = name;
+        public override Type? ReflectedType => throw new NotSupportedException();
+        public override object[] GetCustomAttributes(bool inherit) => throw new NotSupportedException();
+        public override object[] GetCustomAttributes(Type attributeType, bool inherit) => throw new NotSupportedException();
+        public override bool IsDefined(Type attributeType, bool inherit) => throw new NotSupportedException();
+    }
+
     // A collection column, or a parameter collection that isn't expanded into an IN list, queried as the table of its JSON array's
     // elements, ordered as the array is. Adapted from EF Core's SQLite provider (MIT, .NET Foundation):
     // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.Core/Query/Internal/SqliteQueryableMethodTranslatingExpressionVisitor.cs
@@ -126,13 +209,15 @@ internal class AdoNetQueryableMethodTranslatingExpressionVisitor : RelationalQue
 
     // A JSON array table ordered by its ordinal is in its natural order, so Distinct after it isn't Distinct after an ordering.
     // Adapted from EF Core's SQLite provider (MIT, .NET Foundation).
+    // A JSON collection of structural types is that table, pushed down into a subquery ordered by the same ordinal.
     protected override bool IsNaturallyOrdered(SelectExpression selectExpression)
         => selectExpression is
             {
-                Tables: [JsonArrayTableExpression table, ..],
+                Tables: [var table, ..],
                 Orderings: [{ Expression: ColumnExpression { Name: JsonArrayTableExpression.OrdinalColumn } ordinal, IsAscending: true }]
             }
-            && (ordinal.TableAlias == table.Alias);
+            && (ordinal.TableAlias == table.Alias)
+            && (table is JsonArrayTableExpression || (table is SelectExpression { Tables: [JsonArrayTableExpression] }));
 
     private static Type Nullable(Type type)
         => type.IsValueType && (System.Nullable.GetUnderlyingType(type) == null) ? typeof(Nullable<>).MakeGenericType(type) : type;
