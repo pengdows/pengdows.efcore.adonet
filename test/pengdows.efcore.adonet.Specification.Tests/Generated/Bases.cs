@@ -787,8 +787,8 @@ public abstract partial class FromSqlQueryAdoNetTest<THost>(NorthwindQueryAdoNet
 public abstract partial class FromSqlSprocQueryAdoNetTest<THost>(NorthwindQueryAdoNetFixture<THost> fixture) : global::Microsoft.EntityFrameworkCore.Query.FromSqlSprocQueryTestBase<NorthwindQueryAdoNetFixture<THost>>(fixture)
     where THost : IDatabaseHost, new()
 {
-    protected override string TenMostExpensiveProductsSproc => throw new NotSupportedException("Not yet provided by the base suite: TenMostExpensiveProductsSproc.");
-    protected override string CustomerOrderHistorySproc => throw new NotSupportedException("Not yet provided by the base suite: CustomerOrderHistorySproc.");
+    protected override string TenMostExpensiveProductsSproc => Sprocs.Of<THost>().TenMostExpensiveProducts;
+    protected override string CustomerOrderHistorySproc => Sprocs.Of<THost>().CustomerOrderHistory;
 }
 
 /// <summary>EF's FunkyDataQueryTestBase.</summary>
@@ -1948,9 +1948,9 @@ public abstract partial class SqlExecutorAdoNetTest<THost>(SqlExecutorAdoNetTest
 {
     protected override global::System.Data.Common.DbParameter CreateDbParameter(string name, object value)
         => DbParameters.Create(new THost(), name, value);
-    protected override string TenMostExpensiveProductsSproc => throw new NotSupportedException("Not yet provided by the base suite: TenMostExpensiveProductsSproc.");
-    protected override string CustomerOrderHistorySproc => throw new NotSupportedException("Not yet provided by the base suite: CustomerOrderHistorySproc.");
-    protected override string CustomerOrderHistoryWithGeneratedParameterSproc => throw new NotSupportedException("Not yet provided by the base suite: CustomerOrderHistoryWithGeneratedParameterSproc.");
+    protected override string TenMostExpensiveProductsSproc => Sprocs.Of<THost>().TenMostExpensiveProducts;
+    protected override string CustomerOrderHistorySproc => Sprocs.Of<THost>().CustomerOrderHistoryNamed;
+    protected override string CustomerOrderHistoryWithGeneratedParameterSproc => Sprocs.Of<THost>().CustomerOrderHistory;
 
     public partial class AdoNetFixture : global::Microsoft.EntityFrameworkCore.Query.NorthwindQueryRelationalFixture<global::Microsoft.EntityFrameworkCore.Query.SqlExecutorModelCustomizer>, global::Microsoft.EntityFrameworkCore.TestUtilities.ITestSqlLoggerFactory
     {

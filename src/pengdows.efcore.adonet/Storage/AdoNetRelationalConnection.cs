@@ -16,15 +16,21 @@ internal class AdoNetRelationalConnection : RelationalConnection
     private readonly AdoNetOptionsExtension _extension;
     private readonly AdoNetDataSources _dataSources;
     private readonly IDatabaseCapabilities _capabilities;
+    private readonly string? _sessionSetup;
+
+    // Connections whose sessions get the dialect's setup, with it; contexts can share one connection, which is watched once.
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<DbConnection, string> Watched = new();
 
     public AdoNetRelationalConnection(
         RelationalConnectionDependencies dependencies,
         AdoNetDataSources dataSources,
-        IDatabaseCapabilities capabilities)
+        IDatabaseCapabilities capabilities,
+        ISqlDialect sql)
         : base(dependencies)
     {
         _dataSources = dataSources;
         _capabilities = capabilities;
+        _sessionSetup = sql.SessionSetup;
         _extension = dependencies.ContextOptions.FindExtension<AdoNetOptionsExtension>()
             ?? throw new InvalidOperationException($"{nameof(AdoNetOptionsExtension)} is not configured.");
 
@@ -69,6 +75,50 @@ internal class AdoNetRelationalConnection : RelationalConnection
         }
 
         return _dataSources.GetOrCreate(factory, ConnectionString).CreateConnection();
+    }
+
+    // The dialect's session setup runs as each connection opens, whoever opens it (EF, or the application), before anything
+    // else can run on it; a connection already open when EF first sees it is set up then, in EF's transaction if it has one.
+    [System.Diagnostics.CodeAnalysis.AllowNull]
+    public override DbConnection DbConnection
+    {
+        get
+        {
+            var connection = base.DbConnection;
+            if ((_sessionSetup != null) && !Watched.TryGetValue(connection, out _))
+            {
+                Watch(connection, _sessionSetup, CurrentTransaction?.GetDbTransaction());
+            }
+
+            return connection;
+        }
+        set => base.DbConnection = value;
+    }
+
+    private static void Watch(DbConnection connection, string setup, DbTransaction? transaction)
+    {
+        Watched.AddOrUpdate(connection, setup);
+        connection.StateChange += SessionStarted;
+        if (connection.State == ConnectionState.Open)
+        {
+            Run(connection, setup, transaction);
+        }
+    }
+
+    private static void SessionStarted(object? sender, StateChangeEventArgs e)
+    {
+        if ((e.CurrentState == ConnectionState.Open) && (sender is DbConnection connection) && Watched.TryGetValue(connection, out var setup))
+        {
+            Run(connection, setup, transaction: null);
+        }
+    }
+
+    private static void Run(DbConnection connection, string setup, DbTransaction? transaction)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = setup;
+        command.Transaction = transaction;
+        command.ExecuteNonQuery();
     }
 
     // EF opens the connection to begin a transaction and, when beginning fails (a transient failure, an interceptor), leaves

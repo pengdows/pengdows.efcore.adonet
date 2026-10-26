@@ -100,7 +100,7 @@ when the context is created; ISO SQL is chosen like any other dialect, with `Use
 |---|---|---|---|---|
 | `postgresql` | Npgsql | ✅ (bulk insert: binary `COPY`) | ✅ | — |
 | `sqlserver` | Microsoft.Data.SqlClient | ✅ (bulk insert: `SqlBulkCopy`, checking constraints and firing triggers) | ✅ | — |
-| `mysql` | MySqlConnector | ✅ | ✅ | — |
+| `mysql` | MySqlConnector or MySql.Data | ✅ | ✅ | — |
 | `sqlite` (+ pre-3.35) | Microsoft.Data.Sqlite | ✅ | ✅ except `ALTER COLUMN` | Needs a table rebuild, not implemented |
 | `duckdb` | DuckDB.NET | ✅ (no savepoints) | `CreateTables` only | DuckDB can't `ALTER` a table with indexes or foreign keys |
 | `flatfile` | pengdows.flatfile | ✅ except below | ✅ except below | Engine (0.2.1-preview.9): literals with an exponent, no `POWER`, interval literals of one field only, renaming a table leaves foreign keys naming the old one; strict ISO has no `UPDATE ... FROM` |
@@ -108,6 +108,10 @@ when the context is created; ISO SQL is chosen like any other dialect, with `Use
 Gaps are only what a database lacks, recorded per fixture in `KnownEngineGaps` and reported as skipped tests,
 attributed `[SKIP:<dialect>]`. Defects found in EF Core, drivers and engines while building this are listed in
 [UPSTREAM_ISSUES.md](UPSTREAM_ISSUES.md) for issues and pull requests.
+
+MySQL identifiers are quoted the ISO way, `"name"`: each session the provider uses gets `ANSI_QUOTES` added to its
+`sql_mode` as it opens (`ISqlDialect.SessionSetup`), including a connection the application opened itself. Raw SQL sent
+through the context must then quote strings with single quotes only; backtick identifiers still work.
 
 `BulkInsert` doesn't read back keys the database generates (sequence keys are drawn first and set on the entities),
 writes every mapped column (database defaults don't apply), and doesn't support owned or complex types.

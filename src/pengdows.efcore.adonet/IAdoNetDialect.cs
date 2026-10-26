@@ -34,6 +34,12 @@ public interface ISqlDialect
     string IdentifierQuotePrefix { get; }
     string IdentifierQuoteSuffix { get; }
 
+    /// <summary>
+    ///     Run on each database session before EF uses it, to put the session in the mode the dialect writes SQL for (such as
+    ///     ISO quoted identifiers); null for none. A session opened outside EF is set up the first time EF uses it.
+    /// </summary>
+    string? SessionSetup { get; }
+
     /// <summary>Whether <paramref name="identifier" /> must be quoted to mean itself; quoting every one is always safe.</summary>
     bool RequiresQuoting(string identifier);
 

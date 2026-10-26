@@ -452,3 +452,5 @@ pengdows.efcore.adonet.JsonSyntax.ArrayElementsTextType.get -> string?
 pengdows.efcore.adonet.JsonSyntax.ArrayElementsTextType.init -> void
 pengdows.efcore.adonet.JsonSyntax.ArrayElementsBinaryValue.get -> string?
 pengdows.efcore.adonet.JsonSyntax.ArrayElementsBinaryValue.init -> void
+pengdows.efcore.adonet.ISqlDialect.SessionSetup.get -> string?
+virtual pengdows.efcore.adonet.AnsiSqlDialect.SessionSetup.get -> string?

@@ -25,4 +25,19 @@ public interface IDatabaseHost
 
     /// <summary>Whether a <see cref="DateTimeOffset" /> reads back with its offset; false where the database keeps only the instant.</summary>
     bool KeepsOffsets { get; }
+
+    /// <summary>Northwind's stored procedures, for EF's raw-SQL suites; null where the database has none.</summary>
+    NorthwindProcedures? Procedures { get; }
 }
+
+/// <summary>
+///     The Northwind procedures EF's raw-SQL suites call: <see cref="Create" /> makes them after seeding; the calls are written
+///     as each suite asks, <c>{0}</c> a positional parameter and <c>@CustomerID</c> a named one. <see cref="CallRowsAffected" />
+///     is what the driver reports for a call that returns rows (ADO.NET's -1 where it reports none).
+/// </summary>
+public sealed record NorthwindProcedures(
+    IReadOnlyList<string> Create,
+    string TenMostExpensiveProducts,
+    string CustomerOrderHistory,
+    string CustomerOrderHistoryNamed,
+    int CallRowsAffected = -1);

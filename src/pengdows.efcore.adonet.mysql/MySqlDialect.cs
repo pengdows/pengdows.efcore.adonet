@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace pengdows.efcore.adonet.mysql;
 
 /// <summary>
-///     MySQL. Backtick identifiers, a database is the schema, OFFSET needs a LIMIT, and keys come back through
+///     MySQL. ISO quoted identifiers (under ANSI_QUOTES, set for each session), a database is the schema, OFFSET needs a LIMIT, and keys come back through
 ///     <c>LAST_INSERT_ID()</c>. GUIDs are stored as <c>CHAR(36)</c> text.
 /// </summary>
 public sealed class MySqlDialect : AdoNetDialect
@@ -90,8 +90,10 @@ internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = t
         ArrayElementsHint = "/*+ NO_SEMIJOIN() NO_MERGE() */"
     };
 
-    public override string IdentifierQuotePrefix => "`";
-    public override string IdentifierQuoteSuffix => "`";
+    // ISO quoted identifiers ("name"), which MySQL reads only under ANSI_QUOTES: each session adds it to its sql_mode. String
+    // literals are always single-quoted, so nothing else changes meaning.
+    public override string? SessionSetup
+        => "SET SESSION sql_mode = CONCAT_WS(',', NULLIF(@@SESSION.sql_mode, ''), 'ANSI_QUOTES')";
     public override bool SupportsSchemas => false;
     public override PagingSyntax Paging { get; } = PagingSyntax.LimitOffset(noLimitValue: "18446744073709551615").WithValueLimitsOnly();
     public override KeyRetrieval Keys { get; } = KeyRetrieval.SelectAfter("LAST_INSERT_ID()", "ROW_COUNT()");

@@ -41,6 +41,22 @@ internal sealed class SqlLog : DbCommandInterceptor
         return ValueTask.FromResult(result);
     }
 
+    public override int NonQueryExecuted(DbCommand command, CommandExecutedEventData eventData, int result)
+    {
+        Write(command, null);
+        return result;
+    }
+
+    public override ValueTask<int> NonQueryExecutedAsync(
+        DbCommand command,
+        CommandExecutedEventData eventData,
+        int result,
+        CancellationToken cancellationToken = default)
+    {
+        Write(command, null);
+        return ValueTask.FromResult(result);
+    }
+
     private static void Write(DbCommand command, string? error)
     {
         lock (Gate)

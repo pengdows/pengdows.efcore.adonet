@@ -309,7 +309,7 @@ internal class AdoNetDatabaseCreator(
         var options = new DbContextOptionsBuilder()
             .UseAdoNet(Factory(), builder.ConnectionString, dialect)
             .Options;
-        return new AdoNetRelationalConnection(connectionDependencies with { ContextOptions = options }, dataSources, dialect.Capabilities);
+        return new AdoNetRelationalConnection(connectionDependencies with { ContextOptions = options }, dataSources, dialect.Capabilities, dialect.Sql);
     }
 
     private string Statement(string template, string name)

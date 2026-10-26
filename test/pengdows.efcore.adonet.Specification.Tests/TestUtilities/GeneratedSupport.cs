@@ -114,3 +114,11 @@ public static class NullSemantics
         return context;
     }
 }
+
+/// <summary>The host's Northwind procedures; a database without them fails the raw-SQL procedure tests with the reason.</summary>
+public static class Sprocs
+{
+    public static NorthwindProcedures Of<THost>()
+        where THost : IDatabaseHost, new()
+        => new THost().Procedures ?? throw new NotSupportedException($"{typeof(THost).Name} has no Northwind stored procedures.");
+}

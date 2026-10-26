@@ -45,8 +45,10 @@ public sealed class PartsSql(
     LateralJoinSyntax? lateralJoins = null,
     bool noLateralJoins = false,
     DatabaseLifecycle? databases = null,
-    JsonSyntax? json = null) : AnsiSqlDialect
+    JsonSyntax? json = null,
+    string? sessionSetup = null) : AnsiSqlDialect
 {
+    public override string? SessionSetup => sessionSetup;
     public override DatabaseLifecycle? Databases => databases;
     public override JsonSyntax? Json => json;
     public override PagingSyntax Paging { get; } = paging ?? PagingSyntax.OffsetFetch;

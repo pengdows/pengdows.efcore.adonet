@@ -21,6 +21,7 @@ public abstract class ServerHost : IDatabaseHost
 {
     public virtual TimeSpan TemporalResolution => TimeSpan.FromTicks(1);
     public virtual bool KeepsOffsets => true;
+    public virtual NorthwindProcedures? Procedures => null;
 
     protected abstract string AdminConnectionString { get; }
     protected abstract IEnumerable<string> RecreateSql(string database);
@@ -109,6 +110,23 @@ public sealed class MySqlHost : ServerHost
     // A DateTimeOffset is stored as its UTC instant in a DATETIME(6), read back at offset zero.
     public override bool KeepsOffsets => false;
 
+    // As Pomelo's Northwind script defines them; the parameter's collation yields to the column's (as a _bin one does), where
+    // the character set's default (utf8mb4_0900_ai_ci) would clash with it. CALL reports no rows affected. Behaviour reference
+    // (not copied):
+    // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/test/EFCore.MySql.FunctionalTests/Northwind.sql
+    public override NorthwindProcedures Procedures { get; } = new(
+        [
+            "CREATE PROCEDURE `Ten Most Expensive Products`() SELECT `ProductName` AS `TenMostExpensiveProducts`, `UnitPrice` "
+            + "FROM `Products` ORDER BY `UnitPrice` DESC LIMIT 10",
+            "CREATE PROCEDURE `CustOrderHist`(pCustomerID CHAR(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin) SELECT `ProductName`, SUM(`Quantity`) AS `Total` "
+            + "FROM `Products` AS p, `OrderDetails` AS od, `Orders` AS o, `Customers` AS c WHERE c.`CustomerID` = pCustomerID "
+            + "AND c.`CustomerID` = o.`CustomerID` AND o.`OrderID` = od.`OrderID` AND od.`ProductID` = p.`ProductID` GROUP BY `ProductName`"
+        ],
+        "CALL `Ten Most Expensive Products`()",
+        "CALL `CustOrderHist`({0})",
+        "CALL `CustOrderHist`(@CustomerID)",
+        CallRowsAffected: 0);
+
     private static readonly RunContainer Container = new(() => new MySqlBuilder("mysql:8.4").Build());
 
     // Root, so each test store can have its own database.
@@ -140,6 +158,7 @@ public abstract class FileHost : IDatabaseHost
 {
     public virtual TimeSpan TemporalResolution => TimeSpan.FromTicks(1);
     public virtual bool KeepsOffsets => true;
+    public virtual NorthwindProcedures? Procedures => null;
 
     protected static readonly string Root = Directory.CreateTempSubdirectory("adonet-spec-").FullName;
 

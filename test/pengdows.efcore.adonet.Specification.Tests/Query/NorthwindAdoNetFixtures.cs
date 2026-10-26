@@ -8,6 +8,13 @@ public class NorthwindQueryAdoNetFixture<THost> : NorthwindQueryRelationalFixtur
     protected override ITestStoreFactory TestStoreFactory
         => AdoNetTestStoreFactory<THost>.Instance;
 
+    // EF's data, then the database's Northwind procedures, which the raw-SQL suites call.
+    protected override async Task SeedAsync(NorthwindContext context)
+    {
+        await base.SeedAsync(context);
+        await NorthwindProcedureSeeding.CreateAsync<THost>(context);
+    }
+
     // The keyless types read from SQL, as each official provider's Northwind context maps them, written with this database's
     // quotes. Their schema has no Categories table, so the "Alphabetical list of products" view names each category as EF's
     // expected data does. Behaviour reference (not copied):
@@ -18,6 +25,8 @@ public class NorthwindQueryAdoNetFixture<THost> : NorthwindQueryRelationalFixtur
         var store = TestStore;
         var sql = new THost().Dialect.Sql;
 
+        NorthwindProcedureSeeding.MapResults(modelBuilder);
+
         modelBuilder.Entity<CustomerQuery>().ToSqlQuery(store.NormalizeDelimitersInRawString(
             "SELECT [c].[CustomerID], [c].[Address], [c].[City], [c].[CompanyName], [c].[ContactName], [c].[ContactTitle], "
             + "[c].[Country], [c].[Fax], [c].[Phone], [c].[PostalCode], [c].[Region] FROM [Customers] AS [c]"));
@@ -27,5 +36,24 @@ public class NorthwindQueryAdoNetFixture<THost> : NorthwindQueryRelationalFixtur
             + "WHEN 3 THEN 'Confections' WHEN 4 THEN 'Dairy Products' WHEN 5 THEN 'Grains/Cereals' WHEN 6 THEN 'Meat/Poultry' "
             + "WHEN 7 THEN 'Produce' WHEN 8 THEN 'Seafood' END AS [CategoryName] FROM [Products] AS [p] "
             + $"WHERE [p].[Discontinued] = {sql.FalseLiteral}"));
+    }
+}
+
+/// <summary>Northwind's procedures, created after seeding, and the rows they return; shared by every Northwind fixture.</summary>
+public static class NorthwindProcedureSeeding
+{
+    public static async Task CreateAsync<THost>(DbContext context)
+        where THost : IDatabaseHost, new()
+    {
+        foreach (var sql in new THost().Procedures?.Create ?? [])
+        {
+            await context.Database.ExecuteSqlRawAsync(sql);
+        }
+    }
+
+    public static void MapResults(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<CustomerOrderHistory>().HasKey(coh => coh.ProductName);
+        modelBuilder.Entity<MostExpensiveProduct>().HasKey(mep => mep.TenMostExpensiveProducts);
     }
 }

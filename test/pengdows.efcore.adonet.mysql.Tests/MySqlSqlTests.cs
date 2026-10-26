@@ -26,7 +26,7 @@ public class MySqlSqlTests
 
         var sql = context.Blogs.OrderBy(b => b.Id).Skip(5).ToQueryString();
 
-        Assert.Contains("FROM `Blogs` AS `b`", sql);
+        Assert.Contains("FROM \"Blogs\" AS \"b\"", sql);
         Assert.Matches(@"LIMIT 18446744073709551615\s+OFFSET @p", sql);
     }
 }
@@ -113,7 +113,7 @@ public class MySqlAutoIncrementKeyTests
 
     [Fact]
     public void An_auto_increment_column_after_the_first_key_column_leads_a_unique_constraint()
-        => Assert.Contains("UNIQUE (`Id`)", Sql("OwnerId", "Id"));
+        => Assert.Contains("UNIQUE (\"Id\")", Sql("OwnerId", "Id"));
 
     [Fact]
     public void An_auto_increment_column_that_leads_the_key_needs_nothing_more()
@@ -150,7 +150,7 @@ public class MySqlNamedColumnTypeTests
         using var context = new FlaggedContext(new DbContextOptionsBuilder<FlaggedContext>().UseAdoNetMySql("Server=localhost").Options);
         var script = context.Database.GenerateCreateScript();
 
-        Assert.Contains("`Flag` boolean NOT NULL", script);
-        Assert.Contains("`Other` bool NOT NULL", script);
+        Assert.Contains("\"Flag\" boolean NOT NULL", script);
+        Assert.Contains("\"Other\" bool NOT NULL", script);
     }
 }

@@ -153,9 +153,7 @@ public abstract class ProviderFixture : IAsyncLifetime
     /// <summary>The first value <paramref name="sql" /> returns, through plain ADO.NET like <see cref="ExecuteAsync" />.</summary>
     public async Task<object?> ExecuteScalarAsync(string sql)
     {
-        await using var connection = Factory.CreateConnection()!;
-        connection.ConnectionString = ConnectionString;
-        await connection.OpenAsync();
+        await using var connection = await OpenAsync();
         await using var command = connection.CreateCommand();
         command.CommandText = sql;
         return await command.ExecuteScalarAsync();
@@ -164,11 +162,25 @@ public abstract class ProviderFixture : IAsyncLifetime
     /// <summary>Plain ADO.NET, bypassing EF, through the same factory.</summary>
     public async Task<int> ExecuteAsync(string sql)
     {
-        await using var connection = Factory.CreateConnection()!;
-        connection.ConnectionString = ConnectionString;
-        await connection.OpenAsync();
+        await using var connection = await OpenAsync();
         await using var command = connection.CreateCommand();
         command.CommandText = sql;
         return await command.ExecuteNonQueryAsync();
+    }
+
+    // A session in the mode the dialect writes SQL for, as the provider's own sessions are (ISqlDialect.SessionSetup).
+    private async Task<DbConnection> OpenAsync()
+    {
+        var connection = Factory.CreateConnection()!;
+        connection.ConnectionString = ConnectionString;
+        await connection.OpenAsync();
+        if (ExpectedDialect.Sql.SessionSetup is { } setup)
+        {
+            await using var command = connection.CreateCommand();
+            command.CommandText = setup;
+            await command.ExecuteNonQueryAsync();
+        }
+
+        return connection;
     }
 }
