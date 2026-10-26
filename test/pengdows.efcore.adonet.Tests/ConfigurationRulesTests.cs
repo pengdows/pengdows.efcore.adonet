@@ -18,9 +18,9 @@ public class ConfigurationRulesTests
     [Fact]
     public void A_factory_no_dialect_is_registered_for_needs_one_chosen()
     {
-        var refused = Assert.Throws<InvalidOperationException>(() => Context(b => b.UseAdoNet(new UnregisteredFactory(), ConnectionString)));
+        var refused = Assert.Throws<InvalidOperationException>(() => Context(b => b.UseAdoNet(new fakeDbFactory(SupportedDatabase.PostgreSql), ConnectionString)));
 
-        Assert.Contains(nameof(UnregisteredFactory), refused.Message);
+        Assert.Contains(nameof(fakeDbFactory), refused.Message);
         Assert.Contains("UseDialect", refused.Message);
     }
 
@@ -35,7 +35,7 @@ public class ConfigurationRulesTests
     [Fact]
     public void Iso_sql_is_a_dialect_chosen_like_any_other()
     {
-        using var context = Context(b => b.UseAdoNet(new UnregisteredFactory(), ConnectionString, o => o.UseDialect(AdoNetDialect.Ansi)));
+        using var context = Context(b => b.UseAdoNet(new fakeDbFactory(SupportedDatabase.PostgreSql), ConnectionString, o => o.UseDialect(AdoNetDialect.Ansi)));
 
         Assert.Same(AdoNetDialect.Ansi, context.GetService<IAdoNetDialect>());
     }
@@ -101,7 +101,7 @@ public class ConfigurationRulesTests
     public void A_data_source_with_a_known_dialect_is_not_probed_for_its_provider()
     {
         var factory = new fakeDbFactory(SupportedDatabase.PostgreSql);
-        using var dataSource = new CountingDataSource(factory.CreateDataSource(ConnectionString));
+        using var dataSource = factory.CreateDataSource(ConnectionString);
 
         using (var context = Context(b => b.UseAdoNet(dataSource, AdoNetDialect.Ansi)))
         {
@@ -113,51 +113,46 @@ public class ConfigurationRulesTests
             Assert.Same(AdoNetDialect.Ansi, context.GetService<IAdoNetDialect>());
         }
 
-        Assert.Equal(0, dataSource.ConnectionsCreated);
+        Assert.Empty(factory.CreatedConnections);
     }
 
     [Fact]
     public void A_data_source_whose_provider_is_unknown_is_probed_only_once()
     {
-        using var dataSource = new CountingDataSource(new UnregisteredFactory().CreateDataSource(ConnectionString));
+        var factory = new fakeDbFactory(SupportedDatabase.PostgreSql);
+        using var dataSource = factory.CreateDataSource(ConnectionString);
 
         Assert.Throws<InvalidOperationException>(() => Context(b => b.UseAdoNet(dataSource)));
 
-        Assert.Equal(1, dataSource.ConnectionsCreated);
+        Assert.Single(factory.CreatedConnections);
     }
 
     [Fact]
     public void A_data_source_without_a_dialect_is_probed_once_for_a_registered_one()
     {
         AdoNetDialects.Register<ProbedFactory>(TestDialects.Limit);
-        using var dataSource = new CountingDataSource(new ProbedFactory().CreateDataSource(ConnectionString));
+        var factory = new ProbedFactory();
+        using var dataSource = factory.CreateDataSource(ConnectionString);
 
         using var context = Context(b => b.UseAdoNet(dataSource));
 
         Assert.Same(TestDialects.Limit, context.GetService<IAdoNetDialect>());
-        Assert.Equal(1, dataSource.ConnectionsCreated);
+        Assert.Equal(1, factory.ConnectionsCreated);
     }
 
-    /// <summary>Counts the connections a real (fakeDb) data source hands out.</summary>
-    private sealed class CountingDataSource(DbDataSource inner) : DbDataSource
+    /// <summary>
+    ///     fakeDb connections under a factory type of their own: dialects are registered by factory type, and fakeDbFactory
+    ///     is sealed, so registering one for it would reach every other test.
+    /// </summary>
+    private sealed class ProbedFactory : DbProviderFactory
     {
         public int ConnectionsCreated { get; private set; }
 
-        public override string ConnectionString
-            => inner.ConnectionString;
-
-        protected override DbConnection CreateDbConnection()
+        public override DbConnection CreateConnection()
         {
             ConnectionsCreated++;
-            return inner.CreateConnection();
+            return new ProbedConnection();
         }
-    }
-
-    /// <summary>A fakeDb factory of its own type, so registering a dialect for it touches no other test.</summary>
-    private sealed class ProbedFactory : DbProviderFactory
-    {
-        public override DbConnection CreateConnection()
-            => new ProbedConnection();
     }
 
     private sealed class ProbedConnection : fakeDbConnection
@@ -166,12 +161,8 @@ public class ConfigurationRulesTests
             => new ProbedFactory();
     }
 
-    private sealed class UnregisteredFactory : DbProviderFactory
-    {
-        public override DbConnection CreateConnection()
-            => new fakeDbConnection();
-    }
-
+    // fakeDb 2.0.5's factory creates .NET's default data source; a FakeDbDataSource with WasDisposed needs
+    // SupportsNativeDataSource, unpublished (UPSTREAM_ISSUES.md, pengdows.crud.fakeDb).
     private sealed class TrackingFactory : DbProviderFactory
     {
         public List<TrackingDataSource> Created { get; } = [];

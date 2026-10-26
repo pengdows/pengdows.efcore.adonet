@@ -42,6 +42,10 @@ public class ConnectionSourceTests
     }
 
     /// <summary>A provider that, like Npgsql and MySqlConnector, would pool per data source.</summary>
+    /// <remarks>
+    ///     Hand-written only until fakeDb publishes <c>fakeDbFactory.CreatedDataSources</c> (in its source, not in 2.0.5);
+    ///     see UPSTREAM_ISSUES.md, pengdows.crud.fakeDb.
+    /// </remarks>
     private sealed class CountingFactory : DbProviderFactory
     {
         public List<string> DataSourcesCreated { get; } = [];

@@ -291,9 +291,10 @@ public class DialectContractTests
         }
     }
 
+    // A factory type of its own, since dialects are registered by type and fakeDbFactory is sealed; its connections are fakeDb's.
     private sealed class UnknownFactory : DbProviderFactory
     {
         public override DbConnection CreateConnection()
-            => SqliteFactory.Instance.CreateConnection();
+            => new pengdows.crud.fakeDb.fakeDbConnection();
     }
 }

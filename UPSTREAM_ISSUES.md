@@ -167,6 +167,13 @@ Gaps that keep core paths out of reach of fakeDb tests (REVIEW_POLICY: a gap is 
   are only covered by EF's Transaction specification suite on the server databases.
 - 2.0.5 always reports `RecordsAffected = 0` for a batch's reader, so a successful plain-statement write (sequence-key
   dialects) can't be scripted; 2.0.6's `RecordsAffectedOverride` should allow it once published.
+- 2.0.5's `CreateDataSource` returns .NET's default data source, and the factory doesn't list the data sources it made,
+  so two core tests keep a hand-written factory: `ConnectionSourceTests.CountingFactory` (one data source per connection
+  string) and `ConfigurationRulesTests.TrackingFactory` (data sources disposed with the service provider). fakeDb's source
+  (built locally as 2.0.6.1) has `SupportsNativeDataSource`, `CreatedDataSources` and `FakeDbDataSource.WasDisposed`, which
+  replace both once published; nuget.org's latest is 2.0.5.
+- A dialect is registered by factory type and `fakeDbFactory` is sealed, so a test that registers one needs a factory type
+  of its own (`ProbedFactory`, `UnknownFactory`); both hand out fakeDb connections.
 
 ## pengdows.flatfile (0.2.1-preview.9)
 
