@@ -2,6 +2,7 @@ using System.Data.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
+using pengdows.efcore.adonet.Infrastructure;
 
 namespace pengdows.efcore.adonet.Testing;
 
@@ -63,9 +64,15 @@ public abstract class ProviderFixture : IAsyncLifetime
     /// <summary>A context for <typeparamref name="TContext" /> configured like <see cref="Options" />.</summary>
     public TContext CreateContext<TContext>(Func<DbContextOptions<TContext>, TContext> create)
         where TContext : DbContext
+        => CreateContext(create, _ => { });
+
+    /// <summary>A context for <typeparamref name="TContext" /> configured like <see cref="Options" />, then by <paramref name="configure" />.</summary>
+    public TContext CreateContext<TContext>(Func<DbContextOptions<TContext>, TContext> create, Action<AdoNetDbContextOptionsBuilder> configure)
+        where TContext : DbContext
     {
         var builder = new DbContextOptionsBuilder<TContext>();
         UseProvider(builder);
+        configure(new AdoNetDbContextOptionsBuilder(builder));
         return create(builder.ForTestMigrations().Options);
     }
 

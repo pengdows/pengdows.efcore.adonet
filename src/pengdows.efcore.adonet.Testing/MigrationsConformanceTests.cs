@@ -13,6 +13,9 @@ public abstract class MigrationsConformanceTests<TFixture>(TFixture fixture) : I
 {
     private static readonly string[] OwnTables = ["LongNames", "SchemaCategories", "SchemaBooks", "SchemaAuthors", "Shelves", "Writers", "Authors", "__EFMigrationsHistory", "__EFMigrationsLock"];
 
+    // Only Another_schemas_history_table_is_not_this_ones creates it, and only in the tenant schema.
+    private const string TenantHistory = "TenantHistory";
+
     protected TFixture Fixture { get; } = fixture;
 
     private static CancellationToken Ct
@@ -219,6 +222,34 @@ public abstract class MigrationsConformanceTests<TFixture>(TFixture fixture) : I
 
         var id = await Fixture.ExecuteScalarAsync(keys.GetNextValueSql(Fixture.Quote(keys.GetSequenceName("Shelves", "Id"))));
         await Fixture.ExecuteAsync($"INSERT INTO {shelves} ({Fixture.Quote("Id")}, {columns}) VALUES ({id}, {values})");
+    }
+
+    /// <remarks>
+    ///     An unqualified history table is the one in the current schema: one of the same name in another schema doesn't make
+    ///     it exist. Runs on: every provider with schemas (skipped where the dialect has none).
+    /// </remarks>
+    [Fact]
+    public async Task Another_schemas_history_table_is_not_this_ones()
+    {
+        if (!Fixture.ExpectedDialect.Sql.SupportsSchemas)
+        {
+            Fixture.SkipFor("The database has no schemas.");
+        }
+
+        await using (var tenant = Fixture.CreateContext<MigrationsContext>(o => new MigrationsContext(o), o => o.MigrationsHistoryTable(TenantHistory, "tenant")))
+        {
+            var history = tenant.GetService<IHistoryRepository>();
+            if (!await history.ExistsAsync(Ct))
+            {
+                await history.CreateIfNotExistsAsync(Ct);
+            }
+
+            Assert.True(await history.ExistsAsync(Ct));
+        }
+
+        await using var context = Fixture.CreateContext<MigrationsContext>(o => new MigrationsContext(o), o => o.MigrationsHistoryTable(TenantHistory));
+
+        Assert.False(await context.GetService<IHistoryRepository>().ExistsAsync(Ct));
     }
 
     private async Task DropOwnTablesAsync()

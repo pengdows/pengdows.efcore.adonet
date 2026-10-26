@@ -1,3 +1,4 @@
+using System.Data.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace pengdows.efcore.adonet.Testing;
@@ -96,6 +97,55 @@ public abstract class BulkConformanceTests<TFixture>(TFixture fixture) : IClassF
         using (var context = Fixture.CreateContext())
         {
             Assert.Equal(20, context.Blogs.Count());
+        }
+    }
+
+    private async Task<GaugeContext> GaugesAsync()
+    {
+        await Fixture.CreateTablesOnceAsync<GaugeContext>(o => new GaugeContext(o));
+        await Fixture.ExecuteAsync($"DELETE FROM {Fixture.Quote("Gauges")}");
+        await Fixture.ExecuteAsync($"DELETE FROM {Fixture.Quote("Readings")}");
+        return Fixture.CreateContext<GaugeContext>(o => new GaugeContext(o));
+    }
+
+    /// <remarks>
+    ///     A native loader must not bypass what an INSERT would enforce (SqlBulkCopy, for one, skips CHECK constraints unless
+    ///     told otherwise). Runs on: every provider.
+    /// </remarks>
+    [Fact]
+    public async Task Bulk_insert_checks_constraints()
+    {
+        await using (var context = await GaugesAsync())
+        {
+            var error = await Record.ExceptionAsync(() => context.BulkInsertAsync([new Gauge { Level = 11 }], Ct));
+            Assert.True((error is DbException) || (error?.InnerException is DbException), $"Expected the database to refuse the row: {error}");
+            await context.BulkInsertAsync([new Gauge { Level = 3 }], Ct);
+        }
+
+        await using (var context = Fixture.CreateContext<GaugeContext>(o => new GaugeContext(o)))
+        {
+            Assert.Equal([3], await context.Gauges.Select(g => g.Level).ToListAsync(Ct));
+        }
+    }
+
+    /// <remarks>
+    ///     A loader that writes each value as the type .NET would guess for it (a timestamp for a <see cref="DateTime" />)
+    ///     fails or converts on a date column; it must write the column's type (Npgsql's binary COPY, for one, is strict).
+    ///     Runs on: every provider.
+    /// </remarks>
+    [Fact]
+    public async Task Bulk_insert_writes_values_as_the_column_type()
+    {
+        var day = new DateTime(2026, 5, 6);
+        await using (var context = await GaugesAsync())
+        {
+            await context.BulkInsertAsync([new Reading { Day = day, Total = 7 }], Ct);
+        }
+
+        await using (var context = Fixture.CreateContext<GaugeContext>(o => new GaugeContext(o)))
+        {
+            var reading = await context.Readings.SingleAsync(Ct);
+            Assert.Equal((day, 7L), (reading.Day, reading.Total));
         }
     }
 }

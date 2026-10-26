@@ -45,7 +45,14 @@ public sealed class FlatFileFixture : ProviderFixture
 
         // WHERE "Double" = 4.9406564584124654E-324: an approximate numeric literal (ISO), read as a decimal, which overflows.
         ["Floating_point_constants_at_the_edges_of_their_types"] =
-            "pengdows.flatfile 0.2.1-preview.9 parses a literal with an exponent as a decimal and overflows"
+            "pengdows.flatfile 0.2.1-preview.9 parses a literal with an exponent as a decimal and overflows",
+
+        // SELECT "Day" from a DATE column: GetDateTime and GetFieldValue<DateTime> throw InvalidCastException (a DateOnly).
+        ["Bulk_insert_writes_values_as_the_column_type"] = "pengdows.flatfile 0.2.1-preview.9 can't read a DATE as a DateTime",
+
+        // After CREATE TABLE "tenant"."H", an unqualified "H" means that table: CREATE TABLE "H" says it already exists.
+        ["Another_schemas_history_table_is_not_this_ones"] =
+            "pengdows.flatfile 0.2.1-preview.9 resolves an unqualified table name to a table in any schema"
     };
 
     private const string DeleteAlias = "pengdows.flatfile 0.2.1-preview.9 rejects an alias on a DELETE target";

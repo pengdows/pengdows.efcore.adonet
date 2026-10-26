@@ -1,4 +1,6 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace pengdows.efcore.adonet.Testing;
 
@@ -61,4 +63,55 @@ public class SampleContext(DbContextOptions<SampleContext> options) : DbContext(
 public class OffsetSampleContext(DbContextOptions<OffsetSampleContext> options) : DbContext(options)
 {
     public DbSet<OffsetSample> OffsetSamples => Set<OffsetSample>();
+}
+
+/// <summary>A level the database itself keeps between 0 and 10, with a check constraint.</summary>
+public class Gauge
+{
+    public int Id { get; set; }
+    public int Level { get; set; }
+}
+
+/// <summary>
+///     A <see cref="DateTime" /> stored in the database's date type, so a value written as the type .NET would guess for it
+///     (a timestamp) doesn't fit the column.
+/// </summary>
+public class Reading
+{
+    public int Id { get; set; }
+    public DateTime Day { get; set; }
+    public long Total { get; set; }
+}
+
+public class GaugeContext(DbContextOptions<GaugeContext> options) : DbContext(options)
+{
+    public DbSet<Gauge> Gauges => Set<Gauge>();
+    public DbSet<Reading> Readings => Set<Reading>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        var dialect = this.GetService<IAdoNetDialect>();
+        var level = dialect.Sql.IdentifierQuotePrefix + "Level" + dialect.Sql.IdentifierQuoteSuffix;
+        modelBuilder.Entity<Gauge>().ToTable(t => t.HasCheckConstraint("CK_Gauges_Level", $"{level} BETWEEN 0 AND 10"));
+        modelBuilder.Entity<Reading>().Property(r => r.Day).HasColumnType(dialect.TypeMappings.GetStoreType(typeof(DateOnly)));
+    }
+}
+
+/// <summary>A decimal wider than <see cref="long" />, at the widest precision every exact decimal type takes, and an ANSI string.</summary>
+public class LedgerEntry
+{
+    public int Id { get; set; }
+    public decimal Big { get; set; }
+
+    [MaxLength(50)]
+    [Unicode(false)]
+    public string Code { get; set; } = "";
+}
+
+public class LedgerContext(DbContextOptions<LedgerContext> options) : DbContext(options)
+{
+    public DbSet<LedgerEntry> Entries => Set<LedgerEntry>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+        => modelBuilder.Entity<LedgerEntry>().Property(e => e.Big).HasPrecision(38, 0);
 }

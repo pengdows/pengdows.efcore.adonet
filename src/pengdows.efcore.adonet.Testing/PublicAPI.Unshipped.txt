@@ -21,8 +21,10 @@ override pengdows.efcore.adonet.Testing.BrokenMigration.Up(Microsoft.EntityFrame
 override pengdows.efcore.adonet.Testing.ContainerFixture.ConnectionString.get -> string!
 override pengdows.efcore.adonet.Testing.ContainerFixture.DisposeAsync() -> System.Threading.Tasks.ValueTask
 override pengdows.efcore.adonet.Testing.ContainerFixture.InitializeAsync() -> System.Threading.Tasks.ValueTask
+override pengdows.efcore.adonet.Testing.GaugeContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder! modelBuilder) -> void
 override pengdows.efcore.adonet.Testing.InitialMigration.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder! migrationBuilder) -> void
 override pengdows.efcore.adonet.Testing.InitialMigration.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder! migrationBuilder) -> void
+override pengdows.efcore.adonet.Testing.LedgerContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder! modelBuilder) -> void
 override pengdows.efcore.adonet.Testing.LongNamesContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder! modelBuilder) -> void
 override pengdows.efcore.adonet.Testing.MigrationsContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder! modelBuilder) -> void
 override pengdows.efcore.adonet.Testing.ReshapeMigration.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder! migrationBuilder) -> void
@@ -87,10 +89,12 @@ pengdows.efcore.adonet.Testing.BrokenMigrationsContext
 pengdows.efcore.adonet.Testing.BrokenMigrationsContext.BrokenMigrationsContext(Microsoft.EntityFrameworkCore.DbContextOptions<pengdows.efcore.adonet.Testing.BrokenMigrationsContext!>! options) -> void
 pengdows.efcore.adonet.Testing.BulkConformanceTests<TFixture>
 pengdows.efcore.adonet.Testing.BulkConformanceTests<TFixture>.BulkConformanceTests(TFixture! fixture) -> void
+pengdows.efcore.adonet.Testing.BulkConformanceTests<TFixture>.Bulk_insert_checks_constraints() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.BulkConformanceTests<TFixture>.Bulk_insert_joins_the_current_transaction() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.BulkConformanceTests<TFixture>.Bulk_insert_loads_every_row_and_value() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.BulkConformanceTests<TFixture>.Bulk_insert_loads_rows_with_no_columns_to_write() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.BulkConformanceTests<TFixture>.Bulk_insert_works_synchronously_too() -> void
+pengdows.efcore.adonet.Testing.BulkConformanceTests<TFixture>.Bulk_insert_writes_values_as_the_column_type() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.BulkConformanceTests<TFixture>.DisposeAsync() -> System.Threading.Tasks.ValueTask
 pengdows.efcore.adonet.Testing.BulkConformanceTests<TFixture>.Fixture.get -> TFixture!
 pengdows.efcore.adonet.Testing.BulkConformanceTests<TFixture>.InitializeAsync() -> System.Threading.Tasks.ValueTask
@@ -126,8 +130,29 @@ pengdows.efcore.adonet.Testing.FloatSample.Single.set -> void
 pengdows.efcore.adonet.Testing.FloatSampleContext
 pengdows.efcore.adonet.Testing.FloatSampleContext.FloatSampleContext(Microsoft.EntityFrameworkCore.DbContextOptions<pengdows.efcore.adonet.Testing.FloatSampleContext!>! options) -> void
 pengdows.efcore.adonet.Testing.FloatSampleContext.FloatSamples.get -> Microsoft.EntityFrameworkCore.DbSet<pengdows.efcore.adonet.Testing.FloatSample!>!
+pengdows.efcore.adonet.Testing.Gauge
+pengdows.efcore.adonet.Testing.Gauge.Gauge() -> void
+pengdows.efcore.adonet.Testing.Gauge.Id.get -> int
+pengdows.efcore.adonet.Testing.Gauge.Id.set -> void
+pengdows.efcore.adonet.Testing.Gauge.Level.get -> int
+pengdows.efcore.adonet.Testing.Gauge.Level.set -> void
+pengdows.efcore.adonet.Testing.GaugeContext
+pengdows.efcore.adonet.Testing.GaugeContext.GaugeContext(Microsoft.EntityFrameworkCore.DbContextOptions<pengdows.efcore.adonet.Testing.GaugeContext!>! options) -> void
+pengdows.efcore.adonet.Testing.GaugeContext.Gauges.get -> Microsoft.EntityFrameworkCore.DbSet<pengdows.efcore.adonet.Testing.Gauge!>!
+pengdows.efcore.adonet.Testing.GaugeContext.Readings.get -> Microsoft.EntityFrameworkCore.DbSet<pengdows.efcore.adonet.Testing.Reading!>!
 pengdows.efcore.adonet.Testing.InitialMigration
 pengdows.efcore.adonet.Testing.InitialMigration.InitialMigration() -> void
+pengdows.efcore.adonet.Testing.LedgerContext
+pengdows.efcore.adonet.Testing.LedgerContext.Entries.get -> Microsoft.EntityFrameworkCore.DbSet<pengdows.efcore.adonet.Testing.LedgerEntry!>!
+pengdows.efcore.adonet.Testing.LedgerContext.LedgerContext(Microsoft.EntityFrameworkCore.DbContextOptions<pengdows.efcore.adonet.Testing.LedgerContext!>! options) -> void
+pengdows.efcore.adonet.Testing.LedgerEntry
+pengdows.efcore.adonet.Testing.LedgerEntry.Big.get -> decimal
+pengdows.efcore.adonet.Testing.LedgerEntry.Big.set -> void
+pengdows.efcore.adonet.Testing.LedgerEntry.Code.get -> string!
+pengdows.efcore.adonet.Testing.LedgerEntry.Code.set -> void
+pengdows.efcore.adonet.Testing.LedgerEntry.Id.get -> int
+pengdows.efcore.adonet.Testing.LedgerEntry.Id.set -> void
+pengdows.efcore.adonet.Testing.LedgerEntry.LedgerEntry() -> void
 pengdows.efcore.adonet.Testing.LiteralConformanceTests<TFixture>
 pengdows.efcore.adonet.Testing.LiteralConformanceTests<TFixture>.Constants_match_the_values_parameters_stored() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.LiteralConformanceTests<TFixture>.Date_offset_constants_and_parts() -> System.Threading.Tasks.Task!
@@ -151,6 +176,7 @@ pengdows.efcore.adonet.Testing.LongNamesContext.LongNamesContext(Microsoft.Entit
 pengdows.efcore.adonet.Testing.MigrationIds
 pengdows.efcore.adonet.Testing.MigrationsConformanceTests<TFixture>
 pengdows.efcore.adonet.Testing.MigrationsConformanceTests<TFixture>.Alter_column_changes_size_nullability_and_default() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.MigrationsConformanceTests<TFixture>.Another_schemas_history_table_is_not_this_ones() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.MigrationsConformanceTests<TFixture>.A_migration_that_fails_to_generate_leaves_no_lock_behind() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.MigrationsConformanceTests<TFixture>.Create_tables_builds_a_table_that_references_itself() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.MigrationsConformanceTests<TFixture>.Create_tables_builds_the_schema_from_the_model() -> System.Threading.Tasks.Task!
@@ -208,12 +234,15 @@ pengdows.efcore.adonet.Testing.ProviderConformanceTests<TFixture>.Rolled_back_tr
 pengdows.efcore.adonet.Testing.ProviderConformanceTests<TFixture>.Round_trips_every_mapped_type() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.ProviderConformanceTests<TFixture>.Same_query_with_different_paging_values() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.ProviderConformanceTests<TFixture>.Savepoints_undo_part_of_a_transaction() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.ProviderConformanceTests<TFixture>.Save_changes_batches_inserts_where_the_dialect_can() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.ProviderConformanceTests<TFixture>.SeedAsync(int count) -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.ProviderConformanceTests<TFixture>.Synchronous_insert_query_update_delete_and_transaction() -> void
 pengdows.efcore.adonet.Testing.ProviderConformanceTests<TFixture>.Update_and_delete() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.ProviderConformanceTests<TFixture>.Wide_decimals_and_ansi_strings_round_trip() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.ProviderFixture
 pengdows.efcore.adonet.Testing.ProviderFixture.CreateContext() -> pengdows.efcore.adonet.Testing.BlogContext!
 pengdows.efcore.adonet.Testing.ProviderFixture.CreateContext<TContext>(System.Func<Microsoft.EntityFrameworkCore.DbContextOptions<TContext!>!, TContext!>! create) -> TContext!
+pengdows.efcore.adonet.Testing.ProviderFixture.CreateContext<TContext>(System.Func<Microsoft.EntityFrameworkCore.DbContextOptions<TContext!>!, TContext!>! create, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>! configure) -> TContext!
 pengdows.efcore.adonet.Testing.ProviderFixture.CreateTablesOnceAsync<TContext>(System.Func<Microsoft.EntityFrameworkCore.DbContextOptions<TContext!>!, TContext!>! create) -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.ProviderFixture.ExecuteAsync(string! sql) -> System.Threading.Tasks.Task<int>!
 pengdows.efcore.adonet.Testing.ProviderFixture.ExecuteScalarAsync(string! sql) -> System.Threading.Tasks.Task<object?>!
@@ -223,6 +252,14 @@ pengdows.efcore.adonet.Testing.ProviderFixture.Quote(string! identifier) -> stri
 pengdows.efcore.adonet.Testing.ProviderFixture.ResetAsync() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.ProviderFixture.SkipFor(string! reason) -> void
 pengdows.efcore.adonet.Testing.ProviderFixture.SkipIfNotRunnable() -> void
+pengdows.efcore.adonet.Testing.Reading
+pengdows.efcore.adonet.Testing.Reading.Day.get -> System.DateTime
+pengdows.efcore.adonet.Testing.Reading.Day.set -> void
+pengdows.efcore.adonet.Testing.Reading.Id.get -> int
+pengdows.efcore.adonet.Testing.Reading.Id.set -> void
+pengdows.efcore.adonet.Testing.Reading.Reading() -> void
+pengdows.efcore.adonet.Testing.Reading.Total.get -> long
+pengdows.efcore.adonet.Testing.Reading.Total.set -> void
 pengdows.efcore.adonet.Testing.ReshapeMigration
 pengdows.efcore.adonet.Testing.ReshapeMigration.ReshapeMigration() -> void
 pengdows.efcore.adonet.Testing.Sample

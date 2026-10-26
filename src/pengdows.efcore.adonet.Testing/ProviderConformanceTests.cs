@@ -410,6 +410,58 @@ public abstract class ProviderConformanceTests<TFixture>(TFixture fixture) : ICl
         }
     }
 
+    /// <remarks>
+    ///     Where the dialect runs several statements in one command, SaveChanges sends a batch of inserts as one command.
+    ///     Runs on: every provider (one command per insert where the dialect can't batch).
+    /// </remarks>
+    [Fact]
+    public async Task Save_changes_batches_inserts_where_the_dialect_can()
+    {
+        var commands = new List<string>();
+        var options = new DbContextOptionsBuilder<BlogContext>(Fixture.Options)
+            .LogTo(commands.Add, [RelationalEventId.CommandExecuted])
+            .Options;
+        var capabilities = Fixture.ExpectedDialect.Capabilities;
+        var batches = capabilities.SupportsMultipleStatementsPerCommand && (capabilities.DefaultMaxBatchSize > 1);
+
+        await using (var context = new BlogContext(options))
+        {
+            context.AddRange(NewBlog("batched-a"), NewBlog("batched-b"));
+            await context.SaveChangesAsync(Ct);
+        }
+
+        Assert.Equal(batches ? 1 : 2, commands.Count(c => c.Contains("INSERT", StringComparison.OrdinalIgnoreCase)));
+        await using (var context = Fixture.CreateContext())
+        {
+            Assert.Equal(2, await context.Blogs.CountAsync(b => b.Name.StartsWith("batched-"), Ct));
+        }
+    }
+
+    /// <remarks>
+    ///     A decimal wider than <see cref="long" /> at precision 38 (the widest every exact decimal type takes), and an ANSI
+    ///     string, round-trip and compare equal to parameters bound with the column's facets. Runs on: every provider.
+    /// </remarks>
+    [Fact]
+    public async Task Wide_decimals_and_ansi_strings_round_trip()
+    {
+        await Fixture.CreateTablesOnceAsync<LedgerContext>(o => new LedgerContext(o));
+        await Fixture.ExecuteAsync($"DELETE FROM {Fixture.Quote("Entries")}");
+        var big = 123_456_789_012_345_678_901m;
+
+        await using (var context = Fixture.CreateContext<LedgerContext>(o => new LedgerContext(o)))
+        {
+            context.Add(new LedgerEntry { Big = big, Code = "ascii" });
+            await context.SaveChangesAsync(Ct);
+        }
+
+        await using (var context = Fixture.CreateContext<LedgerContext>(o => new LedgerContext(o)))
+        {
+            Assert.Equal(1, await context.Entries.CountAsync(e => (e.Big == big) && (e.Code == "ascii"), Ct));
+            var entry = await context.Entries.SingleAsync(Ct);
+            Assert.Equal((big, "ascii"), (entry.Big, entry.Code));
+        }
+    }
+
     protected async Task SeedAsync(int count)
     {
         await using var context = Fixture.CreateContext();

@@ -50,4 +50,5 @@ and `LegacySqliteDialect` are dialect variants for server or engine settings.
 
 A test kit: the conformance suites a plugin's test project subclasses, the fixtures it derives from, and the models and
 migrations the suites run. All of it is public so a plugin outside this repository can run the same suites.
-`ProviderFixture.Factory` returns a `DbProviderFactory` because a fixture is where a plugin names its provider.
+`ProviderFixture.Factory` and `AdoNetEntryPoints.Factory` return a `DbProviderFactory` because a fixture is where a plugin
+names its provider.

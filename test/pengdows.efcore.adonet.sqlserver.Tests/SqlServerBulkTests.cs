@@ -3,14 +3,18 @@ using Microsoft.EntityFrameworkCore;
 
 namespace pengdows.efcore.adonet.sqlserver.Tests;
 
-/// <summary>SqlBulkCopy behaves as the INSERT it replaces would.</summary>
+/// <summary>SqlBulkCopy fires triggers, as the INSERT it replaces would.</summary>
+/// <remarks>
+///     Runs on: SQL Server (provider-only: SqlBulkCopy skips triggers unless told to fire them). Constraints are checked by
+///     the shared <c>BulkConformanceTests.Bulk_insert_checks_constraints</c>.
+/// </remarks>
 public class SqlServerBulkTests(SqlServerFixture fixture) : IClassFixture<SqlServerFixture>
 {
     private static CancellationToken Ct
         => TestContext.Current.CancellationToken;
 
     [Fact]
-    public async Task Bulk_copy_checks_constraints_and_fires_triggers()
+    public async Task Bulk_copy_fires_triggers()
     {
         await fixture.ExecuteAsync("""
             IF OBJECT_ID(N'Gauges') IS NULL
@@ -25,7 +29,6 @@ public class SqlServerBulkTests(SqlServerFixture fixture) : IClassFixture<SqlSer
 
         await using (var context = fixture.CreateContext<GaugeContext>(o => new GaugeContext(o)))
         {
-            await Assert.ThrowsAsync<SqlException>(() => context.BulkInsertAsync([new Gauge { Level = 11 }], Ct));
             await context.BulkInsertAsync([new Gauge { Level = 3 }], Ct);
         }
 

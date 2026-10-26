@@ -181,6 +181,15 @@ plain ADO.NET:
   fail ("Expected token 'EndOfInput' ... but found 'As'"), though `UPDATE "T" AS "t"` and `UPDATE "T" "t"` work. ISO
   (SQL:2011) allows `DELETE FROM <target table> [ [ AS ] <correlation name> ]`. Found by running `ExecuteDelete` with EF's
   standard DML. No work-around: every `ExecuteDelete` fails, and the five tests that use it are skipped.
+- A `DATE` value can't be read as a `DateTime`: `GetDateTime` and `GetFieldValue<DateTime>` on a `DATE` column throw
+  `InvalidCastException` ("Unable to cast object of type 'System.DateOnly' to type 'System.DateTime'"). Other drivers
+  return a `DATE` through `GetDateTime` (the ADO.NET mapping of a date before `DateOnly`), and EF reads a `DateTime`
+  property through it. Found by `BulkConformanceTests.Bulk_insert_writes_values_as_the_column_type`.
+- An unqualified table name resolves to a table in any schema: after `CREATE SCHEMA "tenant"` and
+  `CREATE TABLE "tenant"."H" (...)`, `CREATE TABLE "H" (...)` fails with "Table 'H' already exists", and
+  `SELECT COUNT(*) FROM "H"` says "Table 'H' must be schema-qualified". ISO: an unqualified name is in the default schema
+  (`CURRENT_SCHEMA`, which the engine also lacks: "Column 'CURRENT_SCHEMA' was not found"). Found by
+  `MigrationsConformanceTests.Another_schemas_history_table_is_not_this_ones`.
 - Found by EF's Select specification suite on preview.9 (each skipped in the base suite's flatfile Select class):
   - Joins of several derived tables don't finish: three `LEFT JOIN (SELECT ... FROM "OrderDetails" INNER JOIN "Products"
     ...)` on `"Orders"`, one with `ROW_NUMBER()`, filtered `"o"."OrderID" < 10350` (`Do_not_erase_projection_mapping_when_adding_single_projection`),

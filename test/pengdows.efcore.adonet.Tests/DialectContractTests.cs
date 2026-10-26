@@ -99,7 +99,8 @@ public class DialectContractTests
         [
             "pengdows.efcore.adonet.Bulk.BulkLoad.Connection.get -> System.Data.Common.DbConnection!",
             "pengdows.efcore.adonet.Bulk.BulkLoad.Transaction.get -> System.Data.Common.DbTransaction!",
-            "abstract pengdows.efcore.adonet.Testing.ProviderFixture.Factory.get -> System.Data.Common.DbProviderFactory!"
+            "abstract pengdows.efcore.adonet.Testing.ProviderFixture.Factory.get -> System.Data.Common.DbProviderFactory!",
+            "abstract pengdows.efcore.adonet.Testing.AdoNetEntryPoints.Factory.get -> System.Data.Common.DbProviderFactory!"
         ];
 
         var handedOut = Directory.EnumerateFiles(src, "PublicAPI.*.txt", SearchOption.AllDirectories)
