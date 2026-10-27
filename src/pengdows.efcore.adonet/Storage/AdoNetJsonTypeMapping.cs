@@ -24,7 +24,13 @@ internal sealed class AdoNetJsonTypeMapping : JsonTypeMapping
     private readonly ISqlDialect _sql;
 
     public AdoNetJsonTypeMapping(string storeType, ISqlDialect sql)
-        : base(storeType, typeof(JsonTypePlaceholder), System.Data.DbType.String)
+        // PostgreSQL's jsonb cannot accept a parameter explicitly typed as text. Object leaves the
+        // provider parameter type open so Npgsql can send the JSON document with its jsonb handler;
+        // other dialects retain the portable string binding.
+        : base(storeType, typeof(JsonTypePlaceholder),
+            storeType.Equals("jsonb", StringComparison.OrdinalIgnoreCase)
+                ? System.Data.DbType.Object
+                : System.Data.DbType.String)
         => _sql = sql;
 
     private AdoNetJsonTypeMapping(RelationalTypeMappingParameters parameters, ISqlDialect sql)
@@ -39,6 +45,27 @@ internal sealed class AdoNetJsonTypeMapping : JsonTypeMapping
 
     protected override string GenerateNonNullSqlLiteral(object value)
         => _sql.StringLiteral((string)value);
+
+    protected override void ConfigureParameter(DbParameter parameter)
+    {
+        base.ConfigureParameter(parameter);
+
+        // DbType has no JSON member. Npgsql exposes the required provider-specific type through
+        // NpgsqlDbType; use the driver's public property without taking a dependency on Npgsql
+        // in the shared provider assembly.
+        if (!StoreType.Equals("jsonb", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var property = parameter.GetType().GetProperty("NpgsqlDbType");
+        if (property?.PropertyType.IsEnum != true)
+        {
+            return;
+        }
+
+        property.SetValue(parameter, Enum.Parse(property.PropertyType, "Jsonb", ignoreCase: false));
+    }
 
     protected override RelationalTypeMapping Clone(RelationalTypeMappingParameters parameters)
         => new AdoNetJsonTypeMapping(parameters, _sql);

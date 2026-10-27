@@ -112,6 +112,8 @@ internal sealed class PostgreSqlFunctions : FunctionSyntax
 
     public override string? OffsetDateTime => "({0} AT TIME ZONE 'UTC')";
     public override string? RoundDigits => "ROUND(CAST({0} AS numeric), {1})";
+    public override string? UnixSeconds => "FLOOR(EXTRACT(EPOCH FROM {0}))";
+    public override string? UnixMilliseconds => "FLOOR(EXTRACT(EPOCH FROM {0}) * 1000)";
 
     // PostgreSQL's interval arithmetic preserves fractional amounts and is the ISO-shaped
     // equivalent of the date/time arithmetic exposed by the shared EF translator.
