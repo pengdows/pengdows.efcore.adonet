@@ -58,7 +58,6 @@ internal class AdoNetQueryableMethodTranslatingExpressionVisitor : RelationalQue
 
         var type = jsonQueryExpression.StructuralType;
         var jsonMapping = _typeMappingSource.FindMapping(typeof(JsonTypePlaceholder))!;
-        var stringMapping = _typeMappingSource.FindMapping(typeof(string))!;
         var intMapping = _typeMappingSource.FindMapping(typeof(int))!;
         SqlExpression source = JsonCollectionSource(jsonQueryExpression, jsonMapping);
 
@@ -88,7 +87,7 @@ internal class AdoNetQueryableMethodTranslatingExpressionVisitor : RelationalQue
             {
                 var jsonName = navigation.TargetEntityType.GetJsonPropertyName()!;
                 projection[new ProjectionMember().Append(new JsonMember(jsonName))] = new JsonScalarExpression(
-                    element, [new PathSegment(jsonName)], typeof(string), stringMapping, !navigation.ForeignKey.IsRequiredDependent);
+                    element, [new PathSegment(jsonName)], typeof(string), jsonMapping, !navigation.ForeignKey.IsRequiredDependent);
             }
         }
 
@@ -96,7 +95,7 @@ internal class AdoNetQueryableMethodTranslatingExpressionVisitor : RelationalQue
         {
             var jsonName = complexProperty.ComplexType.GetJsonPropertyName()!;
             projection[new ProjectionMember().Append(new JsonMember(jsonName))] = new JsonScalarExpression(
-                element, [new PathSegment(jsonName)], typeof(string), stringMapping, jsonQueryExpression.IsNullable || complexProperty.IsNullable);
+                element, [new PathSegment(jsonName)], typeof(string), jsonMapping, jsonQueryExpression.IsNullable || complexProperty.IsNullable);
         }
 
         select.ReplaceProjection(projection);
