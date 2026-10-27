@@ -1,9 +1,14 @@
 using System.Data;
 using System.Globalization;
 using Npgsql;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations.Operations;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using pengdows.efcore.adonet.Bulk;
+using pengdows.efcore.adonet.Migrations;
 
 namespace pengdows.efcore.adonet.postgresql;
 
@@ -37,7 +42,31 @@ public sealed class PostgreSqlDialect : AdoNetDialect
     };
 
     public override void ConfigureServices(IServiceCollection services)
-        => services.TryAddScoped<IAdoNetBulkLoader, PostgreSqlBulkLoader>();
+    {
+        new EntityFrameworkRelationalServicesBuilder(services)
+            .TryAdd<IMigrationsSqlGenerator, PostgreSqlMigrationsSqlGenerator>();
+        services.TryAddScoped<IAdoNetBulkLoader, PostgreSqlBulkLoader>();
+    }
+}
+
+/// <summary>PostgreSQL requires generated columns to use the SQL:2003 STORED form.</summary>
+internal sealed class PostgreSqlMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dependencies, IAdoNetDialect dialect)
+    : AdoNetMigrationsSqlGenerator(dependencies, dialect)
+{
+    protected override void ColumnDefinition(
+        string? schema,
+        string table,
+        string name,
+        ColumnOperation operation,
+        IModel? model,
+        MigrationCommandListBuilder builder)
+    {
+        base.ColumnDefinition(schema, table, name, operation, model, builder);
+        if ((operation.ComputedColumnSql != null) && (operation.IsStored != true))
+        {
+            builder.Append(" STORED");
+        }
+    }
 }
 
 internal sealed class PostgreSqlSql : AnsiSqlDialect
