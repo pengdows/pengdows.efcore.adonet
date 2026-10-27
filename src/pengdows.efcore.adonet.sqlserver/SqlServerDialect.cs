@@ -1,10 +1,12 @@
 using System.Globalization;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using pengdows.efcore.adonet.Metadata;
 using pengdows.efcore.adonet.Bulk;
 
 namespace pengdows.efcore.adonet.sqlserver;
@@ -36,6 +38,9 @@ public sealed class SqlServerDialect : AdoNetDialect
 
     public override void ConfigureServices(IServiceCollection services)
     {
+        new EntityFrameworkRelationalServicesBuilder(services)
+            .TryAdd<IProviderConventionSetBuilder, SqlServerConventionSetBuilder>();
+
         new EntityFrameworkRelationalServicesBuilder(services)
             .TryAdd<IMigrationsSqlGenerator, SqlServerMigrationsSqlGenerator>()
             .TryAdd<IRelationalQueryStringFactory, SqlServerQueryStringFactory>()
