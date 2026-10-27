@@ -15,7 +15,11 @@ public static class SqlServerDbContextOptionsBuilderExtensions
         this DbContextOptionsBuilder optionsBuilder,
         string connectionString,
         Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
-        => optionsBuilder.UseAdoNet(SqlClientFactory.Instance, connectionString, SqlServerDialect.Instance, adoNetOptionsAction);
+        => optionsBuilder.UseAdoNet(
+            SqlClientFactory.Instance,
+            connectionString,
+            SqlServerDialect.Instance,
+            AdoNetProviderOptions.Configure(SqlServerDialect.Instance, adoNetOptionsAction));
 
     /// <summary>Over <paramref name="connection" />, which the caller owns unless <paramref name="contextOwnsConnection" />.</summary>
     public static DbContextOptionsBuilder UseAdoNetSqlServer(
@@ -30,7 +34,10 @@ public static class SqlServerDbContextOptionsBuilderExtensions
         this DbContextOptionsBuilder optionsBuilder,
         DbDataSource dataSource,
         Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
-        => optionsBuilder.UseAdoNet(dataSource, SqlServerDialect.Instance, adoNetOptionsAction);
+        => optionsBuilder.UseAdoNet(
+            dataSource,
+            SqlServerDialect.Instance,
+            AdoNetProviderOptions.Configure(SqlServerDialect.Instance, adoNetOptionsAction));
 
     /// <summary>The connection string, or connection, is set later through <c>Database</c>.</summary>
     public static DbContextOptionsBuilder UseAdoNetSqlServer(

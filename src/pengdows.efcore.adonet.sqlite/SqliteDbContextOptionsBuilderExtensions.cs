@@ -15,7 +15,11 @@ public static class SqliteDbContextOptionsBuilderExtensions
         this DbContextOptionsBuilder optionsBuilder,
         string connectionString,
         Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
-        => optionsBuilder.UseAdoNet(SqliteFactory.Instance, connectionString, SqliteDialect.Instance, adoNetOptionsAction);
+        => optionsBuilder.UseAdoNet(
+            SqliteFactory.Instance,
+            connectionString,
+            SqliteDialect.Instance,
+            AdoNetProviderOptions.Configure(SqliteDialect.Instance, adoNetOptionsAction));
 
     /// <summary>Over <paramref name="connection" />, which the caller owns unless <paramref name="contextOwnsConnection" />.</summary>
     public static DbContextOptionsBuilder UseAdoNetSqlite(
@@ -30,7 +34,10 @@ public static class SqliteDbContextOptionsBuilderExtensions
         this DbContextOptionsBuilder optionsBuilder,
         DbDataSource dataSource,
         Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
-        => optionsBuilder.UseAdoNet(dataSource, SqliteDialect.Instance, adoNetOptionsAction);
+        => optionsBuilder.UseAdoNet(
+            dataSource,
+            SqliteDialect.Instance,
+            AdoNetProviderOptions.Configure(SqliteDialect.Instance, adoNetOptionsAction));
 
     /// <summary>The connection string, or connection, is set later through <c>Database</c>.</summary>
     public static DbContextOptionsBuilder UseAdoNetSqlite(

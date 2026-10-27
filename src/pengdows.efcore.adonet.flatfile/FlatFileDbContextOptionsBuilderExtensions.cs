@@ -15,7 +15,11 @@ public static class FlatFileDbContextOptionsBuilderExtensions
         this DbContextOptionsBuilder optionsBuilder,
         string connectionString,
         Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
-        => optionsBuilder.UseAdoNet(FlatFileProviderFactory.Instance, connectionString, FlatFileDialect.Instance, adoNetOptionsAction);
+        => optionsBuilder.UseAdoNet(
+            FlatFileProviderFactory.Instance,
+            connectionString,
+            FlatFileDialect.Instance,
+            AdoNetProviderOptions.Configure(FlatFileDialect.Instance, adoNetOptionsAction));
 
     /// <summary>Over <paramref name="connection" />, which the caller owns unless <paramref name="contextOwnsConnection" />.</summary>
     public static DbContextOptionsBuilder UseAdoNetFlatFile(
@@ -30,7 +34,10 @@ public static class FlatFileDbContextOptionsBuilderExtensions
         this DbContextOptionsBuilder optionsBuilder,
         DbDataSource dataSource,
         Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
-        => optionsBuilder.UseAdoNet(dataSource, FlatFileDialect.Instance, adoNetOptionsAction);
+        => optionsBuilder.UseAdoNet(
+            dataSource,
+            FlatFileDialect.Instance,
+            AdoNetProviderOptions.Configure(FlatFileDialect.Instance, adoNetOptionsAction));
 
     /// <summary>The connection string, or connection, is set later through <c>Database</c>.</summary>
     public static DbContextOptionsBuilder UseAdoNetFlatFile(

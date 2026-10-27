@@ -15,7 +15,11 @@ public static class DuckDbDbContextOptionsBuilderExtensions
         this DbContextOptionsBuilder optionsBuilder,
         string connectionString,
         Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
-        => optionsBuilder.UseAdoNet(DuckDBClientFactory.Instance, connectionString, DuckDbDialect.Instance, adoNetOptionsAction);
+        => optionsBuilder.UseAdoNet(
+            DuckDBClientFactory.Instance,
+            connectionString,
+            DuckDbDialect.Instance,
+            AdoNetProviderOptions.Configure(DuckDbDialect.Instance, adoNetOptionsAction));
 
     /// <summary>Over <paramref name="connection" />, which the caller owns unless <paramref name="contextOwnsConnection" />.</summary>
     public static DbContextOptionsBuilder UseAdoNetDuckDb(
@@ -30,7 +34,10 @@ public static class DuckDbDbContextOptionsBuilderExtensions
         this DbContextOptionsBuilder optionsBuilder,
         DbDataSource dataSource,
         Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
-        => optionsBuilder.UseAdoNet(dataSource, DuckDbDialect.Instance, adoNetOptionsAction);
+        => optionsBuilder.UseAdoNet(
+            dataSource,
+            DuckDbDialect.Instance,
+            AdoNetProviderOptions.Configure(DuckDbDialect.Instance, adoNetOptionsAction));
 
     /// <summary>The connection string, or connection, is set later through <c>Database</c>.</summary>
     public static DbContextOptionsBuilder UseAdoNetDuckDb(

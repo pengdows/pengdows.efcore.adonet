@@ -15,7 +15,11 @@ public static class MySqlDbContextOptionsBuilderExtensions
         this DbContextOptionsBuilder optionsBuilder,
         string connectionString,
         Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
-        => optionsBuilder.UseAdoNet(MySqlConnectorFactory.Instance, connectionString, MySqlDialect.Instance, adoNetOptionsAction);
+        => optionsBuilder.UseAdoNet(
+            MySqlConnectorFactory.Instance,
+            connectionString,
+            MySqlDialect.Instance,
+            AdoNetProviderOptions.Configure(MySqlDialect.Instance, adoNetOptionsAction));
 
     /// <summary>Over <paramref name="connection" />, which the caller owns unless <paramref name="contextOwnsConnection" />.</summary>
     public static DbContextOptionsBuilder UseAdoNetMySql(
@@ -30,7 +34,10 @@ public static class MySqlDbContextOptionsBuilderExtensions
         this DbContextOptionsBuilder optionsBuilder,
         DbDataSource dataSource,
         Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
-        => optionsBuilder.UseAdoNet(dataSource, MySqlDialect.Instance, adoNetOptionsAction);
+        => optionsBuilder.UseAdoNet(
+            dataSource,
+            MySqlDialect.Instance,
+            AdoNetProviderOptions.Configure(MySqlDialect.Instance, adoNetOptionsAction));
 
     /// <summary>The connection string, or connection, is set later through <c>Database</c>.</summary>
     public static DbContextOptionsBuilder UseAdoNetMySql(
