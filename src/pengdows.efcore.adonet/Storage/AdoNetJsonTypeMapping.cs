@@ -29,7 +29,7 @@ internal sealed class AdoNetJsonTypeMapping : JsonTypeMapping
         // provider parameter type open so the driver can send the JSON document with its native handler;
         // other dialects retain the portable string binding.
         : base(storeType, typeof(JsonTypePlaceholder),
-            storeType.Equals("jsonb", StringComparison.OrdinalIgnoreCase)
+            sql.Json?.UsesBinaryDocument == true
                 ? System.Data.DbType.Object
                 : System.Data.DbType.String)
         => _sql = sql;
@@ -54,7 +54,7 @@ internal sealed class AdoNetJsonTypeMapping : JsonTypeMapping
         // DbType has no JSON member. A driver may expose the required provider-specific type through
         // a public property; use reflection without taking a driver dependency
         // in the shared provider assembly.
-        if (!StoreType.Equals("jsonb", StringComparison.OrdinalIgnoreCase))
+        if (_sql.Json?.UsesBinaryDocument != true)
         {
             return;
         }

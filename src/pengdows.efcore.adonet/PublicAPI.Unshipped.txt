@@ -633,6 +633,8 @@ pengdows.efcore.adonet.SpatialSyntax.Function(string! member) -> string?
 pengdows.efcore.adonet.SpatialSyntax.StoresZAndM.get -> bool
 pengdows.efcore.adonet.SpatialSyntax.StoresZAndM.init -> void
 pengdows.efcore.adonet.JsonSyntax.SetBooleanValue.get -> string?
+pengdows.efcore.adonet.JsonSyntax.UsesBinaryDocument.get -> bool
+pengdows.efcore.adonet.JsonSyntax.UsesBinaryDocument.init -> void
 pengdows.efcore.adonet.ISqlDialect.ConnectionOptions.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
 pengdows.efcore.adonet.ISqlDialect.ProcedureOutputVariable.get -> string?
 virtual pengdows.efcore.adonet.AnsiSqlDialect.ConnectionOptions.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!

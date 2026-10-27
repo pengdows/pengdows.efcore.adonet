@@ -186,6 +186,7 @@ internal static class PostgreSqlJson
             "jsonb_set({0}, string_to_array(ltrim(regexp_replace(regexp_replace({1}, '^\\$\\.?', ''), '\\[([0-9]+)\\]', '.\\1', 'g'), '.'), '.'), {2}, true)",
             "CAST({0} AS jsonb)")
     {
+        UsesBinaryDocument = true,
         // The shared query generator supplies the table alias after this expression. Wrapping the
         // set-returning function gives PostgreSQL stable column names matching the shared JSON AST.
         // jsonb_array_elements returns jsonb. Extract the scalar text before casting it to the

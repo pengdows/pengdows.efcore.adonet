@@ -225,7 +225,7 @@ internal class AdoNetQueryableMethodTranslatingExpressionVisitor : RelationalQue
         // JSON stores them as strings, matching EF's JSON representation and converters.
         var valueType = value.TypeMapping?.ClrType ?? value.Type;
         var valueStoreType = value.TypeMapping?.StoreType ?? "";
-        if (json.StoreType.Equals("jsonb", StringComparison.OrdinalIgnoreCase)
+        if (json.UsesBinaryDocument
             && ((valueType == typeof(DateTime)) || (valueType == typeof(DateTimeOffset)) || (valueType == typeof(DateOnly))
                 || (valueType == typeof(TimeOnly)) || (valueType == typeof(TimeSpan)) || (valueType == typeof(Guid))
                 || (valueType == typeof(byte[])) || (valueType == typeof(char))

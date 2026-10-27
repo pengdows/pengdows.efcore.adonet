@@ -462,6 +462,9 @@ public sealed class JsonSyntax(
     /// </summary>
     public string? SetBooleanValue { get; } = setBooleanValue;
 
+    /// <summary>Whether the database stores JSON in a native binary document type.</summary>
+    public bool UsesBinaryDocument { get; init; }
+
     /// <summary>
     ///     The elements of the JSON array <c>{0}</c> as a table, for querying a primitive collection: a column named <c>{1}</c>
     ///     that orders the elements, and one named <c>{2}</c> holding each element as the store type <c>{3}</c>. The table's alias

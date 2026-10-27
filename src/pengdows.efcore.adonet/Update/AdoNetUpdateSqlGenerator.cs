@@ -45,7 +45,7 @@ internal class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependenc
                 ?? property.GetTypeMapping().Converter?.ProviderClrType ?? property.ClrType) == typeof(bool));
         var providerType = property?.GetTypeMapping().Converter?.ProviderClrType ?? property?.ClrType;
         var storeType = property?.GetRelationalTypeMapping().StoreType ?? "";
-        var scalarNeedsText = dialect.Sql.Json.StoreType.Equals("jsonb", StringComparison.OrdinalIgnoreCase)
+        var scalarNeedsText = json.UsesBinaryDocument
             && !isText
             && (providerType == typeof(DateTime) || providerType == typeof(DateTimeOffset) || providerType == typeof(DateOnly)
                 || providerType == typeof(TimeOnly) || providerType == typeof(TimeSpan) || providerType == typeof(Guid)
@@ -62,7 +62,7 @@ internal class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependenc
         updateSqlGeneratorHelper.DelimitIdentifier(column, columnModification.ColumnName);
 
         var replacement = value.ToString();
-        if (dialect.Sql.Json.StoreType.Equals("jsonb", StringComparison.OrdinalIgnoreCase)
+        if (json.UsesBinaryDocument
             && columnModification.Value is null)
         {
             // jsonb_set propagates SQL NULL, but an EF nullable JSON property means the JSON
@@ -85,7 +85,7 @@ internal class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependenc
         {
             replacement = json.FromText.Replace("{0}", replacement, StringComparison.Ordinal);
         }
-        else if (json.StoreType.Equals("jsonb", StringComparison.OrdinalIgnoreCase))
+        else if (json.UsesBinaryDocument)
         {
             replacement = $"(jsonb_build_array({replacement}) -> 0)";
         }

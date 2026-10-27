@@ -4,6 +4,12 @@ namespace pengdows.efcore.adonet.postgresql.Tests;
 
 public sealed class PostgreSqlJsonTests
 {
+    [Fact]
+    public void Declares_native_binary_json_storage_explicitly()
+    {
+        Assert.True(PostgreSqlDialect.Instance.Sql.Json!.UsesBinaryDocument);
+    }
+
     private sealed class Document
     {
         public int Id { get; set; }
