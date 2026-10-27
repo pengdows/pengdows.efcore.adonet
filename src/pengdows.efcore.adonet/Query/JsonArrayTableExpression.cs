@@ -1,6 +1,5 @@
-// Portions adapted from EF Core's SQLite provider (MIT, .NET Foundation): JsonEachExpression,
-// SqliteQueryableMethodTranslatingExpressionVisitor and SqliteTypeMappingPostprocessor. Copyright (c) .NET Foundation. Licensed
-// under the MIT license.
+// Behaviour reference (not copied): EF Core's SQLite JSON array table implementation (MIT, .NET Foundation):
+// https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.Core/Query/Internal/SqlExpressions/JsonEachExpression.cs
 
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore.Query;
@@ -14,8 +13,8 @@ namespace pengdows.efcore.adonet.Query;
 ///     column (<see cref="ValueColumn" />) of the element's store type, written through the dialect's
 ///     <see cref="JsonSyntax.ArrayElements" />. A primitive collection (a collection column, or a parameter collection that
 ///     isn't expanded into an IN list) is queried through it. A parameter's element type is known only once the query has
-///     inferred it, so <see cref="ElementTypeMapping" /> starts null there and is set by the type-mapping pass. Adapted from EF
-///     Core's SQLite json_each support (MIT, .NET Foundation):
+///     inferred it, so <see cref="ElementTypeMapping" /> starts null and is supplied by the type-mapping pass. Behaviour
+///     reference (not copied): EF Core's SQLite JSON array table implementation (MIT, .NET Foundation):
 ///     https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.Core/Query/Internal/SqlExpressions/JsonEachExpression.cs
 /// </summary>
 internal sealed class JsonArrayTableExpression : TableValuedFunctionExpression
@@ -41,35 +40,51 @@ internal sealed class JsonArrayTableExpression : TableValuedFunctionExpression
 
     /// <summary>The element type of a collection type.</summary>
     public static Type ElementType(Type collection)
-        => collection.IsArray
-            ? collection.GetElementType()!
-            : collection.GetInterfaces().Append(collection)
-                .First(i => i.IsGenericType && (i.GetGenericTypeDefinition() == typeof(IEnumerable<>)))
-                .GetGenericArguments()[0];
+    {
+        if (collection.IsArray)
+        {
+            return collection.GetElementType()!;
+        }
+
+        var enumerable = collection.GetInterfaces()
+            .Append(collection)
+            .FirstOrDefault(interfaceType => interfaceType.IsGenericType
+                && interfaceType.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+        return enumerable?.GetGenericArguments()[0]
+            ?? throw new ArgumentException($"'{collection}' is not a generic enumerable.", nameof(collection));
+    }
 
     public RelationalTypeMapping? ElementTypeMapping { get; }
 
     public JsonArrayTableExpression Update(SqlExpression json, RelationalTypeMapping? elementTypeMapping)
-        => (json == Json) && (elementTypeMapping == ElementTypeMapping)
-            ? this
-            : new JsonArrayTableExpression(Alias, json, elementTypeMapping, Annotations);
+    {
+        if ((json == Json) && (elementTypeMapping == ElementTypeMapping))
+        {
+            return this;
+        }
+
+        return new JsonArrayTableExpression(Alias, json, elementTypeMapping, Annotations);
+    }
 
     public override TableValuedFunctionExpression Update(IReadOnlyList<SqlExpression> arguments)
         => Update(arguments[0], ElementTypeMapping);
 
     protected override Expression VisitChildren(ExpressionVisitor visitor)
-        => Update((SqlExpression)visitor.Visit(Json), ElementTypeMapping);
+    {
+        var visitedJson = (SqlExpression)visitor.Visit(Json);
+        return Update(visitedJson, ElementTypeMapping);
+    }
 
     public override TableExpressionBase Clone(string? alias, ExpressionVisitor cloningExpressionVisitor)
         => new JsonArrayTableExpression(
             alias ?? Alias, (SqlExpression)cloningExpressionVisitor.Visit(Json), ElementTypeMapping, Annotations);
 
     public override JsonArrayTableExpression WithAlias(string newAlias)
-        => new(newAlias, Json, ElementTypeMapping, Annotations);
+        => new JsonArrayTableExpression(newAlias, Json, ElementTypeMapping, Annotations);
 
     protected override JsonArrayTableExpression WithAnnotations(
         IReadOnlyDictionary<string, Microsoft.EntityFrameworkCore.Infrastructure.IAnnotation> annotations)
-        => new(Alias, Json, ElementTypeMapping, annotations);
+        => new JsonArrayTableExpression(Alias, Json, ElementTypeMapping, annotations);
 
     // Precompiled queries would quote this expression into code; the provider has none yet.
     public override Expression Quote()
