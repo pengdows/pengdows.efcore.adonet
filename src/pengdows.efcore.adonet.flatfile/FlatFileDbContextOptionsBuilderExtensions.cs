@@ -23,7 +23,7 @@ public static class FlatFileDbContextOptionsBuilderExtensions
         DbConnection connection,
         bool contextOwnsConnection = false,
         Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
-        => optionsBuilder.UseAdoNet(connection, contextOwnsConnection, With(adoNetOptionsAction));
+        => optionsBuilder.UseAdoNet(connection, contextOwnsConnection, AdoNetProviderOptions.Configure(FlatFileDialect.Instance, adoNetOptionsAction));
 
     /// <summary>Connections from <paramref name="dataSource" />, which the caller owns.</summary>
     public static DbContextOptionsBuilder UseAdoNetFlatFile(
@@ -36,7 +36,7 @@ public static class FlatFileDbContextOptionsBuilderExtensions
     public static DbContextOptionsBuilder UseAdoNetFlatFile(
         this DbContextOptionsBuilder optionsBuilder,
         Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
-        => optionsBuilder.UseAdoNet(FlatFileProviderFactory.Instance, With(adoNetOptionsAction));
+        => optionsBuilder.UseAdoNet(FlatFileProviderFactory.Instance, AdoNetProviderOptions.Configure(FlatFileDialect.Instance, adoNetOptionsAction));
 
     public static DbContextOptionsBuilder<TContext> UseAdoNetFlatFile<TContext>(
         this DbContextOptionsBuilder<TContext> optionsBuilder,
@@ -71,10 +71,4 @@ public static class FlatFileDbContextOptionsBuilderExtensions
     public static void RegisterDialect()
         => AdoNetDialects.Register<FlatFileProviderFactory>(FlatFileDialect.Instance);
 
-    private static Action<AdoNetDbContextOptionsBuilder> With(Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction)
-        => o =>
-        {
-            o.UseDialect(FlatFileDialect.Instance);
-            adoNetOptionsAction?.Invoke(o);
-        };
 }

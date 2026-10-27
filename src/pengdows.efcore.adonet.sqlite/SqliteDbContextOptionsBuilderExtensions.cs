@@ -23,7 +23,7 @@ public static class SqliteDbContextOptionsBuilderExtensions
         DbConnection connection,
         bool contextOwnsConnection = false,
         Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
-        => optionsBuilder.UseAdoNet(connection, contextOwnsConnection, With(adoNetOptionsAction));
+        => optionsBuilder.UseAdoNet(connection, contextOwnsConnection, AdoNetProviderOptions.Configure(SqliteDialect.Instance, adoNetOptionsAction));
 
     /// <summary>Connections from <paramref name="dataSource" />, which the caller owns.</summary>
     public static DbContextOptionsBuilder UseAdoNetSqlite(
@@ -36,7 +36,7 @@ public static class SqliteDbContextOptionsBuilderExtensions
     public static DbContextOptionsBuilder UseAdoNetSqlite(
         this DbContextOptionsBuilder optionsBuilder,
         Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
-        => optionsBuilder.UseAdoNet(SqliteFactory.Instance, With(adoNetOptionsAction));
+        => optionsBuilder.UseAdoNet(SqliteFactory.Instance, AdoNetProviderOptions.Configure(SqliteDialect.Instance, adoNetOptionsAction));
 
     public static DbContextOptionsBuilder<TContext> UseAdoNetSqlite<TContext>(
         this DbContextOptionsBuilder<TContext> optionsBuilder,
@@ -71,10 +71,4 @@ public static class SqliteDbContextOptionsBuilderExtensions
     public static void RegisterDialect()
         => AdoNetDialects.Register<SqliteFactory>(SqliteDialect.Instance);
 
-    private static Action<AdoNetDbContextOptionsBuilder> With(Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction)
-        => o =>
-        {
-            o.UseDialect(SqliteDialect.Instance);
-            adoNetOptionsAction?.Invoke(o);
-        };
 }

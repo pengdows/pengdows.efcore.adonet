@@ -23,7 +23,7 @@ public static class DuckDbDbContextOptionsBuilderExtensions
         DbConnection connection,
         bool contextOwnsConnection = false,
         Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
-        => optionsBuilder.UseAdoNet(connection, contextOwnsConnection, With(adoNetOptionsAction));
+        => optionsBuilder.UseAdoNet(connection, contextOwnsConnection, AdoNetProviderOptions.Configure(DuckDbDialect.Instance, adoNetOptionsAction));
 
     /// <summary>Connections from <paramref name="dataSource" />, which the caller owns.</summary>
     public static DbContextOptionsBuilder UseAdoNetDuckDb(
@@ -36,7 +36,7 @@ public static class DuckDbDbContextOptionsBuilderExtensions
     public static DbContextOptionsBuilder UseAdoNetDuckDb(
         this DbContextOptionsBuilder optionsBuilder,
         Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
-        => optionsBuilder.UseAdoNet(DuckDBClientFactory.Instance, With(adoNetOptionsAction));
+        => optionsBuilder.UseAdoNet(DuckDBClientFactory.Instance, AdoNetProviderOptions.Configure(DuckDbDialect.Instance, adoNetOptionsAction));
 
     public static DbContextOptionsBuilder<TContext> UseAdoNetDuckDb<TContext>(
         this DbContextOptionsBuilder<TContext> optionsBuilder,
@@ -71,10 +71,4 @@ public static class DuckDbDbContextOptionsBuilderExtensions
     public static void RegisterDialect()
         => AdoNetDialects.Register<DuckDBClientFactory>(DuckDbDialect.Instance);
 
-    private static Action<AdoNetDbContextOptionsBuilder> With(Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction)
-        => o =>
-        {
-            o.UseDialect(DuckDbDialect.Instance);
-            adoNetOptionsAction?.Invoke(o);
-        };
 }

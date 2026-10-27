@@ -23,7 +23,7 @@ public static class MySqlDbContextOptionsBuilderExtensions
         DbConnection connection,
         bool contextOwnsConnection = false,
         Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
-        => optionsBuilder.UseAdoNet(connection, contextOwnsConnection, With(adoNetOptionsAction));
+        => optionsBuilder.UseAdoNet(connection, contextOwnsConnection, AdoNetProviderOptions.Configure(MySqlDialect.Instance, adoNetOptionsAction));
 
     /// <summary>Connections from <paramref name="dataSource" />, which the caller owns.</summary>
     public static DbContextOptionsBuilder UseAdoNetMySql(
@@ -36,7 +36,7 @@ public static class MySqlDbContextOptionsBuilderExtensions
     public static DbContextOptionsBuilder UseAdoNetMySql(
         this DbContextOptionsBuilder optionsBuilder,
         Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
-        => optionsBuilder.UseAdoNet(MySqlConnectorFactory.Instance, With(adoNetOptionsAction));
+        => optionsBuilder.UseAdoNet(MySqlConnectorFactory.Instance, AdoNetProviderOptions.Configure(MySqlDialect.Instance, adoNetOptionsAction));
 
     public static DbContextOptionsBuilder<TContext> UseAdoNetMySql<TContext>(
         this DbContextOptionsBuilder<TContext> optionsBuilder,
@@ -71,10 +71,4 @@ public static class MySqlDbContextOptionsBuilderExtensions
     public static void RegisterDialect()
         => AdoNetDialects.Register<MySqlConnectorFactory>(MySqlDialect.Instance);
 
-    private static Action<AdoNetDbContextOptionsBuilder> With(Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction)
-        => o =>
-        {
-            o.UseDialect(MySqlDialect.Instance);
-            adoNetOptionsAction?.Invoke(o);
-        };
 }
