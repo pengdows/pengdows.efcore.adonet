@@ -13,6 +13,51 @@ internal class AdoNetQuerySqlGenerator(
     : QuerySqlGenerator(dependencies), IQuerySqlWriter
 {
     private TableExpression? _qualifyWithTableName;
+    private int _selectDepth;
+    private int _derivedProjectionAlias;
+
+    protected override Expression VisitSelect(SelectExpression selectExpression)
+    {
+        _selectDepth++;
+        try
+        {
+            if ((_selectDepth > 1)
+                && dialect.RequiresDerivedTableColumnAliases
+                && selectExpression.Projection.Any(projection => projection.Alias.Length == 0))
+            {
+                selectExpression = selectExpression.Update(
+                    tables: selectExpression.Tables,
+                    predicate: selectExpression.Predicate,
+                    groupBy: selectExpression.GroupBy,
+                    having: selectExpression.Having,
+                    projections: selectExpression.Projection.Select(projection =>
+                        projection.Alias.Length == 0
+                            ? new ProjectionExpression(projection.Expression, $"c{_derivedProjectionAlias++}")
+                            : projection).ToList(),
+                    orderings: selectExpression.Orderings,
+                    offset: selectExpression.Offset,
+                    limit: selectExpression.Limit);
+            }
+
+            return base.VisitSelect(selectExpression);
+        }
+        finally
+        {
+            _selectDepth--;
+        }
+    }
+
+    protected override void GenerateProjection(SelectExpression selectExpression)
+    {
+        base.GenerateProjection(selectExpression);
+        if ((_selectDepth > 1)
+            && dialect.RequiresDerivedTableColumnAliases
+            && (selectExpression.Projection.Count == 0))
+        {
+            Sql.Append(AliasSeparator)
+                .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier($"c{_derivedProjectionAlias++}"));
+        }
+    }
 
     protected override Expression VisitDelete(DeleteExpression deleteExpression)
         => dialect.Dml.TryGenerateDelete(this, deleteExpression) ? deleteExpression : base.VisitDelete(deleteExpression);

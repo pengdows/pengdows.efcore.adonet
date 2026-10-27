@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Data.Common;
 using Microsoft.EntityFrameworkCore;
+using pengdows.efcore.adonet.Testing;
 
 namespace pengdows.efcore.adonet.sqlserver.Tests;
 
@@ -45,6 +46,21 @@ public class SqlServerQueryStringTests(SqlServerFixture fixture) : IClassFixture
             Assert.Equal(await query.CountAsync(Ct), await CountRowsAsync(query.ToQueryString()));
             Assert.Equal(1, await query.CountAsync(Ct));
         }
+    }
+
+    [Fact]
+    public async Task Count_after_grouped_aggregate_executes_on_sql_server()
+    {
+        fixture.SkipIfNotRunnable();
+        await fixture.CreateTablesOnceAsync<SampleContext>(o => new(o));
+        await using var context = fixture.CreateContext<SampleContext>(o => new(o));
+
+        var count = await context.Samples
+            .GroupBy(sample => sample.Text)
+            .Select(group => group.Sum(sample => sample.Id))
+            .CountAsync(Ct);
+
+        Assert.True(count >= 0);
     }
 
     private async Task<int> CountRowsAsync(string sql)

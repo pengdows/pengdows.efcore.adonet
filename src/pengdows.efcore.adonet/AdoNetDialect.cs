@@ -82,6 +82,7 @@ public class AnsiSqlDialect : ISqlDialect
     public virtual string ValuesRowPrefix => "";
     public virtual bool LimitInPredicateSubqueries => true;
     public virtual LateralJoinSyntax? LateralJoins => LateralJoinSyntax.Iso;
+    public virtual bool RequiresDerivedTableColumnAliases => false;
 
     public virtual string HasTablesSql
         => "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'";

@@ -60,6 +60,7 @@ internal sealed class SqlServerSql : AnsiSqlDialect
     public override string LongCountFunction => "COUNT_BIG";
     public override PagingSyntax Paging => PagingSyntax.TopOrOffsetFetch;
     public override BooleanSyntax Booleans => BooleanSyntax.BitValuesWithBitwiseOperators;
+    public override bool RequiresDerivedTableColumnAliases => true;
     public override KeyRetrieval Keys { get; } = KeyRetrieval.SelectAfter("SCOPE_IDENTITY()", "@@ROWCOUNT");
     public override DmlSyntax Dml => DmlSyntax.TargetAliasFrom;
     public override FunctionSyntax Functions { get; } = new SqlServerFunctions();

@@ -244,6 +244,7 @@ pengdows.efcore.adonet.ISqlDialect.Json.get -> pengdows.efcore.adonet.JsonSyntax
 pengdows.efcore.adonet.ISqlDialect.Keys.get -> pengdows.efcore.adonet.KeyRetrieval!
 pengdows.efcore.adonet.ISqlDialect.LateralJoins.get -> pengdows.efcore.adonet.LateralJoinSyntax?
 pengdows.efcore.adonet.ISqlDialect.LimitInPredicateSubqueries.get -> bool
+pengdows.efcore.adonet.ISqlDialect.RequiresDerivedTableColumnAliases.get -> bool
 pengdows.efcore.adonet.ISqlDialect.LongCountFunction.get -> string!
 pengdows.efcore.adonet.ISqlDialect.Paging.get -> pengdows.efcore.adonet.PagingSyntax!
 pengdows.efcore.adonet.ISqlDialect.ParameterMarker.get -> string!
@@ -398,6 +399,7 @@ virtual pengdows.efcore.adonet.AnsiSqlDialect.Json.get -> pengdows.efcore.adonet
 virtual pengdows.efcore.adonet.AnsiSqlDialect.Keys.get -> pengdows.efcore.adonet.KeyRetrieval!
 virtual pengdows.efcore.adonet.AnsiSqlDialect.LateralJoins.get -> pengdows.efcore.adonet.LateralJoinSyntax?
 virtual pengdows.efcore.adonet.AnsiSqlDialect.LimitInPredicateSubqueries.get -> bool
+virtual pengdows.efcore.adonet.AnsiSqlDialect.RequiresDerivedTableColumnAliases.get -> bool
 virtual pengdows.efcore.adonet.AnsiSqlDialect.LongCountFunction.get -> string!
 virtual pengdows.efcore.adonet.AnsiSqlDialect.Paging.get -> pengdows.efcore.adonet.PagingSyntax!
 virtual pengdows.efcore.adonet.AnsiSqlDialect.ParameterMarker.get -> string!

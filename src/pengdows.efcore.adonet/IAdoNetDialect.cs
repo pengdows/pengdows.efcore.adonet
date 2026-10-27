@@ -147,6 +147,9 @@ public interface ISqlDialect
     /// </summary>
     LateralJoinSyntax? LateralJoins { get; }
 
+    /// <summary>Whether every expression projected by a derived table must have an explicit column name.</summary>
+    bool RequiresDerivedTableColumnAliases { get; }
+
     /// <summary>Returns the number of user tables in the current database or schema.</summary>
     string HasTablesSql { get; }
 }
