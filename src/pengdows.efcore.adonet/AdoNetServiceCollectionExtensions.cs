@@ -56,11 +56,13 @@ public static class AdoNetServiceCollectionExtensions
             .TryAdd<IModificationCommandBatchFactory, AdoNetModificationCommandBatchFactory>()
             .TryAdd<IRelationalParameterBasedSqlProcessorFactory, AdoNetParameterBasedSqlProcessorFactory>()
             .TryAdd<IValueGeneratorSelector, AdoNetValueGeneratorSelector>()
+            .TryAdd<ISingletonOptions, IAdoNetSingletonOptions>(p => p.GetRequiredService<IAdoNetSingletonOptions>())
             .TryAddProviderSpecificServices(b => b
                 .TryAddSingleton(dialect)
                 .TryAddSingleton(dialect.Sql)
                 .TryAddSingleton(dialect.TypeMappings)
                 .TryAddSingleton(dialect.Capabilities)
+                .TryAddSingleton<IAdoNetSingletonOptions, AdoNetSingletonOptions>()
                 .TryAddSingleton<AdoNetDataSources, AdoNetDataSources>()
                 .TryAddScoped<IAdoNetBulkLoader, AdoNetInsertBulkLoader>())
             .TryAddCoreServices();

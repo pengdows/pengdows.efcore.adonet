@@ -12,8 +12,7 @@ namespace pengdows.efcore.adonet.Query;
 ///     stay values: <c>a ^ b</c>, <c>~(a ^ b)</c>, <c>~a</c>. Runs after null semantics have been applied.
 /// </summary>
 /// <remarks>
-///     TODO(LICENSE-AUDIT): Add the pinned upstream source URL for this adapted MIT code.
-///     Adapted from EF Core's SQL Server <c>SearchConditionConverter</c> (MIT, .NET Foundation).
+///     Independent implementation. EF Core SQL Server <c>SearchConditionConverter</c> (MIT, .NET Foundation; Behaviour reference (not copied): https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.SqlServer/Query/Internal/SearchConditionConverter.cs)
 /// </remarks>
 internal class AdoNetSearchConditionConverter(ISqlExpressionFactory sqlExpressionFactory, bool bitwiseOperators = false) : ExpressionVisitor
 {

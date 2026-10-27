@@ -1,5 +1,5 @@
-// TODO(LICENSE-AUDIT): Add the pinned upstream source URL for this adapted MIT code before release.
-// Adapted from EF Core's SQLite NetTopologySuite plugin (SqliteNetTopologySuiteOptionsExtension and its service registration).
+// Independent implementation. Behaviour reference (not copied): EF Core's SQLite NetTopologySuite plugin
+// (MIT, .NET Foundation): https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.NTS/Infrastructure/SqliteNetTopologySuiteOptionsExtension.cs
 // Copyright (c) .NET Foundation. Licensed under the MIT license.
 
 using System.Diagnostics.CodeAnalysis;

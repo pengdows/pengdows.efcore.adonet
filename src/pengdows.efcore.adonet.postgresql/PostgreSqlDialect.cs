@@ -110,6 +110,9 @@ internal sealed class PostgreSqlSql : AnsiSqlDialect
 
 internal sealed class PostgreSqlTypeMappings : AnsiTypeMappings
 {
+    // Npgsql writes timestamptz from offset-zero values only.
+    public override bool WritesDateTimeOffsetAsUtc => true;
+
     public override string? GetStoreType(Type clrType)
         => clrType == typeof(byte[]) ? "BYTEA" : base.GetStoreType(clrType);
 

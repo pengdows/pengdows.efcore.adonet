@@ -178,6 +178,9 @@ public class AnsiTypeMappings : ITypeMappingDialect
     public virtual System.Data.DbType DateTimeDbType
         => System.Data.DbType.DateTime2;
 
+    public virtual bool WritesDateTimeOffsetAsUtc
+        => false;
+
     public virtual string CastTarget(string storeType)
         => storeType;
 

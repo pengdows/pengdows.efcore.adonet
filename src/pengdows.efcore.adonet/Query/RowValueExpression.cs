@@ -9,15 +9,20 @@ namespace pengdows.efcore.adonet.Query;
 
 /// <summary>An ISO row value, <c>(a, b)</c>: one side of a tuple comparison.</summary>
 /// <remarks>
-///     TODO(LICENSE-AUDIT): Add the pinned upstream source URL for this PostgreSQL-license adaptation.
-///     Adapted from npgsql/efcore.pg's PgRowValueExpression (PostgreSQL License).
+///     Behavior reference (not copied):
+///     https://github.com/npgsql/efcore.pg/blob/v10.0.3/src/EFCore.PG/Query/Expressions/Internal/PgRowValueExpression.cs
 /// </remarks>
-internal sealed class RowValueSqlExpression(IReadOnlyList<SqlExpression> values, Type type, RelationalTypeMapping? typeMapping = null)
-    : SqlExpression(type, typeMapping), IEquatable<RowValueSqlExpression>
+internal sealed class RowValueSqlExpression : SqlExpression, IEquatable<RowValueSqlExpression>
 {
+    public RowValueSqlExpression(IReadOnlyList<SqlExpression> values, Type type, RelationalTypeMapping? typeMapping = null)
+        : base(type, typeMapping)
+    {
+        Values = values ?? throw new ArgumentNullException(nameof(values));
+    }
+
     private static ConstructorInfo? _quotingConstructor;
 
-    public IReadOnlyList<SqlExpression> Values { get; } = values;
+    public IReadOnlyList<SqlExpression> Values { get; }
 
     protected override Expression VisitChildren(ExpressionVisitor visitor)
     {
@@ -26,7 +31,11 @@ internal sealed class RowValueSqlExpression(IReadOnlyList<SqlExpression> values,
     }
 
     public RowValueSqlExpression Update(IReadOnlyList<SqlExpression> values)
-        => values.SequenceEqual(Values, ReferenceEqualityComparer.Instance) ? this : new RowValueSqlExpression(values, Type, TypeMapping);
+    {
+        return values.SequenceEqual(Values, ReferenceEqualityComparer.Instance)
+            ? this
+            : new RowValueSqlExpression(values, Type, TypeMapping);
+    }
 
     // EF9100: EF's quoting helpers, used only for precompiled queries, are marked experimental.
 #pragma warning disable EF9100

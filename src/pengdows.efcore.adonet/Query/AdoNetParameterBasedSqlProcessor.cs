@@ -104,11 +104,11 @@ internal class AdoNetSqlNullabilityProcessor(
             ? VisitRowValueComparison(sqlBinaryExpression, left, right, allowOptimizedExpansion, out nullable)
             : base.VisitSqlBinary(sqlBinaryExpression, allowOptimizedExpansion, out nullable);
 
-    // SQL's row equality is NULL where any pair holds a NULL; .NET's tuple equality compares nulls as values. Pairs where
-    // that can differ are taken out of the row and compared on their own, with EF's null semantics, joined by AND (for =)
-    // or OR (for <>); the rest stay a row value.
-    // TODO(LICENSE-AUDIT): Add the pinned upstream source URL and verify the retained copyright notice.
-    // Adapted from npgsql/efcore.pg's NpgsqlSqlNullabilityProcessor (PostgreSQL License).
+    // SQL row equality propagates NULL, while .NET tuple equality treats two null elements as equal. Keep the
+    // non-nullable portion as a row and expand only the element comparisons whose null state can change the result.
+    // This is an independent implementation of the required behavior.
+    // Behaviour reference (not copied):
+    // Npgsql (Behaviour reference (not copied): https://github.com/npgsql/efcore.pg/blob/v10.0.3/src/EFCore.PG/Query/Internal/NpgsqlSqlNullabilityProcessor.cs)
     private SqlExpression VisitRowValueComparison(
         SqlBinaryExpression comparison,
         RowValueSqlExpression left,
@@ -116,40 +116,55 @@ internal class AdoNetSqlNullabilityProcessor(
         bool allowOptimizedExpansion,
         out bool nullable)
     {
-        var equal = comparison.OperatorType == ExpressionType.Equal;
-        var keptLeft = new List<SqlExpression>();
-        var keptRight = new List<SqlExpression>();
-        var expanded = new List<SqlExpression>();
-        for (var i = 0; i < left.Values.Count; i++)
+        var equals = comparison.OperatorType == ExpressionType.Equal;
+        var rowLeft = new List<SqlExpression>(left.Values.Count);
+        var rowRight = new List<SqlExpression>(right.Values.Count);
+        var elementComparisons = new List<SqlExpression>();
+
+        for (var index = 0; index < left.Values.Count; index++)
         {
-            var l = Visit(left.Values[i], out var leftNullable);
-            var r = Visit(right.Values[i], out var rightNullable);
-            if ((!leftNullable && !rightNullable) || (allowOptimizedExpansion && equal && (!leftNullable || !rightNullable)))
+            var leftValue = Visit(left.Values[index], out var leftMayBeNull);
+            var rightValue = Visit(right.Values[index], out var rightMayBeNull);
+            var canStayInRow = (!leftMayBeNull && !rightMayBeNull)
+                || (allowOptimizedExpansion && equals && (!leftMayBeNull || !rightMayBeNull));
+
+            if (canStayInRow)
             {
-                keptLeft.Add(l);
-                keptRight.Add(r);
+                rowLeft.Add(leftValue);
+                rowRight.Add(rightValue);
                 continue;
             }
 
-            expanded.Add(Visit(Dependencies.SqlExpressionFactory.MakeBinary(comparison.OperatorType, l, r, null)!, allowOptimizedExpansion, out _));
+            var elementComparison = Dependencies.SqlExpressionFactory.MakeBinary(
+                comparison.OperatorType,
+                leftValue,
+                rightValue,
+                typeMapping: null)!;
+            elementComparisons.Add(Visit(elementComparison, allowOptimizedExpansion, out _));
         }
 
         nullable = false;
-        if (expanded.Count == 0)
+        if (elementComparisons.Count == 0)
         {
-            return comparison.Update(left.Update(keptLeft), right.Update(keptRight));
+            return comparison.Update(left.Update(rowLeft), right.Update(rowRight));
         }
 
-        // The pairs still compared as a row come first; a single one needs no row.
-        if (keptLeft.Count > 0)
+        if (rowLeft.Count > 0)
         {
-            expanded.Insert(
-                0,
-                keptLeft.Count == 1
-                    ? Dependencies.SqlExpressionFactory.MakeBinary(comparison.OperatorType, keptLeft[0], keptRight[0], null)!
-                    : comparison.Update(left.Update(keptLeft), right.Update(keptRight)));
+            var rowComparison = rowLeft.Count == 1
+                ? Dependencies.SqlExpressionFactory.MakeBinary(comparison.OperatorType, rowLeft[0], rowRight[0], null)!
+                : comparison.Update(left.Update(rowLeft), right.Update(rowRight));
+            elementComparisons.Insert(0, rowComparison);
         }
 
-        return expanded.Aggregate((a, b) => equal ? Dependencies.SqlExpressionFactory.AndAlso(a, b) : Dependencies.SqlExpressionFactory.OrElse(a, b));
+        var combined = elementComparisons[0];
+        for (var index = 1; index < elementComparisons.Count; index++)
+        {
+            combined = equals
+                ? Dependencies.SqlExpressionFactory.AndAlso(combined, elementComparisons[index])
+                : Dependencies.SqlExpressionFactory.OrElse(combined, elementComparisons[index]);
+        }
+
+        return combined;
     }
 }

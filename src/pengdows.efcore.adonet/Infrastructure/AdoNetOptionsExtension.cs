@@ -16,6 +16,7 @@ public class AdoNetOptionsExtension : RelationalOptionsExtension
     private DbProviderFactory? _sourceFactory;
     private bool _dataSourceProbed;
     private QuerySplittingBehavior? _adoNetQuerySplittingBehavior;
+    private bool _reverseNullOrdering;
 
     public AdoNetOptionsExtension()
     {
@@ -31,6 +32,7 @@ public class AdoNetOptionsExtension : RelationalOptionsExtension
         _sourceFactory = copyFrom._sourceFactory;
         _dataSourceProbed = copyFrom._dataSourceProbed;
         _adoNetQuerySplittingBehavior = copyFrom._adoNetQuerySplittingBehavior;
+        _reverseNullOrdering = copyFrom._reverseNullOrdering;
     }
 
     public override DbContextOptionsExtensionInfo Info
@@ -52,6 +54,21 @@ public class AdoNetOptionsExtension : RelationalOptionsExtension
     {
         var clone = (AdoNetOptionsExtension)Clone();
         clone._adoNetQuerySplittingBehavior = null;
+        return clone;
+    }
+
+    /// <summary>
+    ///     Whether every ORDER BY says where nulls sort (<c>NULLS FIRST</c> ascending, <c>NULLS LAST</c> descending), so they sort
+    ///     as in .NET and SQL Server (Behaviour reference (not copied): https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.SqlServer/Query/Internal/SqlServerQuerySqlGenerator.cs) whatever the database's own default is. Not public, as in the providers it follows: the
+    ///     indexes would need to be created to match for such an order to use them.
+    /// </summary>
+    internal bool ReverseNullOrdering
+        => _reverseNullOrdering;
+
+    internal AdoNetOptionsExtension WithReverseNullOrdering(bool reverseNullOrdering)
+    {
+        var clone = (AdoNetOptionsExtension)Clone();
+        clone._reverseNullOrdering = reverseNullOrdering;
         return clone;
     }
 
@@ -184,11 +201,12 @@ public class AdoNetOptionsExtension : RelationalOptionsExtension
         // The dialect is consumed by singleton services and registers services of its own, so it partitions the internal
         // service provider. Equality is the dialect's: reference equality unless it defines value equality.
         public override int GetServiceProviderHashCode()
-            => Extension.ChosenDialect?.GetHashCode() ?? 0;
+            => HashCode.Combine(Extension.ChosenDialect, Extension._reverseNullOrdering);
 
         public override bool ShouldUseSameServiceProvider(DbContextOptionsExtensionInfo other)
             => other is ExtensionInfo otherInfo
-                && Equals(Extension.ChosenDialect, otherInfo.Extension.ChosenDialect);
+                && Equals(Extension.ChosenDialect, otherInfo.Extension.ChosenDialect)
+                && Extension._reverseNullOrdering == otherInfo.Extension._reverseNullOrdering;
 
         public override string LogFragment
             => base.LogFragment + "Dialect=" + (Extension.ChosenDialect?.Name ?? "(none)") + " ";

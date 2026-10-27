@@ -225,6 +225,17 @@ public class AdoNetDateTimeOffsetTypeMapping : DateTimeOffsetTypeMapping
 
     protected override string GenerateNonNullSqlLiteral(object value)
         => _dialect.FormatLiteral(value, StoreType, base.GenerateNonNullSqlLiteral(value));
+
+    protected override void ConfigureParameter(DbParameter parameter)
+    {
+        base.ConfigureParameter(parameter);
+
+        // The same instant at offset zero, for a driver that refuses any other offset.
+        if (_dialect.WritesDateTimeOffsetAsUtc && parameter.Value is DateTimeOffset value && value.Offset != TimeSpan.Zero)
+        {
+            parameter.Value = value.ToUniversalTime();
+        }
+    }
 }
 
 public class AdoNetDateOnlyTypeMapping : DateOnlyTypeMapping

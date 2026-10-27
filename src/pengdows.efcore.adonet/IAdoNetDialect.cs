@@ -198,6 +198,12 @@ public interface ITypeMappingDialect
     ///     datetime type its drivers bind as DbType.DateTime.
     /// </summary>
     System.Data.DbType DateTimeDbType { get; }
+
+    /// <summary>
+    ///     Whether the driver writes a DateTimeOffset parameter only at offset zero, so one is converted to UTC (the same
+    ///     instant) before it binds. False where the driver takes any offset.
+    /// </summary>
+    bool WritesDateTimeOffsetAsUtc => false;
 }
 
 /// <summary>The facets of a property that can change its store type.</summary>

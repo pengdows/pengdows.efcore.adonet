@@ -1,12 +1,15 @@
 using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Query;
+using pengdows.efcore.adonet.Infrastructure;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace pengdows.efcore.adonet.Query;
 
 /// <summary>EF's relational SQL, with paging, functions, <c>LongCount</c> and bulk DML as the dialect writes them.</summary>
-internal class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencies, ISqlDialect dialect, ITypeMappingDialect typeMappings)
+internal class AdoNetQuerySqlGenerator(
+    QuerySqlGeneratorDependencies dependencies, ISqlDialect dialect, ITypeMappingDialect typeMappings, bool reverseNullOrdering = false)
     : QuerySqlGenerator(dependencies), IQuerySqlWriter
 {
     private TableExpression? _qualifyWithTableName;
@@ -328,8 +331,38 @@ internal class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencie
             return sqlBinaryExpression;
         }
 
+        // A native JSON column compared with JSON text: a bare string is a JSON string scalar to some databases, which
+        // equals no document, so the text is turned into a JSON value first.
+        if (sqlBinaryExpression is { OperatorType: ExpressionType.Equal or ExpressionType.NotEqual }
+            && dialect.Json is { } json
+            && (IsJsonDocument(sqlBinaryExpression.Left, json) ? sqlBinaryExpression.Right : IsJsonDocument(sqlBinaryExpression.Right, json) ? sqlBinaryExpression.Left : null)
+                is SqlConstantExpression or SqlParameterExpression)
+        {
+            var jsonOnLeft = IsJsonDocument(sqlBinaryExpression.Left, json);
+            var text = jsonOnLeft ? sqlBinaryExpression.Right : sqlBinaryExpression.Left;
+            void Operand(Expression e)
+            {
+                if (ReferenceEquals(e, text))
+                {
+                    SqlTemplate.Write(json.FromText, [e], s => Sql.Append(s), x => Visit(x));
+                }
+                else
+                {
+                    Visit(e);
+                }
+            }
+
+            Operand(sqlBinaryExpression.Left);
+            Sql.Append(sqlBinaryExpression.OperatorType == ExpressionType.Equal ? " = " : " <> ");
+            Operand(sqlBinaryExpression.Right);
+            return sqlBinaryExpression;
+        }
+
         return base.VisitSqlBinary(sqlBinaryExpression);
     }
+
+    private static bool IsJsonDocument(SqlExpression operand, JsonSyntax json)
+        => operand is ColumnExpression && string.Equals(operand.TypeMapping?.StoreType, json.StoreType, StringComparison.OrdinalIgnoreCase);
 
     // An operand written into an operator template is parenthesized when it is an operation itself: databases order bitwise
     // operators differently (in some & binds tighter than |, in others they are equal).
@@ -416,6 +449,17 @@ internal class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencie
             _ => false
         });
 
+    protected override Expression VisitOrdering(OrderingExpression orderingExpression)
+    {
+        base.VisitOrdering(orderingExpression);
+        if (reverseNullOrdering)
+        {
+            Sql.Append(orderingExpression.IsAscending ? " NULLS FIRST" : " NULLS LAST");
+        }
+
+        return orderingExpression;
+    }
+
     protected override void GenerateOrderings(SelectExpression selectExpression)
     {
         base.GenerateOrderings(selectExpression);
@@ -485,9 +529,39 @@ internal class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencie
     }
 }
 
-internal class AdoNetQuerySqlGeneratorFactory(QuerySqlGeneratorDependencies dependencies, ISqlDialect dialect, ITypeMappingDialect typeMappings)
+internal class AdoNetQuerySqlGeneratorFactory(
+    QuerySqlGeneratorDependencies dependencies, ISqlDialect dialect, ITypeMappingDialect typeMappings, IAdoNetSingletonOptions options)
     : IQuerySqlGeneratorFactory
 {
     public virtual QuerySqlGenerator Create()
-        => new AdoNetQuerySqlGenerator(dependencies, dialect, typeMappings);
+        => new AdoNetQuerySqlGenerator(dependencies, dialect, typeMappings, options.ReverseNullOrdering);
+}
+
+/// <summary>
+///     The settings from the context's options that the singleton services read. EF initializes this from the options of the
+///     first context that uses the service provider, however the provider was built, and checks the others against it.
+/// </summary>
+internal interface IAdoNetSingletonOptions : ISingletonOptions
+{
+    /// <summary>Whether every ORDER BY says where nulls sort; see <see cref="AdoNetOptionsExtension.ReverseNullOrdering" />.</summary>
+    bool ReverseNullOrdering { get; }
+}
+
+internal sealed class AdoNetSingletonOptions : IAdoNetSingletonOptions
+{
+    public bool ReverseNullOrdering { get; private set; }
+
+    public void Initialize(IDbContextOptions options)
+        => ReverseNullOrdering = options.FindExtension<AdoNetOptionsExtension>()?.ReverseNullOrdering ?? false;
+
+    public void Validate(IDbContextOptions options)
+    {
+        var requested = options.FindExtension<AdoNetOptionsExtension>()?.ReverseNullOrdering ?? false;
+        if (requested != ReverseNullOrdering)
+        {
+            throw new InvalidOperationException(
+                "ReverseNullOrdering changed between contexts that share a service provider. Set it the same on every one, "
+                + "or give each its own service provider.");
+        }
+    }
 }

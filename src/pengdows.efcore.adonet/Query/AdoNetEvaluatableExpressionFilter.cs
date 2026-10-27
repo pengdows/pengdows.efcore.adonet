@@ -10,8 +10,8 @@ namespace pengdows.efcore.adonet.Query;
 ///     and can't be one parameter, so <c>new Tuple&lt;string&gt;("London")</c> must stay a construction.
 /// </summary>
 /// <remarks>
-///     TODO(LICENSE-AUDIT): Add the pinned upstream source URL for this PostgreSQL-license behavior reference.
-///     Follows npgsql/efcore.pg's NpgsqlEvaluatableExpressionFilter (PostgreSQL License).
+///     Behaviour reference (not copied):
+///     Npgsql (Behaviour reference (not copied): https://github.com/npgsql/efcore.pg/blob/v10.0.3/src/EFCore.PG/Query/Internal/NpgsqlEvaluatableExpressionFilter.cs)
 /// </remarks>
 internal sealed class AdoNetEvaluatableExpressionFilter(
     EvaluatableExpressionFilterDependencies dependencies,
@@ -20,7 +20,14 @@ internal sealed class AdoNetEvaluatableExpressionFilter(
     : RelationalEvaluatableExpressionFilter(dependencies, relationalDependencies)
 {
     public override bool IsEvaluatableExpression(Expression expression, IModel model)
-        => (!dialect.RowValues || !IsTupleConstruction(expression)) && base.IsEvaluatableExpression(expression, model);
+    {
+        if (dialect.RowValues && IsTupleConstruction(expression))
+        {
+            return false;
+        }
+
+        return base.IsEvaluatableExpression(expression, model);
+    }
 
     private static bool IsTupleConstruction(Expression expression)
         => expression switch

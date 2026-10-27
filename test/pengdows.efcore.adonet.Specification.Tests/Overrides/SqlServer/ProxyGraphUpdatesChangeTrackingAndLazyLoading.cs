@@ -1,0 +1,4 @@
+namespace pengdows.efcore.adonet.Specification.Tests.SqlServer;
+
+public class ProxyGraphUpdatesChangeTrackingAndLazyLoadingSqlServerTest(ProxyGraphUpdatesAdoNetTest.ChangeTrackingAndLazyLoading<SqlServerHost>.ProxyFixture fixture)
+    : ProxyGraphUpdatesAdoNetTest.ChangeTrackingAndLazyLoading<SqlServerHost>(fixture);

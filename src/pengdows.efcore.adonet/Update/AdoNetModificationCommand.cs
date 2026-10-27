@@ -73,7 +73,8 @@ internal sealed class AdoNetModificationCommand : ModificationCommand
     protected override void ProcessSinglePropertyJsonUpdate(ref ColumnModificationParameters parameters)
     {
         var mapping = parameters.Property!.GetTypeMapping();
-        if (parameters.Property.IsPrimitiveCollection && parameters.Value is byte[] bytes)
+        // The CLR lets an sbyte[] satisfy `is byte[]`, which would write a signed-byte collection as base64 text.
+        if (parameters.Property.IsPrimitiveCollection && parameters.Value is byte[] bytes && bytes.GetType() == typeof(byte[]))
         {
             parameters = parameters with { Value = JsonSerializer.Serialize(bytes) };
             return;

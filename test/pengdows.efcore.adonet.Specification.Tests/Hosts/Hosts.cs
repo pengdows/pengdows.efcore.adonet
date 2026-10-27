@@ -10,6 +10,8 @@ using pengdows.efcore.adonet.postgresql;
 using pengdows.efcore.adonet.sqlite;
 using pengdows.efcore.adonet.sqlserver;
 using pengdows.flatfile;
+using pengdows.stormgate;
+using pengdows.stormgate.EntityFrameworkCore;
 using Testcontainers.MsSql;
 using Testcontainers.MySql;
 using Testcontainers.PostgreSql;
@@ -40,10 +42,16 @@ public abstract class ServerHost : IDatabaseHost
     public abstract DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, DbConnection connection, Action<AdoNetDbContextOptionsBuilder> configure);
     public abstract IAdoNetDialect Dialect { get; }
 
+    protected virtual async Task<DbConnection> OpenAdminAsync()
+    {
+        var connection = CreateConnection(AdminConnectionString);
+        await connection.OpenAsync();
+        return connection;
+    }
+
     public async Task CreateEmptyDatabaseAsync(string database)
     {
-        await using var connection = CreateConnection(AdminConnectionString);
-        await connection.OpenAsync();
+        await using var connection = await OpenAdminAsync();
         foreach (var sql in RecreateSql(database))
         {
             await using var command = connection.CreateCommand();
@@ -93,22 +101,44 @@ public sealed class PostgreSqlHost : ServerHost
 
     private static readonly RunContainer Container = new(() => new PostgreSqlBuilder("postgres:17").Build());
 
+    // The image allows 25 connections in all and a few go to administration. Npgsql pools per connection string and each test
+    // store has its own database, so a pool size can't bound the total: one StormGate holds the budget for every connection the
+    // run opens, EF's and the admin ones, and pooling is off so a closed connection frees its server slot at once.
+    private const int ConnectionBudget = 22;
+
+    private static readonly Lazy<StormGate> Gate = new(() => StormGate.Create(
+        Npgsql.NpgsqlFactory.Instance, WithoutPooling(Container.ConnectionString), ConnectionBudget, TimeSpan.FromMinutes(5)));
+
+    private static readonly Lazy<StormGateConnectionInterceptor> Interceptor = new(() => new StormGateConnectionInterceptor(Gate.Value));
+
+    private static string WithoutPooling(string connectionString)
+        => new Npgsql.NpgsqlConnectionStringBuilder(connectionString) { Pooling = false }.ConnectionString;
+
     protected override string AdminConnectionString => Container.ConnectionString;
+    protected override async Task<DbConnection> OpenAdminAsync() => await Gate.Value.OpenAsync();
     public override IAdoNetDialect Dialect => PostgreSqlDialect.Instance;
 
     protected override IEnumerable<string> RecreateSql(string database)
         => [$"DROP DATABASE IF EXISTS \"{database}\" WITH (FORCE)", $"CREATE DATABASE \"{database}\""];
 
     public override string ConnectionStringFor(string database)
-        => new Npgsql.NpgsqlConnectionStringBuilder(Container.ConnectionString) { Database = database, MaxPoolSize = 22 }.ConnectionString;
+        => new Npgsql.NpgsqlConnectionStringBuilder(Container.ConnectionString) { Database = database, Pooling = false }.ConnectionString;
 
     public override DbConnection CreateConnection(string connectionString) => new Npgsql.NpgsqlConnection(connectionString);
 
     public override DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, string connectionString, Action<AdoNetDbContextOptionsBuilder> configure)
-        => builder.UseAdoNetPostgreSql(connectionString, configure);
+        => builder.UseAdoNetPostgreSql(connectionString, NullsFirst(configure)).UseStormGate(Interceptor.Value);
 
     public override DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, DbConnection connection, Action<AdoNetDbContextOptionsBuilder> configure)
-        => builder.UseAdoNetPostgreSql(connection, contextOwnsConnection: false, configure);
+        => builder.UseAdoNetPostgreSql(connection, contextOwnsConnection: false, NullsFirst(configure)).UseStormGate(Interceptor.Value);
+
+    // EF's tests expect nulls first, as in .NET and SQL Server; PostgreSQL sorts them last unless told.
+    private static Action<AdoNetDbContextOptionsBuilder> NullsFirst(Action<AdoNetDbContextOptionsBuilder> configure)
+        => o =>
+        {
+            configure(o);
+            o.ReverseNullOrdering();
+        };
 }
 
 public class MySqlHost : ServerHost
@@ -272,10 +302,18 @@ public sealed class DuckDbHost : FileHost
     public override DbConnection CreateConnection(string connectionString) => new DuckDBConnection(connectionString);
 
     public override DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, string connectionString, Action<AdoNetDbContextOptionsBuilder> configure)
-        => builder.UseAdoNetDuckDb(connectionString, configure);
+        => builder.UseAdoNetDuckDb(connectionString, NullsFirst(configure));
 
     public override DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, DbConnection connection, Action<AdoNetDbContextOptionsBuilder> configure)
-        => builder.UseAdoNetDuckDb(connection, contextOwnsConnection: false, configure);
+        => builder.UseAdoNetDuckDb(connection, contextOwnsConnection: false, NullsFirst(configure));
+
+    // EF's tests expect nulls first, as in .NET and SQL Server; DuckDB sorts them last unless told.
+    private static Action<AdoNetDbContextOptionsBuilder> NullsFirst(Action<AdoNetDbContextOptionsBuilder> configure)
+        => o =>
+        {
+            configure(o);
+            o.ReverseNullOrdering();
+        };
 }
 
 public sealed class FlatFileHost : FileHost
@@ -299,8 +337,16 @@ public sealed class FlatFileHost : FileHost
     public override DbConnection CreateConnection(string connectionString) => new FlatFileConnection { ConnectionString = connectionString };
 
     public override DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, string connectionString, Action<AdoNetDbContextOptionsBuilder> configure)
-        => builder.UseAdoNetFlatFile(connectionString, configure);
+        => builder.UseAdoNetFlatFile(connectionString, NullsFirst(configure));
 
     public override DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, DbConnection connection, Action<AdoNetDbContextOptionsBuilder> configure)
-        => builder.UseAdoNetFlatFile(connection, contextOwnsConnection: false, configure);
+        => builder.UseAdoNetFlatFile(connection, contextOwnsConnection: false, NullsFirst(configure));
+
+    // EF's tests expect nulls first, as in .NET and SQL Server; ISO leaves the default to the implementation.
+    private static Action<AdoNetDbContextOptionsBuilder> NullsFirst(Action<AdoNetDbContextOptionsBuilder> configure)
+        => o =>
+        {
+            configure(o);
+            o.ReverseNullOrdering();
+        };
 }

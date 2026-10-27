@@ -1,0 +1,4 @@
+namespace pengdows.efcore.adonet.Specification.Tests.PostgreSql;
+
+public class ProxyGraphUpdatesChangeTrackingAndLazyLoadingPostgreSqlTest(ProxyGraphUpdatesAdoNetTest.ChangeTrackingAndLazyLoading<PostgreSqlHost>.ProxyFixture fixture)
+    : ProxyGraphUpdatesAdoNetTest.ChangeTrackingAndLazyLoading<PostgreSqlHost>(fixture);
