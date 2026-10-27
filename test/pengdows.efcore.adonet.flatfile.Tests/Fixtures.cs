@@ -30,8 +30,6 @@ public sealed class FlatFileFixture : ProviderFixture
         ["Alter_column_changes_size_nullability_and_default"] =
             "pengdows.flatfile 0.2.1-preview.15 leaves foreign keys naming a table after the table is renamed",
 
-        ["Math_on_doubles"] = "pengdows.flatfile 0.2.1-preview.15 has no POWER",
-
         // INTERVAL '0 01:02:03.5' DAY TO SECOND (ISO). The engine's interval literals have one field and no precision.
         ["Time_span_constants"] = "pengdows.flatfile 0.2.1-preview.15 has no DAY TO SECOND interval literal",
 
