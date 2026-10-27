@@ -432,7 +432,16 @@ internal class AdoNetQuerySqlGenerator(
             {
                 if (ReferenceEquals(e, text))
                 {
-                    SqlTemplate.Write(json.FromText, [e], s => Sql.Append(s), x => Visit(x));
+                    // SQL Server's JSON_VALUE result is already a scalar SQL value; wrapping a
+                    // string literal in JSON_QUERY produces an invalid document.
+                    if (json.StoreType.Equals("nvarchar(max)", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Visit(e);
+                    }
+                    else
+                    {
+                        SqlTemplate.Write(json.FromText, [e], s => Sql.Append(s), x => Visit(x));
+                    }
                 }
                 else
                 {

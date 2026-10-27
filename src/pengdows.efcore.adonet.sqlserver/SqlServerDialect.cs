@@ -80,7 +80,7 @@ internal sealed class SqlServerSql : AnsiSqlDialect
         binaryValue: "(SELECT [value] FROM OPENJSON({0}) WITH ([value] varbinary(max) {1}))",
         concatenate: "CONCAT({0}, {1})",
         set: "JSON_MODIFY({0}, {1}, {2})",
-        fromText: "{0}")
+        fromText: "JSON_QUERY({0})")
     {
         // OPENJSON's default value column is nvarchar(max); cast it in a derived table so EF's
         // shaper receives the element's declared store type while retaining the array ordinal.

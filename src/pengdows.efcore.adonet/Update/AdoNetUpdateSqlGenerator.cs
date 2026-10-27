@@ -77,7 +77,17 @@ internal class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependenc
                 ? $"(jsonb_build_array(CAST({replacement} AS text)) -> 0)"
                 : $"(jsonb_build_array(CAST({replacement} AS text)) -> 0)";
         }
-        else if (isText)
+        else if (dialect.Sql.Json.StoreType.Equals("nvarchar(max)", StringComparison.OrdinalIgnoreCase)
+            && providerType == typeof(bool))
+        {
+            // Primitive JSON booleans are represented by EF's string mapping. SQL Server's
+            // JSON_MODIFY recognizes a bit value as a JSON boolean, whereas a text parameter
+            // is emitted as a JSON string.
+            replacement = $"CONVERT(bit, {replacement})";
+        }
+        else if (isText
+            && !(dialect.Sql.Json.StoreType.Equals("nvarchar(max)", StringComparison.OrdinalIgnoreCase)
+                && providerType == typeof(bool)))
         {
             replacement = json.FromText.Replace("{0}", replacement, StringComparison.Ordinal);
         }
