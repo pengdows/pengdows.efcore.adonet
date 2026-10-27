@@ -188,6 +188,10 @@ internal class AdoNetQueryableMethodTranslatingExpressionVisitor : RelationalQue
         ref SqlExpression? existingSetterValue)
     {
         var json = _dialect.Json ?? throw new UnreachableException();
+        if (json.Set is null)
+        {
+            throw new NotSupportedException("This provider does not support JSON partial updates because the required mutation syntax is not ISO SQL.");
+        }
         ColumnExpression column;
         IReadOnlyList<PathSegment> path;
         var useRawValue = false;

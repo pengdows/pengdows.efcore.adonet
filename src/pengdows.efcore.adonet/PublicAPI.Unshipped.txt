@@ -17,6 +17,7 @@ override pengdows.efcore.adonet.Storage.AdoNetDateTimeOffsetTypeMapping.Clone(Mi
 override pengdows.efcore.adonet.Storage.AdoNetDateTimeOffsetTypeMapping.GenerateNonNullSqlLiteral(object! value) -> string!
 override pengdows.efcore.adonet.Storage.AdoNetDateTimeTypeMapping.Clone(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters) -> Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping!
 override pengdows.efcore.adonet.Storage.AdoNetDateTimeTypeMapping.ConfigureParameter(System.Data.Common.DbParameter! parameter) -> void
+override pengdows.efcore.adonet.Storage.AdoNetDateTimeOffsetTypeMapping.ConfigureParameter(System.Data.Common.DbParameter! parameter) -> void
 override pengdows.efcore.adonet.Storage.AdoNetDateTimeTypeMapping.GenerateNonNullSqlLiteral(object! value) -> string!
 override pengdows.efcore.adonet.Storage.AdoNetDecimalTypeMapping.Clone(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters) -> Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping!
 override pengdows.efcore.adonet.Storage.AdoNetDecimalTypeMapping.ConfigureParameter(System.Data.Common.DbParameter! parameter) -> void
@@ -257,6 +258,7 @@ pengdows.efcore.adonet.ISqlDialect.TrueLiteral.get -> string!
 pengdows.efcore.adonet.ITypeMappingDialect
 pengdows.efcore.adonet.ITypeMappingDialect.CastTarget(string! storeType) -> string!
 pengdows.efcore.adonet.ITypeMappingDialect.DateTimeDbType.get -> System.Data.DbType
+pengdows.efcore.adonet.ITypeMappingDialect.WritesDateTimeOffsetAsUtc.get -> bool
 pengdows.efcore.adonet.ITypeMappingDialect.FormatLiteral(object! value, string! storeType, string! literal) -> string!
 pengdows.efcore.adonet.ITypeMappingDialect.GetClrTypes(string! storeTypeBase) -> System.Collections.Generic.IReadOnlyList<System.Type!>!
 pengdows.efcore.adonet.ITypeMappingDialect.GetStoreType(System.Type! clrType) -> string?
@@ -267,9 +269,9 @@ pengdows.efcore.adonet.JsonSyntax.BooleanValue.get -> string?
 pengdows.efcore.adonet.JsonSyntax.BinaryValue.get -> string?
 pengdows.efcore.adonet.JsonSyntax.Concatenate.get -> string!
 pengdows.efcore.adonet.JsonSyntax.FromText.get -> string!
-pengdows.efcore.adonet.JsonSyntax.JsonSyntax(string! storeType, string! value, string! query, string! typedValue, string? booleanValue, string? binaryValue, string! concatenate, string! set, string! fromText) -> void
+pengdows.efcore.adonet.JsonSyntax.JsonSyntax(string! storeType, string! value, string! query, string! typedValue, string? booleanValue, string? binaryValue, string! concatenate, string? set, string! fromText) -> void
 pengdows.efcore.adonet.JsonSyntax.Query.get -> string!
-pengdows.efcore.adonet.JsonSyntax.Set.get -> string!
+pengdows.efcore.adonet.JsonSyntax.Set.get -> string?
 pengdows.efcore.adonet.JsonSyntax.StoreType.get -> string!
 pengdows.efcore.adonet.JsonSyntax.TypedValue.get -> string!
 pengdows.efcore.adonet.JsonSyntax.Value.get -> string!
@@ -409,6 +411,7 @@ virtual pengdows.efcore.adonet.AnsiSqlDialect.SupportsSchemas.get -> bool
 virtual pengdows.efcore.adonet.AnsiSqlDialect.TrueLiteral.get -> string!
 virtual pengdows.efcore.adonet.AnsiTypeMappings.CastTarget(string! storeType) -> string!
 virtual pengdows.efcore.adonet.AnsiTypeMappings.DateTimeDbType.get -> System.Data.DbType
+virtual pengdows.efcore.adonet.AnsiTypeMappings.WritesDateTimeOffsetAsUtc.get -> bool
 virtual pengdows.efcore.adonet.AnsiTypeMappings.FormatLiteral(object! value, string! storeType, string! literal) -> string!
 virtual pengdows.efcore.adonet.AnsiTypeMappings.GetClrTypes(string! storeTypeBase) -> System.Collections.Generic.IReadOnlyList<System.Type!>!
 virtual pengdows.efcore.adonet.AnsiTypeMappings.GetStoreType(System.Type! clrType) -> string?

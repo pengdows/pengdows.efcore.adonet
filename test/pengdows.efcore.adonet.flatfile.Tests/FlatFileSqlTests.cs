@@ -9,6 +9,16 @@ public class FlatFileSqlTests
     public void Advertises_independent_active_readers()
         => Assert.True(FlatFileDialect.Instance.Capabilities.SupportsMultipleActiveReaders);
 
+    [Fact]
+    public void Advertises_iso_json_queries_and_json_table_without_vendor_mutation()
+    {
+        var json = FlatFileDialect.Instance.Sql.Json!;
+        Assert.Equal("JSON", json.StoreType);
+        Assert.Contains("JSON_VALUE", json.Value);
+        Assert.Contains("JSON_TABLE", json.ArrayElements);
+        Assert.Null(json.Set);
+    }
+
     private static BlogContext Context(Action<DbContextOptionsBuilder> configure)
     {
         var builder = new DbContextOptionsBuilder<BlogContext>();

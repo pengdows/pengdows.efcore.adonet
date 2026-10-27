@@ -416,7 +416,7 @@ public sealed class JsonSyntax(
     string? booleanValue,
     string? binaryValue,
     string concatenate,
-    string set,
+    string? set,
     string fromText)
 {
     /// <summary>
@@ -441,7 +441,7 @@ public sealed class JsonSyntax(
     public string? BooleanValue { get; } = booleanValue;
     public string? BinaryValue { get; } = binaryValue;
     public string Concatenate { get; } = concatenate;
-    public string Set { get; } = set;
+    public string? Set { get; } = set;
     public string FromText { get; } = fromText;
 
     /// <summary>

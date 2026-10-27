@@ -35,6 +35,10 @@ internal class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependenc
 
         var json = dialect.Sql.Json
             ?? throw new InvalidOperationException("This update patches a JSON column, which the dialect has no functions for.");
+        if (json.Set is null)
+        {
+            throw new NotSupportedException("This provider does not support JSON partial updates because the required mutation syntax is not ISO SQL.");
+        }
         var property = columnModification.Property;
         var isText = property is null or { IsPrimitiveCollection: true }
             || ((Nullable.GetUnderlyingType(property.GetTypeMapping().Converter?.ProviderClrType ?? property.ClrType)

@@ -24,32 +24,12 @@ public sealed class FlatFileFixture : ProviderFixture
         // Strict ISO SQL, which pengdows.flatfile implements, has no UPDATE ... FROM: an UPDATE whose rows come from a join.
         ["Execute_update_filters_through_a_navigation"] = "strict ISO SQL has no UPDATE ... FROM",
 
-        // ALTER TABLE "Authors" RENAME TO "Writers", then an insert into Shelves: its foreign key still names "Authors".
-        ["Migrate_applies_records_and_reverts_migrations"] =
-            "pengdows.flatfile 0.2.1-preview.15 leaves foreign keys naming a table after the table is renamed",
-        ["Alter_column_changes_size_nullability_and_default"] =
-            "pengdows.flatfile 0.2.1-preview.15 leaves foreign keys naming a table after the table is renamed",
+        // Directory mode has no current-schema setting for unqualified history-table lookup.
+        ["Another_schemas_history_table_is_not_this_ones"] = "flatfile has no current schema for unqualified history-table lookup",
 
-        // INTERVAL '0 01:02:03.5' DAY TO SECOND (ISO). The engine's interval literals have one field and no precision.
-        ["Time_span_constants"] = "pengdows.flatfile 0.2.1-preview.15 has no DAY TO SECOND interval literal",
+        // The engine intentionally holds its writer lock for the connection lifetime.
+        ["An_open_borrowed_connection_can_be_replaced"] = "flatfile writer lock is held for the connection lifetime",
 
-        // WHERE "Double" = 4.9406564584124654E-324: an approximate numeric literal (ISO), read as a decimal, which overflows.
-        ["Floating_point_constants_at_the_edges_of_their_types"] =
-            "pengdows.flatfile 0.2.1-preview.15 parses a literal with an exponent as a decimal and overflows",
-
-        // SELECT "Day" from a DATE column: GetDateTime and GetFieldValue<DateTime> throw InvalidCastException (a DateOnly).
-        ["Bulk_insert_writes_values_as_the_column_type"] = "pengdows.flatfile 0.2.1-preview.15 can't read a DATE as a DateTime",
-
-        // After CREATE TABLE "tenant"."H", an unqualified "H" means that table: CREATE TABLE "H" says it already exists.
-        ["Another_schemas_history_table_is_not_this_ones"] =
-            "pengdows.flatfile 0.2.1-preview.15 resolves an unqualified table name to a table in any schema",
-
-        // WHERE "Hash" = :c through CREATE INDEX ... ("Hash"): ArgumentException "Object must be of type String".
-        ["Unsized_key_and_index_columns_are_created_and_hold_long_values"] =
-            "pengdows.flatfile 0.2.1-preview.15 can't look up a VARBINARY value through an index",
-
-        // A second connection opened while the first is open waits for the first's write lock, taken at open.
-        ["An_open_borrowed_connection_can_be_replaced"] = "pengdows.flatfile 0.2.1-preview.15 takes the write lock when a connection opens"
     };
 
     public override IReadOnlyList<string> ModelSequences { get; } =
