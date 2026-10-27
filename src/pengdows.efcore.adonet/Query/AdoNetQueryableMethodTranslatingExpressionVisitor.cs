@@ -214,6 +214,24 @@ internal class AdoNetQueryableMethodTranslatingExpressionVisitor : RelationalQue
         }
 
         var pathText = JsonPath(path);
+        // PostgreSQL can turn ordinary scalar SQL values into JSON, but temporal and binary
+        // provider values have no jsonb conversion.  Cast those values to their SQL text form;
+        // JSON stores them as strings, matching EF's JSON representation and converters.
+        var valueType = value.TypeMapping?.ClrType ?? value.Type;
+        var valueStoreType = value.TypeMapping?.StoreType ?? "";
+        if (json.StoreType.Equals("jsonb", StringComparison.OrdinalIgnoreCase)
+            && ((valueType == typeof(DateTime)) || (valueType == typeof(DateTimeOffset)) || (valueType == typeof(DateOnly))
+                || (valueType == typeof(TimeOnly)) || (valueType == typeof(TimeSpan)) || (valueType == typeof(Guid))
+                || (valueType == typeof(byte[])) || (valueType == typeof(char))
+                || valueStoreType.Contains("DATE", StringComparison.OrdinalIgnoreCase)
+                || valueStoreType.Contains("TIME", StringComparison.OrdinalIgnoreCase)
+                || valueStoreType.Contains("INTERVAL", StringComparison.OrdinalIgnoreCase)
+                || valueStoreType.Contains("UUID", StringComparison.OrdinalIgnoreCase)
+                || valueStoreType.Contains("BYTEA", StringComparison.OrdinalIgnoreCase)))
+        {
+            value = _sqlExpressionFactory.Convert(value, typeof(string), _typeMappingSource.FindMapping(typeof(string)));
+        }
+
         var replacement = useRawValue
             ? value
             : _sqlExpressionFactory.Call(json.FromText, [value], typeof(string), value.TypeMapping)!;

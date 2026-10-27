@@ -39,17 +39,45 @@ internal class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependenc
         var isText = property is null or { IsPrimitiveCollection: true }
             || ((Nullable.GetUnderlyingType(property.GetTypeMapping().Converter?.ProviderClrType ?? property.ClrType)
                 ?? property.GetTypeMapping().Converter?.ProviderClrType ?? property.ClrType) == typeof(bool));
+        var providerType = property?.GetTypeMapping().Converter?.ProviderClrType ?? property?.ClrType;
+        var storeType = property?.GetRelationalTypeMapping().StoreType ?? "";
+        var scalarNeedsText = dialect.Sql.Json.StoreType.Equals("jsonb", StringComparison.OrdinalIgnoreCase)
+            && !isText
+            && (providerType == typeof(DateTime) || providerType == typeof(DateTimeOffset) || providerType == typeof(DateOnly)
+                || providerType == typeof(TimeOnly) || providerType == typeof(TimeSpan) || providerType == typeof(Guid)
+                || providerType == typeof(byte[]) || providerType == typeof(char)
+                || storeType.Contains("DATE", StringComparison.OrdinalIgnoreCase)
+                || storeType.Contains("TIME", StringComparison.OrdinalIgnoreCase)
+                || storeType.Contains("INTERVAL", StringComparison.OrdinalIgnoreCase)
+                || storeType.Contains("UUID", StringComparison.OrdinalIgnoreCase)
+                || storeType.Contains("BYTEA", StringComparison.OrdinalIgnoreCase));
 
         var value = new StringBuilder();
         base.AppendUpdateColumnValue(updateSqlGeneratorHelper, columnModification, value, name, schema);
         var column = new StringBuilder();
         updateSqlGeneratorHelper.DelimitIdentifier(column, columnModification.ColumnName);
 
+        var replacement = value.ToString();
+        if (scalarNeedsText)
+        {
+            replacement = providerType == typeof(byte[])
+                ? $"(jsonb_build_array(encode(CAST({replacement} AS bytea), 'base64')) -> 0)"
+                : $"(jsonb_build_array(CAST({replacement} AS text)) -> 0)";
+        }
+        else if (isText)
+        {
+            replacement = json.FromText.Replace("{0}", replacement, StringComparison.Ordinal);
+        }
+        else if (json.StoreType.Equals("jsonb", StringComparison.OrdinalIgnoreCase))
+        {
+            replacement = $"(jsonb_build_array({replacement}) -> 0)";
+        }
+
         stringBuilder.Append(
             json.Set
                 .Replace("{0}", column.ToString(), StringComparison.Ordinal)
                 .Replace("{1}", dialect.Sql.StringLiteral(columnModification.JsonPath), StringComparison.Ordinal)
-                .Replace("{2}", isText ? json.FromText.Replace("{0}", value.ToString(), StringComparison.Ordinal) : value.ToString(), StringComparison.Ordinal));
+                .Replace("{2}", replacement, StringComparison.Ordinal));
     }
 
     // Where the driver returns no output parameters from a text CALL, each output goes through a session variable: set before

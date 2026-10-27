@@ -93,8 +93,8 @@ internal class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencie
         var json = dialect.Json
             ?? throw new InvalidOperationException("This query reads a value inside a JSON column, which the dialect has no functions for.");
         var typeMapping = jsonScalarExpression.TypeMapping;
-        var template = typeMapping is Storage.AdoNetJsonTypeMapping || typeMapping?.ElementTypeMapping != null ? json.Query
-            : (Nullable.GetUnderlyingType(jsonScalarExpression.Type) ?? jsonScalarExpression.Type) == typeof(byte[]) && json.BinaryValue != null ? json.BinaryValue
+        var template = (Nullable.GetUnderlyingType(jsonScalarExpression.Type) ?? jsonScalarExpression.Type) == typeof(byte[]) && json.BinaryValue != null ? json.BinaryValue
+            : typeMapping is Storage.AdoNetJsonTypeMapping || typeMapping?.ElementTypeMapping != null ? json.Query
             : typeMapping is not null
                 && (Nullable.GetUnderlyingType(typeMapping.ClrType) ?? typeMapping.ClrType) == typeof(bool)
                 && typeMapping.Converter?.ProviderClrType != typeof(string)

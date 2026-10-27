@@ -2,6 +2,7 @@ using System.Data.Common;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace pengdows.efcore.adonet.Storage;
@@ -58,6 +59,15 @@ internal sealed class AdoNetJsonTypeMapping : JsonTypeMapping
             return;
         }
 
+        // JSON partial updates can carry a native provider value (interval, timestamp, UUID, ...).
+        // Marking those parameters as jsonb makes Npgsql parse their display text before SQL can
+        // convert them into JSON strings. Force jsonb only for already encoded JSON documents.
+        if (parameter.Value is not JsonDocument && parameter.Value is not JsonElement
+            && !(parameter.Value is string text && IsJson(text)))
+        {
+            return;
+        }
+
         var property = parameter.GetType().GetProperty("NpgsqlDbType");
         if (property?.PropertyType.IsEnum != true)
         {
@@ -65,6 +75,19 @@ internal sealed class AdoNetJsonTypeMapping : JsonTypeMapping
         }
 
         property.SetValue(parameter, Enum.Parse(property.PropertyType, "Jsonb", ignoreCase: false));
+    }
+
+    private static bool IsJson(string value)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(value);
+            return document.RootElement.ValueKind is not JsonValueKind.Undefined;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
     }
 
     protected override RelationalTypeMapping Clone(RelationalTypeMappingParameters parameters)

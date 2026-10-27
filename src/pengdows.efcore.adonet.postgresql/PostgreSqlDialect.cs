@@ -180,7 +180,7 @@ internal static class PostgreSqlJson
             "CAST((jsonb_path_query_first({0}, CAST({1} AS jsonpath)) #>> '{}') AS boolean)",
             "decode((jsonb_path_query_first({0}, CAST({1} AS jsonpath)) #>> '{}'), 'base64')",
             "({0} || {1})",
-            "jsonb_set({0}, string_to_array(regexp_replace(regexp_replace({1}, '^\\$\\.?', ''), '\\[([0-9]+)\\]', '.\\1', 'g'), '.'), CAST({2} AS jsonb), true)",
+            "jsonb_set({0}, string_to_array(ltrim(regexp_replace(regexp_replace({1}, '^\\$\\.?', ''), '\\[([0-9]+)\\]', '.\\1', 'g'), '.'), '.'), {2}, true)",
             "CAST({0} AS jsonb)")
     {
         // The shared query generator supplies the table alias after this expression. Wrapping the
