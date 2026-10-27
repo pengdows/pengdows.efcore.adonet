@@ -46,7 +46,7 @@ internal class AdoNetQueryableMethodTranslatingExpressionVisitor : RelationalQue
 
     // A collection of structural types inside a JSON column, queried as a table: one row per element, ordered as the array is,
     // each property read from the element's JSON as it is from a JSON column. A collection at a path is read from there first.
-    // Adapted from EF Core's SQLite provider (MIT, .NET Foundation):
+    // Behaviour reference (not copied): EF Core's SQLite provider (MIT, .NET Foundation):
     // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.Core/Query/Internal/SqliteQueryableMethodTranslatingExpressionVisitor.cs
 #pragma warning disable EF1001 // CreateSelect: EF's provider-facing helper for a JSON collection's select, marked internal like the rest of its provider API.
     protected override ShapedQueryExpression TransformJsonQueryToTable(JsonQueryExpression jsonQueryExpression)
@@ -60,9 +60,7 @@ internal class AdoNetQueryableMethodTranslatingExpressionVisitor : RelationalQue
         var jsonMapping = _typeMappingSource.FindMapping(typeof(JsonTypePlaceholder))!;
         var stringMapping = _typeMappingSource.FindMapping(typeof(string))!;
         var intMapping = _typeMappingSource.FindMapping(typeof(int))!;
-        SqlExpression source = jsonQueryExpression.Path.Count == 0
-            ? jsonQueryExpression.JsonColumn
-            : new JsonScalarExpression(jsonQueryExpression.JsonColumn, jsonQueryExpression.Path, typeof(string), jsonMapping, jsonQueryExpression.IsNullable);
+        SqlExpression source = JsonCollectionSource(jsonQueryExpression, jsonMapping);
 
         var name = jsonQueryExpression.Path.LastOrDefault(p => p.PropertyName != null).PropertyName ?? jsonQueryExpression.JsonColumn.Name;
         var table = new JsonArrayTableExpression(_sqlAliasManager.GenerateTableAlias(name), source, jsonMapping);
@@ -127,8 +125,13 @@ internal class AdoNetQueryableMethodTranslatingExpressionVisitor : RelationalQue
         public override bool IsDefined(Type attributeType, bool inherit) => throw new NotSupportedException();
     }
 
+    private static SqlExpression JsonCollectionSource(JsonQueryExpression query, RelationalTypeMapping jsonMapping)
+        => query.Path.Count == 0
+            ? query.JsonColumn
+            : new JsonScalarExpression(query.JsonColumn, query.Path, typeof(string), jsonMapping, query.IsNullable);
+
     // A collection column, or a parameter collection that isn't expanded into an IN list, queried as the table of its JSON array's
-    // elements, ordered as the array is. Adapted from EF Core's SQLite provider (MIT, .NET Foundation):
+    // elements, ordered as the array is. Behaviour reference (not copied): EF Core's SQLite provider (MIT, .NET Foundation):
     // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.Core/Query/Internal/SqliteQueryableMethodTranslatingExpressionVisitor.cs
     protected override ShapedQueryExpression? TranslatePrimitiveCollection(
         SqlExpression sqlExpression,
@@ -294,7 +297,7 @@ internal class AdoNetQueryableMethodTranslatingExpressionVisitor : RelationalQue
     }
 
     // A JSON array table ordered by its ordinal is in its natural order, so Distinct after it isn't Distinct after an ordering.
-    // Adapted from EF Core's SQLite provider (MIT, .NET Foundation):
+    // Behaviour reference (not copied): EF Core's SQLite provider (MIT, .NET Foundation):
     // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.Core/Query/Internal/SqliteQueryableMethodTranslatingExpressionVisitor.cs
     // A JSON collection of structural types is that table, pushed down into a subquery ordered by the same ordinal.
     protected override bool IsNaturallyOrdered(SelectExpression selectExpression)

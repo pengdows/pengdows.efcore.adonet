@@ -1,5 +1,5 @@
-// Portions adapted from EF Core's SqlServerTransientExceptionDetector.
-// Copyright (c) .NET Foundation and Contributors. Licensed under the MIT license.
+// Behaviour reference (not copied): EF Core's SQL Server transient exception policy (MIT, .NET Foundation):
+// https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.SqlServer/Storage/Internal/SqlServerTransientExceptionDetector.cs
 
 using System.ComponentModel;
 using Microsoft.Data.SqlClient;
@@ -10,10 +10,6 @@ namespace pengdows.efcore.adonet.sqlserver;
 ///     SqlClient doesn't report <c>DbException.IsTransient</c>, so SQL Server's transient errors are the error numbers EF's
 ///     own provider retries: deadlocks, throttling, failovers, dropped connections.
 /// </summary>
-/// <remarks>
-///     Adapted from EF Core's SqlServerTransientExceptionDetector (MIT, .NET Foundation):
-///     https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.SqlServer/Storage/Internal/SqlServerTransientExceptionDetector.cs
-/// </remarks>
 internal sealed record SqlServerCapabilities : DatabaseCapabilities
 {
     private static readonly HashSet<int> TransientNumbers =
@@ -36,6 +32,12 @@ internal sealed record SqlServerCapabilities : DatabaseCapabilities
     public override bool IsTransient(Exception exception)
         => base.IsTransient(exception)
             || ((exception is SqlException sql)
-                && sql.Errors.Cast<SqlError>().Any(e => TransientNumbers.Contains(e.Number)
-                    || ((e.Number == ConnectionFailed) && (exception.InnerException is Win32Exception))));
+                && HasRetryableError(sql, exception.InnerException));
+
+    private static bool HasRetryableError(SqlException exception, Exception? innerException)
+        => exception.Errors.Cast<SqlError>().Any(error => IsRetryableNumber(error.Number, innerException));
+
+    private static bool IsRetryableNumber(int number, Exception? innerException)
+        => TransientNumbers.Contains(number)
+            || ((number == ConnectionFailed) && (innerException is Win32Exception));
 }
