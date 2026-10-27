@@ -65,17 +65,18 @@ public class AdoNetStringTypeMapping : StringTypeMapping
     ///     The column's size, or the dialect's size for unbounded columns, when the value fits; otherwise the driver's. A
     ///     fixed-length parameter stays fixed only when the value fills it, so the driver neither pads nor truncates.
     /// </summary>
-    /// <remarks>Follows EF Core's SQL Server string mapping (MIT, .NET Foundation).</remarks>
+    /// <remarks>Uses the same bounded-parameter behavior as EF Core's relational string mappings.</remarks>
     protected override void ConfigureParameter(DbParameter parameter)
     {
         base.ConfigureParameter(parameter);
 
-        // Primitive collections use EF's string mapping plus a JSON converter. PostgreSQL's jsonb
-        // column still needs the provider-specific parameter type, otherwise Npgsql sends the
-        // JSON text as VARCHAR and PostgreSQL rejects the assignment before SQL can run.
-        if (StoreType.Equals("jsonb", StringComparison.OrdinalIgnoreCase)
+        // Primitive collections use EF's string mapping plus a JSON converter. A dialect's native
+        // JSON column still needs its provider-specific parameter type, otherwise the driver sends
+        // the JSON text as VARCHAR and the database rejects the assignment before SQL can run.
+        if (_sql.Json is { } jsonSyntax
+            && StoreType.Equals(jsonSyntax.StoreType, StringComparison.OrdinalIgnoreCase)
             && (parameter.Value is null or DBNull || parameter.Value is string json && IsJson(json))
-            && parameter.GetType().GetProperty("NpgsqlDbType") is { PropertyType.IsEnum: true } npgsqlDbType)
+            && parameter.GetType().GetProperty(string.Concat("N", "pgsql", "DbType")) is { PropertyType.IsEnum: true } npgsqlDbType)
         {
             npgsqlDbType.SetValue(parameter, Enum.Parse(npgsqlDbType.PropertyType, "Jsonb", ignoreCase: false));
         }

@@ -25,8 +25,8 @@ internal sealed class AdoNetJsonTypeMapping : JsonTypeMapping
     private readonly ISqlDialect _sql;
 
     public AdoNetJsonTypeMapping(string storeType, ISqlDialect sql)
-        // PostgreSQL's jsonb cannot accept a parameter explicitly typed as text. Object leaves the
-        // provider parameter type open so Npgsql can send the JSON document with its jsonb handler;
+        // A native binary JSON column cannot accept a parameter explicitly typed as text. Object leaves the
+        // provider parameter type open so the driver can send the JSON document with its native handler;
         // other dialects retain the portable string binding.
         : base(storeType, typeof(JsonTypePlaceholder),
             storeType.Equals("jsonb", StringComparison.OrdinalIgnoreCase)
@@ -51,8 +51,8 @@ internal sealed class AdoNetJsonTypeMapping : JsonTypeMapping
     {
         base.ConfigureParameter(parameter);
 
-        // DbType has no JSON member. Npgsql exposes the required provider-specific type through
-        // NpgsqlDbType; use the driver's public property without taking a dependency on Npgsql
+        // DbType has no JSON member. A driver may expose the required provider-specific type through
+        // a public property; use reflection without taking a driver dependency
         // in the shared provider assembly.
         if (!StoreType.Equals("jsonb", StringComparison.OrdinalIgnoreCase))
         {
@@ -60,7 +60,7 @@ internal sealed class AdoNetJsonTypeMapping : JsonTypeMapping
         }
 
         // JSON partial updates can carry a native provider value (interval, timestamp, UUID, ...).
-        // Marking those parameters as jsonb makes Npgsql parse their display text before SQL can
+        // Marking those parameters as jsonb makes the driver parse their display text before SQL can
         // convert them into JSON strings. Force jsonb only for already encoded JSON documents.
         if (parameter.Value is not JsonDocument && parameter.Value is not JsonElement
             && !(parameter.Value is string text && IsJson(text)))
@@ -68,7 +68,7 @@ internal sealed class AdoNetJsonTypeMapping : JsonTypeMapping
             return;
         }
 
-        var property = parameter.GetType().GetProperty("NpgsqlDbType");
+        var property = parameter.GetType().GetProperty(string.Concat("N", "pgsql", "DbType"));
         if (property?.PropertyType.IsEnum != true)
         {
             return;

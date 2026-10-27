@@ -214,7 +214,7 @@ internal class AdoNetQueryableMethodTranslatingExpressionVisitor : RelationalQue
         }
 
         var pathText = JsonPath(path);
-        // PostgreSQL can turn ordinary scalar SQL values into JSON, but temporal and binary
+        // Dialects with binary JSON can turn ordinary scalar SQL values into JSON, but temporal and binary
         // provider values have no jsonb conversion.  Cast those values to their SQL text form;
         // JSON stores them as strings, matching EF's JSON representation and converters.
         var valueType = value.TypeMapping?.ClrType ?? value.Type;

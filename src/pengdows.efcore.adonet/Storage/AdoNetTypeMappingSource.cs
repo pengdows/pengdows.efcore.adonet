@@ -104,7 +104,7 @@ internal class AdoNetTypeMappingSource : RelationalTypeMappingSource
         var mapping = base.FindCollectionMapping(info, modelType, providerType, elementMapping);
 
         // EF builds primitive collections on top of the string mapping when no explicit store type was supplied.
-        // Dialects with native JSON functions must use their JSON store type here; otherwise PostgreSQL emits
+        // Dialects with native JSON functions must use their JSON store type here; otherwise the dialect emits
         // jsonb_array_elements(VARCHAR), and equivalent dialects lose their JSON operators as well.
         return mapping != null && info.StoreTypeName == null && _sql.Json is { } json
             ? mapping.WithStoreTypeAndSize(json.StoreType, mapping.Size)
