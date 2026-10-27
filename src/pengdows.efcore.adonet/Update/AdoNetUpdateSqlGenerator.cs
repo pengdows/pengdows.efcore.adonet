@@ -58,10 +58,19 @@ internal class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependenc
         updateSqlGeneratorHelper.DelimitIdentifier(column, columnModification.ColumnName);
 
         var replacement = value.ToString();
-        if (scalarNeedsText)
+        if (dialect.Sql.Json.StoreType.Equals("jsonb", StringComparison.OrdinalIgnoreCase)
+            && columnModification.Value is null)
+        {
+            // jsonb_set propagates SQL NULL, but an EF nullable JSON property means the JSON
+            // literal null and must preserve the surrounding document.
+            replacement = "CAST('null' AS jsonb)";
+        }
+        else if (scalarNeedsText)
         {
             replacement = providerType == typeof(byte[])
-                ? $"(jsonb_build_array(encode(CAST({replacement} AS bytea), 'base64')) -> 0)"
+                // EF's JSON byte[] mapping already supplies the base64 text; wrapping it as a
+                // JSON string must not encode that text a second time.
+                ? $"(jsonb_build_array(CAST({replacement} AS text)) -> 0)"
                 : $"(jsonb_build_array(CAST({replacement} AS text)) -> 0)";
         }
         else if (isText)
