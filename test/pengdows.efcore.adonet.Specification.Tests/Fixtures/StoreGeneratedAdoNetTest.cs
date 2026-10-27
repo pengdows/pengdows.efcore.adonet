@@ -1,5 +1,5 @@
-// Portions adapted from EF Core's StoreGeneratedSqlServerTestBase.
-// Copyright (c) .NET Foundation and Contributors. Licensed under the MIT license.
+// Behaviour reference (not copied): EF Core's StoreGeneratedSqlServerTestBase (MIT, .NET Foundation):
+// https://github.com/dotnet/efcore/blob/v10.0.11/test/EFCore.SqlServer.FunctionalTests/StoreGeneratedSqlServerTestBase.cs
 
 namespace pengdows.efcore.adonet.Specification.Tests;
 
@@ -8,10 +8,6 @@ namespace pengdows.efcore.adonet.Specification.Tests;
 ///     computed column, which each provider's fixture configures. Every call here is portable EF model building; SQL
 ///     Server's own entities (hi-lo keys, a long key stored as a decimal) are left out.
 /// </summary>
-/// <remarks>
-///     Adapted from EF Core's StoreGeneratedSqlServerTestBase (MIT, .NET Foundation):
-///     https://github.com/dotnet/efcore/blob/v10.0.11/test/EFCore.SqlServer.FunctionalTests/StoreGeneratedSqlServerTestBase.cs
-/// </remarks>
 public abstract partial class StoreGeneratedAdoNetTest<THost>
 {
     public partial class AdoNetFixture

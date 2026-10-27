@@ -1,5 +1,5 @@
-// Portions adapted from Npgsql's BasicTypesQueryNpgsqlFixture.
-// Copyright (c) 2002-2025, Npgsql. Licensed under the PostgreSQL License.
+// Behaviour reference (not copied): Npgsql's BasicTypesQueryNpgsqlFixture (PostgreSQL License):
+// https://github.com/npgsql/efcore.pg/blob/v10.0.3/test/EFCore.PG.FunctionalTests/Query/Translations/BasicTypesQueryNpgsqlFixture.cs
 
 using Microsoft.EntityFrameworkCore.Query.Translations;
 using Microsoft.EntityFrameworkCore.TestModels.BasicTypesModel;
@@ -9,9 +9,7 @@ namespace pengdows.efcore.adonet.Specification.Tests;
 /// <summary>
 ///     EF's basic types data, with each date and time cut to the database's resolution (and each offset zeroed where the
 ///     database keeps none) before it is seeded and expected, so a value reads back as it was written. EF's data holds
-///     100-nanosecond ticks, finer than most databases keep. Adapted from Npgsql's BasicTypesQueryNpgsqlFixture (PostgreSQL
-///     License):
-///     https://github.com/npgsql/efcore.pg/blob/v10.0.3/test/EFCore.PG.FunctionalTests/Query/Translations/BasicTypesQueryNpgsqlFixture.cs
+///     100-nanosecond ticks, finer than most databases keep.
 /// </summary>
 public abstract class BasicTypesAdoNetFixture<THost> : BasicTypesQueryFixtureBase, ITestSqlLoggerFactory
     where THost : IDatabaseHost, new()
@@ -39,12 +37,7 @@ public abstract class BasicTypesAdoNetFixture<THost> : BasicTypesQueryFixtureBas
         var offsets = host.KeepsOffsets;
         foreach (var item in data.BasicTypesEntities)
         {
-            item.DateTime = new DateTime(Cut(item.DateTime.Ticks, ticks), item.DateTime.Kind);
-            item.TimeOnly = new TimeOnly(Cut(item.TimeOnly.Ticks, ticks));
-            item.TimeSpan = new TimeSpan(Cut(item.TimeSpan.Ticks, ticks));
-            item.DateTimeOffset = offsets
-                ? new DateTimeOffset(Cut(item.DateTimeOffset.Ticks, ticks), item.DateTimeOffset.Offset)
-                : new DateTimeOffset(Cut(item.DateTimeOffset.UtcDateTime.Ticks, ticks), TimeSpan.Zero);
+            Normalize(item, ticks, offsets);
         }
 
         foreach (var item in data.NullableBasicTypesEntities)
@@ -74,6 +67,19 @@ public abstract class BasicTypesAdoNetFixture<THost> : BasicTypesQueryFixtureBas
 
         return data;
     }
+
+    private static void Normalize(BasicTypesEntity item, long ticks, bool keepsOffsets)
+    {
+        item.DateTime = new DateTime(Cut(item.DateTime.Ticks, ticks), item.DateTime.Kind);
+        item.TimeOnly = new TimeOnly(Cut(item.TimeOnly.Ticks, ticks));
+        item.TimeSpan = new TimeSpan(Cut(item.TimeSpan.Ticks, ticks));
+        item.DateTimeOffset = NormalizeOffset(item.DateTimeOffset, ticks, keepsOffsets);
+    }
+
+    private static DateTimeOffset NormalizeOffset(DateTimeOffset value, long ticks, bool keepsOffsets)
+        => keepsOffsets
+            ? new DateTimeOffset(Cut(value.Ticks, ticks), value.Offset)
+            : new DateTimeOffset(Cut(value.UtcDateTime.Ticks, ticks), TimeSpan.Zero);
 
     // Toward zero, so a negative span keeps its sign.
     private static long Cut(long value, long ticks)
