@@ -1,14 +1,13 @@
-// Portions adapted from Pomelo's StoredProcedureUpdateMySqlTest.
-// Copyright (c) Pomelo Foundation. Licensed under the MIT license.
+// Behaviour reference (not copied): Pomelo's StoredProcedureUpdateMySqlTest (MIT, Pomelo Foundation):
+// https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/test/EFCore.MySql.FunctionalTests/Update/StoredProcedureUpdateMySqlTest.cs
 
 namespace pengdows.efcore.adonet.Specification.Tests;
 
 /// <summary>
 ///     MySQL's procedures for EF's stored-procedure update suite. Outputs are OUT and INOUT parameters (read back through
 ///     session variables); a result column is a SELECT at the procedure's end. The row version is a TIMESTAMP(6) the
-///     server sets on insert and update, declared by the procedures' SQL. Adapted from Pomelo's StoredProcedureUpdateMySqlTest (MIT, Pomelo Foundation), which
-///     refuses result columns, so those procedures are new:
-///     https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/test/EFCore.MySql.FunctionalTests/Update/StoredProcedureUpdateMySqlTest.cs
+///     server sets on insert and update, declared by the procedures' SQL. The result-column procedures are specific to this
+///     provider's output-result-set contract.
 /// </summary>
 public static class MySqlUpdateProcedures
 {
