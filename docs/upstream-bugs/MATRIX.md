@@ -11,6 +11,11 @@ missed. Each is reproduced here as a test on every database it applies to, and c
 Each row: the issue (title and state as of 2026-10-26, checked with `gh`), the layer it touches, and the result. A test
 proving a row names the row's issue in its doc comment.
 
+New findings must follow [REPORT_TEMPLATE.md](REPORT_TEMPLATE.md). Keep the detailed investigation and workaround in
+`UPSTREAM_ISSUES.md`, add a focused test before classifying a finding as avoided or inherited, and update the row when an
+upstream issue or pull request is filed. Statuses in the report template are deliberately separate from the matrix result:
+the matrix describes behavior in this provider; the report status describes upstream coordination.
+
 | Issue | Title | State | Layer | Result |
 |---|---|---|---|---|
 | [dotnet/efcore#39206](https://github.com/dotnet/efcore/issues/39206) | Split query + projection with Skip/Take: paging subquery has no key ordering, child collections come back empty | open | query (split queries) | to reproduce |
