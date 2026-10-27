@@ -323,8 +323,9 @@ internal sealed class MySqlTypeMappings : AnsiTypeMappings
             { Size: > 0 and <= MaxVarcharCharacters } when clrType == typeof(string) => $"VARCHAR({facets.Size})",
             { Size: > 0 and < MinBlobBytes } when clrType == typeof(byte[]) => $"VARBINARY({facets.Size})",
             // Every VARCHAR and VARBINARY byte counts toward a 65,535-byte row: a string longer than fits at utf8mb4's 4 bytes
-            // a character is LONGTEXT, and binary of 8,000 bytes or more LONGBLOB. Adapted from Pomelo's MySqlTypeMappingSource
-            // and MySqlByteArrayTypeMapping (MIT, Pomelo Foundation).
+            // a character is LONGTEXT, and binary of 8,000 bytes or more LONGBLOB. Behaviour reference (not copied): Pomelo's
+            // MySqlTypeMappingSource and MySqlByteArrayTypeMapping (MIT, Pomelo Foundation):
+            // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Storage/Internal/MySqlTypeMappingSource.cs
             // A size of -1 is EF's "as large as the type allows".
             { Size: > MaxVarcharCharacters or < 0 } when clrType == typeof(string) => "LONGTEXT",
             { Size: >= MinBlobBytes or < 0 } when clrType == typeof(byte[]) => "LONGBLOB",
