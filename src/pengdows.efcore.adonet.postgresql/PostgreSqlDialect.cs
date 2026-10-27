@@ -11,6 +11,12 @@ public sealed class PostgreSqlDialect : AdoNetDialect
 {
     public static readonly PostgreSqlDialect Instance = new();
 
+    static PostgreSqlDialect()
+        // PostgreSQL's infinity sentinels are not SQL values and would make EF's legal year-one
+        // DateTime/DateTimeOffset values non-arithmetic (for example, MIN + 1 second remains -infinity).
+        // Npgsql exposes this as an AppContext switch rather than a connection-string option in current releases.
+        => AppContext.SetSwitch("Npgsql.DisableDateTimeInfinityConversions", true);
+
     private PostgreSqlDialect()
     {
     }
@@ -67,7 +73,6 @@ internal sealed class PostgreSqlSql : AnsiSqlDialect
     public override FunctionSyntax Functions { get; } = new PostgreSqlFunctions();
     public override JsonSyntax Json { get; } = PostgreSqlJson.Syntax;
     public override string CurrentSchema => "CURRENT_SCHEMA";
-
     // INFORMATION_SCHEMA.TABLES also lists the system catalogs.
     public override string HasTablesSql
         => "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' "
@@ -131,7 +136,7 @@ internal sealed class PostgreSqlFunctions : FunctionSyntax
     public override string? TimeSpanHours => "EXTRACT(HOUR FROM {0})";
     public override string? TimeSpanMinutes => "EXTRACT(MINUTE FROM {0})";
     public override string? TimeSpanSeconds => "FLOOR(EXTRACT(SECOND FROM {0}))";
-    public override string? TimeSpanMilliseconds => "((EXTRACT(MICROSECONDS FROM {0}) % 1000000) / 1000)";
+    public override string? TimeSpanMilliseconds => "FLOOR(EXTRACT(MILLISECONDS FROM {0}) % 1000)";
     public override string? TimeSpanMicroseconds => "EXTRACT(MICROSECONDS FROM {0}) % 1000";
     public override string? TimeSpanNanoseconds => "0";
 }

@@ -7,6 +7,18 @@ namespace pengdows.efcore.adonet.postgresql.Tests;
 
 public class PostgreSqlSqlTests
 {
+    private sealed class TemporalRow
+    {
+        public int Id { get; set; }
+        public DateTimeOffset Value { get; set; }
+        public TimeSpan Span { get; set; }
+    }
+
+    private sealed class TemporalContext(DbContextOptions<TemporalContext> options) : DbContext(options)
+    {
+        public DbSet<TemporalRow> Rows => Set<TemporalRow>();
+    }
+
     private static BlogContext Context(Action<DbContextOptionsBuilder> configure)
     {
         var builder = new DbContextOptionsBuilder<BlogContext>();
@@ -37,5 +49,20 @@ public class PostgreSqlSqlTests
         using var context = Context(b => b.UseAdoNetPostgreSql("Host=localhost"));
 
         Assert.IsType<PostgreSqlBulkLoader>(context.GetService<IAdoNetBulkLoader>());
+    }
+
+    [Fact]
+    public void Temporal_arithmetic_uses_postgresql_intervals()
+    {
+        var options = new DbContextOptionsBuilder<TemporalContext>()
+            .UseAdoNetPostgreSql("Host=localhost")
+            .Options;
+        using var context = new TemporalContext(options);
+
+        var sql = context.Rows.Where(r => r.Value.AddSeconds(1) > r.Value && r.Span.Milliseconds == 1).ToQueryString();
+        Assert.Contains("INTERVAL '1 microsecond'", sql);
+
+        Assert.Contains("INTERVAL '1 microsecond'", sql);
+        Assert.Contains("EXTRACT(MILLISECONDS", sql);
     }
 }
