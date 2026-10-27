@@ -1,5 +1,5 @@
-// Portions adapted from EF Core's SQLite NetTopologySuite plugin (SqliteGeometryTypeMapping).
-// Copyright (c) .NET Foundation. Licensed under the MIT license.
+// Behaviour reference (not copied): EF Core's SQLite NetTopologySuite geometry mapping (MIT, .NET Foundation):
+// https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.NTS/Storage/Internal/SqliteGeometryTypeMapping.cs
 
 using System.Buffers.Binary;
 using System.Data.Common;
@@ -15,8 +15,7 @@ namespace pengdows.efcore.adonet.NetTopologySuite;
 
 /// <summary>
 ///     A NetTopologySuite geometry stored as the dialect's <see cref="SpatialBinary" />, its constants written through
-///     <see cref="SpatialSyntax.FromText" />. Adapted from EF Core's SQLite NetTopologySuite plugin (MIT, .NET Foundation):
-///     https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.NTS/Storage/Internal/SqliteGeometryTypeMapping.cs
+///     <see cref="SpatialSyntax.FromText" />.
 /// </summary>
 public class AdoNetGeometryTypeMapping<TGeometry> : RelationalGeometryTypeMapping<TGeometry, byte[]>
     where TGeometry : Geometry
@@ -71,23 +70,14 @@ public class AdoNetGeometryTypeMapping<TGeometry> : RelationalGeometryTypeMappin
     {
         var reader = new WKBReader(services);
         return new ValueConverter<TGeometry, byte[]>(
-            g => Write(g, spatial.Binary, spatial.StoresZAndM),
-            b => (TGeometry)Read(reader, b, spatial.Binary));
+            g => Encode(g, spatial.Binary, spatial.StoresZAndM),
+            b => (TGeometry)Decode(reader, b, spatial.Binary));
     }
 
     // Z and M are written where the geometry has them and the database keeps them.
-    private static byte[] Write(Geometry geometry, SpatialBinary binary, bool zAndM)
+    private static byte[] Encode(Geometry geometry, SpatialBinary binary, bool zAndM)
     {
-        var ordinates = Ordinates.XY;
-        if (zAndM && geometry.Coordinates.Any(c => !double.IsNaN(c.Z)))
-        {
-            ordinates |= Ordinates.Z;
-        }
-
-        if (zAndM && geometry.Coordinates.Any(c => !double.IsNaN(c.M)))
-        {
-            ordinates |= Ordinates.M;
-        }
+        var ordinates = GeometryOrdinates(geometry, zAndM);
 
         var wkb = new WKBWriter(ByteOrder.LittleEndian, handleSRID: false, emitZ: ordinates.HasFlag(Ordinates.Z), emitM: ordinates.HasFlag(Ordinates.M))
             .Write(geometry);
@@ -102,7 +92,28 @@ public class AdoNetGeometryTypeMapping<TGeometry> : RelationalGeometryTypeMappin
         return prefixed;
     }
 
-    private static Geometry Read(WKBReader reader, byte[] bytes, SpatialBinary binary)
+    private static Ordinates GeometryOrdinates(Geometry geometry, bool preserveMeasures)
+    {
+        var ordinates = Ordinates.XY;
+        if (!preserveMeasures)
+        {
+            return ordinates;
+        }
+
+        if (geometry.Coordinates.Any(coordinate => !double.IsNaN(coordinate.Z)))
+        {
+            ordinates |= Ordinates.Z;
+        }
+
+        if (geometry.Coordinates.Any(coordinate => !double.IsNaN(coordinate.M)))
+        {
+            ordinates |= Ordinates.M;
+        }
+
+        return ordinates;
+    }
+
+    private static Geometry Decode(WKBReader reader, byte[] bytes, SpatialBinary binary)
     {
         if (binary == SpatialBinary.Wkb)
         {

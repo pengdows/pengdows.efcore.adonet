@@ -1,5 +1,5 @@
-// Adapted from EF Core's SQLite NetTopologySuite plugin (SqliteJsonGeometryWktReaderWriter).
-// Copyright (c) .NET Foundation. Licensed under the MIT license.
+// Behaviour reference (not copied): EF Core's SQLite NetTopologySuite JSON reader/writer (MIT, .NET Foundation):
+// https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.NTS/Storage/Json/SqliteJsonGeometryWktReaderWriter.cs
 
 using System.Linq.Expressions;
 using System.Reflection;
@@ -11,8 +11,7 @@ using NetTopologySuite.IO;
 namespace pengdows.efcore.adonet.NetTopologySuite;
 
 /// <summary>
-///     A geometry inside a JSON document, as its well-known text. Adapted from EF Core's SQLite NetTopologySuite plugin (MIT,
-///     .NET Foundation): https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.NTS/Storage/Json/SqliteJsonGeometryWktReaderWriter.cs
+///     A geometry inside a JSON document, represented as well-known text.
 /// </summary>
 public sealed class JsonGeometryWktReaderWriter : JsonValueReaderWriter<Geometry>
 {

@@ -1,5 +1,5 @@
-// Adapted from EF Core's SQLite NetTopologySuite plugin (SqliteNetTopologySuiteTypeMappingSourcePlugin).
-// Copyright (c) .NET Foundation. Licensed under the MIT license.
+// Behaviour reference (not copied): EF Core's SQLite NetTopologySuite mapping plugin (MIT, .NET Foundation):
+// https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.NTS/Storage/Internal/SqliteNetTopologySuiteTypeMappingSourcePlugin.cs
 
 using Microsoft.EntityFrameworkCore.Storage;
 using NetTopologySuite;
@@ -8,9 +8,7 @@ using NetTopologySuite.Geometries;
 namespace pengdows.efcore.adonet.NetTopologySuite;
 
 /// <summary>
-///     Maps NetTopologySuite's geometry types to the dialect's spatial columns, and those columns back to them. Adapted from
-///     EF Core's SQLite NetTopologySuite plugin (MIT, .NET Foundation):
-///     https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.NTS/Storage/Internal/SqliteNetTopologySuiteTypeMappingSourcePlugin.cs
+///     Maps NetTopologySuite's geometry types to the dialect's spatial columns, and those columns back to them.
 /// </summary>
 public class AdoNetSpatialTypeMappingSourcePlugin(NtsGeometryServices geometryServices, ISqlDialect sql) : IRelationalTypeMappingSourcePlugin
 {
@@ -34,23 +32,50 @@ public class AdoNetSpatialTypeMappingSourcePlugin(NtsGeometryServices geometrySe
             return null;
         }
 
-        var clrType = mappingInfo.ClrType;
-        var storeType = mappingInfo.StoreTypeName;
-        var storeTypeBase = mappingInfo.StoreTypeNameBase ?? storeType;
-        var kind = clrType != null && typeof(Geometry).IsAssignableFrom(clrType)
-            ? Kinds.First(k => k.Type.IsAssignableFrom(clrType))
-            : storeType != null
-                ? Kinds.FirstOrDefault(k => string.Equals(spatial.StoreType(k.Kind), storeTypeBase, StringComparison.OrdinalIgnoreCase))
-                : default;
-        if (kind.Type == null)
+        var kind = ResolveKind(mappingInfo, spatial);
+        if (kind is not { } resolved)
         {
             return null;
         }
 
+        var clrType = mappingInfo.ClrType;
+        var storeType = mappingInfo.StoreTypeName;
         return (RelationalTypeMapping)Activator.CreateInstance(
-            typeof(AdoNetGeometryTypeMapping<>).MakeGenericType(clrType ?? kind.Type),
+            typeof(AdoNetGeometryTypeMapping<>).MakeGenericType(clrType ?? resolved.Type),
             geometryServices,
-            storeType ?? spatial.StoreType(kind.Kind),
+            storeType ?? spatial.StoreType(resolved.Kind),
             sql)!;
+    }
+
+    private static (string Kind, Type Type)? ResolveKind(RelationalTypeMappingInfo info, SpatialSyntax spatial)
+    {
+        if (info.ClrType != null && typeof(Geometry).IsAssignableFrom(info.ClrType))
+        {
+            foreach (var candidate in Kinds)
+            {
+                if (candidate.Type.IsAssignableFrom(info.ClrType))
+                {
+                    return candidate;
+                }
+            }
+
+            return null;
+        }
+
+        var storeType = info.StoreTypeNameBase ?? info.StoreTypeName;
+        if (storeType == null)
+        {
+            return null;
+        }
+
+        foreach (var candidate in Kinds)
+        {
+            if (string.Equals(spatial.StoreType(candidate.Kind), storeType, StringComparison.OrdinalIgnoreCase))
+            {
+                return candidate;
+            }
+        }
+
+        return null;
     }
 }
