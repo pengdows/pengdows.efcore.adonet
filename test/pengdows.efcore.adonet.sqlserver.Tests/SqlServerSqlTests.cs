@@ -296,6 +296,15 @@ public class SqlServerSqlTests
     }
 
     [Fact]
+    public void Treats_a_canceled_token_as_query_cancellation()
+    {
+        using var context = Context(b => b.UseAdoNetSqlServer("Server=localhost"));
+        var detector = context.GetService<IExceptionDetector>();
+
+        Assert.True(detector.IsCancellation(new InvalidOperationException(), new CancellationToken(canceled: true)));
+    }
+
+    [Fact]
     public void Converts_between_bit_values_and_conditions()
     {
         using var context = Context(b => b.UseAdoNetSqlServer("Server=localhost"));

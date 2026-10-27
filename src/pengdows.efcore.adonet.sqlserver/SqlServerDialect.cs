@@ -2,6 +2,7 @@ using System.Globalization;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Query;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using pengdows.efcore.adonet.Bulk;
@@ -37,7 +38,8 @@ public sealed class SqlServerDialect : AdoNetDialect
     {
         new EntityFrameworkRelationalServicesBuilder(services)
             .TryAdd<IMigrationsSqlGenerator, SqlServerMigrationsSqlGenerator>()
-            .TryAdd<IRelationalQueryStringFactory, SqlServerQueryStringFactory>();
+            .TryAdd<IRelationalQueryStringFactory, SqlServerQueryStringFactory>()
+            .TryAdd<IExceptionDetector, SqlServerExceptionDetector>();
         services.TryAddScoped<IAdoNetBulkLoader, SqlServerBulkLoader>();
     }
 }
