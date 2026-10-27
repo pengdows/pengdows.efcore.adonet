@@ -86,6 +86,63 @@ internal sealed class SqlServerSql : AnsiSqlDialect
         // shaper receives the element's declared store type while retaining the array ordinal.
         ArrayElements = "(SELECT CONVERT(int, [key]) AS [key], CONVERT({3}, [value]) AS [value] FROM OPENJSON({0}))"
     };
+    public override SpatialSyntax Spatial { get; } = new()
+    {
+        Binary = SpatialBinary.Wkb,
+        FromText = "geometry::STGeomFromText({0}, {1})",
+        StoreType = _ => "geometry",
+        Functions = new Dictionary<string, string?>(StringComparer.Ordinal)
+        {
+            ["Area"] = "{0}.STArea()",
+            ["Boundary"] = "{0}.STBoundary()",
+            ["Centroid"] = "{0}.STCentroid()",
+            ["Dimension"] = "{0}.STDimension()",
+            ["Envelope"] = "{0}.STEnvelope()",
+            ["InteriorPoint"] = "{0}.STPointOnSurface()",
+            ["PointOnSurface"] = "{0}.STPointOnSurface()",
+            ["IsEmpty"] = "{0}.STIsEmpty()",
+            ["IsSimple"] = "{0}.STIsSimple()",
+            ["IsValid"] = "{0}.STIsValid()",
+            ["Length"] = "{0}.STLength()",
+            ["NumGeometries"] = "{0}.STNumGeometries()",
+            ["NumPoints"] = "{0}.STNumPoints()",
+            ["SRID"] = "{0}.STSrid",
+            ["AsBinary"] = "{0}.STAsBinary()",
+            ["AsText"] = "{0}.STAsText()",
+            ["Buffer"] = "{0}.STBuffer({1})",
+            ["Contains"] = "{0}.STContains({1})",
+            ["ConvexHull"] = "{0}.STConvexHull()",
+            ["Crosses"] = "{0}.STCrosses({1})",
+            ["Difference"] = "{0}.STDifference({1})",
+            ["Disjoint"] = "{0}.STDisjoint({1})",
+            ["Distance"] = "{0}.STDistance({1})",
+            ["EqualsTopologically"] = "{0}.STEquals({1})",
+            ["Intersection"] = "{0}.STIntersection({1})",
+            ["Intersects"] = "{0}.STIntersects({1})",
+            ["IsWithinDistance"] = "CASE WHEN {0}.STDistance({1}) <= {2} THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END",
+            ["Overlaps"] = "{0}.STOverlaps({1})",
+            ["Relate"] = "{0}.STRelate({1}, {2})",
+            ["SymmetricDifference"] = "{0}.STSymDifference({1})",
+            ["Touches"] = "{0}.STTouches({1})",
+            ["Union"] = "{0}.STUnion({1})",
+            ["Within"] = "{0}.STWithin({1})",
+            ["GetGeometryN"] = "CASE WHEN {0} IS NULL OR {1} IS NULL THEN NULL ELSE {0}.STGeometryN({1} + 1) END",
+            ["X"] = "{0}.STX",
+            ["Y"] = "{0}.STY",
+            ["Z"] = null,
+            ["M"] = null,
+            ["StartPoint"] = "{0}.STStartPoint()",
+            ["EndPoint"] = "{0}.STEndPoint()",
+            ["IsClosed"] = "{0}.STIsClosed()",
+            ["IsRing"] = "{0}.STIsRing()",
+            ["GetPointN"] = "{0}.STPointN({1} + 1)",
+            ["ExteriorRing"] = "{0}.STExteriorRing()",
+            ["NumInteriorRings"] = "{0}.STNumInteriorRing()",
+            ["GetInteriorRingN"] = "{0}.STInteriorRingN({1} + 1)",
+            ["GeometryType"] = "{0}.STGeometryType()",
+            ["OgcGeometryType"] = "CASE {0}.STGeometryType() WHEN 'Point' THEN 1 WHEN 'LineString' THEN 2 WHEN 'Polygon' THEN 3 WHEN 'MultiPoint' THEN 4 WHEN 'MultiLineString' THEN 5 WHEN 'MultiPolygon' THEN 6 WHEN 'GeometryCollection' THEN 7 END"
+        }
+    };
     public override bool PreferExistsToIn => true;
     public override string CurrentSchema => "SCHEMA_NAME()";
 

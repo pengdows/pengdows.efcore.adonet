@@ -34,4 +34,3 @@ pengdows.efcore.adonet.NetTopologySuite.AdoNetSpatialMemberTranslatorPlugin.AdoN
 pengdows.efcore.adonet.NetTopologySuite.AdoNetSpatialMethodCallTranslatorPlugin.AdoNetSpatialMethodCallTranslatorPlugin(Microsoft.EntityFrameworkCore.Query.ISqlExpressionFactory! sqlExpressionFactory, Microsoft.EntityFrameworkCore.Storage.IRelationalTypeMappingSource! typeMappingSource, pengdows.efcore.adonet.ISqlDialect! sql) -> void
 pengdows.efcore.adonet.NetTopologySuite.AdoNetSpatialTranslator.AdoNetSpatialTranslator(Microsoft.EntityFrameworkCore.Query.ISqlExpressionFactory! sqlExpressionFactory, Microsoft.EntityFrameworkCore.Storage.IRelationalTypeMappingSource! typeMappingSource, pengdows.efcore.adonet.ISqlDialect! sql) -> void
 pengdows.efcore.adonet.NetTopologySuite.AdoNetSpatialTypeMappingSourcePlugin.AdoNetSpatialTypeMappingSourcePlugin(NetTopologySuite.NtsGeometryServices! geometryServices, pengdows.efcore.adonet.ISqlDialect! sql) -> void
-

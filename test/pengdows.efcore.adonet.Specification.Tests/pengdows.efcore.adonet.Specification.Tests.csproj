@@ -24,6 +24,7 @@
     <PackageReference Include="Testcontainers.PostgreSql" />
     <PackageReference Include="Testcontainers.MySql" />
     <PackageReference Include="MySql.Data" />
+    <PackageReference Include="Microsoft.SqlServer.Types" />
   </ItemGroup>
 
 </Project>

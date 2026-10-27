@@ -19,6 +19,8 @@
     <PackageVersion Include="Testcontainers.MsSql" Version="4.16.0" />
     <PackageVersion Include="MySqlConnector" Version="2.6.2" />
     <PackageVersion Include="NetTopologySuite" Version="2.6.0" />
+    <PackageVersion Include="NetTopologySuite.IO.SqlServerBytes" Version="2.1.0" />
+    <PackageVersion Include="Microsoft.SqlServer.Types" Version="170.1000.7" />
     <PackageVersion Include="MySql.Data" Version="26.10.0" />
     <!-- Test-only comparison lane; Oracle's provider is never shipped by pengdows. -->
     <PackageVersion Include="MySql.EntityFrameworkCore" Version="10.0.12" />

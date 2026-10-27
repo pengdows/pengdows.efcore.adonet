@@ -40,11 +40,13 @@ public class AdoNetSpatialTypeMappingSourcePlugin(NtsGeometryServices geometrySe
 
         var clrType = mappingInfo.ClrType;
         var storeType = mappingInfo.StoreTypeName;
-        return (RelationalTypeMapping)Activator.CreateInstance(
-            typeof(AdoNetGeometryTypeMapping<>).MakeGenericType(clrType ?? resolved.Type),
-            geometryServices,
-            storeType ?? spatial.StoreType(resolved.Kind),
-            sql)!;
+        var mappingType = spatial.FromText.StartsWith("geometry::", StringComparison.OrdinalIgnoreCase)
+            ? typeof(AdoNetSqlServerGeometryTypeMapping<>).MakeGenericType(clrType ?? resolved.Type)
+            : typeof(AdoNetGeometryTypeMapping<>).MakeGenericType(clrType ?? resolved.Type);
+        var resolvedStoreType = storeType ?? spatial.StoreType(resolved.Kind);
+        return (RelationalTypeMapping)(mappingType == typeof(AdoNetSqlServerGeometryTypeMapping<>).MakeGenericType(clrType ?? resolved.Type)
+            ? Activator.CreateInstance(mappingType, geometryServices, resolvedStoreType)!
+            : Activator.CreateInstance(mappingType, geometryServices, resolvedStoreType, sql)!);
     }
 
     private static (string Kind, Type Type)? ResolveKind(RelationalTypeMappingInfo info, SpatialSyntax spatial)
