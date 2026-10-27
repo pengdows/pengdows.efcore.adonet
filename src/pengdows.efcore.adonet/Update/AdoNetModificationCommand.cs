@@ -1,5 +1,5 @@
-// Portions adapted from Pomelo's MySqlModificationCommand.
-// Copyright (c) Pomelo Foundation. Licensed under the MIT license.
+// Behaviour reference (not copied): Pomelo's MySqlModificationCommand (MIT, Pomelo Foundation):
+// https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Update/Internal/MySqlModificationCommand.cs
 
 using System.Data;
 using System.Diagnostics;
@@ -36,19 +36,24 @@ internal sealed class AdoNetModificationCommand : ModificationCommand
     {
     }
 
-    // Where a procedure's outputs come back through session variables (ISqlDialect.ProcedureOutputVariable), the row selected
-    // after the call holds each output, in parameter order; EF's own reading skips parameters, which elsewhere arrive as
-    // output parameters once the reader is closed. Adapted from Pomelo's MySqlModificationCommand (MIT, Pomelo Foundation):
-    // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Update/Internal/MySqlModificationCommand.cs
+    // A session-variable procedure returns output values in a row, in parameter order; EF's own reader skips the parameters.
     public override void PropagateResults(RelationalDataReader relationalReader)
     {
-        if (!_outputVariables || (StoreStoredProcedure is null) || !ColumnModifications.Any(IsOutput))
+        if (!UsesResultRowForOutputs())
         {
             base.PropagateResults(relationalReader);
             return;
         }
 
-        var ordinal = -1;
+        CopyOutputValues(relationalReader);
+    }
+
+    private bool UsesResultRowForOutputs()
+        => _outputVariables && StoreStoredProcedure != null && ColumnModifications.Any(IsOutput);
+
+    private void CopyOutputValues(RelationalDataReader relationalReader)
+    {
+        var ordinal = 0;
         foreach (var columnModification in ColumnModifications)
         {
             if (!IsOutput(columnModification))
@@ -56,13 +61,14 @@ internal sealed class AdoNetModificationCommand : ModificationCommand
                 continue;
             }
 
-            ordinal++;
             if ((columnModification.Property is { } property) && columnModification.IsRead)
             {
 #pragma warning disable EF1001 // EF's reader of a property's value, which its own PropagateResults uses.
                 columnModification.Value = property.GetReaderFieldValue(relationalReader, ordinal, _detailedErrorsEnabled);
 #pragma warning restore EF1001
             }
+
+            ordinal++;
         }
     }
 

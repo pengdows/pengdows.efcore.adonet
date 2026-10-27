@@ -1,5 +1,5 @@
-// Portions adapted from Pomelo's MySqlModificationCommandBatch.
-// Copyright (c) Pomelo Foundation. Licensed under the MIT license.
+// Behaviour reference (not copied): Pomelo's MySqlModificationCommandBatch (MIT, Pomelo Foundation):
+// https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902df60/src/EFCore.MySql/Update/Internal/MySqlModificationCommandBatch.cs
 
 using System.Data;
 using Microsoft.EntityFrameworkCore;
@@ -21,23 +21,28 @@ internal class AdoNetModificationCommandBatch(
 
     public override bool TryAddCommand(IReadOnlyModificationCommand modificationCommand)
     {
-        var added = base.TryAddCommand(modificationCommand);
-        if (!added || (RelationalCommandBuilder.Parameters.Count <= _maxParametersPerCommand) || (ModificationCommands.Count == 1))
+        if (!base.TryAddCommand(modificationCommand))
         {
-            return added;
+            return false;
+        }
+
+        if (ModificationCommands.Count == 1 || !ParameterLimitExceeded())
+        {
+            return true;
         }
 
         RollbackLastCommand(modificationCommand);
         return false;
     }
 
-    // Where a procedure's outputs go through session variables (ISqlDialect.ProcedureOutputVariable), the command has no
-    // output parameters: an output-only one isn't sent, and an input-output one is sent as an input, the variable's start.
-    // Adapted from Pomelo's MySqlModificationCommandBatch (MIT, Pomelo Foundation):
-    // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Update/Internal/MySqlModificationCommandBatch.cs
+    private bool ParameterLimitExceeded()
+        => RelationalCommandBuilder.Parameters.Count > _maxParametersPerCommand;
+
+    // A procedure using session variables has no output parameters: output-only values are represented by the session
+    // variable, while input-output values are sent as ordinary inputs.
     protected override void AddParameter(IColumnModification columnModification)
     {
-        if ((sql.ProcedureOutputVariable == null) || !AdoNetModificationCommand.IsOutput(columnModification))
+        if (sql.ProcedureOutputVariable == null || !AdoNetModificationCommand.IsOutput(columnModification))
         {
             base.AddParameter(columnModification);
             return;
@@ -48,14 +53,14 @@ internal class AdoNetModificationCommandBatch(
             return;
         }
 
-        // EF adds the one parameter, its original value's where it has one, as input-output; it is replaced by an input.
+        // The base implementation adds the value as input-output. Replace that descriptor with an input descriptor.
         base.AddParameter(columnModification);
-        var index = RelationalCommandBuilder.Parameters.Count - 1;
-        var name = RelationalCommandBuilder.Parameters[index].InvariantName;
-        RelationalCommandBuilder.RemoveParameterAt(index);
+        var lastIndex = RelationalCommandBuilder.Parameters.Count - 1;
+        var original = RelationalCommandBuilder.Parameters[lastIndex];
+        RelationalCommandBuilder.RemoveParameterAt(lastIndex);
         RelationalCommandBuilder.AddParameter(
-            name,
-            Dependencies.SqlGenerationHelper.GenerateParameterName(name),
+            original.InvariantName,
+            Dependencies.SqlGenerationHelper.GenerateParameterName(original.InvariantName),
             columnModification.TypeMapping!,
             columnModification.IsNullable,
             ParameterDirection.Input);
