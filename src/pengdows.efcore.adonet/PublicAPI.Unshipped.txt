@@ -271,7 +271,7 @@ pengdows.efcore.adonet.JsonSyntax.BooleanValue.get -> string?
 pengdows.efcore.adonet.JsonSyntax.BinaryValue.get -> string?
 pengdows.efcore.adonet.JsonSyntax.Concatenate.get -> string!
 pengdows.efcore.adonet.JsonSyntax.FromText.get -> string!
-pengdows.efcore.adonet.JsonSyntax.JsonSyntax(string! storeType, string! value, string! query, string! typedValue, string? booleanValue, string? binaryValue, string! concatenate, string? set, string! fromText) -> void
+pengdows.efcore.adonet.JsonSyntax.JsonSyntax(string! storeType, string! value, string! query, string! typedValue, string? booleanValue, string? binaryValue, string! concatenate, string? set, string! fromText, string? setBooleanValue = null) -> void
 pengdows.efcore.adonet.JsonSyntax.Query.get -> string!
 pengdows.efcore.adonet.JsonSyntax.Set.get -> string?
 pengdows.efcore.adonet.JsonSyntax.StoreType.get -> string!
@@ -613,11 +613,16 @@ virtual pengdows.efcore.adonet.AnsiSqlDialect.Spatial.get -> pengdows.efcore.ado
 pengdows.efcore.adonet.SpatialBinary
 pengdows.efcore.adonet.SpatialBinary.Wkb = 0 -> pengdows.efcore.adonet.SpatialBinary
 pengdows.efcore.adonet.SpatialBinary.SridPrefixedWkb = 1 -> pengdows.efcore.adonet.SpatialBinary
+pengdows.efcore.adonet.SpatialParameterBinding
+pengdows.efcore.adonet.SpatialParameterBinding.Binary = 0 -> pengdows.efcore.adonet.SpatialParameterBinding
+pengdows.efcore.adonet.SpatialParameterBinding.SqlServerUdt = 1 -> pengdows.efcore.adonet.SpatialParameterBinding
 pengdows.efcore.adonet.SpatialSyntax
 pengdows.efcore.adonet.SpatialSyntax.SpatialSyntax() -> void
 static pengdows.efcore.adonet.SpatialSyntax.Iso.get -> pengdows.efcore.adonet.SpatialSyntax!
 pengdows.efcore.adonet.SpatialSyntax.Binary.get -> pengdows.efcore.adonet.SpatialBinary
 pengdows.efcore.adonet.SpatialSyntax.Binary.init -> void
+pengdows.efcore.adonet.SpatialSyntax.ParameterBinding.get -> pengdows.efcore.adonet.SpatialParameterBinding
+pengdows.efcore.adonet.SpatialSyntax.ParameterBinding.init -> void
 pengdows.efcore.adonet.SpatialSyntax.FromText.get -> string!
 pengdows.efcore.adonet.SpatialSyntax.FromText.init -> void
 pengdows.efcore.adonet.SpatialSyntax.StoreType.get -> System.Func<string!, string!>!
@@ -627,6 +632,7 @@ pengdows.efcore.adonet.SpatialSyntax.Functions.init -> void
 pengdows.efcore.adonet.SpatialSyntax.Function(string! member) -> string?
 pengdows.efcore.adonet.SpatialSyntax.StoresZAndM.get -> bool
 pengdows.efcore.adonet.SpatialSyntax.StoresZAndM.init -> void
+pengdows.efcore.adonet.JsonSyntax.SetBooleanValue.get -> string?
 pengdows.efcore.adonet.ISqlDialect.ConnectionOptions.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
 pengdows.efcore.adonet.ISqlDialect.ProcedureOutputVariable.get -> string?
 virtual pengdows.efcore.adonet.AnsiSqlDialect.ConnectionOptions.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!

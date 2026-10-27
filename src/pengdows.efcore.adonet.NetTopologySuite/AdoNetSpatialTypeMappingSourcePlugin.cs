@@ -40,7 +40,7 @@ public class AdoNetSpatialTypeMappingSourcePlugin(NtsGeometryServices geometrySe
 
         var clrType = mappingInfo.ClrType;
         var storeType = mappingInfo.StoreTypeName;
-        var mappingType = spatial.FromText.StartsWith("geometry::", StringComparison.OrdinalIgnoreCase)
+        var mappingType = spatial.ParameterBinding == SpatialParameterBinding.SqlServerUdt
             ? typeof(AdoNetSqlServerGeometryTypeMapping<>).MakeGenericType(clrType ?? resolved.Type)
             : typeof(AdoNetGeometryTypeMapping<>).MakeGenericType(clrType ?? resolved.Type);
         var resolvedStoreType = storeType ?? spatial.StoreType(resolved.Kind);

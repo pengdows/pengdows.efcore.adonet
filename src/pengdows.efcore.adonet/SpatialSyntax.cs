@@ -10,6 +10,16 @@ public enum SpatialBinary
     SridPrefixedWkb
 }
 
+/// <summary>How the ADO.NET provider receives a spatial parameter.</summary>
+public enum SpatialParameterBinding
+{
+    /// <summary>The driver receives the dialect's configured binary representation.</summary>
+    Binary,
+
+    /// <summary>The driver receives SQL Server's geometry/geography UDT binary representation.</summary>
+    SqlServerUdt
+}
+
 /// <summary>
 ///     Spatial columns and the functions over them, for the <c>pengdows.efcore.adonet.NetTopologySuite</c> package, which maps
 ///     NetTopologySuite's types through it; the core itself has no spatial types. Functions are templates keyed by the
@@ -79,6 +89,9 @@ public sealed class SpatialSyntax
 
     /// <summary>How values are stored and passed.</summary>
     public SpatialBinary Binary { get; init; } = SpatialBinary.Wkb;
+
+    /// <summary>How the spatial value is bound to an ADO.NET parameter.</summary>
+    public SpatialParameterBinding ParameterBinding { get; init; } = SpatialParameterBinding.Binary;
 
     /// <summary>Whether coordinates keep Z and M; where they don't, only X and Y are written.</summary>
     public bool StoresZAndM { get; init; } = true;

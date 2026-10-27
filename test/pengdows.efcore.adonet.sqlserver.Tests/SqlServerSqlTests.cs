@@ -31,6 +31,18 @@ public class SqlServerSqlTests
         Assert.Equal("[a]]b]", context.GetService<ISqlGenerationHelper>().DelimitIdentifier("a]b"));
     }
 
+    [Fact]
+    public void Declares_spatial_parameter_binding_explicitly()
+    {
+        Assert.Equal(SpatialParameterBinding.SqlServerUdt, SqlServerDialect.Instance.Sql.Spatial!.ParameterBinding);
+    }
+
+    [Fact]
+    public void Declares_json_boolean_update_conversion_explicitly()
+    {
+        Assert.Equal("CONVERT(bit, {0})", SqlServerDialect.Instance.Sql.Json!.SetBooleanValue);
+    }
+
     [Theory]
     [InlineData(typeof(bool), "bit")]
     [InlineData(typeof(byte), "tinyint")]

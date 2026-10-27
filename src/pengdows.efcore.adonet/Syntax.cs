@@ -418,6 +418,7 @@ public abstract class DmlSyntax
 /// <param name="concatenate">Joins two strings, to build a path whose array index is computed: <c>{0} || {1}</c>.</param>
 /// <param name="set">Replaces the value at the path <c>{1}</c> in <c>{0}</c> with <c>{2}</c>.</param>
 /// <param name="fromText">Turns JSON text (a sub-document, or <c>true</c>/<c>false</c>) into a JSON value.</param>
+/// <param name="setBooleanValue">Converts a boolean parameter to the database's JSON boolean value at a partial-update path.</param>
 public sealed class JsonSyntax(
     string storeType,
     string value,
@@ -427,7 +428,8 @@ public sealed class JsonSyntax(
     string? binaryValue,
     string concatenate,
     string? set,
-    string fromText)
+    string fromText,
+    string? setBooleanValue = null)
 {
     /// <summary>
     ///     SQL:2016's JSON_VALUE and JSON_QUERY, SQL:2023's JSON type and JSON() constructor, and JSON_SET, which ISO lacks and
@@ -453,6 +455,12 @@ public sealed class JsonSyntax(
     public string Concatenate { get; } = concatenate;
     public string? Set { get; } = set;
     public string FromText { get; } = fromText;
+
+    /// <summary>
+    ///     Converts a boolean parameter for <see cref="Set" />; <c>{0}</c> is the parameter expression. Null when the normal
+    ///     JSON text conversion is sufficient.
+    /// </summary>
+    public string? SetBooleanValue { get; } = setBooleanValue;
 
     /// <summary>
     ///     The elements of the JSON array <c>{0}</c> as a table, for querying a primitive collection: a column named <c>{1}</c>
