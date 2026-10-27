@@ -65,6 +65,7 @@ internal sealed class PostgreSqlSql : AnsiSqlDialect
 
     public override PagingSyntax Paging { get; } = PagingSyntax.LimitOffset();
     public override FunctionSyntax Functions { get; } = new PostgreSqlFunctions();
+    public override JsonSyntax Json { get; } = PostgreSqlJson.Syntax;
     public override string CurrentSchema => "CURRENT_SCHEMA";
 
     // INFORMATION_SCHEMA.TABLES also lists the system catalogs.
@@ -131,4 +132,25 @@ internal sealed class PostgreSqlFunctions : FunctionSyntax
     public override string? TimeSpanMilliseconds => "((EXTRACT(MICROSECONDS FROM {0}) % 1000000) / 1000)";
     public override string? TimeSpanMicroseconds => "EXTRACT(MICROSECONDS FROM {0}) % 1000";
     public override string? TimeSpanNanoseconds => "0";
+}
+
+internal static class PostgreSqlJson
+{
+    public static JsonSyntax Syntax { get; } = new(
+            "jsonb",
+            "(jsonb_path_query_first({0}, CAST({1} AS jsonpath)) #>> '{}')",
+            "jsonb_path_query_first({0}, CAST({1} AS jsonpath))",
+            "CAST((jsonb_path_query_first({0}, CAST({1} AS jsonpath)) #>> '{}') AS {2})",
+            "CAST((jsonb_path_query_first({0}, CAST({1} AS jsonpath)) #>> '{}') AS boolean)",
+            "decode((jsonb_path_query_first({0}, CAST({1} AS jsonpath)) #>> '{}'), 'base64')",
+            "({0} || {1})",
+            "jsonb_set({0}, string_to_array(regexp_replace(regexp_replace({1}, '^\\$\\.?', ''), '\\[([0-9]+)\\]', '.\\1', 'g'), '.'), CAST({2} AS jsonb), true)",
+            "CAST({0} AS jsonb)")
+    {
+        // The shared query generator supplies the table alias after this expression. Wrapping the
+        // set-returning function gives PostgreSQL stable column names matching the shared JSON AST.
+        ArrayElements = "(SELECT e.value AS {2}, e.ordinality AS {1} FROM jsonb_array_elements({0}) WITH ORDINALITY AS e(value))",
+        ArrayElementsTextType = "{0}",
+        ArrayElementsBinaryValue = "decode({0}, 'base64')"
+    };
 }
