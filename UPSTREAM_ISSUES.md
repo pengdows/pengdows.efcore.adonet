@@ -6,6 +6,18 @@ noted so they can be removed once the fix ships.
 
 ## dotnet/efcore (EF Core 10.0.11)
 
+### PostgreSQL JSON update fixture uses an unquoted mixed-case table name
+
+- **Where:** `JsonUpdateTestBase.Add_and_update_top_level_optional_owned_collection_to_JSON` reads
+  `JsonEntitiesBasic` through raw SQL without identifier delimiters.
+- **Defect:** PostgreSQL folds the unquoted name to `jsonentitiesbasic`, while the relational model creates the
+  quoted mixed-case table name `"JsonEntitiesBasic"`; the probe fails with `42P01` before the provider operation.
+- **Confirmed:** PostgreSQL specification run; the same test succeeds on providers whose unquoted identifier rules
+  resolve the mixed-case name.
+- **Status:** not reported; candidate fixture fix is to use the provider's delimited identifier helper or configure
+  the fixture table name consistently.
+- **Our handling:** the PostgreSQL specification test is explicitly skipped and linked to this limitation.
+
 ### SQL Server: `string.Length` and `Substring(start)` ignore trailing spaces
 
 - **Where:** the SQL Server provider's string translations (`SqlServerStringMemberTranslator`,
