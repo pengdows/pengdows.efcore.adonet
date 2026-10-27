@@ -59,6 +59,30 @@ internal class AdoNetQuerySqlGenerator(
         }
     }
 
+    protected override Expression VisitValues(ValuesExpression valuesExpression)
+    {
+        if (!dialect.UsesNativeValuesTable)
+        {
+            return base.VisitValues(valuesExpression);
+        }
+
+        Sql.Append("(");
+        GenerateValues(valuesExpression);
+        Sql.Append(") AS ").Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(valuesExpression.Alias)).Append("(");
+        for (var index = 0; index < valuesExpression.ColumnNames.Count; index++)
+        {
+            if (index > 0)
+            {
+                Sql.Append(", ");
+            }
+
+            Sql.Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(valuesExpression.ColumnNames[index]));
+        }
+
+        Sql.Append(")");
+        return valuesExpression;
+    }
+
     protected override Expression VisitDelete(DeleteExpression deleteExpression)
         => dialect.Dml.TryGenerateDelete(this, deleteExpression) ? deleteExpression : base.VisitDelete(deleteExpression);
 
@@ -68,6 +92,27 @@ internal class AdoNetQuerySqlGenerator(
     // EF's SELECT 1 AS "Value" UNION ALL VALUES (2), (3), with the dialect's prefix before each row after the first.
     protected override void GenerateValues(ValuesExpression valuesExpression)
     {
+        if (dialect.UsesNativeValuesTable)
+        {
+            if (valuesExpression.RowValues is not { Count: > 0 } nativeRows)
+            {
+                throw new InvalidOperationException("A native VALUES table requires at least one row.");
+            }
+
+            Sql.Append("VALUES ");
+            for (var index = 0; index < nativeRows.Count; index++)
+            {
+                if (index > 0)
+                {
+                    Sql.Append(", ");
+                }
+
+                Visit(nativeRows[index]);
+            }
+
+            return;
+        }
+
         if ((dialect.ValuesRowPrefix.Length == 0) || (valuesExpression.RowValues is not { Count: > 1 } rows))
         {
             base.GenerateValues(valuesExpression);

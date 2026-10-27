@@ -69,6 +69,7 @@ internal sealed class SqlServerSql : AnsiSqlDialect
 
     // T-SQL has no row value comparisons.
     public override bool RowValues => false;
+    public override bool UsesNativeValuesTable => true;
 
     // SqlClient's SqlTransaction has Save and Rollback(name) but reports no savepoints; they last until the transaction ends.
     public override SavepointSyntax Savepoints { get; } = new("SAVE TRANSACTION {0}", "ROLLBACK TRANSACTION {0}", release: null);

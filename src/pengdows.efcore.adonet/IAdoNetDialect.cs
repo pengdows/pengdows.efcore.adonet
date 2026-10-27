@@ -150,6 +150,9 @@ public interface ISqlDialect
     /// <summary>Whether every expression projected by a derived table must have an explicit column name.</summary>
     bool RequiresDerivedTableColumnAliases { get; }
 
+    /// <summary>Whether the database accepts a native <c>(VALUES (...), (...)) AS alias(column)</c> table expression.</summary>
+    bool UsesNativeValuesTable { get; }
+
     /// <summary>Returns the number of user tables in the current database or schema.</summary>
     string HasTablesSql { get; }
 }
