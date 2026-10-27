@@ -2,7 +2,7 @@
 # Date: 2026-10-27
 # EF Core: 10.0.11
 # Server: MySQL 8.4 (Testcontainers)
-# Driver: MySqlConnector 2.6.2 via pengdows.efcore.adonet.mysql
+# Driver: MySqlConnector 2.6.2 via pengdows.efcore.adonet.mysql (set PENGDOWS_MYSQL_DRIVER=MySql.Data for the MySql.Data lane)
 # Command: dotnet test test/pengdows.efcore.adonet.Specification.Tests/pengdows.efcore.adonet.Specification.Tests.csproj --no-restore --filter FullyQualifiedName~Specification.Tests.MySql --logger trx;LogFileName=mysql-full-review.trx --verbosity quiet
 passed	failed	skipped	total	duration
 29903	0	437	30340	9m18s
@@ -11,5 +11,7 @@ passed	failed	skipped	total	duration
 json_passed	json_failed	json_skipped	json_total
 464	0	28	492
 
-# The MySql.Data driver is covered by the provider comparison/conformance project (288 passed, 2 skipped); the generated
-# EF specification matrix currently has one MySqlHost and therefore runs the matrix through MySqlConnector.
+# The MySql.Data driver is also selectable for the same generated matrix with PENGDOWS_MYSQL_DRIVER=MySql.Data.
+# MySql.Data targeted JSON slice: 462 passed / 2 failed / 28 skipped / 492 total.
+# The two failures are Json_all_types_projection_individual_properties (MySql.Data returns MySqlUInt64 where EF requests
+# byte). A full MySql.Data run exposed additional driver-specific failures and was not recorded as parity evidence.

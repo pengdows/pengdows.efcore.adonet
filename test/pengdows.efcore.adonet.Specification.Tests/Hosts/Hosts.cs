@@ -111,7 +111,7 @@ public sealed class PostgreSqlHost : ServerHost
         => builder.UseAdoNetPostgreSql(connection, contextOwnsConnection: false, configure);
 }
 
-public sealed class MySqlHost : ServerHost
+public class MySqlHost : ServerHost
 {
     // MySQL's JSON type validates documents and canonicalizes duplicate keys, so EF's malformed-document fixture cannot be stored faithfully.
     public override bool SupportsMalformedJsonProperties => false;
@@ -168,20 +168,40 @@ public sealed class MySqlHost : ServerHost
     // With the user variables the dialect reads procedure outputs through, which a connection opened before the provider
     // sees it must already allow.
     public override string ConnectionStringFor(string database)
-        => new MySqlConnectionStringBuilder(AdminConnectionString)
+    {
+        var connectionString = new MySqlConnectionStringBuilder(AdminConnectionString)
         {
             Database = database,
             AllowUserVariables = true,
             UseAffectedRows = false
         }.ConnectionString;
 
-    public override DbConnection CreateConnection(string connectionString) => new MySqlConnection(connectionString);
+        // MySql.Data returns JSON numeric values as unsigned provider wrappers; disabling its TINYINT boolean
+        // coercion keeps the ADO.NET value compatible with EF's byte materializer.
+        return UseMySqlData
+            ? new global::MySql.Data.MySqlClient.MySqlConnectionStringBuilder(connectionString) { TreatTinyAsBoolean = false }.ConnectionString
+            : connectionString;
+    }
+
+    private static bool UseMySqlData
+        => string.Equals(Environment.GetEnvironmentVariable("PENGDOWS_MYSQL_DRIVER"), "MySql.Data", StringComparison.OrdinalIgnoreCase);
+
+    public override DbConnection CreateConnection(string connectionString)
+        => UseMySqlData
+            ? new global::MySql.Data.MySqlClient.MySqlConnection(connectionString)
+            : new MySqlConnection(connectionString);
 
     public override DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, string connectionString, Action<AdoNetDbContextOptionsBuilder> configure)
-        => builder.UseAdoNetMySql(connectionString, configure);
+        => UseMySqlData
+            ? builder.UseAdoNet(global::MySql.Data.MySqlClient.MySqlClientFactory.Instance, connectionString, MySqlDialect.Instance, configure)
+            : builder.UseAdoNetMySql(connectionString, configure);
 
     public override DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, DbConnection connection, Action<AdoNetDbContextOptionsBuilder> configure)
-        => builder.UseAdoNetMySql(connection, contextOwnsConnection: false, configure);
+        => builder.UseAdoNet(connection, contextOwnsConnection: false, o =>
+        {
+            o.UseDialect(MySqlDialect.Instance);
+            configure(o);
+        });
 }
 
 /// <summary>An embedded database: a file or folder per test store, under one temporary directory for the run.</summary>

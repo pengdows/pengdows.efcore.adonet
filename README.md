@@ -163,6 +163,8 @@ dotnet test test/pengdows.efcore.adonet.Tests   # the core alone: fakeDb and an 
   Latest local validation on 2026-10-27: core unit tests **340 passed / 0 failed**, MySQL provider tests **289 passed / 0 failed / 2 skipped**,
   the targeted MySQL specification slice **464 passed / 0 failed / 28 skipped**, and the benchmark project builds with **0 errors**.
   The full MySQL specification run is recorded in `docs/specification-results/mysql-full-review.tsv`.
+  The same generated matrix can be run through Oracle's `MySql.Data` driver with `PENGDOWS_MYSQL_DRIVER=MySql.Data`;
+  its driver-specific result is kept separate from the MySqlConnector baseline.
 
 ### Coverage against the other MySQL providers
 
