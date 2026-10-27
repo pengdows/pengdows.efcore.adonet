@@ -9,6 +9,18 @@ namespace pengdows.efcore.adonet.sqlserver;
 internal class SqlServerMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dependencies, IAdoNetDialect dialect)
     : AdoNetMigrationsSqlGenerator(dependencies, dialect)
 {
+    protected override void ForeignKeyAction(ReferentialAction referentialAction, MigrationCommandListBuilder builder)
+    {
+        // SQL Server has no RESTRICT action; NO ACTION is its equivalent and is the ISO spelling.
+        if (referentialAction == ReferentialAction.Restrict)
+        {
+            builder.Append("NO ACTION");
+            return;
+        }
+
+        base.ForeignKeyAction(referentialAction, builder);
+    }
+
     protected override void IdentityDefinition(string? schema, string table, string name, ColumnOperation operation, MigrationCommandListBuilder builder)
         => builder.Append(" IDENTITY");
 

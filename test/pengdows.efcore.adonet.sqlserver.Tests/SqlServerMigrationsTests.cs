@@ -28,4 +28,24 @@ public class SqlServerMigrationsTests
             "ALTER SCHEMA [dbo] TRANSFER [a].[T];\n",
             Sql(new RenameTableOperation { Schema = "a", Name = "T", NewSchema = null, NewName = "T" }));
     }
+
+    [Fact]
+    public void Restrict_foreign_keys_use_sql_servers_no_action_spelling()
+    {
+        var operation = new AddForeignKeyOperation
+        {
+            Name = "FK_Child_Parent",
+            Table = "Child",
+            Schema = "dbo",
+            Columns = ["ParentId"],
+            PrincipalTable = "Parent",
+            PrincipalSchema = "dbo",
+            PrincipalColumns = ["Id"],
+            OnDelete = ReferentialAction.Restrict
+        };
+
+        Assert.Equal(
+            "ALTER TABLE [dbo].[Child] ADD CONSTRAINT [FK_Child_Parent] FOREIGN KEY ([ParentId]) REFERENCES [dbo].[Parent] ([Id]) ON DELETE NO ACTION;\n",
+            Sql(operation));
+    }
 }
