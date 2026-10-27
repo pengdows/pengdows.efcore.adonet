@@ -16,6 +16,7 @@ override pengdows.efcore.adonet.Storage.AdoNetDateOnlyTypeMapping.GenerateNonNul
 override pengdows.efcore.adonet.Storage.AdoNetDateTimeOffsetTypeMapping.Clone(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters) -> Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping!
 override pengdows.efcore.adonet.Storage.AdoNetDateTimeOffsetTypeMapping.GenerateNonNullSqlLiteral(object! value) -> string!
 override pengdows.efcore.adonet.Storage.AdoNetDateTimeTypeMapping.Clone(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters) -> Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping!
+override pengdows.efcore.adonet.Storage.AdoNetDateTimeTypeMapping.ConfigureParameter(System.Data.Common.DbParameter! parameter) -> void
 override pengdows.efcore.adonet.Storage.AdoNetDateTimeTypeMapping.GenerateNonNullSqlLiteral(object! value) -> string!
 override pengdows.efcore.adonet.Storage.AdoNetDecimalTypeMapping.Clone(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters) -> Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping!
 override pengdows.efcore.adonet.Storage.AdoNetDecimalTypeMapping.ConfigureParameter(System.Data.Common.DbParameter! parameter) -> void

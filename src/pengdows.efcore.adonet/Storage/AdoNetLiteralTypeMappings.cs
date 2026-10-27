@@ -26,6 +26,7 @@ public class AdoNetByteTypeMapping : ByteTypeMapping
 
     protected override string GenerateNonNullSqlLiteral(object value)
         => _dialect.FormatLiteral(value, StoreType, base.GenerateNonNullSqlLiteral(value));
+
 }
 
 public class AdoNetShortTypeMapping : ShortTypeMapping
@@ -190,6 +191,19 @@ public class AdoNetDateTimeTypeMapping : DateTimeTypeMapping
 
     protected override string GenerateNonNullSqlLiteral(object value)
         => _dialect.FormatLiteral(value, StoreType, base.GenerateNonNullSqlLiteral(value));
+
+    protected override void ConfigureParameter(DbParameter parameter)
+    {
+        base.ConfigureParameter(parameter);
+
+        // TIMESTAMP WITHOUT TIME ZONE represents a wall-clock value. Drivers such as Npgsql
+        // reject a UTC DateTime for that store type, even though the underlying instant is not
+        // part of the SQL value. Normalize only the Kind marker before binding.
+        if (parameter.Value is DateTime value && StoreType.Contains("WITHOUT TIME ZONE", StringComparison.OrdinalIgnoreCase))
+        {
+            parameter.Value = DateTime.SpecifyKind(value, DateTimeKind.Unspecified);
+        }
+    }
 }
 
 public class AdoNetDateTimeOffsetTypeMapping : DateTimeOffsetTypeMapping
