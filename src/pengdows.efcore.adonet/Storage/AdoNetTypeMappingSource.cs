@@ -95,9 +95,21 @@ internal class AdoNetTypeMappingSource : RelationalTypeMappingSource
         Type modelType,
         Type? providerType,
         CoreTypeMapping? elementMapping)
-        => FindMapping(info.WithConverter(new ValueConverterInfo(modelType, typeof(string), _ => null!))) == null
-            ? null
-            : base.FindCollectionMapping(info, modelType, providerType, elementMapping);
+    {
+        if (FindMapping(info.WithConverter(new ValueConverterInfo(modelType, typeof(string), _ => null!))) == null)
+        {
+            return null;
+        }
+
+        var mapping = base.FindCollectionMapping(info, modelType, providerType, elementMapping);
+
+        // EF builds primitive collections on top of the string mapping when no explicit store type was supplied.
+        // Dialects with native JSON functions must use their JSON store type here; otherwise PostgreSQL emits
+        // jsonb_array_elements(VARCHAR), and equivalent dialects lose their JSON operators as well.
+        return mapping != null && info.StoreTypeName == null && _sql.Json is { } json
+            ? mapping.WithStoreTypeAndSize(json.StoreType, mapping.Size)
+            : mapping;
+    }
 #pragma warning restore EF1001
 
     protected override RelationalTypeMapping? FindMapping(in RelationalTypeMappingInfo mappingInfo)

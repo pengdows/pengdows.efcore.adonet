@@ -1,5 +1,7 @@
 using System.Data;
 using System.Data.Common;
+using System.Reflection;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace pengdows.efcore.adonet.Storage;
@@ -68,6 +70,16 @@ public class AdoNetStringTypeMapping : StringTypeMapping
     {
         base.ConfigureParameter(parameter);
 
+        // Primitive collections use EF's string mapping plus a JSON converter. PostgreSQL's jsonb
+        // column still needs the provider-specific parameter type, otherwise Npgsql sends the
+        // JSON text as VARCHAR and PostgreSQL rejects the assignment before SQL can run.
+        if (StoreType.Equals("jsonb", StringComparison.OrdinalIgnoreCase)
+            && (parameter.Value is null or DBNull || parameter.Value is string json && IsJson(json))
+            && parameter.GetType().GetProperty("NpgsqlDbType") is { PropertyType.IsEnum: true } npgsqlDbType)
+        {
+            npgsqlDbType.SetValue(parameter, Enum.Parse(npgsqlDbType.PropertyType, "Jsonb", ignoreCase: false));
+        }
+
         var length = (parameter.Value as string)?.Length;
         var size = Size is > 0 ? Size : _typeMappings.StringParameterSize(IsUnicode);
         var fixedLength = IsFixedLength && (length == null || length == Size);
@@ -79,6 +91,19 @@ public class AdoNetStringTypeMapping : StringTypeMapping
         if (size != null && (length == null || length <= size))
         {
             parameter.Size = size.Value;
+        }
+    }
+
+    private static bool IsJson(string value)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(value);
+            return document.RootElement.ValueKind is not JsonValueKind.Undefined;
+        }
+        catch (JsonException)
+        {
+            return false;
         }
     }
 }

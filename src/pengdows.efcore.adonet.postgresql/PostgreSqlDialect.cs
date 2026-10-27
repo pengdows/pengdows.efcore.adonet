@@ -185,7 +185,10 @@ internal static class PostgreSqlJson
     {
         // The shared query generator supplies the table alias after this expression. Wrapping the
         // set-returning function gives PostgreSQL stable column names matching the shared JSON AST.
-        ArrayElements = "(SELECT e.value AS {2}, e.ordinality AS {1} FROM jsonb_array_elements({0}) WITH ORDINALITY AS e(value))",
+        // jsonb_array_elements returns jsonb. Extract the scalar text before casting it to the
+        // element mapping; leaving e.value uncast makes predicates compare jsonb to INTEGER,
+        // BOOLEAN, etc., which PostgreSQL correctly rejects.
+        ArrayElements = "(SELECT CAST(e.value #>> '{}' AS {3}) AS {2}, e.ordinality AS {1} FROM jsonb_array_elements({0}) WITH ORDINALITY AS e(value))",
         ArrayElementsTextType = "{0}",
         ArrayElementsBinaryValue = "decode({0}, 'base64')"
     };
