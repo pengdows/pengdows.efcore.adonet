@@ -12,8 +12,6 @@ public partial class StoredProcedureUpdateMySqlTest
     // EF warns can repeat across a hierarchy's tables. Adapted from Pomelo's StoredProcedureUpdateMySqlTest (MIT, Pomelo
     // Foundation):
     // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/test/EFCore.MySql.FunctionalTests/Update/StoredProcedureUpdateMySqlTest.cs
-    [ConditionalTheory]
-    [MemberData(nameof(IsAsyncData))]
     public override async Task Tpc(bool async)
     {
         var contextFactory = await InitializeAsync<DbContext>(

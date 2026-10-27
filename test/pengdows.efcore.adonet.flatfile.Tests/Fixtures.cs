@@ -26,11 +26,11 @@ public sealed class FlatFileFixture : ProviderFixture
 
         // ALTER TABLE "Authors" RENAME TO "Writers", then an insert into Shelves: its foreign key still names "Authors".
         ["Migrate_applies_records_and_reverts_migrations"] =
-            "pengdows.flatfile 0.2.1-preview.9 leaves foreign keys naming a table after the table is renamed",
+            "pengdows.flatfile 0.2.1-preview.10 leaves foreign keys naming a table after the table is renamed",
         ["Alter_column_changes_size_nullability_and_default"] =
-            "pengdows.flatfile 0.2.1-preview.9 leaves foreign keys naming a table after the table is renamed",
+            "pengdows.flatfile 0.2.1-preview.10 leaves foreign keys naming a table after the table is renamed",
 
-        ["Math_on_doubles"] = "pengdows.flatfile 0.2.1-preview.9 has no POWER",
+        ["Math_on_doubles"] = "pengdows.flatfile 0.2.1-preview.10 has no POWER",
 
         // DELETE FROM "Blogs" AS "b" ... (ISO SQL:2011 allows a correlation name on a DELETE target): each test deletes
         // through ExecuteDelete, in its body or to clear its table.
@@ -41,28 +41,28 @@ public sealed class FlatFileFixture : ProviderFixture
         ["Date_offset_constants_and_parts"] = DeleteAlias,
 
         // INTERVAL '0 01:02:03.5' DAY TO SECOND (ISO). The engine's interval literals have one field and no precision.
-        ["Time_span_constants"] = "pengdows.flatfile 0.2.1-preview.9 has no DAY TO SECOND interval literal",
+        ["Time_span_constants"] = "pengdows.flatfile 0.2.1-preview.10 has no DAY TO SECOND interval literal",
 
         // WHERE "Double" = 4.9406564584124654E-324: an approximate numeric literal (ISO), read as a decimal, which overflows.
         ["Floating_point_constants_at_the_edges_of_their_types"] =
-            "pengdows.flatfile 0.2.1-preview.9 parses a literal with an exponent as a decimal and overflows",
+            "pengdows.flatfile 0.2.1-preview.10 parses a literal with an exponent as a decimal and overflows",
 
         // SELECT "Day" from a DATE column: GetDateTime and GetFieldValue<DateTime> throw InvalidCastException (a DateOnly).
-        ["Bulk_insert_writes_values_as_the_column_type"] = "pengdows.flatfile 0.2.1-preview.9 can't read a DATE as a DateTime",
+        ["Bulk_insert_writes_values_as_the_column_type"] = "pengdows.flatfile 0.2.1-preview.10 can't read a DATE as a DateTime",
 
         // After CREATE TABLE "tenant"."H", an unqualified "H" means that table: CREATE TABLE "H" says it already exists.
         ["Another_schemas_history_table_is_not_this_ones"] =
-            "pengdows.flatfile 0.2.1-preview.9 resolves an unqualified table name to a table in any schema",
+            "pengdows.flatfile 0.2.1-preview.10 resolves an unqualified table name to a table in any schema",
 
         // WHERE "Hash" = :c through CREATE INDEX ... ("Hash"): ArgumentException "Object must be of type String".
         ["Unsized_key_and_index_columns_are_created_and_hold_long_values"] =
-            "pengdows.flatfile 0.2.1-preview.9 can't look up a VARBINARY value through an index",
+            "pengdows.flatfile 0.2.1-preview.10 can't look up a VARBINARY value through an index",
 
         // A second connection opened while the first is open waits for the first's write lock, taken at open.
-        ["An_open_borrowed_connection_can_be_replaced"] = "pengdows.flatfile 0.2.1-preview.9 takes the write lock when a connection opens"
+        ["An_open_borrowed_connection_can_be_replaced"] = "pengdows.flatfile 0.2.1-preview.12 takes the write lock when a connection opens"
     };
 
-    private const string DeleteAlias = "pengdows.flatfile 0.2.1-preview.9 rejects an alias on a DELETE target";
+    private const string DeleteAlias = "pengdows.flatfile 0.2.1-preview.10 rejects an alias on a DELETE target";
 
     public override IReadOnlyList<string> ModelSequences { get; } =
         ["SchemaAuthors_Id_seq", "SchemaBooks_Id_seq", "SchemaCategories_Id_seq", "LongNames_Id_seq", "Authors_Id_seq", "Writers_Id_seq", "Shelves_Id_seq"];

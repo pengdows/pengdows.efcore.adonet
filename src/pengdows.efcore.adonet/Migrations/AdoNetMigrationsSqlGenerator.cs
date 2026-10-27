@@ -13,7 +13,7 @@ namespace pengdows.efcore.adonet.Migrations;
 public class AdoNetMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dependencies, IAdoNetDialect dialect)
     : MigrationsSqlGenerator(dependencies)
 {
-    protected IAdoNetDialect Dialect { get; } = dialect;
+    protected virtual IAdoNetDialect Dialect { get; } = dialect;
 
     protected override void Generate(CreateTableOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
     {

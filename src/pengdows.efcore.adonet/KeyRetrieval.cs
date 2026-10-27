@@ -16,6 +16,13 @@ public abstract class KeyRetrieval
     public static ReturningKeyRetrieval Returning { get; } = new();
 
     /// <summary>
+    ///     SQL:2023 feature T495, combined data change and retrieval: the statement is a data change delta table, and what it
+    ///     returns is read by an ordinary <c>SELECT col FROM FINAL TABLE (INSERT ...)</c>, <c>... NEW TABLE (UPDATE ...)</c> or
+    ///     <c>... OLD TABLE (DELETE ...)</c>. The standard form of what <see cref="Returning" /> does with an extension.
+    /// </summary>
+    public static DeltaTableKeyRetrieval DeltaTable { get; } = new();
+
+    /// <summary>
     ///     <c>INSERT ...; SELECT col FROM t WHERE {rowsAffectedFunction} = 1 AND key = {identityFunction};</c>, e.g.
     ///     <c>SCOPE_IDENTITY()</c>/<c>@@ROWCOUNT</c>. Requires <see cref="IDatabaseCapabilities.SupportsMultipleStatementsPerCommand" />.
     /// </summary>
@@ -35,6 +42,8 @@ public abstract class KeyRetrieval
 }
 
 public sealed class ReturningKeyRetrieval : KeyRetrieval;
+
+public sealed class DeltaTableKeyRetrieval : KeyRetrieval;
 
 public sealed class SelectAfterKeyRetrieval(string identityFunction, string rowsAffectedFunction) : KeyRetrieval
 {

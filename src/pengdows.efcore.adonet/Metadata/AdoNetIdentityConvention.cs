@@ -38,7 +38,10 @@ internal class AdoNetIdentityConvention : IModelFinalizingConvention
             // A key that is the entity's own foreign key copies another row's. A TPT hierarchy's derived types tie their
             // keys to the root's through it too, but those foreign keys are theirs, not the root's.
             && !property.GetContainingForeignKeys().Any(fk => fk.DeclaringEntityType == property.DeclaringType)
-            && property.GetValueGeneratorFactory() == null
+            // EF's own conventions attach a temporary-value factory to database-generated keys; one the model asked for
+            // means the application numbers the key.
+            && (property.GetValueGeneratorFactory() == null
+                || property.GetValueGeneratorFactoryConfigurationSource() == ConfigurationSource.Convention)
             // GetDefaultValue() is the CLR default (0) when none is configured.
             && !property.TryGetDefaultValue(out _)
             && property.GetDefaultValueSql() == null

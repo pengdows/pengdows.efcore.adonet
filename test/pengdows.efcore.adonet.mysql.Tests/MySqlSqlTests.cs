@@ -6,6 +6,13 @@ namespace pengdows.efcore.adonet.mysql.Tests;
 
 public class MySqlSqlTests
 {
+    [Fact]
+    public void Session_setup_matches_the_string_literal_escape_mode()
+    {
+        Assert.EndsWith("'ANSI_QUOTES')", MySqlDialect.Instance.Sql.SessionSetup);
+        Assert.EndsWith("'ANSI_QUOTES', 'NO_BACKSLASH_ESCAPES')", MySqlDialect.NoBackslashEscapes.Sql.SessionSetup);
+    }
+
     private static BlogContext Context(Action<DbContextOptionsBuilder> configure)
     {
         var builder = new DbContextOptionsBuilder<BlogContext>();

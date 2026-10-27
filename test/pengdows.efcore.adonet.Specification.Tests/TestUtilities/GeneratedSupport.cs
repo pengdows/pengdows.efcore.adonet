@@ -29,8 +29,7 @@ public static class QuerySplitting
     {
         if (optionsBuilder.Options.FindExtension<AdoNetOptionsExtension>() is { } extension)
         {
-            ((IDbContextOptionsBuilderInfrastructure)optionsBuilder).AddOrUpdateExtension(
-                (AdoNetOptionsExtension)extension.WithUseQuerySplittingBehavior(QuerySplittingBehavior.SingleQuery));
+            ((IDbContextOptionsBuilderInfrastructure)optionsBuilder).AddOrUpdateExtension(extension.WithoutQuerySplittingBehavior());
         }
 
         return optionsBuilder;

@@ -5,6 +5,10 @@ namespace pengdows.efcore.adonet.flatfile.Tests;
 
 public class FlatFileSqlTests
 {
+    [Fact]
+    public void Advertises_independent_active_readers()
+        => Assert.True(FlatFileDialect.Instance.Capabilities.SupportsMultipleActiveReaders);
+
     private static BlogContext Context(Action<DbContextOptionsBuilder> configure)
     {
         var builder = new DbContextOptionsBuilder<BlogContext>();

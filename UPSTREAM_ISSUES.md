@@ -173,6 +173,21 @@ noted so they can be removed once the fix ships.
   unless the connection allows user variables, so the dialect's `ConnectionOptions` adds `Allow User Variables=true` to
   connection strings and closed connections, and refuses an open connection or a data source without it.
 
+### JSON path members that aren't identifiers
+
+- **Defect (1):** `RelationalSqlGenerationHelper.DelimitJsonPathElement` leaves a name of letters and digits bare, so a
+  member named `1CustomEnum` is written `$.CustomOwnedReferenceRoot.1CustomEnum`, which no database's path grammar reads. The
+  SQL Server provider overrides it to quote a name whose first character isn't a letter; the relational default doesn't.
+- **Defect (2):** the path in a `SaveChanges` JSON update (`IColumnModification.JsonPath`, a string in 10.0.11) is built
+  by EF with the member names unquoted: a member named `Full name` is patched at `$.Full name`. EF's `main` replaces the
+  string with `StructuredJsonPath`, which a provider can delimit; the shipped string can't be repaired by a provider.
+- **Confirmed:** (1) `JsonQueryMySqlTest.Json_projection_enum_with_custom_conversion` fails with "Invalid JSON path
+  expression" under the default helper and passes under ours; (2) `JsonTests` writes `JSON_SET("Detail", '$.Full name', ...)`
+  from a `SaveChanges` update, while the `ExecuteUpdate` path (ours) writes `'$."Full name"'`.
+- **Before filing:** (2) against the 10.0.11 source, and whether `main`'s `StructuredJsonPath` already closes it.
+- **Our fix:** (1) `AdoNetSqlGenerationHelper.DelimitJsonPathElement`. (2) none yet: a `SaveChanges` patch of a member whose
+  name isn't an identifier writes an unquoted path.
+
 ## mysql/mysql-connector-net (MySql.Data 26.10.0)
 
 Found by running the shared MySQL suites through Oracle's driver as well as MySqlConnector (the dialect is
@@ -293,9 +308,9 @@ Gaps that keep core paths out of reach of fakeDb tests (REVIEW_POLICY: a gap is 
 - A dialect is registered by factory type and `fakeDbFactory` is sealed, so a test that registers one needs a factory type
   of its own (`ProbedFactory`, `UnknownFactory`); both hand out fakeDb connections.
 
-## pengdows.flatfile (0.2.1-preview.9)
+## pengdows.flatfile (0.2.1-preview.10)
 
-Open, recorded as skips in `test/pengdows.efcore.adonet.flatfile.Tests/Fixtures.cs`, each probed against preview.9 with
+Open, recorded as skips in `test/pengdows.efcore.adonet.flatfile.Tests/Fixtures.cs`, each probed against preview.10 with
 plain ADO.NET:
 
 - Comparing a `DOUBLE PRECISION` value with a numeric literal goes through `decimal`: `WHERE "D" = 0E0` throws

@@ -16,7 +16,7 @@ namespace pengdows.efcore.adonet.Migrations;
 public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies, IAdoNetDialect dialect)
     : HistoryRepository(dependencies), IHistoryRepository
 {
-    protected IAdoNetDialect Dialect { get; } = dialect;
+    protected virtual IAdoNetDialect Dialect { get; } = dialect;
 
     protected virtual string LockTableName
         => "__EFMigrationsLock";

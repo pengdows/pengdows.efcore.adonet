@@ -15,10 +15,16 @@ public class AdoNetTestStore<THost> : RelationalTestStore
     // each database's stores apart.
     private static readonly TestStoreIndex Index = new();
 
+    private readonly string _databaseName;
+
     public AdoNetTestStore(string name, bool shared)
-        : base(name, shared, Host.CreateConnection(Host.ConnectionStringFor(DatabaseName(name))))
+        : this(name, shared, DatabaseName(name))
     {
     }
+
+    private AdoNetTestStore(string name, bool shared, string databaseName)
+        : base(name, shared, Host.CreateConnection(Host.ConnectionStringFor(databaseName)))
+        => _databaseName = databaseName;
 
     // Test store names are EF's (e.g. "Northwind"); one database per name and host.
     private static string DatabaseName(string name)
@@ -30,10 +36,14 @@ public class AdoNetTestStore<THost> : RelationalTestStore
     // As EF's own test stores: the store's connection, which every context shares (so a nested context can join the outer
     // one's transaction), unless a test asks for a connection string.
     public override DbContextOptionsBuilder AddProviderOptions(DbContextOptionsBuilder builder)
-        => SqlLog.AddTo(
+    {
+        var options = SqlLog.AddTo(
             UseConnectionString
                 ? Host.UseProvider(builder, ConnectionString, Configure)
                 : Host.UseProvider(builder, Connection, Configure));
+
+        return options;
+    }
 
     private static void Configure(AdoNetDbContextOptionsBuilder options)
         => SpatialTypes.Use(Host, options.UseQuerySplittingBehavior(QuerySplittingBehavior.SingleQuery).CommandTimeout(300));
@@ -43,7 +53,7 @@ public class AdoNetTestStore<THost> : RelationalTestStore
     // https://github.com/dotnet/efcore/blob/v10.0.11/test/EFCore.Sqlite.FunctionalTests/TestUtilities/SqliteTestStore.cs
     protected override async Task InitializeAsync(Func<DbContext> createContext, Func<DbContext, Task>? seed, Func<DbContext, Task>? clean)
     {
-        await Host.CreateEmptyDatabaseAsync(DatabaseName(Name));
+        await Host.CreateEmptyDatabaseAsync(_databaseName);
         await using var context = createContext();
         if (clean != null)
         {
@@ -72,7 +82,10 @@ public class AdoNetTestStore<THost> : RelationalTestStore
         Func<DbContext, Task>? clean = null)
     {
         await base.InitializeAsync(serviceProvider, createContext, seed, clean);
-        CloseIfOpen();
+        if (!Host.KeepStoreConnectionOpen)
+        {
+            CloseIfOpen();
+        }
         return this;
     }
 
@@ -98,7 +111,7 @@ public class AdoNetTestStore<THost> : RelationalTestStore
     {
         // The store's connection, which the context shares, may be open: a test opened it.
         CloseIfOpen();
-        await Host.CreateEmptyDatabaseAsync(DatabaseName(Name));
+        await Host.CreateEmptyDatabaseAsync(_databaseName);
         // EF's database cleaner drops everything and creates the tables again: an empty schema, ready to seed.
         await context.GetService<IRelationalDatabaseCreator>().CreateTablesAsync();
     }

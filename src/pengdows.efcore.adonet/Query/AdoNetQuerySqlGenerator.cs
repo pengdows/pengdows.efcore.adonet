@@ -94,8 +94,12 @@ internal class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencie
             ?? throw new InvalidOperationException("This query reads a value inside a JSON column, which the dialect has no functions for.");
         var typeMapping = jsonScalarExpression.TypeMapping;
         var template = typeMapping is Storage.AdoNetJsonTypeMapping || typeMapping?.ElementTypeMapping != null ? json.Query
+            : (Nullable.GetUnderlyingType(jsonScalarExpression.Type) ?? jsonScalarExpression.Type) == typeof(byte[]) && json.BinaryValue != null ? json.BinaryValue
+            : typeMapping is not null
+                && (Nullable.GetUnderlyingType(typeMapping.ClrType) ?? typeMapping.ClrType) == typeof(bool)
+                && typeMapping.Converter?.ProviderClrType != typeof(string)
+                && (json.BooleanValue != null) ? json.BooleanValue
             : typeMapping is null or StringTypeMapping ? json.Value
-            : ((Nullable.GetUnderlyingType(typeMapping.ClrType) ?? typeMapping.ClrType) == typeof(bool)) && (json.BooleanValue != null) ? json.BooleanValue
             : json.TypedValue;
 
         WriteTemplate(
@@ -114,29 +118,17 @@ internal class AdoNetQuerySqlGenerator(QuerySqlGeneratorDependencies dependencie
     // to text, with the dialect's concatenation.
     private void WriteJsonPath(JsonSyntax json, IReadOnlyList<PathSegment> path)
     {
+        var text = JsonPathText.Of(path, Dependencies.SqlGenerationHelper);
         var parts = new List<Action>();
-        var text = new System.Text.StringBuilder("$");
-        foreach (var segment in path)
+        for (var i = 0; i < text.Indexes.Count; i++)
         {
-            if (segment.PropertyName is { } name)
-            {
-                text.Append('.').Append(Dependencies.SqlGenerationHelper.DelimitJsonPathElement(name));
-            }
-            else if (segment.ArrayIndex is SqlConstantExpression { Value: var index })
-            {
-                text.Append('[').Append(Convert.ToString(index, System.Globalization.CultureInfo.InvariantCulture)).Append(']');
-            }
-            else
-            {
-                var literal = text.Append('[').ToString();
-                var computed = segment.ArrayIndex!;
-                parts.Add(() => Sql.Append(dialect.StringLiteral(literal)));
-                parts.Add(() => WriteCast(computed, typeMappings.GetStoreType(typeof(string))!));
-                text.Clear().Append(']');
-            }
+            var literal = text.Literals[i];
+            var computed = text.Indexes[i];
+            parts.Add(() => Sql.Append(dialect.StringLiteral(literal)));
+            parts.Add(() => WriteCast(computed, typeMappings.GetStoreType(typeof(string))!));
         }
 
-        var rest = text.ToString();
+        var rest = text.Literals[^1];
         parts.Add(() => Sql.Append(dialect.StringLiteral(rest)));
         WriteConcatenation(json.Concatenate, parts, 0);
     }

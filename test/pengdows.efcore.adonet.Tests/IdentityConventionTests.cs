@@ -79,11 +79,30 @@ public class IdentityConventionTests
         public int Part { get; set; }
     }
 
+    public class Guided
+    {
+        public int Id { get; set; }
+    }
+
+    public class Viewed
+    {
+        public int Id { get; set; }
+    }
+
+    public class CountingGenerator : Microsoft.EntityFrameworkCore.ValueGeneration.ValueGenerator<int>
+    {
+        public override bool GeneratesTemporaryValues => false;
+
+        public override int Next(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry) => 1;
+    }
+
     private sealed class KeysContext(DbContextOptions<KeysContext> options) : DbContext(options)
     {
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Numbered>();
+            modelBuilder.Entity<Guided>().Property(e => e.Id).HasValueGenerator<CountingGenerator>();
+            modelBuilder.Entity<Viewed>().ToView("Viewed").Property(e => e.Id).ValueGeneratedOnAdd();
             modelBuilder.Entity<Coded>().Property(e => e.Id).HasConversion<string>();
             modelBuilder.Entity<Packed>().Property(e => e.Id).HasConversion<byte[]>();
             modelBuilder.Entity<Kinded>().Property(e => e.Id).ValueGeneratedOnAdd();
@@ -175,4 +194,19 @@ public class IdentityConventionTests
     [Fact]
     public void A_column_of_a_composite_key_is_an_identity_when_asked()
         => Assert.True(IsIdentity<Paired>());
+
+    // The application numbers this key itself, so the database must not.
+    [Fact]
+    public void A_key_the_application_generates_is_not_an_identity()
+        => Assert.False(IsIdentity<Guided>());
+
+    // An entity that maps to no table has no column to number.
+    [Fact]
+    public void An_entity_without_a_table_has_no_identity()
+    {
+        using var context = new FakeDatabase().ContextOf<KeysContext>(AdoNetDialect.Ansi, o => new KeysContext(o));
+        var viewed = context.GetService<IDesignTimeModel>().Model.FindEntityType(typeof(Viewed))!;
+
+        Assert.All(viewed.GetProperties(), p => Assert.Null(p.FindAnnotation(AdoNetAnnotationNames.Identity)));
+    }
 }

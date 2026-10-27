@@ -22,6 +22,16 @@ internal class AdoNetSqlGenerationHelper(RelationalSqlGenerationHelperDependenci
     public override void GenerateParameterNamePlaceholder(StringBuilder builder, string name)
         => builder.Append(GenerateParameterNamePlaceholder(name));
 
+    // A JSON path member is bare when it reads as an identifier (a letter or underscore, then letters, digits and underscores):
+    // EF's own helper would also leave a leading digit bare, which no database's path grammar reads as a member name.
+    public override string DelimitJsonPathElement(string pathElement)
+        => IsBareJsonPathMember(pathElement) ? pathElement : $"\"{EscapeJsonPathElement(pathElement)}\"";
+
+    private static bool IsBareJsonPathMember(string name)
+        => (name.Length > 0)
+            && (char.IsAsciiLetter(name[0]) || (name[0] == '_'))
+            && name.All(c => char.IsAsciiLetterOrDigit(c) || (c == '_'));
+
     public override string EscapeIdentifier(string identifier)
         => identifier.Replace(dialect.IdentifierQuoteSuffix, dialect.IdentifierQuoteSuffix + dialect.IdentifierQuoteSuffix);
 

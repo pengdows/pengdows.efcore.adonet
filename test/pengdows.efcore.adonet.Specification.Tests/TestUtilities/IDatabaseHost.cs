@@ -26,14 +26,35 @@ public interface IDatabaseHost
     /// <summary>Whether a <see cref="DateTimeOffset" /> reads back with its offset; false where the database keeps only the instant.</summary>
     bool KeepsOffsets { get; }
 
+    /// <summary>A valid baseline DateTime for provider-neutral built-in type probes.</summary>
+    DateTime DefaultDateTime => new();
+
+    /// <summary>Whether floating-point equality probes can require exact database equality.</summary>
+    bool StrictEquality => true;
+
     /// <summary>Northwind's stored procedures, for EF's raw-SQL suites; null where the database has none.</summary>
     NorthwindProcedures? Procedures { get; }
 
     /// <summary>A collation other than the test databases' own, for the migrations suites; null where there is none to name.</summary>
     string? NonDefaultCollation { get; }
 
+    /// <summary>Collation used by the shared Northwind string-comparison tests when an insensitive comparison is required.</summary>
+    string? CaseInsensitiveCollation => null;
+
+    /// <summary>Collation used by the shared Northwind string-comparison tests when a sensitive comparison is required.</summary>
+    string? CaseSensitiveCollation => null;
+
+    /// <summary>Database schema used by mapping tests; null for engines without schemas.</summary>
+    string? DatabaseSchema => null;
+
     /// <summary>EF's stored-procedure update suite on this database; null where the database has no procedures.</summary>
     UpdateProcedures? UpdateProcedures { get; }
+
+    /// <summary>Whether the shared store keeps its connection open after initialization.</summary>
+    bool KeepStoreConnectionOpen { get; }
+
+    /// <summary>Whether the store can retain the malformed JSON documents used by EF's bad-property tests.</summary>
+    bool SupportsMalformedJsonProperties => true;
 }
 
 /// <summary>

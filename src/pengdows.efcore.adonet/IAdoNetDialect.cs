@@ -34,6 +34,12 @@ public interface IAdoNetDialect
 /// <summary>The SQL text: identifiers, parameters, literals, and the grammar parts that differ between databases.</summary>
 public interface ISqlDialect
 {
+    /// <summary>The isolation level to pass to the driver when EF requests its default.</summary>
+    System.Data.IsolationLevel DefaultTransactionIsolationLevel { get; }
+
+    /// <summary>Whether a suppressed transaction completion must keep the connection open for the caller.</summary>
+    bool KeepConnectionOpenAfterSuppressedTransaction { get; }
+
     string IdentifierQuotePrefix { get; }
     string IdentifierQuoteSuffix { get; }
 

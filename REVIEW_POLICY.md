@@ -329,3 +329,57 @@ Compliance with this policy is enforced via:
 2. **Manual peer review**: Maintainers verify adherence to this policy and project-specific invariants.
 3. **Public-API guards**: Public API analyzers and the project's `PublicAPI.*.txt` baselines must reject undeclared public or protected members and unexplained removals.
 
+---
+
+## 12) Shared Core and Canonical Test Policy
+
+The project ports, rewrites, and unifies behavior from upstream DuckDB, SQLite, MySQL, and SQL Server providers into one ADO.NET-based architecture. The goal is one coherent EF-facing provider contract, with provider projects containing only behavior that is genuinely specific to a database engine, driver, or dialect.
+
+### A. Centralize shared functionality
+
+* If two or more providers need the same implementation, it belongs in the core unless a documented boundary makes that impossible.
+* If two or more providers expose the same EF-visible capability, prefer one core API, abstraction, or capability contract rather than parallel provider APIs.
+* Do not force a lowest-common-denominator design. Preserve real provider capabilities through explicit dialect syntax, capability flags, or narrowly scoped extension points.
+* Before adding provider-specific code, identify why the core cannot express the behavior. The reason must be an actual database, driver, SQL, lifecycle, or capability difference—not merely that an upstream provider implemented it separately.
+* Shared code must remain provider-neutral. The core must not reference provider packages or name a specific database except for the ANSI default dialect.
+
+### B. Maintain one canonical test per behavior
+
+* Before adding or porting a test, search all existing suites and upstream sources for the same setup, operation, expected result, and failure mode.
+* If tests prove the same semantic behavior, consolidate them into one canonical test with the most meaningful behavior-based name.
+* Prefer names such as `Can_insert_and_read_back_store_generated_key` or `Can_query_with_offset_without_limit`; do not preserve names tied to an upstream provider, private helper, or source file when the behavior is shared.
+* Keep separate tests only when they exercise a materially different path, such as result semantics versus SQL-shape verification, synchronous versus asynchronous ownership behavior where both matter, or a distinct failure mode.
+* A difference in SQL spelling alone is not a reason for a second test. Use the dialect or provider fixture to express the expected SQL.
+* A difference in expected results is not automatically a reason for a second test. Use capability- or version-specific expectations when the operation is still the same behavior.
+
+### C. Classify every imported behavior
+
+Every imported or newly unified behavior must be classified as one of:
+
+1. Shared unchanged across all six providers.
+2. Shared with capability-based skips.
+3. Shared with provider-specific expectations.
+4. Provider-only because the behavior is genuinely provider-specific.
+5. An upstream, driver, or engine gap requiring a documented workaround or issue.
+
+The classification must identify the actual providers that execute the test. Tests should run on MySQL, PostgreSQL, SQL Server, flatfile, SQLite, and DuckDB whenever their capabilities permit. Unsupported cases remain active everywhere else and use an attributed `[SKIP:<Product>]` reason only where the product truly lacks the feature.
+
+### D. Preserve upstream coverage without preserving upstream duplication
+
+* Upstream tests are behavior references, not a mandate to reproduce provider-specific class structures, helpers, APIs, or duplicate tests.
+* Adapt upstream tests to the shared fixtures and core abstractions.
+* Compare equivalent upstream tests across providers and retain the strongest coverage under one canonical test name.
+* The PR description must record the source suites examined, the duplicate search performed, the final provider matrix, and intentionally omitted cases.
+* Borrowed implementation or test code must follow the licensing and attribution rules in section 4A. Oracle provider code may be read for behavior but must not be copied.
+
+### E. Required evidence for centralization
+
+Any change that moves behavior into the core or unifies tests must include:
+
+* Core unit coverage for provider-neutral behavior.
+* Real-provider integration coverage for database, SQL, transaction, lifecycle, or dialect behavior.
+* The affected-provider matrix, including explicit capability skips and their reasons.
+* Updated metrics, result ledgers, upstream baselines, or issue documentation when the change alters reported coverage or test classification.
+* DB impact notes whenever SQL generation, DDL, transactions, isolation, connection ownership, or provider capabilities change.
+
+The preferred unit of work is a small semantic slice: identify duplicates, establish the canonical name, centralize the implementation or fixture, run the provider matrix, and then update the relevant documentation and metrics.

@@ -40,10 +40,10 @@ public abstract class PagingSyntax
         => new LimitOffsetPaging(noLimitValue);
 
     /// <summary>When true, OFFSET/LIMIT values are written as literals once known; the SQL is then not cached.</summary>
-    public bool InlinesValues { get; private set; }
+    public virtual bool InlinesValues { get; private set; }
 
     /// <summary>A copy that writes paging values as literals, for databases that reject parameters there.</summary>
-    public PagingSyntax WithLiteralValues()
+    public virtual PagingSyntax WithLiteralValues()
     {
         var copy = (PagingSyntax)MemberwiseClone();
         copy.InlinesValues = true;
@@ -54,10 +54,10 @@ public abstract class PagingSyntax
     ///     False where a limit must be a value (a constant or parameter), not an expression: <c>Take(a).Take(b)</c> is then a
     ///     subquery, where it would otherwise be limited to <c>LEAST(a, b)</c>.
     /// </summary>
-    public bool ComputesLimits { get; private set; } = true;
+    public virtual bool ComputesLimits { get; private set; } = true;
 
     /// <summary>A copy for databases whose limit takes only a constant or parameter.</summary>
-    public PagingSyntax WithValueLimitsOnly()
+    public virtual PagingSyntax WithValueLimitsOnly()
     {
         var copy = (PagingSyntax)MemberwiseClone();
         copy.ComputesLimits = false;
@@ -261,6 +261,11 @@ public abstract class DmlSyntax
         => select is { Tables: [TableExpression, ..], Orderings: [], Offset: null, Limit: null, GroupBy: [], Having: null, IsDistinct: false }
             && select.Tables.Skip(1).All(t => t is JoinExpressionBase);
 
+    // Ordering and DISTINCT do not change the set of rows affected by ExecuteDelete. Some servers reject the fallback
+    // key-IN-subquery form when that subquery reads the target table, so a single-table delete must stay direct.
+    private static bool IsSingleTableDelete(SelectExpression select)
+        => select is { Tables: [TableExpression], Offset: null, Limit: null, GroupBy: [], Having: null };
+
     protected static void AppendTables(IQuerySqlWriter sql, SelectExpression select)
     {
         for (var i = 0; i < select.Tables.Count; i++)
@@ -367,7 +372,7 @@ public abstract class DmlSyntax
     private sealed class MultiTableDml : DmlSyntax
     {
         public override bool? CanDeleteDirectly(SelectExpression select)
-            => IsJoinsAndPredicateOnly(select);
+            => IsJoinsAndPredicateOnly(select) || IsSingleTableDelete(select);
 
         public override bool TryGenerateDelete(IQuerySqlWriter sql, DeleteExpression delete)
         {
@@ -399,6 +404,7 @@ public abstract class DmlSyntax
 /// <param name="query">A sub-document (an object or array), as JSON.</param>
 /// <param name="typedValue">A value inside the document returned as the store type <c>{2}</c>.</param>
 /// <param name="booleanValue">A boolean value inside the document, where a typed value can't express it.</param>
+/// <param name="binaryValue">A base64-encoded binary value inside the document, decoded to bytes.</param>
 /// <param name="concatenate">Joins two strings, to build a path whose array index is computed: <c>{0} || {1}</c>.</param>
 /// <param name="set">Replaces the value at the path <c>{1}</c> in <c>{0}</c> with <c>{2}</c>.</param>
 /// <param name="fromText">Turns JSON text (a sub-document, or <c>true</c>/<c>false</c>) into a JSON value.</param>
@@ -408,6 +414,7 @@ public sealed class JsonSyntax(
     string query,
     string typedValue,
     string? booleanValue,
+    string? binaryValue,
     string concatenate,
     string set,
     string fromText)
@@ -422,6 +429,7 @@ public sealed class JsonSyntax(
         "JSON_QUERY({0}, {1})",
         "JSON_VALUE({0}, {1} RETURNING {2})",
         booleanValue: null,
+        binaryValue: null,
         "{0} || {1}",
         "JSON_SET({0}, {1}, {2})",
         "JSON({0})");
@@ -431,6 +439,7 @@ public sealed class JsonSyntax(
     public string Query { get; } = query;
     public string TypedValue { get; } = typedValue;
     public string? BooleanValue { get; } = booleanValue;
+    public string? BinaryValue { get; } = binaryValue;
     public string Concatenate { get; } = concatenate;
     public string Set { get; } = set;
     public string FromText { get; } = fromText;

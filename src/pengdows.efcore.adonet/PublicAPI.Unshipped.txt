@@ -5,12 +5,48 @@ abstract pengdows.efcore.adonet.PagingSyntax.GenerateLimitOffset(pengdows.efcore
 const pengdows.efcore.adonet.AdoNetAnnotationNames.Identity = "AdoNet:Identity" -> string!
 const pengdows.efcore.adonet.AdoNetAnnotationNames.IdentityColumns = "AdoNet:IdentityColumns" -> string!
 const pengdows.efcore.adonet.AdoNetAnnotationNames.Prefix = "AdoNet:" -> string!
+override pengdows.efcore.adonet.Storage.AdoNetBoolTypeMapping.Clone(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters) -> Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping!
+override pengdows.efcore.adonet.Storage.AdoNetBoolTypeMapping.GenerateNonNullSqlLiteral(object! value) -> string!
+override pengdows.efcore.adonet.Storage.AdoNetByteArrayTypeMapping.Clone(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters) -> Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping!
+override pengdows.efcore.adonet.Storage.AdoNetByteArrayTypeMapping.GenerateNonNullSqlLiteral(object! value) -> string!
+override pengdows.efcore.adonet.Storage.AdoNetByteTypeMapping.Clone(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters) -> Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping!
+override pengdows.efcore.adonet.Storage.AdoNetByteTypeMapping.GenerateNonNullSqlLiteral(object! value) -> string!
+override pengdows.efcore.adonet.Storage.AdoNetDateOnlyTypeMapping.Clone(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters) -> Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping!
+override pengdows.efcore.adonet.Storage.AdoNetDateOnlyTypeMapping.GenerateNonNullSqlLiteral(object! value) -> string!
+override pengdows.efcore.adonet.Storage.AdoNetDateTimeOffsetTypeMapping.Clone(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters) -> Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping!
+override pengdows.efcore.adonet.Storage.AdoNetDateTimeOffsetTypeMapping.GenerateNonNullSqlLiteral(object! value) -> string!
+override pengdows.efcore.adonet.Storage.AdoNetDateTimeTypeMapping.Clone(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters) -> Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping!
+override pengdows.efcore.adonet.Storage.AdoNetDateTimeTypeMapping.GenerateNonNullSqlLiteral(object! value) -> string!
+override pengdows.efcore.adonet.Storage.AdoNetDecimalTypeMapping.Clone(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters) -> Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping!
+override pengdows.efcore.adonet.Storage.AdoNetDecimalTypeMapping.ConfigureParameter(System.Data.Common.DbParameter! parameter) -> void
+override pengdows.efcore.adonet.Storage.AdoNetDecimalTypeMapping.GenerateNonNullSqlLiteral(object! value) -> string!
+override pengdows.efcore.adonet.Storage.AdoNetDoubleTypeMapping.Clone(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters) -> Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping!
+override pengdows.efcore.adonet.Storage.AdoNetDoubleTypeMapping.GenerateNonNullSqlLiteral(object! value) -> string!
+override pengdows.efcore.adonet.Storage.AdoNetFloatTypeMapping.Clone(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters) -> Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping!
+override pengdows.efcore.adonet.Storage.AdoNetFloatTypeMapping.GenerateNonNullSqlLiteral(object! value) -> string!
+override pengdows.efcore.adonet.Storage.AdoNetGuidTypeMapping.Clone(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters) -> Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping!
+override pengdows.efcore.adonet.Storage.AdoNetGuidTypeMapping.GenerateNonNullSqlLiteral(object! value) -> string!
+override pengdows.efcore.adonet.Storage.AdoNetIntTypeMapping.Clone(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters) -> Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping!
+override pengdows.efcore.adonet.Storage.AdoNetIntTypeMapping.GenerateNonNullSqlLiteral(object! value) -> string!
+override pengdows.efcore.adonet.Storage.AdoNetLongTypeMapping.Clone(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters) -> Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping!
+override pengdows.efcore.adonet.Storage.AdoNetLongTypeMapping.GenerateNonNullSqlLiteral(object! value) -> string!
+override pengdows.efcore.adonet.Storage.AdoNetShortTypeMapping.Clone(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters) -> Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping!
+override pengdows.efcore.adonet.Storage.AdoNetShortTypeMapping.GenerateNonNullSqlLiteral(object! value) -> string!
+override pengdows.efcore.adonet.Storage.AdoNetStringTypeMapping.Clone(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters) -> Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping!
+override pengdows.efcore.adonet.Storage.AdoNetStringTypeMapping.ConfigureParameter(System.Data.Common.DbParameter! parameter) -> void
+override pengdows.efcore.adonet.Storage.AdoNetStringTypeMapping.GenerateNonNullSqlLiteral(object! value) -> string!
+override pengdows.efcore.adonet.Storage.AdoNetTimeOnlyTypeMapping.Clone(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters) -> Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping!
+override pengdows.efcore.adonet.Storage.AdoNetTimeOnlyTypeMapping.GenerateNonNullSqlLiteral(object! value) -> string!
+override pengdows.efcore.adonet.Storage.AdoNetTimeSpanTypeMapping.Clone(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters) -> Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping!
+override pengdows.efcore.adonet.Storage.AdoNetTimeSpanTypeMapping.GenerateNonNullSqlLiteral(object! value) -> string!
 pengdows.efcore.adonet.AdoNetPropertyBuilderExtensions
 override pengdows.efcore.adonet.AdoNetDialect.ToString() -> string!
 override pengdows.efcore.adonet.AdoNetRetryingExecutionStrategy.ShouldRetryOn(System.Exception! exception) -> bool
 override pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.ApplyServices(Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> void
 override pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.Clone() -> Microsoft.EntityFrameworkCore.Infrastructure.RelationalOptionsExtension!
 override pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.Info.get -> Microsoft.EntityFrameworkCore.Infrastructure.DbContextOptionsExtensionInfo!
+override pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.QuerySplittingBehavior.get -> Microsoft.EntityFrameworkCore.QuerySplittingBehavior?
+override pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.WithUseQuerySplittingBehavior(Microsoft.EntityFrameworkCore.QuerySplittingBehavior querySplittingBehavior) -> Microsoft.EntityFrameworkCore.Infrastructure.RelationalOptionsExtension!
 override pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.Validate(Microsoft.EntityFrameworkCore.Infrastructure.IDbContextOptions! options) -> void
 override pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.WithConnection(System.Data.Common.DbConnection? connection) -> Microsoft.EntityFrameworkCore.Infrastructure.RelationalOptionsExtension!
 override pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.WithConnection(System.Data.Common.DbConnection? connection, bool owned) -> Microsoft.EntityFrameworkCore.Infrastructure.RelationalOptionsExtension!
@@ -91,10 +127,78 @@ pengdows.efcore.adonet.DatabaseStorage
 pengdows.efcore.adonet.DatabaseStorage.Directory = 2 -> pengdows.efcore.adonet.DatabaseStorage
 pengdows.efcore.adonet.DatabaseStorage.File = 1 -> pengdows.efcore.adonet.DatabaseStorage
 pengdows.efcore.adonet.DatabaseStorage.Server = 0 -> pengdows.efcore.adonet.DatabaseStorage
+pengdows.efcore.adonet.DeltaTableKeyRetrieval
+pengdows.efcore.adonet.DeltaTableKeyRetrieval.DeltaTableKeyRetrieval() -> void
 pengdows.efcore.adonet.DmlSyntax
 pengdows.efcore.adonet.DmlSyntax.DmlSyntax() -> void
 pengdows.efcore.adonet.FunctionSyntax
-pengdows.efcore.adonet.FunctionSyntax.EscapeLikePattern(string! value) -> string?
+pengdows.efcore.adonet.Storage.AdoNetBoolTypeMapping
+pengdows.efcore.adonet.Storage.AdoNetBoolTypeMapping.AdoNetBoolTypeMapping(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters, string! trueLiteral, string! falseLiteral) -> void
+pengdows.efcore.adonet.Storage.AdoNetBoolTypeMapping.AdoNetBoolTypeMapping(string! storeType, string! trueLiteral, string! falseLiteral) -> void
+pengdows.efcore.adonet.Storage.AdoNetByteArrayTypeMapping
+pengdows.efcore.adonet.Storage.AdoNetByteArrayTypeMapping.AdoNetByteArrayTypeMapping(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
+pengdows.efcore.adonet.Storage.AdoNetByteArrayTypeMapping.AdoNetByteArrayTypeMapping(string! storeType, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
+pengdows.efcore.adonet.Storage.AdoNetByteTypeMapping
+pengdows.efcore.adonet.Storage.AdoNetByteTypeMapping.AdoNetByteTypeMapping(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
+pengdows.efcore.adonet.Storage.AdoNetByteTypeMapping.AdoNetByteTypeMapping(string! storeType, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
+pengdows.efcore.adonet.Storage.AdoNetDateOnlyTypeMapping
+pengdows.efcore.adonet.Storage.AdoNetDateOnlyTypeMapping.AdoNetDateOnlyTypeMapping(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
+pengdows.efcore.adonet.Storage.AdoNetDateOnlyTypeMapping.AdoNetDateOnlyTypeMapping(string! storeType, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
+pengdows.efcore.adonet.Storage.AdoNetDateTimeOffsetTypeMapping
+pengdows.efcore.adonet.Storage.AdoNetDateTimeOffsetTypeMapping.AdoNetDateTimeOffsetTypeMapping(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
+pengdows.efcore.adonet.Storage.AdoNetDateTimeOffsetTypeMapping.AdoNetDateTimeOffsetTypeMapping(string! storeType, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
+pengdows.efcore.adonet.Storage.AdoNetDateTimeTypeMapping
+pengdows.efcore.adonet.Storage.AdoNetDateTimeTypeMapping.AdoNetDateTimeTypeMapping(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
+pengdows.efcore.adonet.Storage.AdoNetDateTimeTypeMapping.AdoNetDateTimeTypeMapping(string! storeType, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
+pengdows.efcore.adonet.Storage.AdoNetDecimalTypeMapping
+pengdows.efcore.adonet.Storage.AdoNetDecimalTypeMapping.AdoNetDecimalTypeMapping(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
+pengdows.efcore.adonet.Storage.AdoNetDecimalTypeMapping.AdoNetDecimalTypeMapping(string! storeType, pengdows.efcore.adonet.ITypeMappingDialect! dialect, int? precision = null, int? scale = null) -> void
+pengdows.efcore.adonet.Storage.AdoNetDoubleTypeMapping
+pengdows.efcore.adonet.Storage.AdoNetDoubleTypeMapping.AdoNetDoubleTypeMapping(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
+pengdows.efcore.adonet.Storage.AdoNetDoubleTypeMapping.AdoNetDoubleTypeMapping(string! storeType, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
+pengdows.efcore.adonet.Storage.AdoNetFloatTypeMapping
+pengdows.efcore.adonet.Storage.AdoNetFloatTypeMapping.AdoNetFloatTypeMapping(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
+pengdows.efcore.adonet.Storage.AdoNetFloatTypeMapping.AdoNetFloatTypeMapping(string! storeType, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
+pengdows.efcore.adonet.Storage.AdoNetGuidTypeMapping
+pengdows.efcore.adonet.Storage.AdoNetGuidTypeMapping.AdoNetGuidTypeMapping(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
+pengdows.efcore.adonet.Storage.AdoNetGuidTypeMapping.AdoNetGuidTypeMapping(string! storeType, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
+pengdows.efcore.adonet.Storage.AdoNetIntTypeMapping
+pengdows.efcore.adonet.Storage.AdoNetIntTypeMapping.AdoNetIntTypeMapping(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
+pengdows.efcore.adonet.Storage.AdoNetIntTypeMapping.AdoNetIntTypeMapping(string! storeType, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
+pengdows.efcore.adonet.Storage.AdoNetLongTypeMapping
+pengdows.efcore.adonet.Storage.AdoNetLongTypeMapping.AdoNetLongTypeMapping(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
+pengdows.efcore.adonet.Storage.AdoNetLongTypeMapping.AdoNetLongTypeMapping(string! storeType, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
+pengdows.efcore.adonet.Storage.AdoNetShortTypeMapping
+pengdows.efcore.adonet.Storage.AdoNetShortTypeMapping.AdoNetShortTypeMapping(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
+pengdows.efcore.adonet.Storage.AdoNetShortTypeMapping.AdoNetShortTypeMapping(string! storeType, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
+pengdows.efcore.adonet.Storage.AdoNetStringTypeMapping
+pengdows.efcore.adonet.Storage.AdoNetStringTypeMapping.AdoNetStringTypeMapping(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters, pengdows.efcore.adonet.ISqlDialect! sql, pengdows.efcore.adonet.ITypeMappingDialect! typeMappings) -> void
+pengdows.efcore.adonet.Storage.AdoNetStringTypeMapping.AdoNetStringTypeMapping(string! storeType, pengdows.efcore.adonet.ISqlDialect! sql, pengdows.efcore.adonet.ITypeMappingDialect! typeMappings, bool unicode = true, int? size = null) -> void
+pengdows.efcore.adonet.Storage.AdoNetTimeOnlyTypeMapping
+pengdows.efcore.adonet.Storage.AdoNetTimeOnlyTypeMapping.AdoNetTimeOnlyTypeMapping(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
+pengdows.efcore.adonet.Storage.AdoNetTimeOnlyTypeMapping.AdoNetTimeOnlyTypeMapping(string! storeType, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
+pengdows.efcore.adonet.Storage.AdoNetTimeSpanTypeMapping
+pengdows.efcore.adonet.Storage.AdoNetTimeSpanTypeMapping.AdoNetTimeSpanTypeMapping(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
+pengdows.efcore.adonet.Storage.AdoNetTimeSpanTypeMapping.AdoNetTimeSpanTypeMapping(string! storeType, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
+static pengdows.efcore.adonet.FunctionSyntax.FormatLikePattern(Microsoft.EntityFrameworkCore.Query.QueryContext! queryContext, string! parameterName, string! match, char escape, string! specialCharacters) -> string?
+static pengdows.efcore.adonet.KeyRetrieval.DeltaTable.get -> pengdows.efcore.adonet.DeltaTableKeyRetrieval!
+static pengdows.efcore.adonet.Storage.AdoNetBoolTypeMapping.Default.get -> pengdows.efcore.adonet.Storage.AdoNetBoolTypeMapping!
+static pengdows.efcore.adonet.Storage.AdoNetByteArrayTypeMapping.Default.get -> pengdows.efcore.adonet.Storage.AdoNetByteArrayTypeMapping!
+static pengdows.efcore.adonet.Storage.AdoNetByteTypeMapping.Default.get -> pengdows.efcore.adonet.Storage.AdoNetByteTypeMapping!
+static pengdows.efcore.adonet.Storage.AdoNetDateOnlyTypeMapping.Default.get -> pengdows.efcore.adonet.Storage.AdoNetDateOnlyTypeMapping!
+static pengdows.efcore.adonet.Storage.AdoNetDateTimeOffsetTypeMapping.Default.get -> pengdows.efcore.adonet.Storage.AdoNetDateTimeOffsetTypeMapping!
+static pengdows.efcore.adonet.Storage.AdoNetDateTimeTypeMapping.Default.get -> pengdows.efcore.adonet.Storage.AdoNetDateTimeTypeMapping!
+static pengdows.efcore.adonet.Storage.AdoNetDecimalTypeMapping.Default.get -> pengdows.efcore.adonet.Storage.AdoNetDecimalTypeMapping!
+static pengdows.efcore.adonet.Storage.AdoNetDoubleTypeMapping.Default.get -> pengdows.efcore.adonet.Storage.AdoNetDoubleTypeMapping!
+static pengdows.efcore.adonet.Storage.AdoNetFloatTypeMapping.Default.get -> pengdows.efcore.adonet.Storage.AdoNetFloatTypeMapping!
+static pengdows.efcore.adonet.Storage.AdoNetGuidTypeMapping.Default.get -> pengdows.efcore.adonet.Storage.AdoNetGuidTypeMapping!
+static pengdows.efcore.adonet.Storage.AdoNetIntTypeMapping.Default.get -> pengdows.efcore.adonet.Storage.AdoNetIntTypeMapping!
+static pengdows.efcore.adonet.Storage.AdoNetLongTypeMapping.Default.get -> pengdows.efcore.adonet.Storage.AdoNetLongTypeMapping!
+static pengdows.efcore.adonet.Storage.AdoNetShortTypeMapping.Default.get -> pengdows.efcore.adonet.Storage.AdoNetShortTypeMapping!
+static pengdows.efcore.adonet.Storage.AdoNetStringTypeMapping.Default.get -> pengdows.efcore.adonet.Storage.AdoNetStringTypeMapping!
+static pengdows.efcore.adonet.Storage.AdoNetTimeOnlyTypeMapping.Default.get -> pengdows.efcore.adonet.Storage.AdoNetTimeOnlyTypeMapping!
+static pengdows.efcore.adonet.Storage.AdoNetTimeSpanTypeMapping.Default.get -> pengdows.efcore.adonet.Storage.AdoNetTimeSpanTypeMapping!
+virtual pengdows.efcore.adonet.FunctionSyntax.EscapeLikePattern(string! value) -> string?
 pengdows.efcore.adonet.FunctionSyntax.FunctionSyntax() -> void
 pengdows.efcore.adonet.IAdoNetDialect
 pengdows.efcore.adonet.IAdoNetDialect.Capabilities.get -> pengdows.efcore.adonet.IDatabaseCapabilities!
@@ -126,6 +230,8 @@ pengdows.efcore.adonet.ISqlDialect.Booleans.get -> pengdows.efcore.adonet.Boolea
 pengdows.efcore.adonet.ISqlDialect.CurrentSchema.get -> string?
 pengdows.efcore.adonet.ISqlDialect.Databases.get -> pengdows.efcore.adonet.DatabaseLifecycle?
 pengdows.efcore.adonet.ISqlDialect.DefaultValues.get -> string!
+pengdows.efcore.adonet.ISqlDialect.DefaultTransactionIsolationLevel.get -> System.Data.IsolationLevel
+pengdows.efcore.adonet.ISqlDialect.KeepConnectionOpenAfterSuppressedTransaction.get -> bool
 pengdows.efcore.adonet.ISqlDialect.Dml.get -> pengdows.efcore.adonet.DmlSyntax!
 pengdows.efcore.adonet.ISqlDialect.FalseLiteral.get -> string!
 pengdows.efcore.adonet.ISqlDialect.Functions.get -> pengdows.efcore.adonet.FunctionSyntax!
@@ -157,9 +263,10 @@ pengdows.efcore.adonet.ITypeMappingDialect.GetStoreType(System.Type! clrType, pe
 pengdows.efcore.adonet.ITypeMappingDialect.StringParameterSize(bool unicode) -> int?
 pengdows.efcore.adonet.JsonSyntax
 pengdows.efcore.adonet.JsonSyntax.BooleanValue.get -> string?
+pengdows.efcore.adonet.JsonSyntax.BinaryValue.get -> string?
 pengdows.efcore.adonet.JsonSyntax.Concatenate.get -> string!
 pengdows.efcore.adonet.JsonSyntax.FromText.get -> string!
-pengdows.efcore.adonet.JsonSyntax.JsonSyntax(string! storeType, string! value, string! query, string! typedValue, string? booleanValue, string! concatenate, string! set, string! fromText) -> void
+pengdows.efcore.adonet.JsonSyntax.JsonSyntax(string! storeType, string! value, string! query, string! typedValue, string? booleanValue, string? binaryValue, string! concatenate, string! set, string! fromText) -> void
 pengdows.efcore.adonet.JsonSyntax.Query.get -> string!
 pengdows.efcore.adonet.JsonSyntax.Set.get -> string!
 pengdows.efcore.adonet.JsonSyntax.StoreType.get -> string!
@@ -174,14 +281,14 @@ pengdows.efcore.adonet.LateralJoinSyntax.OuterJoin.get -> string!
 pengdows.efcore.adonet.LateralJoinSyntax.OuterJoinCondition.get -> string?
 pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository
 pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.AdoNetHistoryRepository(Microsoft.EntityFrameworkCore.Migrations.HistoryRepositoryDependencies! dependencies, pengdows.efcore.adonet.IAdoNetDialect! dialect) -> void
-pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.Dialect.get -> pengdows.efcore.adonet.IAdoNetDialect!
+virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.Dialect.get -> pengdows.efcore.adonet.IAdoNetDialect!
 pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator
 pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.AdoNetMigrationsSqlGenerator(Microsoft.EntityFrameworkCore.Migrations.MigrationsSqlGeneratorDependencies! dependencies, pengdows.efcore.adonet.IAdoNetDialect! dialect) -> void
-pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.Dialect.get -> pengdows.efcore.adonet.IAdoNetDialect!
+virtual pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.Dialect.get -> pengdows.efcore.adonet.IAdoNetDialect!
 pengdows.efcore.adonet.PagingSyntax
-pengdows.efcore.adonet.PagingSyntax.InlinesValues.get -> bool
+virtual pengdows.efcore.adonet.PagingSyntax.InlinesValues.get -> bool
 pengdows.efcore.adonet.PagingSyntax.PagingSyntax() -> void
-pengdows.efcore.adonet.PagingSyntax.WithLiteralValues() -> pengdows.efcore.adonet.PagingSyntax!
+virtual pengdows.efcore.adonet.PagingSyntax.WithLiteralValues() -> pengdows.efcore.adonet.PagingSyntax!
 pengdows.efcore.adonet.Query.SqlTemplate
 pengdows.efcore.adonet.ReturningKeyRetrieval
 pengdows.efcore.adonet.ReturningKeyRetrieval.ReturningKeyRetrieval() -> void
@@ -276,6 +383,8 @@ virtual pengdows.efcore.adonet.AnsiSqlDialect.Booleans.get -> pengdows.efcore.ad
 virtual pengdows.efcore.adonet.AnsiSqlDialect.CurrentSchema.get -> string?
 virtual pengdows.efcore.adonet.AnsiSqlDialect.Databases.get -> pengdows.efcore.adonet.DatabaseLifecycle?
 virtual pengdows.efcore.adonet.AnsiSqlDialect.DefaultValues.get -> string!
+virtual pengdows.efcore.adonet.AnsiSqlDialect.DefaultTransactionIsolationLevel.get -> System.Data.IsolationLevel
+virtual pengdows.efcore.adonet.AnsiSqlDialect.KeepConnectionOpenAfterSuppressedTransaction.get -> bool
 virtual pengdows.efcore.adonet.AnsiSqlDialect.Dml.get -> pengdows.efcore.adonet.DmlSyntax!
 virtual pengdows.efcore.adonet.AnsiSqlDialect.FalseLiteral.get -> string!
 virtual pengdows.efcore.adonet.AnsiSqlDialect.Functions.get -> pengdows.efcore.adonet.FunctionSyntax!
@@ -438,10 +547,15 @@ virtual pengdows.efcore.adonet.FunctionSyntax.ByteLength.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.BytesContain.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.OffsetNow.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.TimeDifference.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.DateDifference.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.DateDifferenceTotalDays.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.TimeSpanTotalDays.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.TimeSpanAdd.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.TimeSpanSubtract.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.UnixMilliseconds.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.UnixSeconds.get -> string?
-pengdows.efcore.adonet.PagingSyntax.ComputesLimits.get -> bool
-pengdows.efcore.adonet.PagingSyntax.WithValueLimitsOnly() -> pengdows.efcore.adonet.PagingSyntax!
+virtual pengdows.efcore.adonet.PagingSyntax.ComputesLimits.get -> bool
+virtual pengdows.efcore.adonet.PagingSyntax.WithValueLimitsOnly() -> pengdows.efcore.adonet.PagingSyntax!
 pengdows.efcore.adonet.ISqlDialect.ValuesRowPrefix.get -> string!
 virtual pengdows.efcore.adonet.AnsiSqlDialect.ValuesRowPrefix.get -> string!
 pengdows.efcore.adonet.JsonSyntax.ArrayElements.get -> string?
@@ -482,7 +596,7 @@ virtual pengdows.efcore.adonet.Design.AdoNetDesignTimeServices.ConfigureDesignTi
 pengdows.efcore.adonet.IAdoNetDialect.SchemaReader.get -> pengdows.efcore.adonet.Scaffolding.InformationSchemaReader?
 virtual pengdows.efcore.adonet.AdoNetDialect.SchemaReader.get -> pengdows.efcore.adonet.Scaffolding.InformationSchemaReader?
 pengdows.efcore.adonet.Design.AdoNetDesignTimeServices.AdoNetDesignTimeServices(pengdows.efcore.adonet.IAdoNetDialect! dialect) -> void
-pengdows.efcore.adonet.Design.AdoNetDesignTimeServices.Dialect.get -> pengdows.efcore.adonet.IAdoNetDialect!
+virtual pengdows.efcore.adonet.Design.AdoNetDesignTimeServices.Dialect.get -> pengdows.efcore.adonet.IAdoNetDialect!
 virtual pengdows.efcore.adonet.Scaffolding.InformationSchemaReader.KeepsConstraintNames.get -> bool
 virtual pengdows.efcore.adonet.Scaffolding.InformationSchemaReader.ReadsIndexFilters.get -> bool
 virtual pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.FillNullsWithDefault(Microsoft.EntityFrameworkCore.Migrations.Operations.AlterColumnOperation! operation, Microsoft.EntityFrameworkCore.Migrations.MigrationCommandListBuilder! builder) -> void

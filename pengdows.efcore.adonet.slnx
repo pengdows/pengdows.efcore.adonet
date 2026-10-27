@@ -19,6 +19,7 @@
     <Project Path="test/pengdows.efcore.adonet.sqlserver.Tests/pengdows.efcore.adonet.sqlserver.Tests.csproj" />
     <Project Path="test/pengdows.efcore.adonet.FunctionalTests.Shared/pengdows.efcore.adonet.FunctionalTests.Shared.csproj" />
     <Project Path="test/pengdows.efcore.adonet.mysql.Tests/pengdows.efcore.adonet.mysql.Tests.csproj" />
+    <Project Path="test/pengdows.efcore.adonet.mysql.PomeloComparison/pengdows.efcore.adonet.mysql.PomeloComparison.csproj" />
     <Project Path="test/pengdows.efcore.adonet.flatfile.Tests/pengdows.efcore.adonet.flatfile.Tests.csproj" />
   </Folder>
 </Solution>

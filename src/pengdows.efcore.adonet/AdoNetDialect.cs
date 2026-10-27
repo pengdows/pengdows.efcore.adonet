@@ -40,6 +40,11 @@ public class AnsiSqlDialect : ISqlDialect
 {
     public static readonly AnsiSqlDialect Instance = new();
 
+    public virtual System.Data.IsolationLevel DefaultTransactionIsolationLevel
+        => System.Data.IsolationLevel.Unspecified;
+
+    public virtual bool KeepConnectionOpenAfterSuppressedTransaction => false;
+
     public virtual string IdentifierQuotePrefix => "\"";
     public virtual string IdentifierQuoteSuffix => "\"";
     public virtual string? SessionSetup => null;

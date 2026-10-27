@@ -14,6 +14,9 @@ public partial class AdHocComplexTypeQueryDuckDbTest(global::Microsoft.EntityFra
 public partial class AdHocJsonQueryDuckDbTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocJsonQueryAdoNetTest<DuckDbHost>(fixture);
 
 [Collection(SingleWriter.DuckDb)]
+public partial class AdHocJsonQueryCoreDuckDbTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocJsonQueryCoreAdoNetTest<DuckDbHost>(fixture);
+
+[Collection(SingleWriter.DuckDb)]
 public partial class AdHocManyToManyQueryDuckDbTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocManyToManyQueryAdoNetTest<DuckDbHost>(fixture);
 
 [Collection(SingleWriter.DuckDb)]
@@ -122,6 +125,9 @@ public partial class ComplexTypeQueryDuckDbTest(ComplexTypeQueryAdoNetTest<DuckD
 public partial class ComplexTypesTrackingDuckDbTest(ComplexTypesTrackingAdoNetTest<DuckDbHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexTypesTrackingAdoNetTest<DuckDbHost>(fixture, testOutputHelper);
 
 [Collection(SingleWriter.DuckDb)]
+public partial class ComplexTypesTrackingCoreDuckDbTest(ComplexTypesTrackingCoreAdoNetTest<DuckDbHost>.AdoNetFixture fixture) : ComplexTypesTrackingCoreAdoNetTest<DuckDbHost>(fixture);
+
+[Collection(SingleWriter.DuckDb)]
 public partial class CompositeKeyEndToEndDuckDbTest(CompositeKeyEndToEndAdoNetTest<DuckDbHost>.AdoNetFixture fixture) : CompositeKeyEndToEndAdoNetTest<DuckDbHost>(fixture);
 
 [Collection(SingleWriter.DuckDb)]
@@ -182,6 +188,9 @@ public partial class FieldsOnlyLoadDuckDbTest(FieldsOnlyLoadAdoNetTest<DuckDbHos
 public partial class FiltersInheritanceBulkUpdatesDuckDbTest(FiltersInheritanceBulkUpdatesAdoNetTest<DuckDbHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : FiltersInheritanceBulkUpdatesAdoNetTest<DuckDbHost>(fixture, testOutputHelper);
 
 [Collection(SingleWriter.DuckDb)]
+public partial class FiltersInheritanceBulkUpdatesCoreDuckDbTest(FiltersInheritanceBulkUpdatesCoreAdoNetTest<DuckDbHost>.AdoNetFixture fixture) : FiltersInheritanceBulkUpdatesCoreAdoNetTest<DuckDbHost>(fixture);
+
+[Collection(SingleWriter.DuckDb)]
 public partial class FiltersInheritanceQueryDuckDbTest(FiltersInheritanceQueryAdoNetTest<DuckDbHost>.AdoNetFixture fixture) : FiltersInheritanceQueryAdoNetTest<DuckDbHost>(fixture);
 
 [Collection(SingleWriter.DuckDb)]
@@ -215,6 +224,9 @@ public partial class IncludeOneToOneDuckDbTest(IncludeOneToOneAdoNetTest<DuckDbH
 public partial class InheritanceRelationshipsQueryDuckDbTest(InheritanceRelationshipsQueryAdoNetTest<DuckDbHost>.AdoNetFixture fixture) : InheritanceRelationshipsQueryAdoNetTest<DuckDbHost>(fixture);
 
 [Collection(SingleWriter.DuckDb)]
+public partial class InheritanceRelationshipsQueryCoreDuckDbTest(InheritanceRelationshipsQueryCoreAdoNetTest<DuckDbHost>.AdoNetFixture fixture) : InheritanceRelationshipsQueryCoreAdoNetTest<DuckDbHost>(fixture);
+
+[Collection(SingleWriter.DuckDb)]
 public partial class JsonQueryDuckDbTest(JsonQueryAdoNetTest<DuckDbHost>.AdoNetFixture fixture) : JsonQueryAdoNetTest<DuckDbHost>(fixture);
 
 [Collection(SingleWriter.DuckDb)]
@@ -228,6 +240,9 @@ public partial class KeysWithConvertersDuckDbTest(KeysWithConvertersAdoNetTest<D
 
 [Collection(SingleWriter.DuckDb)]
 public partial class LazyLoadProxyDuckDbTest(LazyLoadProxyAdoNetTest<DuckDbHost>.AdoNetFixture fixture) : LazyLoadProxyAdoNetTest<DuckDbHost>(fixture);
+
+[Collection(SingleWriter.DuckDb)]
+public partial class LazyLoadProxyCoreDuckDbTest(LazyLoadProxyCoreAdoNetTest<DuckDbHost>.AdoNetFixture fixture) : LazyLoadProxyCoreAdoNetTest<DuckDbHost>(fixture);
 
 [Collection(SingleWriter.DuckDb)]
 public partial class LoadDuckDbTest(LoadAdoNetTest<DuckDbHost>.AdoNetFixture fixture) : LoadAdoNetTest<DuckDbHost>(fixture);
@@ -449,10 +464,19 @@ public partial class OwnedTableSplittingProjectionDuckDbTest(OwnedTableSplitting
 public partial class OwnedTableSplittingStructuralEqualityDuckDbTest(OwnedTableSplittingStructuralEqualityAdoNetTest<DuckDbHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedTableSplittingStructuralEqualityAdoNetTest<DuckDbHost>(fixture, testOutputHelper);
 
 [Collection(SingleWriter.DuckDb)]
+public partial class PrecompiledQueryDuckDbTest(AdoNetPrecompiledQueryRelationalFixture<DuckDbHost> fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : PrecompiledQueryAdoNetTest<DuckDbHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.DuckDb)]
+public partial class PrecompiledSqlPregenerationQueryDuckDbTest(AdoNetPrecompiledSqlPregenerationQueryRelationalFixture<DuckDbHost> fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : PrecompiledSqlPregenerationQueryAdoNetTest<DuckDbHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.DuckDb)]
 public partial class PrimitiveCollectionsQueryDuckDbTest(PrimitiveCollectionsQueryAdoNetTest<DuckDbHost>.AdoNetFixture fixture) : PrimitiveCollectionsQueryAdoNetTest<DuckDbHost>(fixture);
 
 [Collection(SingleWriter.DuckDb)]
 public partial class PropertyValuesDuckDbTest(PropertyValuesAdoNetTest<DuckDbHost>.AdoNetFixture fixture) : PropertyValuesAdoNetTest<DuckDbHost>(fixture);
+
+[Collection(SingleWriter.DuckDb)]
+public partial class PropertyValuesCoreDuckDbTest(PropertyValuesCoreAdoNetTest<DuckDbHost>.AdoNetFixture fixture) : PropertyValuesCoreAdoNetTest<DuckDbHost>(fixture);
 
 [Collection(SingleWriter.DuckDb)]
 public partial class QueryExpressionInterceptionDuckDbTest(AdoNetInterceptionFixture<DuckDbHost> fixture) : QueryExpressionInterceptionAdoNetTest<DuckDbHost>(fixture);
@@ -494,7 +518,7 @@ public partial class RelationalOneToOneDuckDbTest(AdoNetRelationalModelBuilderFi
 public partial class RelationalOwnedTypesDuckDbTest(AdoNetRelationalModelBuilderFixture<DuckDbHost> fixture) : RelationalOwnedTypesAdoNetTest<DuckDbHost>(fixture);
 
 [Collection(SingleWriter.DuckDb)]
-public partial class RelationalServiceCollectionExtensionsDuckDbTest(global::Microsoft.EntityFrameworkCore.TestUtilities.TestHelpers testHelpers) : RelationalServiceCollectionExtensionsAdoNetTest<DuckDbHost>(testHelpers);
+public partial class RelationalServiceCollectionExtensionsDuckDbTest() : RelationalServiceCollectionExtensionsAdoNetTest<DuckDbHost>();
 
 [Collection(SingleWriter.DuckDb)]
 public partial class SaveChangesInterceptionDuckDbTest(AdoNetInterceptionFixture<DuckDbHost> fixture) : SaveChangesInterceptionAdoNetTest<DuckDbHost>(fixture);
@@ -624,4 +648,3 @@ public partial class WarningsDuckDbTest(NorthwindQueryAdoNetFixture<DuckDbHost> 
 
 [Collection(SingleWriter.DuckDb)]
 public partial class WithConstructorsDuckDbTest(WithConstructorsAdoNetTest<DuckDbHost>.AdoNetFixture fixture) : WithConstructorsAdoNetTest<DuckDbHost>(fixture);
-

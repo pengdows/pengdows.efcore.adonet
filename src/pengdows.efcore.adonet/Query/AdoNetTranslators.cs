@@ -142,6 +142,12 @@ internal class AdoNetStringMethodTranslator(
     /// </summary>
     private SqlExpression? Match(SqlExpression instance, SqlExpression value, bool start, bool end)
     {
+        // A null constant matches nothing, and is never passed on to LENGTH or SUBSTRING.
+        if (value is SqlConstantExpression { Value: null })
+        {
+            return sqlExpressionFactory.Constant(false);
+        }
+
         if (value is SqlConstantExpression { Value: string constant } && functions.EscapeLikePattern(constant) is { } pattern)
         {
             return sqlExpressionFactory.Like(
@@ -171,7 +177,13 @@ internal class AdoNetStringMethodTranslator(
                     sqlExpressionFactory.Add(sqlExpressionFactory.Subtract(length, valueLength), sqlExpressionFactory.Constant(1)))
                 : null;
 
-        return part == null ? null : sqlExpressionFactory.Equal(part, value);
+        // The argument may itself hold wildcards (a column), so this compares the text. A null on either side is false, and
+        // its negation true, which EF's null compensation would otherwise turn into TRUE for a nullable column.
+        return part == null
+            ? null
+            : sqlExpressionFactory.AndAlso(
+                sqlExpressionFactory.IsNotNull(instance),
+                sqlExpressionFactory.AndAlso(sqlExpressionFactory.IsNotNull(value), sqlExpressionFactory.Equal(part, value)));
     }
 }
 
@@ -279,6 +291,7 @@ internal class AdoNetMemberTranslator(
             : type == typeof(TimeSpan)
                 ? member.Name switch
                 {
+                    nameof(TimeSpan.TotalDays) => functions.TimeSpanTotalDays,
                     nameof(TimeSpan.Hours) => functions.TimeSpanHours,
                     nameof(TimeSpan.Minutes) => functions.TimeSpanMinutes,
                     nameof(TimeSpan.Seconds) => functions.TimeSpanSeconds,

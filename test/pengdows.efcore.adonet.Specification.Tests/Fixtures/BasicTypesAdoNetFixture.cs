@@ -13,9 +13,12 @@ namespace pengdows.efcore.adonet.Specification.Tests;
 ///     License):
 ///     https://github.com/npgsql/efcore.pg/blob/v10.0.3/test/EFCore.PG.FunctionalTests/Query/Translations/BasicTypesQueryNpgsqlFixture.cs
 /// </summary>
-public abstract class BasicTypesAdoNetFixture<THost> : BasicTypesQueryFixtureBase
+public abstract class BasicTypesAdoNetFixture<THost> : BasicTypesQueryFixtureBase, ITestSqlLoggerFactory
     where THost : IDatabaseHost, new()
 {
+    public TestSqlLoggerFactory TestSqlLoggerFactory
+        => (TestSqlLoggerFactory)ListLoggerFactory;
+
     private BasicTypesData? _expectedData;
 
     protected override Task SeedAsync(BasicTypesContext context)
@@ -29,8 +32,7 @@ public abstract class BasicTypesAdoNetFixture<THost> : BasicTypesQueryFixtureBas
     public override ISetSource GetExpectedData()
         => _expectedData ??= AtResolution((BasicTypesData)base.GetExpectedData(), new THost());
 
-    // Where the database keeps only a DateTimeOffset's instant, each is moved to offset zero, keeping its clock reading, so it
-    // reads back as written.
+    // Where the database keeps only a DateTimeOffset's instant, normalize the expected value to that instant at offset zero.
     private static BasicTypesData AtResolution(BasicTypesData data, THost host)
     {
         var ticks = host.TemporalResolution.Ticks;
@@ -40,7 +42,9 @@ public abstract class BasicTypesAdoNetFixture<THost> : BasicTypesQueryFixtureBas
             item.DateTime = new DateTime(Cut(item.DateTime.Ticks, ticks), item.DateTime.Kind);
             item.TimeOnly = new TimeOnly(Cut(item.TimeOnly.Ticks, ticks));
             item.TimeSpan = new TimeSpan(Cut(item.TimeSpan.Ticks, ticks));
-            item.DateTimeOffset = new DateTimeOffset(Cut(item.DateTimeOffset.Ticks, ticks), offsets ? item.DateTimeOffset.Offset : TimeSpan.Zero);
+            item.DateTimeOffset = offsets
+                ? new DateTimeOffset(Cut(item.DateTimeOffset.Ticks, ticks), item.DateTimeOffset.Offset)
+                : new DateTimeOffset(Cut(item.DateTimeOffset.UtcDateTime.Ticks, ticks), TimeSpan.Zero);
         }
 
         foreach (var item in data.NullableBasicTypesEntities)
@@ -62,7 +66,9 @@ public abstract class BasicTypesAdoNetFixture<THost> : BasicTypesQueryFixtureBas
 
             if (item.DateTimeOffset is { } offset)
             {
-                item.DateTimeOffset = new DateTimeOffset(Cut(offset.Ticks, ticks), offsets ? offset.Offset : TimeSpan.Zero);
+                item.DateTimeOffset = offsets
+                    ? new DateTimeOffset(Cut(offset.Ticks, ticks), offset.Offset)
+                    : new DateTimeOffset(Cut(offset.UtcDateTime.Ticks, ticks), TimeSpan.Zero);
             }
         }
 

@@ -35,7 +35,7 @@ internal class AdoNetSqlTranslatingExpressionVisitor : RelationalSqlTranslatingE
     }
 
     private static readonly MethodInfo PatternMethod
-        = typeof(AdoNetSqlTranslatingExpressionVisitor).GetMethod(nameof(Pattern), BindingFlags.NonPublic | BindingFlags.Static)!;
+        = typeof(FunctionSyntax).GetMethod(nameof(FunctionSyntax.FormatLikePattern), BindingFlags.Public | BindingFlags.Static)!;
 
     private enum Match
     {
@@ -67,8 +67,9 @@ internal class AdoNetSqlTranslatingExpressionVisitor : RelationalSqlTranslatingE
                         PatternMethod,
                         QueryCompilationContext.QueryContextParameter,
                         Expression.Constant(parameter.Name),
-                        Expression.Constant(match),
-                        Expression.Constant(_functions)),
+                        Expression.Constant(match.ToString()),
+                        Expression.Constant(escape),
+                        Expression.Constant(_functions.LikeSpecialCharacters)),
                     QueryCompilationContext.QueryContextParameter));
 
             return Dependencies.SqlExpressionFactory.Like(
@@ -84,6 +85,22 @@ internal class AdoNetSqlTranslatingExpressionVisitor : RelationalSqlTranslatingE
     // database doesn't have is left untranslated.
     protected override Expression VisitBinary(BinaryExpression binaryExpression)
     {
+        if ((binaryExpression.NodeType is ExpressionType.Add or ExpressionType.Subtract)
+            && (Nullable.GetUnderlyingType(binaryExpression.Type) ?? binaryExpression.Type) == typeof(TimeSpan))
+        {
+            var template = binaryExpression.NodeType == ExpressionType.Add ? _functions.TimeSpanAdd : _functions.TimeSpanSubtract;
+            if (template is { }
+                && Visit(binaryExpression.Left) is SqlExpression left
+                && Visit(binaryExpression.Right) is SqlExpression right)
+            {
+                return Dependencies.SqlExpressionFactory.Call(
+                    template,
+                    [left, Dependencies.SqlExpressionFactory.ApplyTypeMapping(right, left.TypeMapping)!],
+                    binaryExpression.Type,
+                    Dependencies.TypeMappingSource.FindMapping(typeof(TimeSpan)))!;
+            }
+        }
+
         if (IsBitwise(binaryExpression.NodeType, binaryExpression.Type) && (BitwiseTemplate(binaryExpression.NodeType) == null))
         {
             return QueryCompilationContext.NotTranslatedExpression;
@@ -101,8 +118,10 @@ internal class AdoNetSqlTranslatingExpressionVisitor : RelationalSqlTranslatingE
 
         if (IsDateDifference(binaryExpression))
         {
-            return IsTimeDifference(binaryExpression) && (_functions.TimeDifference is { } difference)
-                && (Visit(binaryExpression.Left) is SqlExpression left) && (Visit(binaryExpression.Right) is SqlExpression right)
+            var difference = IsTimeDifference(binaryExpression) ? _functions.TimeDifference : _functions.DateDifference;
+            return difference is { }
+                && (Visit(binaryExpression.Left) is SqlExpression left)
+                && (Visit(binaryExpression.Right) is SqlExpression right)
                 ? Dependencies.SqlExpressionFactory.Call(
                     difference,
                     [left, Dependencies.SqlExpressionFactory.ApplyTypeMapping(right, left.TypeMapping)!],
@@ -121,6 +140,30 @@ internal class AdoNetSqlTranslatingExpressionVisitor : RelationalSqlTranslatingE
         }
 
         return base.VisitBinary(binaryExpression);
+    }
+
+    protected override Expression VisitMember(MemberExpression memberExpression)
+    {
+        if (memberExpression is
+            {
+                Member: { DeclaringType: var declaringType, Name: nameof(TimeSpan.TotalDays) },
+                Expression: BinaryExpression { } difference
+            }
+            && declaringType == typeof(TimeSpan)
+            && IsDateDifference(difference)
+            && !IsTimeDifference(difference)
+            && _functions.DateDifferenceTotalDays is { } totalDays
+            && Visit(difference.Left) is SqlExpression left
+            && Visit(difference.Right) is SqlExpression right)
+        {
+            return Dependencies.SqlExpressionFactory.Call(
+                totalDays,
+                [left, Dependencies.SqlExpressionFactory.ApplyTypeMapping(right, left.TypeMapping)!],
+                typeof(double),
+                Dependencies.TypeMappingSource.FindMapping(typeof(double)))!;
+        }
+
+        return base.VisitMember(memberExpression);
     }
 
     protected override Expression VisitUnary(UnaryExpression unaryExpression)
@@ -261,16 +304,6 @@ internal class AdoNetSqlTranslatingExpressionVisitor : RelationalSqlTranslatingE
             typeof(bool),
             Dependencies.TypeMappingSource.FindMapping(typeof(bool)));
     }
-
-    private static string? Pattern(QueryContext queryContext, string parameterName, Match match, FunctionSyntax functions)
-        => queryContext.Parameters[parameterName] is string value && functions.EscapeLikePattern(value) is { } escaped
-            ? match switch
-            {
-                Match.StartsWith => escaped + "%",
-                Match.EndsWith => "%" + escaped,
-                _ => "%" + escaped + "%"
-            }
-            : null;
 }
 
 internal class AdoNetSqlTranslatingExpressionVisitorFactory(RelationalSqlTranslatingExpressionVisitorDependencies dependencies, ISqlDialect dialect)

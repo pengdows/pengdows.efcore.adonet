@@ -4,417 +4,647 @@
 
 namespace pengdows.efcore.adonet.Specification.Tests.MySql;
 
+[Collection(SingleWriter.MySql)]
 public partial class AdHocAdvancedMappingsQueryMySqlTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocAdvancedMappingsQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class AdHocComplexTypeQueryMySqlTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocComplexTypeQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class AdHocJsonQueryMySqlTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocJsonQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
+public partial class AdHocJsonQueryCoreMySqlTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocJsonQueryCoreAdoNetTest<MySqlHost>(fixture);
+
+[Collection(SingleWriter.MySql)]
 public partial class AdHocManyToManyQueryMySqlTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocManyToManyQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class AdHocMiscellaneousQueryMySqlTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocMiscellaneousQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class AdHocNavigationsQueryMySqlTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocNavigationsQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class AdHocPrecompiledQueryMySqlTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : AdHocPrecompiledQueryAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class AdHocQueryFiltersQueryMySqlTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocQueryFiltersQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class AdHocQuerySplittingQueryMySqlTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocQuerySplittingQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class ApiConsistencyMySqlTest(ApiConsistencyAdoNetTest<MySqlHost>.AdoNetFixture fixture) : ApiConsistencyAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class ArithmeticOperatorTranslationsMySqlTest(ArithmeticOperatorTranslationsAdoNetTest<MySqlHost>.AdoNetFixture fixture) : ArithmeticOperatorTranslationsAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class BadDataJsonDeserializationMySqlTest() : BadDataJsonDeserializationAdoNetTest<MySqlHost>();
 
+[Collection(SingleWriter.MySql)]
 public partial class BitwiseOperatorTranslationsMySqlTest(BitwiseOperatorTranslationsAdoNetTest<MySqlHost>.AdoNetFixture fixture) : BitwiseOperatorTranslationsAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class BuiltInDataTypesMySqlTest(BuiltInDataTypesAdoNetTest<MySqlHost>.AdoNetFixture fixture) : BuiltInDataTypesAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class ByteArrayTranslationsMySqlTest(ByteArrayTranslationsAdoNetTest<MySqlHost>.AdoNetFixture fixture) : ByteArrayTranslationsAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class CommandInterceptionMySqlTest(AdoNetInterceptionFixture<MySqlHost> fixture) : CommandInterceptionAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class ComparisonOperatorTranslationsMySqlTest(ComparisonOperatorTranslationsAdoNetTest<MySqlHost>.AdoNetFixture fixture) : ComparisonOperatorTranslationsAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class CompiledModelMySqlTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : CompiledModelAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class ComplexCollectionJsonUpdateMySqlTest(ComplexCollectionJsonUpdateAdoNetTest<MySqlHost>.AdoNetFixture fixture) : ComplexCollectionJsonUpdateAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class ComplexJsonBulkUpdateMySqlTest(ComplexJsonBulkUpdateAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexJsonBulkUpdateAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class ComplexJsonCollectionMySqlTest(ComplexJsonCollectionAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexJsonCollectionAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class ComplexJsonMiscellaneousMySqlTest(ComplexJsonMiscellaneousAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexJsonMiscellaneousAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class ComplexJsonPrimitiveCollectionMySqlTest(ComplexJsonPrimitiveCollectionAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexJsonPrimitiveCollectionAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class ComplexJsonProjectionMySqlTest(ComplexJsonProjectionAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexJsonProjectionAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class ComplexJsonSetOperationsMySqlTest(ComplexJsonSetOperationsAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexJsonSetOperationsAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class ComplexJsonStructuralEqualityMySqlTest(ComplexJsonStructuralEqualityAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexJsonStructuralEqualityAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class ComplexNavigationsCollectionsQueryMySqlTest(ComplexNavigationsCollectionsQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : ComplexNavigationsCollectionsQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class ComplexNavigationsCollectionsSharedTypeQueryMySqlTest(ComplexNavigationsCollectionsSharedTypeQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : ComplexNavigationsCollectionsSharedTypeQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class ComplexNavigationsCollectionsSplitQueryMySqlTest(ComplexNavigationsCollectionsSplitQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : ComplexNavigationsCollectionsSplitQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class ComplexNavigationsCollectionsSplitSharedTypeQueryMySqlTest(ComplexNavigationsCollectionsSplitSharedTypeQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : ComplexNavigationsCollectionsSplitSharedTypeQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class ComplexNavigationsQueryMySqlTest(ComplexNavigationsQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : ComplexNavigationsQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class ComplexNavigationsSharedTypeQueryMySqlTest(ComplexNavigationsSharedTypeQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : ComplexNavigationsSharedTypeQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class ComplexTableSplittingBulkUpdateMySqlTest(ComplexTableSplittingBulkUpdateAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexTableSplittingBulkUpdateAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class ComplexTableSplittingMiscellaneousMySqlTest(ComplexTableSplittingMiscellaneousAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexTableSplittingMiscellaneousAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class ComplexTableSplittingPrimitiveCollectionMySqlTest(ComplexTableSplittingPrimitiveCollectionAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexTableSplittingPrimitiveCollectionAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class ComplexTableSplittingProjectionMySqlTest(ComplexTableSplittingProjectionAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexTableSplittingProjectionAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class ComplexTableSplittingStructuralEqualityMySqlTest(ComplexTableSplittingStructuralEqualityAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexTableSplittingStructuralEqualityAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class ComplexTypeQueryMySqlTest(ComplexTypeQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : ComplexTypeQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class ComplexTypesTrackingMySqlTest(ComplexTypesTrackingAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexTypesTrackingAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
+public partial class ComplexTypesTrackingCoreMySqlTest(ComplexTypesTrackingCoreAdoNetTest<MySqlHost>.AdoNetFixture fixture) : ComplexTypesTrackingCoreAdoNetTest<MySqlHost>(fixture);
+
+[Collection(SingleWriter.MySql)]
 public partial class CompositeKeyEndToEndMySqlTest(CompositeKeyEndToEndAdoNetTest<MySqlHost>.AdoNetFixture fixture) : CompositeKeyEndToEndAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class CompositeKeysQueryMySqlTest(CompositeKeysQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : CompositeKeysQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class CompositeKeysSplitQueryMySqlTest(CompositeKeysSplitQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : CompositeKeysSplitQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class ConcurrencyDetectorDisabledMySqlTest(ConcurrencyDetectorDisabledAdoNetTest<MySqlHost>.AdoNetFixture fixture) : ConcurrencyDetectorDisabledAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class ConcurrencyDetectorEnabledMySqlTest(ConcurrencyDetectorEnabledAdoNetTest<MySqlHost>.AdoNetFixture fixture) : ConcurrencyDetectorEnabledAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class ConnectionInterceptionMySqlTest(AdoNetInterceptionFixture<MySqlHost> fixture) : ConnectionInterceptionAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class ConvertToProviderTypesMySqlTest(ConvertToProviderTypesAdoNetTest<MySqlHost>.AdoNetFixture fixture) : ConvertToProviderTypesAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class CustomConvertersMySqlTest(CustomConvertersAdoNetTest<MySqlHost>.AdoNetFixture fixture) : CustomConvertersAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class DataAnnotationMySqlTest(DataAnnotationAdoNetTest<MySqlHost>.AdoNetFixture fixture) : DataAnnotationAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class DataBindingMySqlTest(DataBindingAdoNetTest<MySqlHost>.AdoNetFixture fixture) : DataBindingAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class DateOnlyTranslationsMySqlTest(DateOnlyTranslationsAdoNetTest<MySqlHost>.AdoNetFixture fixture) : DateOnlyTranslationsAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class DateTimeOffsetTranslationsMySqlTest(DateTimeOffsetTranslationsAdoNetTest<MySqlHost>.AdoNetFixture fixture) : DateTimeOffsetTranslationsAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class DateTimeTranslationsMySqlTest(DateTimeTranslationsAdoNetTest<MySqlHost>.AdoNetFixture fixture) : DateTimeTranslationsAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class DesignTimeMySqlTest(DesignTimeAdoNetTest<MySqlHost>.AdoNetFixture fixture) : DesignTimeAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class Ef6GroupByMySqlTest(Ef6GroupByAdoNetTest<MySqlHost>.AdoNetFixture fixture) : Ef6GroupByAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class EntitySplittingQueryMySqlTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : EntitySplittingQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class EntitySplittingMySqlTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : EntitySplittingAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class EnumTranslationsMySqlTest(EnumTranslationsAdoNetTest<MySqlHost>.AdoNetFixture fixture) : EnumTranslationsAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class FieldsOnlyLoadMySqlTest(FieldsOnlyLoadAdoNetTest<MySqlHost>.AdoNetFixture fixture) : FieldsOnlyLoadAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class FiltersInheritanceBulkUpdatesMySqlTest(FiltersInheritanceBulkUpdatesAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : FiltersInheritanceBulkUpdatesAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
+public partial class FiltersInheritanceBulkUpdatesCoreMySqlTest(FiltersInheritanceBulkUpdatesCoreAdoNetTest<MySqlHost>.AdoNetFixture fixture) : FiltersInheritanceBulkUpdatesCoreAdoNetTest<MySqlHost>(fixture);
+
+[Collection(SingleWriter.MySql)]
 public partial class FiltersInheritanceQueryMySqlTest(FiltersInheritanceQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : FiltersInheritanceQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class FindMySqlTest(FindAdoNetTest<MySqlHost>.AdoNetFixture fixture) : FindAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class FromSqlQueryMySqlTest(NorthwindQueryAdoNetFixture<MySqlHost> fixture) : FromSqlQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class FromSqlSprocQueryMySqlTest(NorthwindQueryAdoNetFixture<MySqlHost> fixture) : FromSqlSprocQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class FunkyDataQueryMySqlTest(FunkyDataQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : FunkyDataQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class GearsOfWarFromSqlQueryMySqlTest(GearsOfWarFromSqlQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : GearsOfWarFromSqlQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class GearsOfWarQueryMySqlTest(GearsOfWarQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : GearsOfWarQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class GraphUpdatesMySqlTest(GraphUpdatesAdoNetTest<MySqlHost>.AdoNetFixture fixture) : GraphUpdatesAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class GuidTranslationsMySqlTest(GuidTranslationsAdoNetTest<MySqlHost>.AdoNetFixture fixture) : GuidTranslationsAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class IncludeOneToOneMySqlTest(IncludeOneToOneAdoNetTest<MySqlHost>.AdoNetFixture fixture) : IncludeOneToOneAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class InheritanceRelationshipsQueryMySqlTest(InheritanceRelationshipsQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : InheritanceRelationshipsQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
+public partial class InheritanceRelationshipsQueryCoreMySqlTest(InheritanceRelationshipsQueryCoreAdoNetTest<MySqlHost>.AdoNetFixture fixture) : InheritanceRelationshipsQueryCoreAdoNetTest<MySqlHost>(fixture);
+
+[Collection(SingleWriter.MySql)]
 public partial class JsonQueryMySqlTest(JsonQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : JsonQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class JsonTypesMySqlTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : JsonTypesAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class JsonUpdateMySqlTest(JsonUpdateAdoNetTest<MySqlHost>.AdoNetFixture fixture) : JsonUpdateAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class KeysWithConvertersMySqlTest(KeysWithConvertersAdoNetTest<MySqlHost>.AdoNetFixture fixture) : KeysWithConvertersAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class LazyLoadProxyMySqlTest(LazyLoadProxyAdoNetTest<MySqlHost>.AdoNetFixture fixture) : LazyLoadProxyAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
+public partial class LazyLoadProxyCoreMySqlTest(LazyLoadProxyCoreAdoNetTest<MySqlHost>.AdoNetFixture fixture) : LazyLoadProxyCoreAdoNetTest<MySqlHost>(fixture);
+
+[Collection(SingleWriter.MySql)]
 public partial class LoadMySqlTest(LoadAdoNetTest<MySqlHost>.AdoNetFixture fixture) : LoadAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class LogicalOperatorTranslationsMySqlTest(LogicalOperatorTranslationsAdoNetTest<MySqlHost>.AdoNetFixture fixture) : LogicalOperatorTranslationsAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class ManyToManyFieldsLoadMySqlTest(ManyToManyFieldsLoadAdoNetTest<MySqlHost>.AdoNetFixture fixture) : ManyToManyFieldsLoadAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class ManyToManyLoadMySqlTest(ManyToManyLoadAdoNetTest<MySqlHost>.AdoNetFixture fixture) : ManyToManyLoadAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class ManyToManyNoTrackingQueryMySqlTest(ManyToManyNoTrackingQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : ManyToManyNoTrackingQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class ManyToManyQueryMySqlTest(ManyToManyQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : ManyToManyQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class ManyToManyTrackingMySqlTest(ManyToManyTrackingAdoNetTest<MySqlHost>.AdoNetFixture fixture) : ManyToManyTrackingAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class MappingQueryMySqlTest(MappingQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : MappingQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class MathTranslationsMySqlTest(MathTranslationsAdoNetTest<MySqlHost>.AdoNetFixture fixture) : MathTranslationsAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class MigrationsInfrastructureMySqlTest(MigrationsInfrastructureAdoNetTest<MySqlHost>.AdoNetFixture fixture) : MigrationsInfrastructureAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class MigrationsSqlGeneratorMySqlTest() : MigrationsSqlGeneratorAdoNetTest<MySqlHost>();
 
+[Collection(SingleWriter.MySql)]
 public partial class MigrationsMySqlTest(MigrationsAdoNetTest<MySqlHost>.AdoNetFixture fixture) : MigrationsAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class MiscellaneousOperatorTranslationsMySqlTest(MiscellaneousOperatorTranslationsAdoNetTest<MySqlHost>.AdoNetFixture fixture) : MiscellaneousOperatorTranslationsAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class MiscellaneousTranslationsMySqlTest(MiscellaneousTranslationsAdoNetTest<MySqlHost>.AdoNetFixture fixture) : MiscellaneousTranslationsAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class MonsterFixupMySqlTest(MonsterFixupAdoNetTest<MySqlHost>.AdoNetFixture fixture) : MonsterFixupAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class MusicStoreMySqlTest(MusicStoreAdoNetTest<MySqlHost>.AdoNetFixture fixture) : MusicStoreAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class NavigationsCollectionMySqlTest(NavigationsCollectionAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : NavigationsCollectionAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class NavigationsIncludeMySqlTest(NavigationsIncludeAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : NavigationsIncludeAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class NavigationsMiscellaneousMySqlTest(NavigationsMiscellaneousAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : NavigationsMiscellaneousAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class NavigationsPrimitiveCollectionMySqlTest(NavigationsPrimitiveCollectionAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : NavigationsPrimitiveCollectionAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class NavigationsProjectionMySqlTest(NavigationsProjectionAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : NavigationsProjectionAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class NavigationsSetOperationsMySqlTest(NavigationsSetOperationsAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : NavigationsSetOperationsAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class NavigationsStructuralEqualityMySqlTest(NavigationsStructuralEqualityAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : NavigationsStructuralEqualityAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class NonSharedModelBulkUpdatesMySqlTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : NonSharedModelBulkUpdatesAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class NonSharedModelUpdatesMySqlTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : NonSharedModelUpdatesAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class NonSharedPrimitiveCollectionsQueryMySqlTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : NonSharedPrimitiveCollectionsQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class NorthwindAggregateOperatorsQueryMySqlTest(NorthwindQueryAdoNetFixture<MySqlHost> fixture) : NorthwindAggregateOperatorsQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class NorthwindAsNoTrackingQueryMySqlTest(NorthwindQueryAdoNetFixture<MySqlHost> fixture) : NorthwindAsNoTrackingQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class NorthwindAsTrackingQueryMySqlTest(NorthwindQueryAdoNetFixture<MySqlHost> fixture) : NorthwindAsTrackingQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class NorthwindBulkUpdatesMySqlTest(NorthwindBulkUpdatesAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : NorthwindBulkUpdatesAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class NorthwindChangeTrackingQueryMySqlTest(NorthwindQueryAdoNetFixture<MySqlHost> fixture) : NorthwindChangeTrackingQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class NorthwindCompiledQueryMySqlTest(NorthwindQueryAdoNetFixture<MySqlHost> fixture) : NorthwindCompiledQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class NorthwindDbFunctionsQueryMySqlTest(NorthwindQueryAdoNetFixture<MySqlHost> fixture) : NorthwindDbFunctionsQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class NorthwindEFPropertyIncludeQueryMySqlTest(NorthwindQueryAdoNetFixture<MySqlHost> fixture) : NorthwindEFPropertyIncludeQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class NorthwindFunctionsQueryMySqlTest(NorthwindQueryAdoNetFixture<MySqlHost> fixture) : NorthwindFunctionsQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class NorthwindGroupByQueryMySqlTest(NorthwindQueryAdoNetFixture<MySqlHost> fixture) : NorthwindGroupByQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class NorthwindIncludeNoTrackingQueryMySqlTest(NorthwindQueryAdoNetFixture<MySqlHost> fixture) : NorthwindIncludeNoTrackingQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class NorthwindIncludeQueryMySqlTest(NorthwindQueryAdoNetFixture<MySqlHost> fixture) : NorthwindIncludeQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class NorthwindJoinQueryMySqlTest(NorthwindQueryAdoNetFixture<MySqlHost> fixture) : NorthwindJoinQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class NorthwindKeylessEntitiesQueryMySqlTest(NorthwindQueryAdoNetFixture<MySqlHost> fixture) : NorthwindKeylessEntitiesQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class NorthwindMiscellaneousQueryMySqlTest(NorthwindQueryAdoNetFixture<MySqlHost> fixture) : NorthwindMiscellaneousQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class NorthwindNavigationsQueryMySqlTest(NorthwindQueryAdoNetFixture<MySqlHost> fixture) : NorthwindNavigationsQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class NorthwindQueryFiltersQueryMySqlTest(NorthwindQueryFiltersQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : NorthwindQueryFiltersQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class NorthwindQueryTaggingQueryMySqlTest(NorthwindQueryAdoNetFixture<MySqlHost> fixture) : NorthwindQueryTaggingQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class NorthwindSetOperationsQueryMySqlTest(NorthwindQueryAdoNetFixture<MySqlHost> fixture) : NorthwindSetOperationsQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class NorthwindSplitIncludeNoTrackingQueryMySqlTest(NorthwindQueryAdoNetFixture<MySqlHost> fixture) : NorthwindSplitIncludeNoTrackingQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class NorthwindSplitIncludeQueryMySqlTest(NorthwindQueryAdoNetFixture<MySqlHost> fixture) : NorthwindSplitIncludeQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class NorthwindSqlQueryMySqlTest(NorthwindQueryAdoNetFixture<MySqlHost> fixture) : NorthwindSqlQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class NorthwindStringIncludeQueryMySqlTest(NorthwindQueryAdoNetFixture<MySqlHost> fixture) : NorthwindStringIncludeQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class NotificationEntitiesMySqlTest(NotificationEntitiesAdoNetTest<MySqlHost>.AdoNetFixture fixture) : NotificationEntitiesAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class NullKeysMySqlTest(NullKeysAdoNetTest<MySqlHost>.AdoNetFixture fixture) : NullKeysAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class NullSemanticsQueryMySqlTest(NullSemanticsQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : NullSemanticsQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class OperatorsQueryMySqlTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : OperatorsQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class OptionalDependentQueryMySqlTest(OptionalDependentQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : OptionalDependentQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class OverzealousInitializationMySqlTest(OverzealousInitializationAdoNetTest<MySqlHost>.AdoNetFixture fixture) : OverzealousInitializationAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class OwnedEntityQueryMySqlTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : OwnedEntityQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class OwnedJsonBulkUpdateMySqlTest(OwnedJsonBulkUpdateAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedJsonBulkUpdateAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class OwnedJsonCollectionMySqlTest(OwnedJsonCollectionAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedJsonCollectionAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class OwnedJsonMiscellaneousMySqlTest(OwnedJsonMiscellaneousAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedJsonMiscellaneousAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class OwnedJsonPrimitiveCollectionMySqlTest(OwnedJsonPrimitiveCollectionAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedJsonPrimitiveCollectionAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class OwnedJsonProjectionMySqlTest(OwnedJsonProjectionAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedJsonProjectionAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class OwnedJsonStructuralEqualityMySqlTest(OwnedJsonStructuralEqualityAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedJsonStructuralEqualityAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class OwnedNavigationsCollectionMySqlTest(OwnedNavigationsCollectionAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedNavigationsCollectionAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class OwnedNavigationsMiscellaneousMySqlTest(OwnedNavigationsMiscellaneousAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedNavigationsMiscellaneousAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class OwnedNavigationsPrimitiveCollectionMySqlTest(OwnedNavigationsPrimitiveCollectionAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedNavigationsPrimitiveCollectionAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class OwnedNavigationsProjectionMySqlTest(OwnedNavigationsProjectionAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedNavigationsProjectionAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class OwnedNavigationsSetOperationsMySqlTest(OwnedNavigationsSetOperationsAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedNavigationsSetOperationsAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class OwnedNavigationsStructuralEqualityMySqlTest(OwnedNavigationsStructuralEqualityAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedNavigationsStructuralEqualityAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class OwnedQueryMySqlTest(OwnedQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : OwnedQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class OwnedTableSplittingMiscellaneousMySqlTest(OwnedTableSplittingMiscellaneousAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedTableSplittingMiscellaneousAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class OwnedTableSplittingPrimitiveCollectionMySqlTest(OwnedTableSplittingPrimitiveCollectionAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedTableSplittingPrimitiveCollectionAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class OwnedTableSplittingProjectionMySqlTest(OwnedTableSplittingProjectionAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedTableSplittingProjectionAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class OwnedTableSplittingStructuralEqualityMySqlTest(OwnedTableSplittingStructuralEqualityAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedTableSplittingStructuralEqualityAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
+public partial class PrecompiledQueryMySqlTest(AdoNetPrecompiledQueryRelationalFixture<MySqlHost> fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : PrecompiledQueryAdoNetTest<MySqlHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.MySql)]
+public partial class PrecompiledSqlPregenerationQueryMySqlTest(AdoNetPrecompiledSqlPregenerationQueryRelationalFixture<MySqlHost> fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : PrecompiledSqlPregenerationQueryAdoNetTest<MySqlHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.MySql)]
 public partial class PrimitiveCollectionsQueryMySqlTest(PrimitiveCollectionsQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : PrimitiveCollectionsQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class PropertyValuesMySqlTest(PropertyValuesAdoNetTest<MySqlHost>.AdoNetFixture fixture) : PropertyValuesAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
+public partial class PropertyValuesCoreMySqlTest(PropertyValuesCoreAdoNetTest<MySqlHost>.AdoNetFixture fixture) : PropertyValuesCoreAdoNetTest<MySqlHost>(fixture);
+
+[Collection(SingleWriter.MySql)]
 public partial class QueryExpressionInterceptionMySqlTest(AdoNetInterceptionFixture<MySqlHost> fixture) : QueryExpressionInterceptionAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class QueryFilterFuncletizationMySqlTest(QueryFilterFuncletizationAdoNetTest<MySqlHost>.AdoNetFixture fixture) : QueryFilterFuncletizationAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class QueryNoClientEvalMySqlTest(NorthwindQueryAdoNetFixture<MySqlHost> fixture) : QueryNoClientEvalAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class RelationalComplexCollectionMySqlTest(AdoNetRelationalModelBuilderFixture<MySqlHost> fixture) : RelationalComplexCollectionAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class RelationalComplexTypeMySqlTest(AdoNetRelationalModelBuilderFixture<MySqlHost> fixture) : RelationalComplexTypeAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class RelationalComplianceMySqlTest() : RelationalComplianceAdoNetTest<MySqlHost>();
 
+[Collection(SingleWriter.MySql)]
 public partial class RelationalInheritanceMySqlTest(AdoNetRelationalModelBuilderFixture<MySqlHost> fixture) : RelationalInheritanceAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class RelationalManyToManyMySqlTest(AdoNetRelationalModelBuilderFixture<MySqlHost> fixture) : RelationalManyToManyAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class RelationalManyToOneMySqlTest(AdoNetRelationalModelBuilderFixture<MySqlHost> fixture) : RelationalManyToOneAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class RelationalNonRelationshipMySqlTest(AdoNetRelationalModelBuilderFixture<MySqlHost> fixture) : RelationalNonRelationshipAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class RelationalOneToManyMySqlTest(AdoNetRelationalModelBuilderFixture<MySqlHost> fixture) : RelationalOneToManyAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class RelationalOneToOneMySqlTest(AdoNetRelationalModelBuilderFixture<MySqlHost> fixture) : RelationalOneToOneAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class RelationalOwnedTypesMySqlTest(AdoNetRelationalModelBuilderFixture<MySqlHost> fixture) : RelationalOwnedTypesAdoNetTest<MySqlHost>(fixture);
 
-public partial class RelationalServiceCollectionExtensionsMySqlTest(global::Microsoft.EntityFrameworkCore.TestUtilities.TestHelpers testHelpers) : RelationalServiceCollectionExtensionsAdoNetTest<MySqlHost>(testHelpers);
+[Collection(SingleWriter.MySql)]
+public partial class RelationalServiceCollectionExtensionsMySqlTest() : RelationalServiceCollectionExtensionsAdoNetTest<MySqlHost>();
 
+[Collection(SingleWriter.MySql)]
 public partial class SaveChangesInterceptionMySqlTest(AdoNetInterceptionFixture<MySqlHost> fixture) : SaveChangesInterceptionAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class SeedingMySqlTest() : SeedingAdoNetTest<MySqlHost>();
 
+[Collection(SingleWriter.MySql)]
 public partial class SerializationMySqlTest(SerializationAdoNetTest<MySqlHost>.AdoNetFixture fixture) : SerializationAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class SharedTypeQueryMySqlTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : SharedTypeQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class SpatialQueryMySqlTest(SpatialQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : SpatialQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class SpatialMySqlTest(SpatialAdoNetTest<MySqlHost>.AdoNetFixture fixture) : SpatialAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class SqlExecutorMySqlTest(SqlExecutorAdoNetTest<MySqlHost>.AdoNetFixture fixture) : SqlExecutorAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class SqlQueryMySqlTest(NorthwindQueryAdoNetFixture<MySqlHost> fixture) : SqlQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class StoreGeneratedFixupMySqlTest(StoreGeneratedFixupAdoNetTest<MySqlHost>.AdoNetFixture fixture) : StoreGeneratedFixupAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class StoreGeneratedMySqlTest(StoreGeneratedAdoNetTest<MySqlHost>.AdoNetFixture fixture) : StoreGeneratedAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class StoreValueGenerationMySqlTest(StoreValueGenerationAdoNetTest<MySqlHost>.AdoNetFixture fixture) : StoreValueGenerationAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class StoredProcedureUpdateMySqlTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : StoredProcedureUpdateAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class StringTranslationsMySqlTest(StringTranslationsAdoNetTest<MySqlHost>.AdoNetFixture fixture) : StringTranslationsAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class TPCFiltersInheritanceBulkUpdatesMySqlTest(TPCFiltersInheritanceBulkUpdatesAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPCFiltersInheritanceBulkUpdatesAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class TPCFiltersInheritanceQueryMySqlTest(TPCFiltersInheritanceQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : TPCFiltersInheritanceQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class TPCGearsOfWarQueryMySqlTest(TPCGearsOfWarQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : TPCGearsOfWarQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class TPCInheritanceBulkUpdatesMySqlTest(TPCInheritanceBulkUpdatesAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPCInheritanceBulkUpdatesAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class TPCInheritanceQueryMySqlTest(TPCInheritanceQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPCInheritanceQueryAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class TPCManyToManyNoTrackingQueryMySqlTest(TPCManyToManyNoTrackingQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : TPCManyToManyNoTrackingQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class TPCManyToManyQueryMySqlTest(TPCManyToManyQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : TPCManyToManyQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class TPCRelationshipsQueryMySqlTest(TPCRelationshipsQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : TPCRelationshipsQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class TPHInheritanceBulkUpdatesMySqlTest(TPHInheritanceBulkUpdatesAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPHInheritanceBulkUpdatesAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class TPHInheritanceQueryMySqlTest(TPHInheritanceQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPHInheritanceQueryAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class TPTFiltersInheritanceBulkUpdatesMySqlTest(TPTFiltersInheritanceBulkUpdatesAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPTFiltersInheritanceBulkUpdatesAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class TPTFiltersInheritanceQueryMySqlTest(TPTFiltersInheritanceQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : TPTFiltersInheritanceQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class TPTGearsOfWarQueryMySqlTest(TPTGearsOfWarQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : TPTGearsOfWarQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class TPTInheritanceBulkUpdatesMySqlTest(TPTInheritanceBulkUpdatesAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPTInheritanceBulkUpdatesAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class TPTInheritanceQueryMySqlTest(TPTInheritanceQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPTInheritanceQueryAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class TPTManyToManyNoTrackingQueryMySqlTest(TPTManyToManyNoTrackingQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : TPTManyToManyNoTrackingQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class TPTManyToManyQueryMySqlTest(TPTManyToManyQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : TPTManyToManyQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class TPTRelationshipsQueryMySqlTest(TPTRelationshipsQueryAdoNetTest<MySqlHost>.AdoNetFixture fixture) : TPTRelationshipsQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class TPTTableSplittingMySqlTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TPTTableSplittingAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class TableSplittingMySqlTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : TableSplittingAdoNetTest<MySqlHost>(fixture, testOutputHelper);
 
+[Collection(SingleWriter.MySql)]
 public partial class TimeOnlyTranslationsMySqlTest(TimeOnlyTranslationsAdoNetTest<MySqlHost>.AdoNetFixture fixture) : TimeOnlyTranslationsAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class TimeSpanTranslationsMySqlTest(TimeSpanTranslationsAdoNetTest<MySqlHost>.AdoNetFixture fixture) : TimeSpanTranslationsAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class ToSqlQueryMySqlTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : ToSqlQueryAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class TransactionInterceptionMySqlTest(AdoNetInterceptionFixture<MySqlHost> fixture) : TransactionInterceptionAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class TransactionMySqlTest(TransactionAdoNetTest<MySqlHost>.AdoNetFixture fixture) : TransactionAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class UpdateSqlGeneratorMySqlTest() : UpdateSqlGeneratorAdoNetTest<MySqlHost>();
 
+[Collection(SingleWriter.MySql)]
 public partial class UpdatesMySqlTest(UpdatesAdoNetTest<MySqlHost>.AdoNetFixture fixture) : UpdatesAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class ValueConvertersEndToEndMySqlTest(ValueConvertersEndToEndAdoNetTest<MySqlHost>.AdoNetFixture fixture) : ValueConvertersEndToEndAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class WarningsMySqlTest(NorthwindQueryAdoNetFixture<MySqlHost> fixture) : WarningsAdoNetTest<MySqlHost>(fixture);
 
+[Collection(SingleWriter.MySql)]
 public partial class WithConstructorsMySqlTest(WithConstructorsAdoNetTest<MySqlHost>.AdoNetFixture fixture) : WithConstructorsAdoNetTest<MySqlHost>(fixture);
-

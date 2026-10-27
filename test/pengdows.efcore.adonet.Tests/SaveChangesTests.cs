@@ -94,6 +94,113 @@ public class SaveChangesTests
         Assert.Contains("DELETE FROM \"Items\"", _db.Commands[1]);
     }
 
+    // SQL:2023 T495: the statement is a data change delta table, and the key comes back as an ordinary SELECT over it.
+    [Fact]
+    public async Task A_delta_table_insert_reads_the_key_from_the_final_table()
+    {
+        await using var context = _db.Context(TestDialects.DeltaTable);
+        var item = NewItem();
+        _db.Returns(FakeDatabase.Row("Id", 7));
+
+        context.Add(item);
+        await context.SaveChangesAsync(Ct);
+
+        Assert.Equal(7, item.Id);
+        Assert.Matches(@"^SELECT ""Id""\nFROM FINAL TABLE \(INSERT INTO ""Items"" \(.*\)\nVALUES \(.*\)\);$", Assert.Single(_db.Commands));
+    }
+
+    [Fact]
+    public async Task A_delta_table_update_checks_its_row_in_the_new_table()
+    {
+        await using var context = _db.Context(TestDialects.DeltaTable);
+        var item = new Item { Id = 1, Version = 3 };
+        context.Attach(item);
+        item.Name = "changed";
+        _db.Returns(FakeDatabase.Row("1", 1));
+
+        await context.SaveChangesAsync(Ct);
+
+        Assert.Matches(
+            @"^SELECT 1\nFROM NEW TABLE \(UPDATE ""Items"" SET ""Name"" = @p\d+\nWHERE ""Id"" = @p\d+ AND ""Version"" = @p\d+\);$",
+            Assert.Single(_db.Commands));
+    }
+
+    [Fact]
+    public async Task A_delta_table_update_detects_a_concurrency_conflict_when_no_row_comes_back()
+    {
+        await using var context = _db.Context(TestDialects.DeltaTable);
+        var item = new Item { Id = 1, Version = 3 };
+        context.Attach(item);
+        item.Name = "changed";
+
+        await Assert.ThrowsAsync<DbUpdateConcurrencyException>(() => context.SaveChangesAsync(Ct));
+    }
+
+    [Fact]
+    public async Task A_delta_table_delete_checks_its_row_in_the_old_table()
+    {
+        await using var context = _db.Context(TestDialects.DeltaTable);
+        context.Remove(new Item { Id = 1, Version = 3 });
+        _db.Returns(FakeDatabase.Row("1", 1));
+
+        await context.SaveChangesAsync(Ct);
+
+        Assert.Matches(
+            @"^SELECT 1\nFROM OLD TABLE \(DELETE FROM ""Items""\nWHERE ""Id"" = @p\d+ AND ""Version"" = @p\d+\);$",
+            Assert.Single(_db.Commands));
+    }
+
+    // The identity function names the last number handed out, not a row whose key came from a column default: the key
+    // columns the caller supplied identify that row instead.
+    [Fact]
+    public async Task Select_after_reads_a_defaulted_key_by_the_key_columns_the_caller_supplied()
+    {
+        await using var context = _db.ContextOf<DefaultedKeyContext>(TestDialects.SelectAfter, o => new DefaultedKeyContext(o));
+        var row = new DefaultedKey { Part = 4 };
+        _db.Returns(FakeDatabase.Row("Id", 12));
+
+        context.Add(row);
+        await context.SaveChangesAsync(Ct);
+
+        Assert.Equal(12, row.Id);
+        var command = Assert.Single(_db.Commands);
+        Assert.Contains("SELECT \"Id\"\nFROM \"DefaultedKeys\"\nWHERE row_count() = 1 AND \"Part\" = @p", command);
+        Assert.DoesNotContain("last_id()", command);
+    }
+
+    // A database that returns keys from the insert never needs the supplied columns to find the row.
+    [Fact]
+    public async Task Returning_reads_a_defaulted_key_from_the_insert()
+    {
+        await using var context = _db.ContextOf<DefaultedKeyContext>(TestDialects.Ansi, o => new DefaultedKeyContext(o));
+        var row = new DefaultedKey { Part = 4 };
+        _db.Returns(FakeDatabase.Row("Id", 12));
+
+        context.Add(row);
+        await context.SaveChangesAsync(Ct);
+
+        Assert.Equal(12, row.Id);
+        Assert.Matches(@"INSERT INTO ""DefaultedKeys"" \(.*\)\nVALUES \(.*\)\nRETURNING ""Id"";", Assert.Single(_db.Commands));
+    }
+
+    public class DefaultedKey
+    {
+        public int Id { get; set; }
+        public int Part { get; set; }
+    }
+
+    private sealed class DefaultedKeyContext(DbContextOptions<DefaultedKeyContext> options) : DbContext(options)
+    {
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+            => modelBuilder.Entity<DefaultedKey>(b =>
+            {
+                b.ToTable("DefaultedKeys");
+                b.HasKey(e => new { e.Id, e.Part });
+                b.Property(e => e.Id).HasDefaultValueSql("next_id()").ValueGeneratedOnAdd();
+                b.Property(e => e.Part).ValueGeneratedNever();
+            });
+    }
+
     [Fact]
     public void Keys_a_sequence_cannot_supply_are_generated_on_the_client()
     {

@@ -17,8 +17,15 @@ public sealed class FlatFileDialect : AdoNetDialect
     public override IDatabaseCapabilities Capabilities { get; } = new DatabaseCapabilities
     {
         SupportsMultipleStatementsPerCommand = true,
-        DefaultMaxBatchSize = 128
+        DefaultMaxBatchSize = 128,
+        // Index sidecars include both the table and index names. Keep the generated component below common filesystem
+        // limits even when EF combines two long model identifiers.
+        MaxIdentifierLength = 63,
+        // Readers are independent file streams.  A split query can therefore keep its result readers active on the same
+        // connection, just as the flat-file engine permits multiple read-only connections alongside its single writer.
+        SupportsMultipleActiveReaders = true
     };
+
 }
 
 internal sealed class FlatFileSql : AnsiSqlDialect

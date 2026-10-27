@@ -102,8 +102,51 @@ internal class AdoNetTypeMappingSource : RelationalTypeMappingSource
 
     protected override RelationalTypeMapping? FindMapping(in RelationalTypeMappingInfo mappingInfo)
     {
+        // byte[] is both a scalar CLR type and EF's primitive collection of bytes. The element mapping marks the latter;
+        // let FindCollectionMapping build its JSON collection mapping instead of allowing the scalar BLOB mapping to win.
+        if (mappingInfo.ClrType == typeof(byte[]) && mappingInfo.ElementTypeMapping != null)
+        {
+            return null;
+        }
+
+        // Precompiled queries reconstruct a parameterized primitive collection with its JSON store type but without the
+        // element mapping that was present during normal translation. Recreate the collection mapping before the named-store
+        // scalar lookup rejects IEnumerable<T> as incompatible with a text store type.
+        if (mappingInfo is { ClrType: { } collectionType, StoreTypeName: { } collectionStoreType }
+            && collectionType != typeof(string)
+            && collectionType != typeof(byte[])
+            && _storeTypeMappings.TryGetValue(mappingInfo.StoreTypeNameBase ?? collectionStoreType, out var collectionStoreMapping)
+            && collectionStoreMapping.ClrType == typeof(string)
+            && TryGetCollectionElementType(collectionType) is { } collectionElementType
+            && FindMapping(collectionElementType) is { } collectionElementMapping)
+        {
+            return FindCollectionMapping(mappingInfo, collectionType, providerType: null, collectionElementMapping);
+        }
+
         // Plugins registered through IRelationalTypeMappingSourcePlugin win.
-        var mapping = base.FindMapping(mappingInfo);
+        // EF's stock source eagerly supplies VARCHAR/VARBINARY for sized properties. Give the dialect the first say for
+        // those facets so providers can choose their actual sized type rather than the unsized default. Named store types
+        // still go through the normal provider/base resolution below.
+        RelationalTypeMapping? mapping = null;
+        if (mappingInfo is { ClrType: { } sizedClr, Size: not null }
+            && mappingInfo.StoreTypeName == null
+            && _clrTypeMappings.TryGetValue(sizedClr, out var sizedMapping)
+            && _typeMappings.GetStoreType(
+                sizedClr,
+                new StoreTypeFacets(
+                    mappingInfo.Size,
+                    mappingInfo.Precision,
+                    mappingInfo.Scale,
+                    mappingInfo.IsFixedLength == true,
+                    mappingInfo.IsUnicode != false,
+                    mappingInfo.IsKeyOrIndex)) is { } dialectStoreType)
+        {
+            mapping = sizedMapping
+                .WithStoreTypeAndSize(dialectStoreType, mappingInfo.Size)
+                .WithTypeMappingInfo(mappingInfo);
+        }
+
+        mapping ??= base.FindMapping(mappingInfo);
         if (mapping != null)
         {
             return mapping;
@@ -166,6 +209,12 @@ internal class AdoNetTypeMappingSource : RelationalTypeMappingSource
 
         return null;
     }
+
+    private static Type? TryGetCollectionElementType(Type type)
+        => type.IsArray
+            ? type.GetElementType()
+            : type.GetInterfaces().Append(type)
+                .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>))?.GetGenericArguments()[0];
 
     // A named decimal type binds with that type's own precision and scale, never the default mapping's (18, 2).
     private static RelationalTypeMapping WithStoreTypeFacets(RelationalTypeMapping mapping, in RelationalTypeMappingInfo mappingInfo)

@@ -1,3 +1,4 @@
+using System.Data;
 using System.Globalization;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -56,6 +57,9 @@ public sealed class MySqlDialect : AdoNetDialect
 
 internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = true) : AnsiSqlDialect
 {
+    public override IsolationLevel DefaultTransactionIsolationLevel => IsolationLevel.ReadCommitted;
+    public override bool KeepConnectionOpenAfterSuppressedTransaction => true;
+
     // Through a connection to no database. Behaviour reference (not copied):
     // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Storage/Internal/MySqlDatabaseCreator.cs
     public override DatabaseLifecycle Databases { get; } = DatabaseLifecycle.Server(
@@ -66,14 +70,20 @@ internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = t
         => savepoints ? SavepointSyntax.Iso : null;
 
     // MySQL's json type and functions. JSON_UNQUOTE turns a JSON null into the text "null", so a string is read only when the
-    // value isn't null; a bool compares against JSON true and false; other types use JSON_VALUE ... RETURNING (8.0.21+),
-    // which reads a JSON null as NULL. A patch value given as JSON text is CAST to JSON.
+    // value isn't null; a bool compares against JSON true and false; typed values unquote and CAST the extracted scalar.
+    // JSON_VALUE's RETURNING form does not accept a computed path expression on MySQL, while JSON_EXTRACT does.
+    // A patch value given as JSON text is CAST to JSON.
     public override JsonSyntax Json { get; } = new(
         "json",
         "CASE JSON_TYPE(JSON_EXTRACT({0}, {1})) WHEN 'NULL' THEN NULL ELSE JSON_UNQUOTE(JSON_EXTRACT({0}, {1})) END",
         "JSON_EXTRACT({0}, {1})",
-        "JSON_VALUE({0}, {1} RETURNING {2})",
-        "CASE JSON_EXTRACT({0}, {1}) WHEN CAST('true' AS JSON) THEN TRUE WHEN CAST('false' AS JSON) THEN FALSE END",
+        // A number or boolean is read as JSON true/false or 1/0: a bool stored as text goes through its converter instead.
+        "CASE JSON_TYPE(JSON_EXTRACT({0}, {1})) WHEN 'NULL' THEN NULL ELSE "
+        + "CASE LOWER(JSON_UNQUOTE(JSON_EXTRACT({0}, {1}))) WHEN 'true' THEN CAST(1 AS {2}) WHEN 'false' THEN CAST(0 AS {2}) "
+        + "ELSE CAST(JSON_UNQUOTE(JSON_EXTRACT({0}, {1})) AS {2}) END END",
+        "CASE LOWER(JSON_UNQUOTE(JSON_EXTRACT({0}, {1}))) WHEN 'true' THEN TRUE WHEN '1' THEN TRUE "
+        + "WHEN 'false' THEN FALSE WHEN '0' THEN FALSE END",
+        "FROM_BASE64(JSON_UNQUOTE(JSON_EXTRACT({0}, {1})))",
         "CONCAT({0}, {1})",
         "JSON_SET({0}, {1}, {2})",
         "CAST({0} AS JSON)")
@@ -93,10 +103,16 @@ internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = t
         ArrayElementsHint = "/*+ NO_SEMIJOIN() NO_MERGE() */"
     };
 
-    // ISO quoted identifiers ("name"), which MySQL reads only under ANSI_QUOTES: each session adds it to its sql_mode. String
-    // literals are always single-quoted, so nothing else changes meaning.
+    // ISO quoted identifiers ("name"), which MySQL reads only under ANSI_QUOTES: each session adds it to its sql_mode, and sets
+    // NO_BACKSLASH_ESCAPES to match the string literals this dialect writes. Every other mode the server had is kept.
+    private const string SessionModeWithBackslashEscapes =
+        "SET SESSION sql_mode = CONCAT_WS(',', NULLIF(TRIM(BOTH ',' FROM REPLACE(@@SESSION.sql_mode, 'NO_BACKSLASH_ESCAPES', '')), ''), 'ANSI_QUOTES')";
+
+    private const string SessionModeWithoutBackslashEscapes =
+        "SET SESSION sql_mode = CONCAT_WS(',', NULLIF(TRIM(BOTH ',' FROM REPLACE(@@SESSION.sql_mode, 'NO_BACKSLASH_ESCAPES', '')), ''), 'ANSI_QUOTES', 'NO_BACKSLASH_ESCAPES')";
+
     public override string? SessionSetup
-        => "SET SESSION sql_mode = CONCAT_WS(',', NULLIF(@@SESSION.sql_mode, ''), 'ANSI_QUOTES')";
+        => backslashEscapes ? SessionModeWithBackslashEscapes : SessionModeWithoutBackslashEscapes;
     public override bool SupportsSchemas => false;
 
     // Geometry columns hold MySQL's own format, a four-byte SRID before the WKB, which the drivers pass as bytes. Constants are
@@ -233,6 +249,12 @@ internal sealed class MySqlFunctions : FunctionSyntax
 
     // TIMEDIFF of two times may be negative; .NET's difference wraps past midnight.
     public override string? TimeDifference => "CASE WHEN {0} >= {1} THEN TIMEDIFF({0}, {1}) ELSE ADDTIME(TIMEDIFF({0}, {1}), '24:00:00') END";
+    // TIME can't hold a multi-month DateTime difference, so subtracting two dates is left untranslated; TotalDays of the
+    // difference has its own microsecond path.
+    public override string? DateDifference => null;
+    public override string? DateDifferenceTotalDays => "(TIMESTAMPDIFF(MICROSECOND, {1}, {0}) / 86400000000.0)";
+    public override string? TimeSpanAdd => "ADDTIME({0}, {1})";
+    public override string? TimeSpanSubtract => "SUBTIME({0}, {1})";
 
     // A DateTimeOffset is stored as its UTC instant.
     public override string? OffsetNow => "UTC_TIMESTAMP(6)";
@@ -282,8 +304,8 @@ internal sealed class MySqlTypeMappings : AnsiTypeMappings
     public override System.Data.DbType DateTimeDbType
         => System.Data.DbType.DateTime;
 
-    // TEXT and BLOB can't be keys or indexed without a prefix length, and InnoDB's index key holds 3072 bytes: an unsized key or
-    // index column is VARCHAR(255) (half the key at utf8mb4's 4 bytes a character, at most 255) or VARBINARY(3072).
+    // TEXT and BLOB can't be keys or indexed without a prefix length. MySQL 8's 3072-byte InnoDB key limit leaves ample room
+    // for the provider's default VARCHAR(255) key/index column at utf8mb4's four bytes per character.
     // Behaviour reference (not copied):
     // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Storage/Internal/MySqlTypeMappingSource.cs
     public override string? GetStoreType(Type clrType, StoreTypeFacets facets)
@@ -291,6 +313,11 @@ internal sealed class MySqlTypeMappings : AnsiTypeMappings
         {
             { KeyOrIndex: true, Size: null } when clrType == typeof(string) => "VARCHAR(255)",
             { KeyOrIndex: true, Size: null } when clrType == typeof(byte[]) => "VARBINARY(3072)",
+            // CHAR and BINARY hold up to 255.
+            { FixedLength: true, Size: > 0 and <= MaxFixedLength } when clrType == typeof(string) => $"CHAR({facets.Size})",
+            { FixedLength: true, Size: > 0 and <= MaxFixedLength } when clrType == typeof(byte[]) => $"BINARY({facets.Size})",
+            { Size: > 0 and <= MaxVarcharCharacters } when clrType == typeof(string) => $"VARCHAR({facets.Size})",
+            { Size: > 0 and < MinBlobBytes } when clrType == typeof(byte[]) => $"VARBINARY({facets.Size})",
             // Every VARCHAR and VARBINARY byte counts toward a 65,535-byte row: a string longer than fits at utf8mb4's 4 bytes
             // a character is LONGTEXT, and binary of 8,000 bytes or more LONGBLOB. Adapted from Pomelo's MySqlTypeMappingSource
             // and MySqlByteArrayTypeMapping (MIT, Pomelo Foundation).
@@ -300,6 +327,7 @@ internal sealed class MySqlTypeMappings : AnsiTypeMappings
             _ => base.GetStoreType(clrType, facets)
         };
 
+    private const int MaxFixedLength = 255;
     private const int MaxVarcharCharacters = 65_535 / 4;
     private const int MinBlobBytes = 8000;
 

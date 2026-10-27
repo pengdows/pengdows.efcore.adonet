@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
@@ -13,18 +14,21 @@ internal class AdoNetQueryableMethodTranslatingExpressionVisitor : RelationalQue
     private readonly IRelationalTypeMappingSource _typeMappingSource;
     private readonly SqlAliasManager _sqlAliasManager;
     private readonly ISqlExpressionFactory _sqlExpressionFactory;
+    private readonly ISqlGenerationHelper _sqlGenerationHelper;
 
     public AdoNetQueryableMethodTranslatingExpressionVisitor(
         QueryableMethodTranslatingExpressionVisitorDependencies dependencies,
         RelationalQueryableMethodTranslatingExpressionVisitorDependencies relationalDependencies,
         RelationalQueryCompilationContext queryCompilationContext,
-        ISqlDialect dialect)
+        ISqlDialect dialect,
+        ISqlGenerationHelper sqlGenerationHelper)
         : base(dependencies, relationalDependencies, queryCompilationContext)
     {
         _dialect = dialect;
         _typeMappingSource = relationalDependencies.TypeMappingSource;
         _sqlAliasManager = queryCompilationContext.SqlAliasManager;
         _sqlExpressionFactory = relationalDependencies.SqlExpressionFactory;
+        _sqlGenerationHelper = sqlGenerationHelper;
     }
 
     protected AdoNetQueryableMethodTranslatingExpressionVisitor(AdoNetQueryableMethodTranslatingExpressionVisitor parentVisitor)
@@ -34,6 +38,7 @@ internal class AdoNetQueryableMethodTranslatingExpressionVisitor : RelationalQue
         _typeMappingSource = parentVisitor._typeMappingSource;
         _sqlAliasManager = parentVisitor._sqlAliasManager;
         _sqlExpressionFactory = parentVisitor._sqlExpressionFactory;
+        _sqlGenerationHelper = parentVisitor._sqlGenerationHelper;
     }
 
     protected override QueryableMethodTranslatingExpressionVisitor CreateSubqueryVisitor()
@@ -174,6 +179,65 @@ internal class AdoNetQueryableMethodTranslatingExpressionVisitor : RelationalQue
         return new ShapedQueryExpression(select, shaper);
     }
 
+    // JSON_SET is available to several providers, so partial ExecuteUpdate support belongs in the shared translator. The
+    // dialect supplies the actual function and JSON conversion templates; a provider only needs to expose JsonSyntax.
+#pragma warning disable EF1001 // EF's provider-facing JSON update extension point is internal by design.
+    protected override SqlExpression? GenerateJsonPartialUpdateSetter(
+        Expression target,
+        SqlExpression value,
+        ref SqlExpression? existingSetterValue)
+    {
+        var json = _dialect.Json ?? throw new UnreachableException();
+        ColumnExpression column;
+        IReadOnlyList<PathSegment> path;
+        var useRawValue = false;
+
+        if (target is JsonScalarExpression scalar)
+        {
+            if (scalar.Json is not ColumnExpression scalarColumn)
+            {
+                throw new UnreachableException();
+            }
+
+            column = scalarColumn;
+            path = scalar.Path;
+            useRawValue = scalar.TypeMapping?.ElementTypeMapping == null;
+        }
+        else if (target is JsonQueryExpression query)
+        {
+            column = query.JsonColumn;
+            path = query.Path;
+        }
+        else
+        {
+            throw new UnreachableException();
+        }
+
+        var pathText = JsonPath(path);
+        var replacement = useRawValue
+            ? value
+            : _sqlExpressionFactory.Call(json.FromText, [value], typeof(string), value.TypeMapping)!;
+        var setter = _sqlExpressionFactory.Call(
+            json.Set,
+            [existingSetterValue ?? column, _sqlExpressionFactory.Constant(pathText), replacement],
+            typeof(string),
+            column.TypeMapping);
+
+        if (existingSetterValue == null)
+        {
+            return setter;
+        }
+
+        existingSetterValue = setter;
+        return null;
+    }
+#pragma warning restore EF1001
+
+    private string JsonPath(IReadOnlyList<PathSegment> path)
+        => JsonPathText.Of(path, _sqlGenerationHelper) is { Indexes.Count: 0 } text
+            ? text.Literals[0]
+            : throw new NotSupportedException("This provider's JSON partial updates require a constant JSON array index.");
+
     // collection[i] is OFFSET i LIMIT 1 over the collection in order. Where OFFSET takes only a value and i is computed (a
     // column), an inline or JSON collection is filtered on its ordinal instead: VALUES numbers its rows from 0 (_ord), a JSON
     // array table from 1.
@@ -229,10 +293,11 @@ internal class AdoNetQueryableMethodTranslatingExpressionVisitor : RelationalQue
 internal class AdoNetQueryableMethodTranslatingExpressionVisitorFactory(
     QueryableMethodTranslatingExpressionVisitorDependencies dependencies,
     RelationalQueryableMethodTranslatingExpressionVisitorDependencies relationalDependencies,
-    ISqlDialect dialect)
+    ISqlDialect dialect,
+    ISqlGenerationHelper sqlGenerationHelper)
     : IQueryableMethodTranslatingExpressionVisitorFactory
 {
     public virtual QueryableMethodTranslatingExpressionVisitor Create(QueryCompilationContext queryCompilationContext)
         => new AdoNetQueryableMethodTranslatingExpressionVisitor(
-            dependencies, relationalDependencies, (RelationalQueryCompilationContext)queryCompilationContext, dialect);
+            dependencies, relationalDependencies, (RelationalQueryCompilationContext)queryCompilationContext, dialect, sqlGenerationHelper);
 }

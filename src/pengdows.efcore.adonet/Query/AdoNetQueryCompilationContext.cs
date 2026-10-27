@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 
+#pragma warning disable EF9100 // EF's precompiled-query opt-in constructor is the provider extension point.
+
 namespace pengdows.efcore.adonet.Query;
 
 /// <summary>
@@ -16,9 +18,12 @@ internal sealed class AdoNetQueryCompilationContext(
     QueryCompilationContextDependencies dependencies,
     RelationalQueryCompilationContextDependencies relationalDependencies,
     bool async,
+    bool precompiling,
     bool multipleActiveReaders)
-    : RelationalQueryCompilationContext(dependencies, relationalDependencies, async)
+    : RelationalQueryCompilationContext(dependencies, relationalDependencies, async, precompiling)
 {
+    public override bool SupportsPrecompiledQuery => true;
+
     public override bool IsBuffering
         => base.IsBuffering || ((QuerySplittingBehavior == Microsoft.EntityFrameworkCore.QuerySplittingBehavior.SplitQuery) && !multipleActiveReaders);
 }
@@ -30,5 +35,10 @@ internal sealed class AdoNetQueryCompilationContextFactory(
     : IQueryCompilationContextFactory
 {
     public QueryCompilationContext Create(bool async)
-        => new AdoNetQueryCompilationContext(dependencies, relationalDependencies, async, capabilities.SupportsMultipleActiveReaders);
+        => new AdoNetQueryCompilationContext(dependencies, relationalDependencies, async, false, capabilities.SupportsMultipleActiveReaders);
+
+    public QueryCompilationContext CreatePrecompiled(bool async)
+        => new AdoNetQueryCompilationContext(dependencies, relationalDependencies, async, true, capabilities.SupportsMultipleActiveReaders);
 }
+
+#pragma warning restore EF9100

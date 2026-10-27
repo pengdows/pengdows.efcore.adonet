@@ -10,6 +10,8 @@ public partial class AdHocComplexTypeQueryPostgreSqlTest(global::Microsoft.Entit
 
 public partial class AdHocJsonQueryPostgreSqlTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocJsonQueryAdoNetTest<PostgreSqlHost>(fixture);
 
+public partial class AdHocJsonQueryCorePostgreSqlTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocJsonQueryCoreAdoNetTest<PostgreSqlHost>(fixture);
+
 public partial class AdHocManyToManyQueryPostgreSqlTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocManyToManyQueryAdoNetTest<PostgreSqlHost>(fixture);
 
 public partial class AdHocMiscellaneousQueryPostgreSqlTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocMiscellaneousQueryAdoNetTest<PostgreSqlHost>(fixture);
@@ -82,6 +84,8 @@ public partial class ComplexTypeQueryPostgreSqlTest(ComplexTypeQueryAdoNetTest<P
 
 public partial class ComplexTypesTrackingPostgreSqlTest(ComplexTypesTrackingAdoNetTest<PostgreSqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexTypesTrackingAdoNetTest<PostgreSqlHost>(fixture, testOutputHelper);
 
+public partial class ComplexTypesTrackingCorePostgreSqlTest(ComplexTypesTrackingCoreAdoNetTest<PostgreSqlHost>.AdoNetFixture fixture) : ComplexTypesTrackingCoreAdoNetTest<PostgreSqlHost>(fixture);
+
 public partial class CompositeKeyEndToEndPostgreSqlTest(CompositeKeyEndToEndAdoNetTest<PostgreSqlHost>.AdoNetFixture fixture) : CompositeKeyEndToEndAdoNetTest<PostgreSqlHost>(fixture);
 
 public partial class CompositeKeysQueryPostgreSqlTest(CompositeKeysQueryAdoNetTest<PostgreSqlHost>.AdoNetFixture fixture) : CompositeKeysQueryAdoNetTest<PostgreSqlHost>(fixture);
@@ -122,6 +126,8 @@ public partial class FieldsOnlyLoadPostgreSqlTest(FieldsOnlyLoadAdoNetTest<Postg
 
 public partial class FiltersInheritanceBulkUpdatesPostgreSqlTest(FiltersInheritanceBulkUpdatesAdoNetTest<PostgreSqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : FiltersInheritanceBulkUpdatesAdoNetTest<PostgreSqlHost>(fixture, testOutputHelper);
 
+public partial class FiltersInheritanceBulkUpdatesCorePostgreSqlTest(FiltersInheritanceBulkUpdatesCoreAdoNetTest<PostgreSqlHost>.AdoNetFixture fixture) : FiltersInheritanceBulkUpdatesCoreAdoNetTest<PostgreSqlHost>(fixture);
+
 public partial class FiltersInheritanceQueryPostgreSqlTest(FiltersInheritanceQueryAdoNetTest<PostgreSqlHost>.AdoNetFixture fixture) : FiltersInheritanceQueryAdoNetTest<PostgreSqlHost>(fixture);
 
 public partial class FindPostgreSqlTest(FindAdoNetTest<PostgreSqlHost>.AdoNetFixture fixture) : FindAdoNetTest<PostgreSqlHost>(fixture);
@@ -144,6 +150,8 @@ public partial class IncludeOneToOnePostgreSqlTest(IncludeOneToOneAdoNetTest<Pos
 
 public partial class InheritanceRelationshipsQueryPostgreSqlTest(InheritanceRelationshipsQueryAdoNetTest<PostgreSqlHost>.AdoNetFixture fixture) : InheritanceRelationshipsQueryAdoNetTest<PostgreSqlHost>(fixture);
 
+public partial class InheritanceRelationshipsQueryCorePostgreSqlTest(InheritanceRelationshipsQueryCoreAdoNetTest<PostgreSqlHost>.AdoNetFixture fixture) : InheritanceRelationshipsQueryCoreAdoNetTest<PostgreSqlHost>(fixture);
+
 public partial class JsonQueryPostgreSqlTest(JsonQueryAdoNetTest<PostgreSqlHost>.AdoNetFixture fixture) : JsonQueryAdoNetTest<PostgreSqlHost>(fixture);
 
 public partial class JsonTypesPostgreSqlTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : JsonTypesAdoNetTest<PostgreSqlHost>(fixture);
@@ -153,6 +161,8 @@ public partial class JsonUpdatePostgreSqlTest(JsonUpdateAdoNetTest<PostgreSqlHos
 public partial class KeysWithConvertersPostgreSqlTest(KeysWithConvertersAdoNetTest<PostgreSqlHost>.AdoNetFixture fixture) : KeysWithConvertersAdoNetTest<PostgreSqlHost>(fixture);
 
 public partial class LazyLoadProxyPostgreSqlTest(LazyLoadProxyAdoNetTest<PostgreSqlHost>.AdoNetFixture fixture) : LazyLoadProxyAdoNetTest<PostgreSqlHost>(fixture);
+
+public partial class LazyLoadProxyCorePostgreSqlTest(LazyLoadProxyCoreAdoNetTest<PostgreSqlHost>.AdoNetFixture fixture) : LazyLoadProxyCoreAdoNetTest<PostgreSqlHost>(fixture);
 
 public partial class LoadPostgreSqlTest(LoadAdoNetTest<PostgreSqlHost>.AdoNetFixture fixture) : LoadAdoNetTest<PostgreSqlHost>(fixture);
 
@@ -300,9 +310,15 @@ public partial class OwnedTableSplittingProjectionPostgreSqlTest(OwnedTableSplit
 
 public partial class OwnedTableSplittingStructuralEqualityPostgreSqlTest(OwnedTableSplittingStructuralEqualityAdoNetTest<PostgreSqlHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedTableSplittingStructuralEqualityAdoNetTest<PostgreSqlHost>(fixture, testOutputHelper);
 
+public partial class PrecompiledQueryPostgreSqlTest(AdoNetPrecompiledQueryRelationalFixture<PostgreSqlHost> fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : PrecompiledQueryAdoNetTest<PostgreSqlHost>(fixture, testOutputHelper);
+
+public partial class PrecompiledSqlPregenerationQueryPostgreSqlTest(AdoNetPrecompiledSqlPregenerationQueryRelationalFixture<PostgreSqlHost> fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : PrecompiledSqlPregenerationQueryAdoNetTest<PostgreSqlHost>(fixture, testOutputHelper);
+
 public partial class PrimitiveCollectionsQueryPostgreSqlTest(PrimitiveCollectionsQueryAdoNetTest<PostgreSqlHost>.AdoNetFixture fixture) : PrimitiveCollectionsQueryAdoNetTest<PostgreSqlHost>(fixture);
 
 public partial class PropertyValuesPostgreSqlTest(PropertyValuesAdoNetTest<PostgreSqlHost>.AdoNetFixture fixture) : PropertyValuesAdoNetTest<PostgreSqlHost>(fixture);
+
+public partial class PropertyValuesCorePostgreSqlTest(PropertyValuesCoreAdoNetTest<PostgreSqlHost>.AdoNetFixture fixture) : PropertyValuesCoreAdoNetTest<PostgreSqlHost>(fixture);
 
 public partial class QueryExpressionInterceptionPostgreSqlTest(AdoNetInterceptionFixture<PostgreSqlHost> fixture) : QueryExpressionInterceptionAdoNetTest<PostgreSqlHost>(fixture);
 
@@ -330,7 +346,7 @@ public partial class RelationalOneToOnePostgreSqlTest(AdoNetRelationalModelBuild
 
 public partial class RelationalOwnedTypesPostgreSqlTest(AdoNetRelationalModelBuilderFixture<PostgreSqlHost> fixture) : RelationalOwnedTypesAdoNetTest<PostgreSqlHost>(fixture);
 
-public partial class RelationalServiceCollectionExtensionsPostgreSqlTest(global::Microsoft.EntityFrameworkCore.TestUtilities.TestHelpers testHelpers) : RelationalServiceCollectionExtensionsAdoNetTest<PostgreSqlHost>(testHelpers);
+public partial class RelationalServiceCollectionExtensionsPostgreSqlTest() : RelationalServiceCollectionExtensionsAdoNetTest<PostgreSqlHost>();
 
 public partial class SaveChangesInterceptionPostgreSqlTest(AdoNetInterceptionFixture<PostgreSqlHost> fixture) : SaveChangesInterceptionAdoNetTest<PostgreSqlHost>(fixture);
 
@@ -417,4 +433,3 @@ public partial class ValueConvertersEndToEndPostgreSqlTest(ValueConvertersEndToE
 public partial class WarningsPostgreSqlTest(NorthwindQueryAdoNetFixture<PostgreSqlHost> fixture) : WarningsAdoNetTest<PostgreSqlHost>(fixture);
 
 public partial class WithConstructorsPostgreSqlTest(WithConstructorsAdoNetTest<PostgreSqlHost>.AdoNetFixture fixture) : WithConstructorsAdoNetTest<PostgreSqlHost>(fixture);
-

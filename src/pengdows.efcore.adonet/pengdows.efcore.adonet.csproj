@@ -8,5 +8,6 @@
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="pengdows.efcore.adonet.Tests" />
+    <InternalsVisibleTo Include="pengdows.efcore.adonet.Specification.Tests" />
   </ItemGroup>
 </Project>

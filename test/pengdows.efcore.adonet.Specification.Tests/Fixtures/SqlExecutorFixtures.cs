@@ -6,7 +6,6 @@ public abstract partial class SqlExecutorAdoNetTest<THost>
 {
     // EF expects -1 rows affected, as SQL Server reports for a procedure that returns rows; the driver's own count is checked.
     // Adapted from EF Core's SqlExecutorTestBase (MIT, .NET Foundation).
-    [ConditionalTheory, InlineData(false), InlineData(true)]
     public override async Task Executes_stored_procedure(bool async)
     {
         using var context = CreateContext();
@@ -18,7 +17,6 @@ public abstract partial class SqlExecutorAdoNetTest<THost>
                 : context.Database.ExecuteSqlRaw(TenMostExpensiveProductsSproc));
     }
 
-    [ConditionalTheory, InlineData(false), InlineData(true)]
     public override async Task Executes_stored_procedure_with_parameter(bool async)
     {
         using var context = CreateContext();
@@ -31,7 +29,6 @@ public abstract partial class SqlExecutorAdoNetTest<THost>
                 : context.Database.ExecuteSqlRaw(CustomerOrderHistorySproc, parameter));
     }
 
-    [ConditionalTheory, InlineData(false), InlineData(true)]
     public override async Task Executes_stored_procedure_with_generated_parameter(bool async)
     {
         using var context = CreateContext();
@@ -49,6 +46,7 @@ public abstract partial class SqlExecutorAdoNetTest<THost>
         protected override void OnModelCreating(ModelBuilder modelBuilder, DbContext context)
         {
             base.OnModelCreating(modelBuilder, context);
+            NorthwindCanonicalSchema.Configure(modelBuilder);
             NorthwindProcedureSeeding.MapResults(modelBuilder);
         }
     }

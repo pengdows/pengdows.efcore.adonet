@@ -15,6 +15,7 @@ public class AdoNetOptionsExtension : RelationalOptionsExtension
     private IAdoNetDialect? _registeredDialect;
     private DbProviderFactory? _sourceFactory;
     private bool _dataSourceProbed;
+    private QuerySplittingBehavior? _adoNetQuerySplittingBehavior;
 
     public AdoNetOptionsExtension()
     {
@@ -29,10 +30,30 @@ public class AdoNetOptionsExtension : RelationalOptionsExtension
         _registeredDialect = copyFrom._registeredDialect;
         _sourceFactory = copyFrom._sourceFactory;
         _dataSourceProbed = copyFrom._dataSourceProbed;
+        _adoNetQuerySplittingBehavior = copyFrom._adoNetQuerySplittingBehavior;
     }
 
     public override DbContextOptionsExtensionInfo Info
         => _info ??= new ExtensionInfo(this);
+
+    /// <summary>The ADO.NET provider's query splitting setting, including the absence of an explicit setting.</summary>
+    public override QuerySplittingBehavior? QuerySplittingBehavior
+        => _adoNetQuerySplittingBehavior;
+
+    public override RelationalOptionsExtension WithUseQuerySplittingBehavior(QuerySplittingBehavior querySplittingBehavior)
+    {
+        var clone = (AdoNetOptionsExtension)base.WithUseQuerySplittingBehavior(querySplittingBehavior);
+        clone._adoNetQuerySplittingBehavior = querySplittingBehavior;
+        return clone;
+    }
+
+    /// <summary>Returns a copy with no context-level query splitting behavior, allowing EF's warning path to run.</summary>
+    internal AdoNetOptionsExtension WithoutQuerySplittingBehavior()
+    {
+        var clone = (AdoNetOptionsExtension)Clone();
+        clone._adoNetQuerySplittingBehavior = null;
+        return clone;
+    }
 
     /// <summary>Used with <see cref="RelationalOptionsExtension.ConnectionString" /> to create connections.</summary>
     internal DbProviderFactory? ProviderFactory

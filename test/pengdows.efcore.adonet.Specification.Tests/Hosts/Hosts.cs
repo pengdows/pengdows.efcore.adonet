@@ -19,10 +19,17 @@ namespace pengdows.efcore.adonet.Specification.Tests;
 /// <summary>A server: one container for the run, a database per test store, made by the server's own DDL.</summary>
 public abstract class ServerHost : IDatabaseHost
 {
+    public virtual bool KeepStoreConnectionOpen => true;
+    public virtual bool SupportsMalformedJsonProperties => true;
     public virtual TimeSpan TemporalResolution => TimeSpan.FromTicks(1);
     public virtual bool KeepsOffsets => true;
+    public virtual DateTime DefaultDateTime => new();
+    public virtual bool StrictEquality => true;
     public virtual NorthwindProcedures? Procedures => null;
     public virtual string? NonDefaultCollation => null;
+    public virtual string? CaseInsensitiveCollation => null;
+    public virtual string? CaseSensitiveCollation => null;
+    public virtual string? DatabaseSchema => null;
     public virtual UpdateProcedures? UpdateProcedures => null;
 
     protected abstract string AdminConnectionString { get; }
@@ -106,14 +113,24 @@ public sealed class PostgreSqlHost : ServerHost
 
 public sealed class MySqlHost : ServerHost
 {
+    // MySQL's JSON type validates documents and canonicalizes duplicate keys, so EF's malformed-document fixture cannot be stored faithfully.
+    public override bool SupportsMalformedJsonProperties => false;
     // DATETIME(6) and TIME(6) keep microseconds.
     public override TimeSpan TemporalResolution => TimeSpan.FromMicroseconds(1);
+
+    // MySQL DATETIME cannot represent .NET's year-one sentinel used by EF's generic probe.
+    public override DateTime DefaultDateTime => new(2000, 1, 1, 12, 34, 56);
+
+    // MySQL's FLOAT/DOUBLE comparisons can round the EF probe values at storage or parameter binding time.
+    public override bool StrictEquality => false;
 
     // A DateTimeOffset is stored as its UTC instant in a DATETIME(6), read back at offset zero.
     public override bool KeepsOffsets => false;
 
     // The test databases are utf8mb4_0900_as_cs.
     public override string NonDefaultCollation => "utf8mb4_bin";
+    public override string CaseInsensitiveCollation => "utf8mb4_0900_ai_ci";
+    public override string CaseSensitiveCollation => "utf8mb4_bin";
 
     public override UpdateProcedures UpdateProcedures => MySqlUpdateProcedures.Instance;
 
@@ -126,7 +143,7 @@ public sealed class MySqlHost : ServerHost
             "CREATE PROCEDURE `Ten Most Expensive Products`() SELECT `ProductName` AS `TenMostExpensiveProducts`, `UnitPrice` "
             + "FROM `Products` ORDER BY `UnitPrice` DESC LIMIT 10",
             "CREATE PROCEDURE `CustOrderHist`(pCustomerID CHAR(5) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin) SELECT `ProductName`, SUM(`Quantity`) AS `Total` "
-            + "FROM `Products` AS p, `OrderDetails` AS od, `Orders` AS o, `Customers` AS c WHERE c.`CustomerID` = pCustomerID "
+            + "FROM `Products` AS p, `Order Details` AS od, `Orders` AS o, `Customers` AS c WHERE c.`CustomerID` = pCustomerID "
             + "AND c.`CustomerID` = o.`CustomerID` AND o.`OrderID` = od.`OrderID` AND od.`ProductID` = p.`ProductID` GROUP BY `ProductName`"
         ],
         "CALL `Ten Most Expensive Products`()",
@@ -142,11 +159,11 @@ public sealed class MySqlHost : ServerHost
 
     public override IAdoNetDialect Dialect => MySqlDialect.Instance;
 
-    // Case- and accent-sensitive, as EF's expected results compare strings ordinally; the server's default collation
-    // (utf8mb4_0900_ai_ci) ignores both. Pomelo's test databases do the same. Behaviour reference (not copied):
+    // Keep MySQL's default utf8mb4_0900_ai_ci collation. The shared tests request utf8mb4_bin explicitly when they need
+    // ordinal comparison; this is also how Pomelo's Northwind database is configured. Behaviour reference (not copied):
     // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/test/EFCore.MySql.FunctionalTests/TestUtilities/MySqlTestStore.cs
     protected override IEnumerable<string> RecreateSql(string database)
-        => [$"DROP DATABASE IF EXISTS `{database}`", $"CREATE DATABASE `{database}` CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_as_cs"];
+        => [$"DROP DATABASE IF EXISTS `{database}`", $"CREATE DATABASE `{database}` CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci"];
 
     // With the user variables the dialect reads procedure outputs through, which a connection opened before the provider
     // sees it must already allow.
@@ -165,10 +182,15 @@ public sealed class MySqlHost : ServerHost
 /// <summary>An embedded database: a file or folder per test store, under one temporary directory for the run.</summary>
 public abstract class FileHost : IDatabaseHost
 {
+    public virtual bool KeepStoreConnectionOpen => false;
+    public virtual bool SupportsMalformedJsonProperties => true;
     public virtual TimeSpan TemporalResolution => TimeSpan.FromTicks(1);
     public virtual bool KeepsOffsets => true;
     public virtual NorthwindProcedures? Procedures => null;
     public virtual string? NonDefaultCollation => null;
+    public virtual string? CaseInsensitiveCollation => null;
+    public virtual string? CaseSensitiveCollation => null;
+    public virtual string? DatabaseSchema => null;
     public virtual UpdateProcedures? UpdateProcedures => null;
 
     protected static readonly string Root = Directory.CreateTempSubdirectory("adonet-spec-").FullName;

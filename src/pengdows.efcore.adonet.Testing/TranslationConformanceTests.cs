@@ -225,4 +225,58 @@ public abstract class TranslationConformanceTests<TFixture>(TFixture fixture) : 
         await Server(b => b.CreatedAt.AddMonths(13));
         await Server(b => b.CreatedAt.AddYears(-1));
     }
+
+    // A column is no constant to escape, so these compare the text itself; a null argument matches nothing, however it is
+    // negated, as it does in .NET's own string methods' relational reading.
+    [Fact]
+    public async Task String_methods_with_a_column_argument_compare_the_text()
+    {
+        await Matches(b => b.Name.StartsWith(b.Name));
+        await Matches(b => b.Name.EndsWith(b.Name));
+        await Matches(b => b.Name.Contains(b.Name));
+        await Matches(b => b.Name.StartsWith(b.Name.Trim()));
+        await Matches(b => b.Name.Trim().StartsWith(b.Name));
+        await Matches(b => !b.Name.Contains(b.Name + "x"));
+    }
+
+    [Fact]
+    public async Task String_methods_with_a_null_argument_match_nothing()
+    {
+        await using var context = Fixture.CreateContext();
+
+        Assert.Equal(0, await context.Blogs.CountAsync(b => b.Name.StartsWith(null!), Ct));
+        Assert.Equal(0, await context.Blogs.CountAsync(b => b.Name.EndsWith(null!), Ct));
+        Assert.Equal(0, await context.Blogs.CountAsync(b => b.Name.Contains(null!), Ct));
+        Assert.Equal(1, await context.Blogs.CountAsync(b => !b.Name.Contains(null!), Ct));
+    }
+
+    // CreatedAt is 64.25 days (and a bit) after the origin.
+    [Fact]
+    public async Task The_difference_between_two_dates_in_days()
+    {
+        var functions = Fixture.ExpectedDialect.Sql.Functions;
+        if ((functions.DateDifferenceTotalDays == null) && (functions.DateDifference == null))
+        {
+            Fixture.SkipFor("no date difference");
+        }
+
+        var origin = new DateTime(2024, 1, 1);
+        await Matches(b => ((b.CreatedAt - origin).TotalDays > 64.25) && ((b.CreatedAt - origin).TotalDays < 64.26));
+        await Matches(b => ((origin - b.CreatedAt).TotalDays < -64.25) && ((origin - b.CreatedAt).TotalDays > -64.26));
+    }
+
+    // 06:07:08.5 plus an hour, less an hour.
+    [Fact]
+    public async Task Time_spans_add_and_subtract()
+    {
+        var functions = Fixture.ExpectedDialect.Sql.Functions;
+        if ((functions.TimeSpanAdd == null) || (functions.TimeSpanSubtract == null))
+        {
+            Fixture.SkipFor("no time span arithmetic");
+        }
+
+        await Server(b => (b.CreatedAt.TimeOfDay + TimeSpan.FromHours(1)).Hours);
+        await Server(b => (b.CreatedAt.TimeOfDay - TimeSpan.FromHours(1)).Hours);
+        await Server(b => (b.CreatedAt.TimeOfDay + TimeSpan.FromMinutes(54)).Minutes);
+    }
 }

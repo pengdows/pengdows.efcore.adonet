@@ -1,5 +1,6 @@
 using System.Data;
 using System.Data.Common;
+using Transaction = System.Transactions.Transaction;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using pengdows.efcore.adonet.Infrastructure;
@@ -16,6 +17,7 @@ internal class AdoNetRelationalConnection : RelationalConnection
     private readonly AdoNetOptionsExtension _extension;
     private readonly AdoNetDataSources _dataSources;
     private readonly IDatabaseCapabilities _capabilities;
+    private readonly IsolationLevel _defaultIsolationLevel;
     private readonly string? _sessionSetup;
     private readonly IReadOnlyDictionary<string, string> _connectionOptions;
 
@@ -34,6 +36,7 @@ internal class AdoNetRelationalConnection : RelationalConnection
     {
         _dataSources = dataSources;
         _capabilities = capabilities;
+        _defaultIsolationLevel = sql.DefaultTransactionIsolationLevel;
         _sessionSetup = sql.SessionSetup;
         _connectionOptions = sql.ConnectionOptions;
         _extension = dependencies.ContextOptions.FindExtension<AdoNetOptionsExtension>()
@@ -193,7 +196,7 @@ internal class AdoNetRelationalConnection : RelationalConnection
     {
         try
         {
-            return base.BeginTransaction(isolationLevel);
+            return base.BeginTransaction(DefaultIsolationLevel(isolationLevel));
         }
         catch
         {
@@ -206,7 +209,7 @@ internal class AdoNetRelationalConnection : RelationalConnection
     {
         try
         {
-            return await base.BeginTransactionAsync(isolationLevel, cancellationToken);
+            return await base.BeginTransactionAsync(DefaultIsolationLevel(isolationLevel), cancellationToken);
         }
         catch
         {
@@ -214,6 +217,11 @@ internal class AdoNetRelationalConnection : RelationalConnection
             throw;
         }
     }
+
+    private IsolationLevel DefaultIsolationLevel(IsolationLevel isolationLevel)
+        => isolationLevel == IsolationLevel.Unspecified
+            ? _defaultIsolationLevel
+            : isolationLevel;
 
     // Some drivers' DisposeAsync skips what Dispose does (one neither raises Disposed nor disposes, another raises nothing):
     // close asynchronously, which does the I/O, then dispose synchronously, which every driver gets right and which costs
@@ -255,4 +263,20 @@ internal class AdoNetRelationalConnection : RelationalConnection
         => DbConnection.State != ConnectionState.Closed
             ? base.CloseDbConnectionAsync()
             : Task.CompletedTask;
+
+    // EF reports enlisting in a transaction a connection can't take (one already enlisted, in an ambient transaction, or with
+    // a local transaction begun) as InvalidOperationException, whatever the driver throws for it. Every other driver failure
+    // keeps its type and error code.
+    protected override void ConnectionEnlistTransaction(Transaction? transaction)
+    {
+        try
+        {
+            base.ConnectionEnlistTransaction(transaction);
+        }
+        catch (DbException exception) when ((transaction != null)
+            && ((EnlistedTransaction != null) || (CurrentTransaction != null) || (Transaction.Current != null)))
+        {
+            throw new InvalidOperationException("The connection is already in a transaction.", exception);
+        }
+    }
 }

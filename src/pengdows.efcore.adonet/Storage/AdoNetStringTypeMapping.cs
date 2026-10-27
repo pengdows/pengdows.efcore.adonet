@@ -8,13 +8,20 @@ namespace pengdows.efcore.adonet.Storage;
 ///     Binds through <see cref="DbType" />: <c>String</c>/<c>AnsiString</c>, or their fixed-length forms for fixed-length
 ///     columns. Constants are written by the dialect's <see cref="ISqlDialect.StringLiteral" />.
 /// </summary>
-internal class AdoNetStringTypeMapping : StringTypeMapping
+public class AdoNetStringTypeMapping : StringTypeMapping
 {
+    public static new AdoNetStringTypeMapping Default { get; } = new("VARCHAR", AnsiSqlDialect.Instance, AnsiTypeMappings.Instance);
+
     private readonly ISqlDialect _sql;
     private readonly ITypeMappingDialect _typeMappings;
 
-    public AdoNetStringTypeMapping(string storeType, ISqlDialect sql, ITypeMappingDialect typeMappings)
-        : base(storeType, System.Data.DbType.String, unicode: true)
+    public AdoNetStringTypeMapping(
+        string storeType,
+        ISqlDialect sql,
+        ITypeMappingDialect typeMappings,
+        bool unicode = true,
+        int? size = null)
+        : base(storeType, GetDbType(unicode, fixedLength: false), unicode, size)
     {
         _sql = sql;
         _typeMappings = typeMappings;
@@ -59,13 +66,15 @@ internal class AdoNetStringTypeMapping : StringTypeMapping
     /// <remarks>Follows EF Core's SQL Server string mapping (MIT, .NET Foundation).</remarks>
     protected override void ConfigureParameter(DbParameter parameter)
     {
+        base.ConfigureParameter(parameter);
+
         var length = (parameter.Value as string)?.Length;
         var size = Size is > 0 ? Size : _typeMappings.StringParameterSize(IsUnicode);
+        var fixedLength = IsFixedLength && (length == null || length == Size);
 
-        if (IsFixedLength && length != null && length != Size)
-        {
-            parameter.DbType = GetDbType(IsUnicode, fixedLength: false);
-        }
+        // This override owns parameter configuration, so preserve the DbType that the base mapping
+        // would otherwise apply before handling value-sensitive fixed-length behavior.
+        parameter.DbType = GetDbType(IsUnicode, fixedLength);
 
         if (size != null && (length == null || length <= size))
         {

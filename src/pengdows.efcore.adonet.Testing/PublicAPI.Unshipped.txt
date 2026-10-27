@@ -396,7 +396,11 @@ pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Null_or_whi
 pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Parameter_patterns_match_wildcards_literally() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Replace() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Row_values() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.String_methods_with_a_column_argument_compare_the_text() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.String_methods_with_a_null_argument_match_nothing() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Substring() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.The_difference_between_two_dates_in_days() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Time_spans_add_and_subtract() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.TranslationConformanceTests(TFixture! fixture) -> void
 pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Trimming() -> System.Threading.Tasks.Task!
 static pengdows.efcore.adonet.Testing.MigrationsOptions.ForTestMigrations<TContext>(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>! builder) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>!

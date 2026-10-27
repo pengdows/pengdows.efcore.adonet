@@ -14,6 +14,9 @@ public partial class AdHocComplexTypeQuerySqliteTest(global::Microsoft.EntityFra
 public partial class AdHocJsonQuerySqliteTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocJsonQueryAdoNetTest<SqliteHost>(fixture);
 
 [Collection(SingleWriter.Sqlite)]
+public partial class AdHocJsonQueryCoreSqliteTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocJsonQueryCoreAdoNetTest<SqliteHost>(fixture);
+
+[Collection(SingleWriter.Sqlite)]
 public partial class AdHocManyToManyQuerySqliteTest(global::Microsoft.EntityFrameworkCore.NonSharedFixture fixture) : AdHocManyToManyQueryAdoNetTest<SqliteHost>(fixture);
 
 [Collection(SingleWriter.Sqlite)]
@@ -122,6 +125,9 @@ public partial class ComplexTypeQuerySqliteTest(ComplexTypeQueryAdoNetTest<Sqlit
 public partial class ComplexTypesTrackingSqliteTest(ComplexTypesTrackingAdoNetTest<SqliteHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : ComplexTypesTrackingAdoNetTest<SqliteHost>(fixture, testOutputHelper);
 
 [Collection(SingleWriter.Sqlite)]
+public partial class ComplexTypesTrackingCoreSqliteTest(ComplexTypesTrackingCoreAdoNetTest<SqliteHost>.AdoNetFixture fixture) : ComplexTypesTrackingCoreAdoNetTest<SqliteHost>(fixture);
+
+[Collection(SingleWriter.Sqlite)]
 public partial class CompositeKeyEndToEndSqliteTest(CompositeKeyEndToEndAdoNetTest<SqliteHost>.AdoNetFixture fixture) : CompositeKeyEndToEndAdoNetTest<SqliteHost>(fixture);
 
 [Collection(SingleWriter.Sqlite)]
@@ -182,6 +188,9 @@ public partial class FieldsOnlyLoadSqliteTest(FieldsOnlyLoadAdoNetTest<SqliteHos
 public partial class FiltersInheritanceBulkUpdatesSqliteTest(FiltersInheritanceBulkUpdatesAdoNetTest<SqliteHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : FiltersInheritanceBulkUpdatesAdoNetTest<SqliteHost>(fixture, testOutputHelper);
 
 [Collection(SingleWriter.Sqlite)]
+public partial class FiltersInheritanceBulkUpdatesCoreSqliteTest(FiltersInheritanceBulkUpdatesCoreAdoNetTest<SqliteHost>.AdoNetFixture fixture) : FiltersInheritanceBulkUpdatesCoreAdoNetTest<SqliteHost>(fixture);
+
+[Collection(SingleWriter.Sqlite)]
 public partial class FiltersInheritanceQuerySqliteTest(FiltersInheritanceQueryAdoNetTest<SqliteHost>.AdoNetFixture fixture) : FiltersInheritanceQueryAdoNetTest<SqliteHost>(fixture);
 
 [Collection(SingleWriter.Sqlite)]
@@ -215,6 +224,9 @@ public partial class IncludeOneToOneSqliteTest(IncludeOneToOneAdoNetTest<SqliteH
 public partial class InheritanceRelationshipsQuerySqliteTest(InheritanceRelationshipsQueryAdoNetTest<SqliteHost>.AdoNetFixture fixture) : InheritanceRelationshipsQueryAdoNetTest<SqliteHost>(fixture);
 
 [Collection(SingleWriter.Sqlite)]
+public partial class InheritanceRelationshipsQueryCoreSqliteTest(InheritanceRelationshipsQueryCoreAdoNetTest<SqliteHost>.AdoNetFixture fixture) : InheritanceRelationshipsQueryCoreAdoNetTest<SqliteHost>(fixture);
+
+[Collection(SingleWriter.Sqlite)]
 public partial class JsonQuerySqliteTest(JsonQueryAdoNetTest<SqliteHost>.AdoNetFixture fixture) : JsonQueryAdoNetTest<SqliteHost>(fixture);
 
 [Collection(SingleWriter.Sqlite)]
@@ -228,6 +240,9 @@ public partial class KeysWithConvertersSqliteTest(KeysWithConvertersAdoNetTest<S
 
 [Collection(SingleWriter.Sqlite)]
 public partial class LazyLoadProxySqliteTest(LazyLoadProxyAdoNetTest<SqliteHost>.AdoNetFixture fixture) : LazyLoadProxyAdoNetTest<SqliteHost>(fixture);
+
+[Collection(SingleWriter.Sqlite)]
+public partial class LazyLoadProxyCoreSqliteTest(LazyLoadProxyCoreAdoNetTest<SqliteHost>.AdoNetFixture fixture) : LazyLoadProxyCoreAdoNetTest<SqliteHost>(fixture);
 
 [Collection(SingleWriter.Sqlite)]
 public partial class LoadSqliteTest(LoadAdoNetTest<SqliteHost>.AdoNetFixture fixture) : LoadAdoNetTest<SqliteHost>(fixture);
@@ -449,10 +464,19 @@ public partial class OwnedTableSplittingProjectionSqliteTest(OwnedTableSplitting
 public partial class OwnedTableSplittingStructuralEqualitySqliteTest(OwnedTableSplittingStructuralEqualityAdoNetTest<SqliteHost>.AdoNetFixture fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : OwnedTableSplittingStructuralEqualityAdoNetTest<SqliteHost>(fixture, testOutputHelper);
 
 [Collection(SingleWriter.Sqlite)]
+public partial class PrecompiledQuerySqliteTest(AdoNetPrecompiledQueryRelationalFixture<SqliteHost> fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : PrecompiledQueryAdoNetTest<SqliteHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.Sqlite)]
+public partial class PrecompiledSqlPregenerationQuerySqliteTest(AdoNetPrecompiledSqlPregenerationQueryRelationalFixture<SqliteHost> fixture, global::Xunit.Abstractions.ITestOutputHelper testOutputHelper) : PrecompiledSqlPregenerationQueryAdoNetTest<SqliteHost>(fixture, testOutputHelper);
+
+[Collection(SingleWriter.Sqlite)]
 public partial class PrimitiveCollectionsQuerySqliteTest(PrimitiveCollectionsQueryAdoNetTest<SqliteHost>.AdoNetFixture fixture) : PrimitiveCollectionsQueryAdoNetTest<SqliteHost>(fixture);
 
 [Collection(SingleWriter.Sqlite)]
 public partial class PropertyValuesSqliteTest(PropertyValuesAdoNetTest<SqliteHost>.AdoNetFixture fixture) : PropertyValuesAdoNetTest<SqliteHost>(fixture);
+
+[Collection(SingleWriter.Sqlite)]
+public partial class PropertyValuesCoreSqliteTest(PropertyValuesCoreAdoNetTest<SqliteHost>.AdoNetFixture fixture) : PropertyValuesCoreAdoNetTest<SqliteHost>(fixture);
 
 [Collection(SingleWriter.Sqlite)]
 public partial class QueryExpressionInterceptionSqliteTest(AdoNetInterceptionFixture<SqliteHost> fixture) : QueryExpressionInterceptionAdoNetTest<SqliteHost>(fixture);
@@ -494,7 +518,7 @@ public partial class RelationalOneToOneSqliteTest(AdoNetRelationalModelBuilderFi
 public partial class RelationalOwnedTypesSqliteTest(AdoNetRelationalModelBuilderFixture<SqliteHost> fixture) : RelationalOwnedTypesAdoNetTest<SqliteHost>(fixture);
 
 [Collection(SingleWriter.Sqlite)]
-public partial class RelationalServiceCollectionExtensionsSqliteTest(global::Microsoft.EntityFrameworkCore.TestUtilities.TestHelpers testHelpers) : RelationalServiceCollectionExtensionsAdoNetTest<SqliteHost>(testHelpers);
+public partial class RelationalServiceCollectionExtensionsSqliteTest() : RelationalServiceCollectionExtensionsAdoNetTest<SqliteHost>();
 
 [Collection(SingleWriter.Sqlite)]
 public partial class SaveChangesInterceptionSqliteTest(AdoNetInterceptionFixture<SqliteHost> fixture) : SaveChangesInterceptionAdoNetTest<SqliteHost>(fixture);
@@ -624,4 +648,3 @@ public partial class WarningsSqliteTest(NorthwindQueryAdoNetFixture<SqliteHost> 
 
 [Collection(SingleWriter.Sqlite)]
 public partial class WithConstructorsSqliteTest(WithConstructorsAdoNetTest<SqliteHost>.AdoNetFixture fixture) : WithConstructorsAdoNetTest<SqliteHost>(fixture);
-

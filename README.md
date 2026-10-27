@@ -103,7 +103,7 @@ when the context is created; ISO SQL is chosen like any other dialect, with `Use
 | `mysql` | MySqlConnector or MySql.Data | ✅ | ✅ | — |
 | `sqlite` (+ pre-3.35) | Microsoft.Data.Sqlite | ✅ | ✅ except `ALTER COLUMN` | Needs a table rebuild, not implemented |
 | `duckdb` | DuckDB.NET | ✅ (no savepoints) | `CreateTables` only | DuckDB can't `ALTER` a table with indexes or foreign keys |
-| `flatfile` | pengdows.flatfile | ✅ except below | ✅ except below | Engine (0.2.1-preview.9): literals with an exponent, no `POWER`, interval literals of one field only, renaming a table leaves foreign keys naming the old one; strict ISO has no `UPDATE ... FROM` |
+| `flatfile` | pengdows.flatfile | ✅ except below | ✅ except below | Engine (0.2.1-preview.12): literals with an exponent, no `POWER`, interval literals of one field only, renaming a table leaves foreign keys naming the old one; strict ISO has no `UPDATE ... FROM` |
 
 Gaps are only what a database lacks, recorded per fixture in `KnownEngineGaps` and reported as skipped tests,
 attributed `[SKIP:<dialect>]`. Defects found in EF Core, drivers and engines while building this are listed in
@@ -122,13 +122,13 @@ Code lines (no blanks or comments) and Release DLL size, against the official pr
 
 | Package | Lines | DLL |
 |---|---|---|
-| core | 3,477 | 148 KB |
+| core | 6,648 | 263 KB |
 | sqlserver | 476 | 28 KB |
 | postgresql | 198 | 16 KB |
-| mysql | 195 | 14 KB |
+| mysql | 684 | 51 KB |
 | sqlite | 160 | 13 KB |
 | duckdb | 189 | 13 KB |
-| flatfile | 96 | 9 KB |
+| flatfile | 133 | 9 KB |
 | Microsoft.EntityFrameworkCore.SqlServer 10.0.11 | 23,474 | 627 KB |
 | Microsoft.EntityFrameworkCore.Sqlite.Core 10.0.11 | 8,677 | 304 KB |
 | Npgsql.EntityFrameworkCore.PostgreSQL 10.0.3 | — | 663 KB |
@@ -158,7 +158,11 @@ dotnet test test/pengdows.efcore.adonet.Tests   # the core alone: fakeDb and an 
 - **EF Core's specification tests** (`pengdows.efcore.adonet.Specification.Tests`), run unchanged on all six databases
   through one database-neutral test store (harness: `pengdows.efcore.adonet.FunctionalTests.Shared`,
   `test/FunctionalTests.props`). Results only: no provider's SQL baselines. Where suite: 408 of 408 on all six (SQL Server,
-  PostgreSQL, MySQL, SQLite, DuckDB and pengdows.flatfile 0.2.1-preview.9).
+  PostgreSQL, MySQL, SQLite, DuckDB and pengdows.flatfile 0.2.1-preview.12).
+
+  Latest local validation on 2026-10-27: core unit tests **339 passed / 0 failed**, MySQL provider tests **288 passed / 0 failed / 2 skipped**,
+  and the MySQL Release build completed with **0 warnings / 0 errors**. The comparison table below remains the full coverage baseline
+  measured against the provider suites on 2026-10-26.
 
 ### Coverage against the other MySQL providers
 

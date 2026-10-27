@@ -402,6 +402,200 @@ public class LifecycleTests
         Assert.Contains("'Top'", Assert.Throws<NotSupportedException>(() => creator.Delete()).Message);
     }
 
+    private static readonly IAdoNetDialect ReadCommittedByDefault = new PartsDialect(
+        "ReadCommitted by default", new PartsSql(defaultTransactionIsolationLevel: IsolationLevel.ReadCommitted));
+
+    private static readonly IAdoNetDialect KeepsConnectionAfterSuppression = new PartsDialect(
+        "Keeps the connection after a suppressed completion", new PartsSql(keepConnectionOpenAfterSuppressedTransaction: true));
+
+    // EF asks for no isolation level; a database whose server default isn't the one its users (and EF's suites) expect
+    // says which to use. A level the caller names is never replaced.
+    [Theory]
+    [InlineData(IsolationLevel.Unspecified, IsolationLevel.ReadCommitted)]
+    [InlineData(IsolationLevel.Serializable, IsolationLevel.Serializable)]
+    public async Task A_transaction_without_a_level_takes_the_dialects_default(IsolationLevel requested, IsolationLevel expected)
+    {
+        var db = new FakeDatabase();
+        await using var context = db.Context(ReadCommittedByDefault);
+
+        await using (var transaction = await context.Database.BeginTransactionAsync(requested, Ct))
+        {
+            Assert.Equal(expected, transaction.GetDbTransaction().IsolationLevel);
+        }
+
+        using (var transaction = context.Database.BeginTransaction(requested))
+        {
+            Assert.Equal(expected, transaction.GetDbTransaction().IsolationLevel);
+        }
+    }
+
+    [Fact]
+    public async Task A_dialect_with_no_default_level_leaves_it_to_the_server()
+    {
+        var db = new FakeDatabase();
+        await using var context = db.Context(AdoNetDialect.Ansi);
+
+        await using (var transaction = await context.Database.BeginTransactionAsync(Ct))
+        {
+            Assert.Equal(IsolationLevel.Unspecified, transaction.GetDbTransaction().IsolationLevel);
+        }
+    }
+
+    // A caller that opened the connection owns that open: ending a transaction closes only the open the transaction made, on
+    // every dialect, however the completion is written.
+    [Theory]
+    [InlineData(false, true)]
+    [InlineData(false, false)]
+    [InlineData(true, true)]
+    [InlineData(true, false)]
+    public async Task Ending_a_transaction_leaves_the_connection_the_caller_opened_open(bool keepsConnection, bool commit)
+    {
+        var db = new FakeDatabase();
+        await using var context = db.Context(keepsConnection ? KeepsConnectionAfterSuppression : AdoNetDialect.Ansi);
+        await context.Database.OpenConnectionAsync(Ct);
+
+        await using (var transaction = await context.Database.BeginTransactionAsync(Ct))
+        {
+            await (commit ? transaction.CommitAsync(Ct) : transaction.RollbackAsync(Ct));
+        }
+
+        Assert.Equal(ConnectionState.Open, db.Connection.State);
+        await context.Database.CloseConnectionAsync();
+        Assert.Equal(ConnectionState.Closed, db.Connection.State);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task An_interceptor_that_suppresses_the_completion_leaves_the_transaction_and_connection_to_the_caller(bool commit)
+    {
+        var db = new FakeDatabase();
+        await using var context = new ItemContext(new DbContextOptionsBuilder<ItemContext>()
+            .UseAdoNet(db.Connection, contextOwnsConnection: false, o => o.UseDialect(KeepsConnectionAfterSuppression))
+            .AddInterceptors(new SuppressCompletion())
+            .AllowManyDialects()
+            .Options);
+
+        await using var transaction = await context.Database.BeginTransactionAsync(Ct);
+        await (commit ? transaction.CommitAsync(Ct) : transaction.RollbackAsync(Ct));
+
+        Assert.NotNull(transaction.GetDbTransaction().Connection); // a completed transaction has none
+        Assert.Equal(ConnectionState.Open, db.Connection.State);
+    }
+
+    [Fact]
+    public async Task Ending_a_transaction_synchronously_closes_the_connection_it_opened()
+    {
+        var db = new FakeDatabase();
+        using var context = db.Context(KeepsConnectionAfterSuppression);
+
+        using (var transaction = context.Database.BeginTransaction())
+        {
+            transaction.Commit();
+        }
+
+        Assert.Equal(ConnectionState.Closed, db.Connection.State);
+        await Task.CompletedTask;
+    }
+
+    // Only a refusal to enlist in a second transaction is EF's InvalidOperationException; any other driver failure keeps its
+    // type and error code, for the caller and the retrying execution strategy.
+    [Fact]
+    public async Task A_second_enlistment_is_an_invalid_operation()
+    {
+        var connection = new EnlistmentRefusingConnection();
+        await using var context = EnlistingContext(connection);
+        using var first = new System.Transactions.CommittableTransaction();
+        using var second = new System.Transactions.CommittableTransaction();
+        ((RelationalConnection)context.GetService<IRelationalConnection>()).EnlistTransaction(first);
+        connection.RefuseFromNowOn = true;
+
+        var error = Assert.Throws<InvalidOperationException>(() => ((RelationalConnection)context.GetService<IRelationalConnection>()).EnlistTransaction(second));
+
+        Assert.IsType<EnlistmentRefused>(error.InnerException);
+    }
+
+    [Fact]
+    public async Task Enlisting_where_a_local_transaction_has_begun_is_an_invalid_operation()
+    {
+        var connection = new EnlistmentRefusingConnection { RefuseFromNowOn = true };
+        await using var context = EnlistingContext(connection);
+        using var ambient = new System.Transactions.CommittableTransaction();
+        await using var local = await context.Database.BeginTransactionAsync(Ct);
+
+        var error = Assert.Throws<InvalidOperationException>(
+            () => ((RelationalConnection)context.GetService<IRelationalConnection>()).EnlistTransaction(ambient));
+
+        Assert.IsType<EnlistmentRefused>(error.InnerException);
+    }
+
+    [Fact]
+    public async Task Enlisting_in_a_second_transaction_inside_an_ambient_one_is_an_invalid_operation()
+    {
+        var connection = new EnlistmentRefusingConnection();
+        await using var context = EnlistingContext(connection);
+        using var scope = new System.Transactions.TransactionScope(System.Transactions.TransactionScopeAsyncFlowOption.Enabled);
+        using var other = new System.Transactions.CommittableTransaction();
+        await context.Database.OpenConnectionAsync(Ct);
+        connection.RefuseFromNowOn = true;
+
+        var error = Assert.Throws<InvalidOperationException>(
+            () => ((RelationalConnection)context.GetService<IRelationalConnection>()).EnlistTransaction(other));
+
+        Assert.IsType<EnlistmentRefused>(error.InnerException);
+    }
+
+    [Fact]
+    public async Task Any_other_enlistment_failure_keeps_its_type()
+    {
+        var connection = new EnlistmentRefusingConnection { RefuseFromNowOn = true };
+        await using var context = EnlistingContext(connection);
+        using var transaction = new System.Transactions.CommittableTransaction();
+
+        Assert.Throws<EnlistmentRefused>(() => ((RelationalConnection)context.GetService<IRelationalConnection>()).EnlistTransaction(transaction));
+    }
+
+    private static ItemContext EnlistingContext(DbConnection connection)
+        => new(new DbContextOptionsBuilder<ItemContext>()
+            .UseAdoNet(connection, contextOwnsConnection: false, o => o.UseDialect(
+                new PartsDialect("Enlists", capabilities: new DatabaseCapabilities { SupportsAmbientTransactions = true })))
+            .AllowManyDialects()
+            .Options);
+
+    private sealed class EnlistmentRefused() : DbException("enlistment refused");
+
+    private sealed class EnlistmentRefusingConnection : fakeDbConnection
+    {
+        public bool RefuseFromNowOn { get; set; }
+
+        public override void EnlistTransaction(System.Transactions.Transaction? transaction)
+        {
+            if (RefuseFromNowOn)
+            {
+                throw new EnlistmentRefused();
+            }
+        }
+    }
+
+    private sealed class SuppressCompletion : DbTransactionInterceptor
+    {
+        public override InterceptionResult TransactionCommitting(
+            DbTransaction transaction, TransactionEventData eventData, InterceptionResult result)
+            => InterceptionResult.Suppress();
+
+        public override InterceptionResult TransactionRollingBack(
+            DbTransaction transaction, TransactionEventData eventData, InterceptionResult result)
+            => InterceptionResult.Suppress();
+
+        public override ValueTask<InterceptionResult> TransactionCommittingAsync(
+            DbTransaction transaction, TransactionEventData eventData, InterceptionResult result, CancellationToken cancellationToken = default)
+            => ValueTask.FromResult(InterceptionResult.Suppress());
+
+        public override ValueTask<InterceptionResult> TransactionRollingBackAsync(
+            DbTransaction transaction, TransactionEventData eventData, InterceptionResult result, CancellationToken cancellationToken = default)
+            => ValueTask.FromResult(InterceptionResult.Suppress());
+    }
+
     private sealed class UnreachableException() : DbException("unreachable");
 
     private sealed class SavepointRefused() : DbException("savepoint refused");

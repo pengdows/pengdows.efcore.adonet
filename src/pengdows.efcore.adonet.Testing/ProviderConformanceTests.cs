@@ -286,6 +286,10 @@ public abstract class ProviderConformanceTests<TFixture>(TFixture fixture) : ICl
             case ReturningKeyRetrieval:
                 Assert.Contains("RETURNING", insert);
                 break;
+            case DeltaTableKeyRetrieval:
+                Assert.DoesNotContain("RETURNING", insert);
+                Assert.Contains("FINAL TABLE (INSERT INTO", insert);
+                break;
             case SelectAfterKeyRetrieval selectAfter:
                 Assert.DoesNotContain("RETURNING", insert);
                 Assert.Contains(selectAfter.IdentityFunction, insert);

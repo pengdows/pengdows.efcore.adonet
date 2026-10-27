@@ -31,6 +31,20 @@ public class DmlGrammarTests
         return _db.Commands[^1];
     }
 
+    private async Task<string> DeleteOrdered(IAdoNetDialect dialect)
+    {
+        await using var context = _db.Context(dialect);
+        await context.Items.OrderBy(i => i.Id).ExecuteDeleteAsync(Ct);
+        return _db.Commands[^1];
+    }
+
+    private async Task<string> DeleteDistinct(IAdoNetDialect dialect)
+    {
+        await using var context = _db.Context(dialect);
+        await context.Items.Select(i => i).Distinct().ExecuteDeleteAsync(Ct);
+        return _db.Commands[^1];
+    }
+
     private async Task<string> RenameActive(IAdoNetDialect dialect)
     {
         await using var context = _db.Context(dialect);
@@ -100,6 +114,13 @@ public class DmlGrammarTests
         Assert.Equal(
             "UPDATE \"Parts\" AS \"p\"\nINNER JOIN \"Items\" AS \"i\" ON \"p\".\"ItemId\" = \"i\".\"Id\"\nSET \"p\".\"Label\" = @p\nWHERE \"i\".\"Active\"",
             await RelabelPartsOfActiveItems(TestDialects.MultiTable));
+    }
+
+    [Fact]
+    public async Task Multi_table_single_table_deletes_ignore_order_and_distinct()
+    {
+        Assert.Equal("DELETE \"i\"\nFROM \"Items\" AS \"i\"", await DeleteOrdered(TestDialects.MultiTable));
+        Assert.Equal("DELETE \"i\"\nFROM \"Items\" AS \"i\"", await DeleteDistinct(TestDialects.MultiTable));
     }
 
     [Fact]

@@ -12,6 +12,53 @@ public class FunctionSyntax
 {
     public static readonly FunctionSyntax Iso = new();
 
+    /// <summary>
+    ///     Builds the runtime value for a parameterized <c>LIKE</c> operation. The arguments are deliberately primitive so
+    ///     EF's precompiled-query generator can emit the call without capturing a provider-specific syntax object.
+    /// </summary>
+    public static string? FormatLikePattern(
+        Microsoft.EntityFrameworkCore.Query.QueryContext queryContext,
+        string parameterName,
+        string match,
+        char escape,
+        string specialCharacters)
+    {
+        if (queryContext.Parameters[parameterName] is not string value)
+        {
+            return null;
+        }
+
+        var pattern = EscapeLikePattern(value, escape, specialCharacters);
+        return match switch
+        {
+            nameof(string.StartsWith) => pattern + "%",
+            nameof(string.EndsWith) => "%" + pattern,
+            nameof(string.Contains) => "%" + pattern + "%",
+            _ => throw new ArgumentOutOfRangeException(nameof(match), match, "A LIKE pattern is built for StartsWith, EndsWith or Contains.")
+        };
+    }
+
+    private static string EscapeLikePattern(string value, char escape, string specialCharacters)
+    {
+        if (!value.Any(c => (c == escape) || specialCharacters.Contains(c)))
+        {
+            return value;
+        }
+
+        var pattern = new System.Text.StringBuilder(value.Length * 2);
+        foreach (var c in value)
+        {
+            if ((c == escape) || specialCharacters.Contains(c))
+            {
+                pattern.Append(escape);
+            }
+
+            pattern.Append(c);
+        }
+
+        return pattern.ToString();
+    }
+
     /// <summary>String concatenation: the operator for <c>a + b</c> on strings.</summary>
     public virtual string Concat => "{0} || {1}";
 
@@ -232,6 +279,14 @@ public class FunctionSyntax
 
     // The parts of a time span: whole hours of the day (not the total), minutes of the hour, and so on.
     public virtual string? TimeSpanHours => null;
+    /// <summary>How a date/time difference is represented when a database has no interval type.</summary>
+    public virtual string? DateDifference => null;
+    /// <summary>How a date difference is converted directly to total days.</summary>
+    public virtual string? DateDifferenceTotalDays => null;
+    /// <summary>How <see cref="TimeSpan.TotalDays"/> is read from a translated span.</summary>
+    public virtual string? TimeSpanTotalDays => null;
+    public virtual string? TimeSpanAdd => null;
+    public virtual string? TimeSpanSubtract => null;
     public virtual string? TimeSpanMinutes => null;
     public virtual string? TimeSpanSeconds => null;
     public virtual string? TimeSpanMilliseconds => null;
@@ -261,31 +316,10 @@ public class FunctionSyntax
     public virtual char? LikeEscapeCharacter => '\\';
 
     /// <summary>A LIKE pattern matching <paramref name="value" /> literally, or null when it needs escaping and can't be.</summary>
-    public string? EscapeLikePattern(string value)
-    {
-        if (!value.Any(c => (c == LikeEscapeCharacter) || LikeSpecialCharacters.Contains(c)))
-        {
-            return value;
-        }
-
-        if (LikeEscapeCharacter is not { } escape)
-        {
-            return null;
-        }
-
-        var pattern = new System.Text.StringBuilder(value.Length * 2);
-        foreach (var c in value)
-        {
-            if ((c == escape) || LikeSpecialCharacters.Contains(c))
-            {
-                pattern.Append(escape);
-            }
-
-            pattern.Append(c);
-        }
-
-        return pattern.ToString();
-    }
+    public virtual string? EscapeLikePattern(string value)
+        => LikeEscapeCharacter is { } escape
+            ? EscapeLikePattern(value, escape, LikeSpecialCharacters)
+            : (value.Any(c => LikeSpecialCharacters.Contains(c)) ? null : value);
 
     /// <summary>Characters LIKE treats specially, besides the escape character.</summary>
     public virtual string LikeSpecialCharacters => "%_";

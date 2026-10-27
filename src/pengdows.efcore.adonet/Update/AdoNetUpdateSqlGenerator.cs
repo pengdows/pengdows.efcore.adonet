@@ -145,10 +145,47 @@ internal class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependenc
         {
             ReturningKeyRetrieval
                 => AppendInsertReturningOperation(commandStringBuilder, command, commandPosition, out requiresTransaction),
+            DeltaTableKeyRetrieval
+                => AppendInsertDeltaTableOperation(commandStringBuilder, command, out requiresTransaction),
             SelectAfterKeyRetrieval
                 => AppendInsertAndSelectOperation(commandStringBuilder, command, commandPosition, out requiresTransaction),
             _ => AppendPlainOperation(commandStringBuilder, command, out requiresTransaction)
         };
+
+    protected override ResultSetMapping AppendInsertAndSelectOperation(
+        StringBuilder commandStringBuilder,
+        IReadOnlyModificationCommand command,
+        int commandPosition,
+        out bool requiresTransaction)
+    {
+        var operations = command.ColumnModifications;
+        var readOperations = operations.Where(o => o.IsRead).ToList();
+        var suppliedKeyOperations = operations.Where(o => o is { IsKey: true, IsRead: false }).ToList();
+        var generatedDefaultKey = readOperations.Any(o => o is { IsKey: true, Property: { } property } && HasNonClrDefault(property));
+
+        // The identity function identifies an auto-increment key, but cannot identify a row whose generated key came from a
+        // column default (for example, a defaulted member of a composite key). The values supplied for the remaining key
+        // columns are then the stable predicate for reading the generated value.
+        if (generatedDefaultKey && suppliedKeyOperations.Count > 0)
+        {
+            AppendInsertCommand(commandStringBuilder, command.TableName, command.Schema, operations.Where(o => o.IsWrite).ToList(), []);
+            requiresTransaction = true;
+            return AppendSelectAffectedCommand(
+                commandStringBuilder,
+                command.TableName,
+                command.Schema,
+                readOperations,
+                suppliedKeyOperations,
+                commandPosition);
+        }
+
+        return base.AppendInsertAndSelectOperation(commandStringBuilder, command, commandPosition, out requiresTransaction);
+    }
+
+    private static bool HasNonClrDefault(IProperty property)
+        => (property.GetDefaultValueSql() is not null)
+            || ((property.GetDefaultValue() is { } defaultValue)
+                && !Equals(defaultValue, property.ClrType.IsValueType ? Activator.CreateInstance(property.ClrType) : null));
 
     public override ResultSetMapping AppendUpdateOperation(
         StringBuilder commandStringBuilder,
@@ -159,6 +196,8 @@ internal class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependenc
         {
             ReturningKeyRetrieval
                 => AppendUpdateReturningOperation(commandStringBuilder, command, commandPosition, out requiresTransaction),
+            DeltaTableKeyRetrieval
+                => AppendUpdateDeltaTableOperation(commandStringBuilder, command, out requiresTransaction),
             SelectAfterKeyRetrieval
                 => AppendUpdateAndSelectOperation(commandStringBuilder, command, commandPosition, out requiresTransaction),
             _ => AppendPlainOperation(commandStringBuilder, command, out requiresTransaction)
@@ -173,10 +212,110 @@ internal class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependenc
         {
             ReturningKeyRetrieval
                 => AppendDeleteReturningOperation(commandStringBuilder, command, commandPosition, out requiresTransaction),
+            DeltaTableKeyRetrieval
+                => AppendDeleteDeltaTableOperation(commandStringBuilder, command, out requiresTransaction),
             SelectAfterKeyRetrieval
                 => AppendDeleteAndSelectOperation(commandStringBuilder, command, commandPosition, out requiresTransaction),
             _ => AppendPlainOperation(commandStringBuilder, command, out requiresTransaction)
         };
+
+    // SELECT cols FROM FINAL TABLE (INSERT ...): the generated columns come back as the delta table's rows.
+    private ResultSetMapping AppendInsertDeltaTableOperation(
+        StringBuilder commandStringBuilder,
+        IReadOnlyModificationCommand command,
+        out bool requiresTransaction)
+    {
+        var writeOperations = command.ColumnModifications.Where(o => o.IsWrite).ToList();
+        var readOperations = command.ColumnModifications.Where(o => o.IsRead).ToList();
+        requiresTransaction = false;
+        if (readOperations.Count == 0)
+        {
+            AppendInsertCommand(commandStringBuilder, command.TableName, command.Schema, writeOperations, []);
+            return ResultSetMapping.NoResults;
+        }
+
+        AppendDeltaTable(
+            commandStringBuilder, readOperations.Select(o => o.ColumnName), "FINAL",
+            inner => AppendInsertCommand(inner, command.TableName, command.Schema, writeOperations, []));
+        return ResultSetMapping.LastInResultSet;
+    }
+
+    // An update's row comes back from the new table: its generated columns, or a 1 where nothing is generated, which is how a
+    // concurrency conflict (no row) is told from success.
+    private ResultSetMapping AppendUpdateDeltaTableOperation(
+        StringBuilder commandStringBuilder,
+        IReadOnlyModificationCommand command,
+        out bool requiresTransaction)
+    {
+        var writeOperations = command.ColumnModifications.Where(o => o.IsWrite).ToList();
+        var readOperations = command.ColumnModifications.Where(o => o.IsRead).ToList();
+        var conditionOperations = command.ColumnModifications.Where(o => o.IsCondition).ToList();
+        requiresTransaction = false;
+        AppendDeltaTable(
+            commandStringBuilder,
+            readOperations.Count == 0 ? null : readOperations.Select(o => o.ColumnName),
+            readOperations.Count == 0 ? "NEW" : "FINAL",
+            inner => AppendUpdateCommand(
+                inner, command.TableName, command.Schema, writeOperations, [], conditionOperations, appendReturningOneClause: false));
+        return ResultSetMapping.LastInResultSet;
+    }
+
+    private ResultSetMapping AppendDeleteDeltaTableOperation(
+        StringBuilder commandStringBuilder,
+        IReadOnlyModificationCommand command,
+        out bool requiresTransaction)
+    {
+        var conditionOperations = command.ColumnModifications.Where(o => o.IsCondition).ToList();
+        requiresTransaction = false;
+        AppendDeltaTable(
+            commandStringBuilder,
+            null,
+            "OLD",
+            inner => AppendDeleteCommand(inner, command.TableName, command.Schema, [], conditionOperations, appendReturningOneClause: false));
+        return ResultSetMapping.LastInResultSet;
+    }
+
+    // SELECT {columns, or 1} FROM {FINAL|NEW|OLD} TABLE ({statement});
+    private void AppendDeltaTable(
+        StringBuilder commandStringBuilder,
+        IEnumerable<string>? columns,
+        string resultOption,
+        Action<StringBuilder> appendStatement)
+    {
+        var statement = new StringBuilder();
+        appendStatement(statement);
+        var terminator = SqlGenerationHelper.StatementTerminator;
+        var text = statement.ToString().TrimEnd();
+        if (text.EndsWith(terminator, StringComparison.Ordinal))
+        {
+            text = text[..^terminator.Length];
+        }
+
+        commandStringBuilder.Append("SELECT ");
+        if (columns == null)
+        {
+            commandStringBuilder.Append('1');
+        }
+        else
+        {
+            var first = true;
+            foreach (var column in columns)
+            {
+                if (!first)
+                {
+                    commandStringBuilder.Append(", ");
+                }
+
+                first = false;
+                SqlGenerationHelper.DelimitIdentifier(commandStringBuilder, column);
+            }
+        }
+
+        commandStringBuilder
+            .AppendLine()
+            .Append("FROM ").Append(resultOption).Append(" TABLE (").Append(text).Append(')')
+            .AppendLine(terminator);
+    }
 
     /// <summary>
     ///     <see cref="SequenceKeyRetrieval" />: the statement alone, with no result set;

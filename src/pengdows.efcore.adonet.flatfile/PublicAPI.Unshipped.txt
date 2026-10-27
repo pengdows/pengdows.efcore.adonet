@@ -3,6 +3,8 @@ override pengdows.efcore.adonet.flatfile.FlatFileDialect.Capabilities.get -> pen
 override pengdows.efcore.adonet.flatfile.FlatFileDialect.Name.get -> string!
 override pengdows.efcore.adonet.flatfile.FlatFileDialect.Sql.get -> pengdows.efcore.adonet.ISqlDialect!
 pengdows.efcore.adonet.flatfile.FlatFileDbContextOptionsBuilderExtensions
+pengdows.efcore.adonet.flatfile.FlatFileDesignTimeServices
+pengdows.efcore.adonet.flatfile.FlatFileDesignTimeServices.FlatFileDesignTimeServices() -> void
 pengdows.efcore.adonet.flatfile.FlatFileDialect
 static pengdows.efcore.adonet.flatfile.FlatFileDbContextOptionsBuilderExtensions.RegisterDialect() -> void
 static pengdows.efcore.adonet.flatfile.FlatFileDbContextOptionsBuilderExtensions.UseAdoNetFlatFile(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder! optionsBuilder, string! connectionString, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder!

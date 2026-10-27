@@ -39,6 +39,124 @@ internal class AdoNetRelationalTransaction(
     public override bool SupportsSavepoints
         => dialect.Sql.Savepoints != null;
 
+    // RelationalTransaction clears the transaction and closes the connection even when an interceptor suppresses Commit or
+    // Rollback. Some drivers end the provider transaction when its connection closes, so where the dialect says so a suppressed
+    // completion leaves both to the caller until this wrapper is disposed. Otherwise this is RelationalTransaction's own
+    // sequence, ending in its ClearTransaction, which closes the connection once however many times it is asked to.
+    public override void Commit()
+    {
+        if (!PreserveConnectionAfterSuppression)
+        {
+            base.Commit();
+            return;
+        }
+
+        Complete(
+            "Commit",
+            start => Logger.TransactionCommitting(Connection, DbTransaction, TransactionId, start),
+            (start, elapsed) => Logger.TransactionCommitted(Connection, DbTransaction, TransactionId, start, elapsed),
+            DbTransaction.Commit);
+    }
+
+    public override void Rollback()
+    {
+        if (!PreserveConnectionAfterSuppression)
+        {
+            base.Rollback();
+            return;
+        }
+
+        Complete(
+            "Rollback",
+            start => Logger.TransactionRollingBack(Connection, DbTransaction, TransactionId, start),
+            (start, elapsed) => Logger.TransactionRolledBack(Connection, DbTransaction, TransactionId, start, elapsed),
+            DbTransaction.Rollback);
+    }
+
+    public override Task CommitAsync(CancellationToken cancellationToken = default)
+        => PreserveConnectionAfterSuppression
+            ? CompleteAsync(
+            "Commit",
+            (start, token) => Logger.TransactionCommittingAsync(Connection, DbTransaction, TransactionId, start, token),
+            (start, elapsed, token) => Logger.TransactionCommittedAsync(Connection, DbTransaction, TransactionId, start, elapsed, token),
+            token => DbTransaction.CommitAsync(token),
+            cancellationToken)
+            : base.CommitAsync(cancellationToken);
+
+    public override Task RollbackAsync(CancellationToken cancellationToken = default)
+        => PreserveConnectionAfterSuppression
+            ? CompleteAsync(
+            "Rollback",
+            (start, token) => Logger.TransactionRollingBackAsync(Connection, DbTransaction, TransactionId, start, token),
+            (start, elapsed, token) => Logger.TransactionRolledBackAsync(Connection, DbTransaction, TransactionId, start, elapsed, token),
+            token => DbTransaction.RollbackAsync(token),
+            cancellationToken)
+            : base.RollbackAsync(cancellationToken);
+
+    private bool PreserveConnectionAfterSuppression
+        => dialect.Sql.KeepConnectionOpenAfterSuppressedTransaction;
+
+    private void Complete(
+        string action,
+        Func<DateTimeOffset, InterceptionResult> before,
+        Action<DateTimeOffset, TimeSpan> after,
+        Action operation)
+    {
+        var start = DateTimeOffset.UtcNow;
+        var stopwatch = Stopwatch.StartNew();
+        try
+        {
+            var result = before(start);
+            if (!result.IsSuppressed)
+            {
+                operation();
+            }
+
+            after(start, stopwatch.Elapsed);
+            if (!result.IsSuppressed)
+            {
+                ClearTransaction();
+            }
+        }
+        catch (Exception exception)
+        {
+            Logger.TransactionError(Connection, DbTransaction, TransactionId, action, exception, start, stopwatch.Elapsed);
+            throw;
+        }
+    }
+
+    private async Task CompleteAsync(
+        string action,
+        Func<DateTimeOffset, CancellationToken, ValueTask<InterceptionResult>> before,
+        Func<DateTimeOffset, TimeSpan, CancellationToken, Task> after,
+        Func<CancellationToken, Task> operation,
+        CancellationToken cancellationToken)
+    {
+        var start = DateTimeOffset.UtcNow;
+        var stopwatch = Stopwatch.StartNew();
+        try
+        {
+            var result = await before(start, cancellationToken).ConfigureAwait(false);
+            if (!result.IsSuppressed)
+            {
+                await operation(cancellationToken).ConfigureAwait(false);
+            }
+
+            await after(start, stopwatch.Elapsed, cancellationToken).ConfigureAwait(false);
+            if (!result.IsSuppressed)
+            {
+                await ClearTransactionAsync(cancellationToken).ConfigureAwait(false);
+            }
+        }
+        catch (Exception exception)
+        {
+            await Logger.TransactionErrorAsync(
+                    Connection, DbTransaction, TransactionId, action, exception, start, stopwatch.Elapsed, cancellationToken)
+                .ConfigureAwait(false);
+            throw;
+        }
+    }
+
     public override void CreateSavepoint(string name)
         => Execute(
             "CreateSavepoint",

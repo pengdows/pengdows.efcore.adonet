@@ -24,7 +24,7 @@ public class AdoNetDesignTimeServices : IDesignTimeServices
     protected AdoNetDesignTimeServices(IAdoNetDialect dialect)
         => Dialect = dialect;
 
-    protected IAdoNetDialect Dialect { get; }
+    protected virtual IAdoNetDialect Dialect { get; }
 
     public virtual void ConfigureDesignTimeServices(IServiceCollection serviceCollection)
     {

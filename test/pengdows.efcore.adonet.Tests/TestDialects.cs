@@ -48,8 +48,12 @@ public sealed class PartsSql(
     JsonSyntax? json = null,
     string? sessionSetup = null,
     IReadOnlyDictionary<string, string>? connectionOptions = null,
-    string? procedureOutputVariable = null) : AnsiSqlDialect
+    string? procedureOutputVariable = null,
+    System.Data.IsolationLevel defaultTransactionIsolationLevel = System.Data.IsolationLevel.Unspecified,
+    bool keepConnectionOpenAfterSuppressedTransaction = false) : AnsiSqlDialect
 {
+    public override System.Data.IsolationLevel DefaultTransactionIsolationLevel => defaultTransactionIsolationLevel;
+    public override bool KeepConnectionOpenAfterSuppressedTransaction => keepConnectionOpenAfterSuppressedTransaction;
     public override string? SessionSetup => sessionSetup;
     public override IReadOnlyDictionary<string, string> ConnectionOptions { get; } = connectionOptions ?? new Dictionary<string, string>();
     public override string? ProcedureOutputVariable => procedureOutputVariable;
@@ -111,6 +115,11 @@ public static class TestDialects
     public static readonly IAdoNetDialect SelectAfter = new PartsDialect(
         "SelectAfter",
         new PartsSql(keys: KeyRetrieval.SelectAfter("last_id()", "row_count()")),
+        new DatabaseCapabilities { SupportsMultipleStatementsPerCommand = true, DefaultMaxBatchSize = 10 });
+
+    public static readonly IAdoNetDialect DeltaTable = new PartsDialect(
+        "DeltaTable",
+        new PartsSql(keys: KeyRetrieval.DeltaTable),
         new DatabaseCapabilities { SupportsMultipleStatementsPerCommand = true, DefaultMaxBatchSize = 10 });
 
     public static readonly IAdoNetDialect Json = new PartsDialect("Json", new PartsSql(json: JsonSyntax.Iso));
