@@ -280,6 +280,22 @@ public class SqlServerSqlTests
     }
 
     [Fact]
+    public void Translates_sql_server_date_parts()
+    {
+        using var context = Context(b => b.UseAdoNetSqlServer("Server=localhost"));
+
+        var sql = context.Blogs
+            .Where(blog => blog.CreatedAt.Date == new DateTime(2024, 1, 2)
+                && blog.CreatedAt.Microsecond != 0
+                && blog.CreatedAt.Nanosecond != 0)
+            .ToQueryString();
+
+        Assert.Contains("CONVERT(date, [b].[CreatedAt])", sql);
+        Assert.Contains("DATEPART(microsecond, [b].[CreatedAt]) % 1000", sql);
+        Assert.Contains("DATEPART(nanosecond, [b].[CreatedAt]) % 1000", sql);
+    }
+
+    [Fact]
     public void Converts_between_bit_values_and_conditions()
     {
         using var context = Context(b => b.UseAdoNetSqlServer("Server=localhost"));

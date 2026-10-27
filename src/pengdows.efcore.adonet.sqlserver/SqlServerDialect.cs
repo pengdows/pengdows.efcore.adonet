@@ -110,6 +110,9 @@ internal sealed class SqlServerFunctions : FunctionSyntax
     public override string? Hour => "DATEPART(hour, {0})";
     public override string? Minute => "DATEPART(minute, {0})";
     public override string? Second => "DATEPART(second, {0})";
+    public override string? Microsecond => "DATEPART(microsecond, {0}) % 1000";
+    public override string? Nanosecond => "DATEPART(nanosecond, {0}) % 1000";
+    public override string? DateOf => "CONVERT(date, {0})";
     public override string LikeSpecialCharacters => "%_[";
 }
 
