@@ -12,7 +12,7 @@ namespace pengdows.efcore.adonet.Query;
 ///     stay values: <c>a ^ b</c>, <c>~(a ^ b)</c>, <c>~a</c>. Runs after null semantics have been applied.
 /// </summary>
 /// <remarks>
-///     Adapted from EF Core SQL Server <c>SearchConditionConverter</c> (MIT, .NET Foundation):
+///     Behaviour reference (not copied): EF Core SQL Server <c>SearchConditionConverter</c> (MIT, .NET Foundation):
 ///     https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.SqlServer/Query/Internal/SearchConditionConverter.cs
 /// </remarks>
 internal class AdoNetSearchConditionConverter(ISqlExpressionFactory sqlExpressionFactory, bool bitwiseOperators = false) : ExpressionVisitor
@@ -23,34 +23,72 @@ internal class AdoNetSearchConditionConverter(ISqlExpressionFactory sqlExpressio
 
     [return: NotNullIfNotNull(nameof(expression))]
     protected virtual Expression? Visit(Expression? expression, bool inSearchConditionContext, bool allowNullFalseEquivalence)
-        => expression switch
+    {
+        if (expression is null)
         {
-            CaseExpression e => VisitCase(e, inSearchConditionContext, allowNullFalseEquivalence),
-            SelectExpression e => VisitSelect(e),
-            SqlBinaryExpression e => VisitSqlBinary(e, inSearchConditionContext, allowNullFalseEquivalence),
-            SqlUnaryExpression e => VisitSqlUnary(e, inSearchConditionContext),
-            PredicateJoinExpressionBase e => VisitPredicateJoin(e),
-            // Search conditions only: they can stand in a WHERE but not be projected.
-            SqlExpression e and (ExistsExpression or InExpression or LikeExpression)
-                => ApplyConversion((SqlExpression)base.VisitExtension(e), inSearchConditionContext, isExpressionSearchCondition: true),
-            SqlExpression e
-                => ApplyConversion((SqlExpression)base.VisitExtension(e), inSearchConditionContext, isExpressionSearchCondition: false),
-            _ => base.Visit(expression)
-        };
+            return null;
+        }
+
+        if (expression is CaseExpression caseExpression)
+        {
+            return VisitCase(caseExpression, inSearchConditionContext, allowNullFalseEquivalence);
+        }
+
+        if (expression is SelectExpression selectExpression)
+        {
+            return VisitSelect(selectExpression);
+        }
+
+        if (expression is SqlBinaryExpression binaryExpression)
+        {
+            return VisitSqlBinary(binaryExpression, inSearchConditionContext, allowNullFalseEquivalence);
+        }
+
+        if (expression is SqlUnaryExpression unaryExpression)
+        {
+            return VisitSqlUnary(unaryExpression, inSearchConditionContext);
+        }
+
+        if (expression is PredicateJoinExpressionBase predicateJoin)
+        {
+            return VisitPredicateJoin(predicateJoin);
+        }
+
+        if (expression is SqlExpression sqlExpression)
+        {
+            var visited = (SqlExpression)base.VisitExtension(sqlExpression);
+            var isCondition = sqlExpression is ExistsExpression or InExpression or LikeExpression;
+            return ApplyConversion(visited, inSearchConditionContext, isCondition);
+        }
+
+        return base.Visit(expression);
+    }
 
     private SqlExpression ApplyConversion(SqlExpression sqlExpression, bool inSearchConditionContext, bool isExpressionSearchCondition)
-        => (inSearchConditionContext, isExpressionSearchCondition) switch
+    {
+        if (inSearchConditionContext && !isExpressionSearchCondition)
         {
             // WHERE b.BitColumn => WHERE b.BitColumn = TRUE; WHERE FALSE => WHERE 0 = 1
-            (true, false) => sqlExpression is SqlConstantExpression { Value: bool value }
-                ? sqlExpressionFactory.Equal(sqlExpressionFactory.Constant(value ? 1 : 0), sqlExpressionFactory.Constant(1))
-                : sqlExpressionFactory.Equal(sqlExpression, Constant(true)),
+            if (sqlExpression is SqlConstantExpression { Value: bool value })
+            {
+                return sqlExpressionFactory.Equal(
+                    sqlExpressionFactory.Constant(value ? 1 : 0),
+                    sqlExpressionFactory.Constant(1));
+            }
+
+            return sqlExpressionFactory.Equal(sqlExpression, Constant(true));
+        }
+
+        if (!inSearchConditionContext && isExpressionSearchCondition)
+        {
             // SELECT a LIKE b => SELECT CASE WHEN a LIKE b THEN TRUE ELSE FALSE END
-            (false, true) => sqlExpressionFactory.Case(
+            return sqlExpressionFactory.Case(
                 [new CaseWhenClause(SimplifyNegatedBinary(sqlExpression), Constant(true))],
-                Constant(false)),
-            _ => sqlExpression
-        };
+                Constant(false));
+        }
+
+        return sqlExpression;
+    }
 
     private SqlExpression Constant(bool value)
         => sqlExpressionFactory.ApplyDefaultTypeMapping(sqlExpressionFactory.Constant(value));
