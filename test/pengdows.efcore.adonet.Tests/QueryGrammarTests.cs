@@ -166,6 +166,15 @@ public class QueryGrammarTests
     }
 
     [Fact]
+    public void Top_uses_zero_top_instead_of_zero_fetch()
+    {
+        var sql = Sql(TestDialects.Top, c => c.Items.OrderBy(i => i.Id).Skip(3).Take(0));
+
+        Assert.Contains("TOP(0)", sql);
+        Assert.DoesNotContain("FETCH", sql);
+    }
+
+    [Fact]
     public void Limit_offset_writes_a_bare_offset_without_a_no_limit_value()
     {
         var sql = Sql(TestDialects.Limit, c => c.Items.OrderBy(i => i.Id).Skip(3));

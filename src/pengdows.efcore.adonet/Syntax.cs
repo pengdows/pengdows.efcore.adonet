@@ -42,6 +42,11 @@ public abstract class PagingSyntax
     /// <summary>When true, OFFSET/LIMIT values are written as literals once known; the SQL is then not cached.</summary>
     public virtual bool InlinesValues { get; private set; }
 
+    // Some offset/fetch grammars reject FETCH NEXT 0. A TOP form can represent the same empty result, but only after
+    // the runtime paging parameter has been inspected. Keep this implementation detail internal so custom paging
+    // syntaxes retain the existing parameter/cache behavior unless they explicitly opt into literal paging.
+    internal virtual bool RequiresZeroLimitInlining => false;
+
     /// <summary>A copy that writes paging values as literals, for databases that reject parameters there.</summary>
     public virtual PagingSyntax WithLiteralValues()
     {
@@ -98,9 +103,11 @@ public abstract class PagingSyntax
 
     private sealed class TopOrOffsetFetchPaging : OffsetFetchPaging
     {
+        internal override bool RequiresZeroLimitInlining => true;
+
         public override void GenerateTop(IQuerySqlWriter sql, SelectExpression select)
         {
-            if (select is { Limit: { } limit, Offset: null })
+            if (select is { Limit: { } limit } && (select.Offset == null || IsZeroLimit(limit)))
             {
                 sql.Append("TOP(").Visit(limit).Append(") ");
             }
@@ -118,11 +125,14 @@ public abstract class PagingSyntax
         // A limit without an offset was written as TOP.
         public override void GenerateLimitOffset(IQuerySqlWriter sql, SelectExpression select)
         {
-            if (select.Offset != null)
+            if (select.Offset != null && !IsZeroLimit(select.Limit))
             {
                 base.GenerateLimitOffset(sql, select);
             }
         }
+
+        private static bool IsZeroLimit(SqlExpression? limit)
+            => limit is SqlConstantExpression { Value: int value } && value == 0;
     }
 
     private sealed class LimitOffsetPaging(string? noLimitValue) : PagingSyntax

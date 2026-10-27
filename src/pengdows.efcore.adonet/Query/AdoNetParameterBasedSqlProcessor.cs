@@ -19,10 +19,10 @@ internal class AdoNetParameterBasedSqlProcessor(
     {
         queryExpression = base.Process(queryExpression, parametersDecorator);
 
-        if (dialect.Paging.InlinesValues)
-        {
-            queryExpression = new PagingParameterInliner(parametersDecorator).Visit(queryExpression);
-        }
+        queryExpression = new PagingParameterInliner(
+            parametersDecorator,
+            dialect.Paging.InlinesValues,
+            dialect.Paging.RequiresZeroLimitInlining).Visit(queryExpression);
 
         // After null semantics, which add conditions of their own.
         return dialect.Booleans.Process(queryExpression, Dependencies.SqlExpressionFactory);
@@ -31,15 +31,31 @@ internal class AdoNetParameterBasedSqlProcessor(
     protected override Expression ProcessSqlNullability(Expression queryExpression, ParametersCacheDecorator decorator)
         => new AdoNetSqlNullabilityProcessor(Dependencies, Parameters, dialect).Process(queryExpression, decorator);
 
-    private sealed class PagingParameterInliner(ParametersCacheDecorator parametersDecorator) : ExpressionVisitor
+    private sealed class PagingParameterInliner(
+        ParametersCacheDecorator parametersDecorator,
+        bool inlineAll,
+        bool inlineZeroLimit) : ExpressionVisitor
     {
         protected override Expression VisitExtension(Expression node)
         {
             var visited = base.VisitExtension(node);
-            if (visited is not SelectExpression select
-                || (select.Offset is not SqlParameterExpression && select.Limit is not SqlParameterExpression))
+            if (visited is not SelectExpression select || (select.Offset is not SqlParameterExpression && select.Limit is not SqlParameterExpression))
             {
                 return visited;
+            }
+
+            var values = inlineAll ? parametersDecorator.GetAndDisableCaching() : null;
+            if (!inlineAll && inlineZeroLimit && select.Limit is SqlParameterExpression limitParameter)
+            {
+                var currentValues = parametersDecorator.GetAndDisableCaching();
+                if (currentValues.TryGetValue(limitParameter.Name, out var limitValue) && limitValue is int { } intValue && intValue == 0)
+                {
+                    values = currentValues;
+                }
+                else
+                {
+                    return visited;
+                }
             }
 
             return select.Update(
@@ -49,17 +65,24 @@ internal class AdoNetParameterBasedSqlProcessor(
                 select.Having,
                 select.Projection,
                 select.Orderings,
-                Inline(select.Offset),
-                Inline(select.Limit));
+                Inline(select.Offset, values),
+                Inline(select.Limit, values));
         }
 
-        private SqlExpression? Inline(SqlExpression? expression)
-            => expression is SqlParameterExpression parameter
-                ? new SqlConstantExpression(
-                    parametersDecorator.GetAndDisableCaching()[parameter.Name],
-                    parameter.Type,
-                    parameter.TypeMapping)
-                : expression;
+        private SqlExpression? Inline(SqlExpression? expression, IReadOnlyDictionary<string, object?>? values = null)
+        {
+            if (expression is not SqlParameterExpression parameter)
+            {
+                return expression;
+            }
+
+            if (values == null || !values.TryGetValue(parameter.Name, out var value))
+            {
+                return expression;
+            }
+
+            return new SqlConstantExpression(value, parameter.Type, parameter.TypeMapping);
+        }
     }
 }
 
