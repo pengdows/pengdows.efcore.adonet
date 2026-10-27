@@ -15,7 +15,7 @@ public static class PostgreSqlDbContextOptionsBuilderExtensions
         this DbContextOptionsBuilder optionsBuilder,
         string connectionString,
         Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
-        => optionsBuilder.UseAdoNet(NpgsqlFactory.Instance, connectionString, PostgreSqlDialect.Instance, adoNetOptionsAction);
+        => optionsBuilder.UseAdoNet(NpgsqlFactory.Instance, connectionString, PostgreSqlDialect.Instance, With(adoNetOptionsAction));
 
     /// <summary>Over <paramref name="connection" />, which the caller owns unless <paramref name="contextOwnsConnection" />.</summary>
     public static DbContextOptionsBuilder UseAdoNetPostgreSql(
@@ -30,7 +30,7 @@ public static class PostgreSqlDbContextOptionsBuilderExtensions
         this DbContextOptionsBuilder optionsBuilder,
         DbDataSource dataSource,
         Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
-        => optionsBuilder.UseAdoNet(dataSource, PostgreSqlDialect.Instance, adoNetOptionsAction);
+        => optionsBuilder.UseAdoNet(dataSource, PostgreSqlDialect.Instance, With(adoNetOptionsAction));
 
     /// <summary>The connection string, or connection, is set later through <c>Database</c>.</summary>
     public static DbContextOptionsBuilder UseAdoNetPostgreSql(
@@ -75,6 +75,9 @@ public static class PostgreSqlDbContextOptionsBuilderExtensions
         => o =>
         {
             o.UseDialect(PostgreSqlDialect.Instance);
+            // PostgreSQL's typed collection parameters avoid EF's untyped empty VALUES row and match Npgsql's
+            // provider default. The dialect's JSON array table translation supplies the relational representation.
+            o.UseParameterizedCollectionMode(ParameterTranslationMode.Parameter);
             adoNetOptionsAction?.Invoke(o);
         };
 }

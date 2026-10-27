@@ -195,8 +195,9 @@ counts, not code-coverage percentages; the machine-readable ledger is `docs/spec
 The correctness workload is exercised by `Providers_return_the_same_results_for_the_same_workload`. Performance claims
 must come from `test/pengdows.efcore.adonet.mysql.Benchmarks`, which uses BenchmarkDotNet's process isolation, warmup,
 iterations and variance reporting. Its baseline is Oracle `MySql.EntityFrameworkCore` **10.0.12 on EF Core 10**;
-MySqlConnector and MySql.Data are separate benchmarks. The Pomelo comparison remains a separate **Pomelo 8.0.2 on
-EF Core 8/net8.0** lane. No unrecorded percentage advantage is claimed.
+MySqlConnector and MySql.Data are separate benchmarks, and the current Pomelo lane is built from the local EF 10
+checkout with MySqlConnector. The older **Pomelo 8.0.2 on EF Core 8/net8.0** console lane is historical only. No
+unrecorded percentage advantage is claimed.
 
 Run the primary comparison with:
 

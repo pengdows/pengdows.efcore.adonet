@@ -6,6 +6,8 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\pengdows.efcore.adonet.mysql\pengdows.efcore.adonet.mysql.csproj" />
+    <!-- Local checkout used for the apples-to-apples EF 10 comparison. -->
+    <ProjectReference Include="..\..\..\..\Pomelo.EntityFrameworkCore.MySql\src\EFCore.MySql\EFCore.MySql.csproj" />
     <PackageReference Include="BenchmarkDotNet" />
     <PackageReference Include="MySql.EntityFrameworkCore" />
     <PackageReference Include="MySql.Data" />

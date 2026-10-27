@@ -2,6 +2,7 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 using Microsoft.EntityFrameworkCore;
 using MySql.EntityFrameworkCore.Extensions;
+using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using pengdows.efcore.adonet;
 using pengdows.efcore.adonet.mysql;
 using Testcontainers.MySql;
@@ -10,8 +11,8 @@ BenchmarkRunner.Run<MySqlProviderBenchmark>();
 
 /// <summary>
 ///     Reproducible provider comparison for the same EF 10 workload. BenchmarkDotNet supplies process isolation,
-///     warmup, repeated measurements and variance; the Pomelo EF 8 comparison remains a separate, version-labelled
-///     console lane in <c>mysql.PomeloComparison</c>.
+///     warmup, repeated measurements and variance. Pomelo is built from the local EF 10 checkout so both providers
+///     use the same EF version, runtime, MySQL server, driver and workload.
 /// </summary>
 [MemoryDiagnoser]
 public class MySqlProviderBenchmark
@@ -37,13 +38,16 @@ public class MySqlProviderBenchmark
     public async Task Cleanup() => await _container.DisposeAsync();
 
     [Benchmark(Baseline = true)]
-    public Task OracleEf10() => Query(CreateContext(Provider.Oracle));
+    public Task OracleEf10MySqlData() => Query(CreateContext(Provider.Oracle));
 
     [Benchmark]
-    public Task AdoNetMySqlConnector() => Query(CreateContext(Provider.MySqlConnector));
+    public Task PengdowsEfMySqlConnector() => Query(CreateContext(Provider.MySqlConnector));
 
     [Benchmark]
-    public Task AdoNetMySqlData() => Query(CreateContext(Provider.MySqlData));
+    public Task PengdowsEfMySqlData() => Query(CreateContext(Provider.MySqlData));
+
+    [Benchmark]
+    public Task PomeloMySqlConnector() => Query(CreateContext(Provider.Pomelo));
 
     private ComparisonContext CreateContext(Provider provider)
     {
@@ -55,6 +59,9 @@ public class MySqlProviderBenchmark
                 break;
             case Provider.MySqlData:
                 options.UseAdoNet(MySql.Data.MySqlClient.MySqlClientFactory.Instance, _connectionString, MySqlDialect.Instance);
+                break;
+            case Provider.Pomelo:
+                options.UseMySql(_connectionString, ServerVersion.Parse("8.4.0-mysql"));
                 break;
             default:
                 options.UseAdoNetMySql(_connectionString);
@@ -89,7 +96,7 @@ public class MySqlProviderBenchmark
         }
     }
 
-    private enum Provider { Oracle, MySqlConnector, MySqlData }
+    private enum Provider { Oracle, MySqlConnector, MySqlData, Pomelo }
 
     private sealed class ComparisonContext(DbContextOptions<ComparisonContext> options) : DbContext(options)
     {

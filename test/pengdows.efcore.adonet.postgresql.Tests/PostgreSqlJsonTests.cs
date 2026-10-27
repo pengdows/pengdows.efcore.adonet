@@ -51,4 +51,18 @@ public sealed class PostgreSqlJsonTests
         Assert.Contains("AS jsonpath", sql, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("AS INTEGER", sql, StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact]
+    public void Uses_typed_json_array_for_parameterized_collections()
+    {
+        using var context = CreateContext();
+        int[] ids = [];
+
+        var sql = context.Documents
+            .Join(ids, document => document.Id, id => id, (document, _) => document)
+            .ToQueryString();
+
+        Assert.Contains("jsonb_array_elements", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("CAST(e.value #>> '{}' AS integer)", sql, StringComparison.OrdinalIgnoreCase);
+    }
 }
