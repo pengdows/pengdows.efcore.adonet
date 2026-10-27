@@ -10,9 +10,27 @@ using Microsoft.EntityFrameworkCore.Update;
 
 namespace pengdows.efcore.adonet.Update;
 
-internal class AdoNetModificationCommandBatch(ModificationCommandBatchFactoryDependencies dependencies, int maxBatchSize, ISqlDialect sql)
+internal class AdoNetModificationCommandBatch(
+    ModificationCommandBatchFactoryDependencies dependencies,
+    int maxBatchSize,
+    int maxParametersPerCommand,
+    ISqlDialect sql)
     : AffectedCountModificationCommandBatch(dependencies, maxBatchSize)
 {
+    private readonly int _maxParametersPerCommand = maxParametersPerCommand;
+
+    public override bool TryAddCommand(IReadOnlyModificationCommand modificationCommand)
+    {
+        var added = base.TryAddCommand(modificationCommand);
+        if (!added || (RelationalCommandBuilder.Parameters.Count <= _maxParametersPerCommand) || (ModificationCommands.Count == 1))
+        {
+            return added;
+        }
+
+        RollbackLastCommand(modificationCommand);
+        return false;
+    }
+
     // Where a procedure's outputs go through session variables (ISqlDialect.ProcedureOutputVariable), the command has no
     // output parameters: an output-only one isn't sent, and an input-output one is sent as an input, the variable's start.
     // Adapted from Pomelo's MySqlModificationCommandBatch (MIT, Pomelo Foundation):
@@ -52,8 +70,9 @@ internal class AdoNetModificationCommandBatch(ModificationCommandBatchFactoryDep
 internal class AdoNetRecordsAffectedModificationCommandBatch(
     ModificationCommandBatchFactoryDependencies dependencies,
     int maxBatchSize,
+    int maxParametersPerCommand,
     ISqlDialect sql)
-    : AdoNetModificationCommandBatch(dependencies, maxBatchSize, sql)
+    : AdoNetModificationCommandBatch(dependencies, maxBatchSize, maxParametersPerCommand, sql)
 {
     protected override void Consume(RelationalDataReader reader)
     {
@@ -99,9 +118,10 @@ internal class AdoNetModificationCommandBatchFactory(
     private readonly int _maxBatchSize = capabilities.SupportsMultipleStatementsPerCommand
         ? RelationalOptionsExtension.Extract(options).MaxBatchSize ?? capabilities.DefaultMaxBatchSize
         : 1;
+    private readonly int _maxParametersPerCommand = capabilities.MaxParametersPerCommand;
 
     public virtual ModificationCommandBatch Create()
         => sql.Keys is SequenceKeyRetrieval
-            ? new AdoNetRecordsAffectedModificationCommandBatch(dependencies, _maxBatchSize, sql)
-            : new AdoNetModificationCommandBatch(dependencies, _maxBatchSize, sql);
+            ? new AdoNetRecordsAffectedModificationCommandBatch(dependencies, _maxBatchSize, _maxParametersPerCommand, sql)
+            : new AdoNetModificationCommandBatch(dependencies, _maxBatchSize, _maxParametersPerCommand, sql);
 }

@@ -22,6 +22,7 @@
     <PackageVersion Include="MySql.Data" Version="26.10.0" />
     <!-- Test-only comparison lane; Oracle's provider is never shipped by pengdows. -->
     <PackageVersion Include="MySql.EntityFrameworkCore" Version="10.0.12" />
+    <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
     <PackageVersion Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.2" Condition="'$(TargetFramework)' == 'net8.0'" />
     <PackageVersion Include="pengdows.crud.fakeDb" Version="2.0.5" />
     <PackageVersion Include="coverlet.collector" Version="10.1.0" />

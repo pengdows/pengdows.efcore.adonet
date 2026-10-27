@@ -168,7 +168,12 @@ public sealed class MySqlHost : ServerHost
     // With the user variables the dialect reads procedure outputs through, which a connection opened before the provider
     // sees it must already allow.
     public override string ConnectionStringFor(string database)
-        => new MySqlConnectionStringBuilder(AdminConnectionString) { Database = database, AllowUserVariables = true }.ConnectionString;
+        => new MySqlConnectionStringBuilder(AdminConnectionString)
+        {
+            Database = database,
+            AllowUserVariables = true,
+            UseAffectedRows = false
+        }.ConnectionString;
 
     public override DbConnection CreateConnection(string connectionString) => new MySqlConnection(connectionString);
 

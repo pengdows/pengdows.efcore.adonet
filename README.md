@@ -160,9 +160,9 @@ dotnet test test/pengdows.efcore.adonet.Tests   # the core alone: fakeDb and an 
   `test/FunctionalTests.props`). Results only: no provider's SQL baselines. Where suite: 408 of 408 on all six (SQL Server,
   PostgreSQL, MySQL, SQLite, DuckDB and pengdows.flatfile 0.2.1-preview.12).
 
-  Latest local validation on 2026-10-27: core unit tests **339 passed / 0 failed**, MySQL provider tests **288 passed / 0 failed / 2 skipped**,
-  and the MySQL Release build completed with **0 warnings / 0 errors**. The comparison table below remains the full coverage baseline
-  measured against the provider suites on 2026-10-26.
+  Latest local validation on 2026-10-27: core unit tests **340 passed / 0 failed**, MySQL provider tests **289 passed / 0 failed / 2 skipped**,
+  the targeted MySQL specification slice **464 passed / 0 failed / 28 skipped**, and the benchmark project builds with **0 errors**.
+  The full MySQL specification run is recorded in `docs/specification-results/mysql-full-review.tsv`.
 
 ### Coverage against the other MySQL providers
 
@@ -175,14 +175,32 @@ us, the core plus the MySQL plugin, since a MySQL user runs both). Measured 2026
 | Pomelo.EntityFrameworkCore.MySql 9.0.1 (EF Core 9) | 30,595 / 14,381 | 73.3% | 65.6% | 64.7% | 29,601 / 10 / 1,288 |
 | MySql.EntityFrameworkCore 26.10.0 (Oracle) | 18,085 / 6,859 | 58.9% | 42.0% | 53.6% | 137 / 3 / 2 |
 
+The fresh EF Core 10 MySQL specification run (MySqlConnector) is **29,903 passed / 0 failed / 437 skipped / 30,340 total**;
+the provider test run covers both MySqlConnector and MySql.Data (**289 passed / 0 failed / 2 skipped**). These are result
+counts, not code-coverage percentages; the machine-readable ledger is `docs/specification-results/mysql-full-review.tsv`.
+
 - **Ours:** the core's unit tests on fakeDb, the MySQL plugin's conformance suites, and EF Core 10.0.11's specification
-  suites on MySQL. The 1,692 failures are specification tests MySQL doesn't pass yet; the suites still run the code they
-  reach.
+  suites on MySQL. The historical coverage row above is retained for code-coverage context; the current specification
+  result is recorded separately so it cannot be mistaken for a fresh run.
 - **Pomelo:** its unit tests and its functional tests (EF Core 9's specification suites with Pomelo's MySQL baselines). It
   targets .NET 9 and was run there. Its test discoverer queries the server, so the run pins `ServerVersion` rather than
   `auto`, and its 200-connection pool needs the server's `max_connections` raised.
 - **Oracle:** the three test projects in its source release (basic, design-time, migrations), run as a test-only tool
   (GPL: read and run, never copied). It ships no specification-suite run.
+
+### Performance comparisons
+
+The correctness workload is exercised by `Providers_return_the_same_results_for_the_same_workload`. Performance claims
+must come from `test/pengdows.efcore.adonet.mysql.Benchmarks`, which uses BenchmarkDotNet's process isolation, warmup,
+iterations and variance reporting. Its baseline is Oracle `MySql.EntityFrameworkCore` **10.0.12 on EF Core 10**;
+MySqlConnector and MySql.Data are separate benchmarks. The Pomelo comparison remains a separate **Pomelo 8.0.2 on
+EF Core 8/net8.0** lane. No unrecorded percentage advantage is claimed.
+
+Run the primary comparison with:
+
+```text
+dotnet run -c Release --project test/pengdows.efcore.adonet.mysql.Benchmarks
+```
 
 A percentage is of each provider's own code, so the numbers say how much of what each ships its tests reach, not how much
 each does. Pomelo's tests reach more lines than ours in total (about 10,500 against 3,200), and do so over a much

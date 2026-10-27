@@ -152,7 +152,11 @@ internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = t
     // (not copied):
     // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Storage/Internal/MySqlConnectionStringOptionsValidator.cs
     public override string ProcedureOutputVariable => "@{0}";
-    public override IReadOnlyDictionary<string, string> ConnectionOptions { get; } = new Dictionary<string, string> { ["Allow User Variables"] = "true" };
+    public override IReadOnlyDictionary<string, string> ConnectionOptions { get; } = new Dictionary<string, string>
+    {
+        ["Allow User Variables"] = "true",
+        ["Use Affected Rows"] = "false"
+    };
     public override string CurrentSchema => "DATABASE()";
 
     // "This version of MySQL doesn't yet support 'LIMIT & IN/ALL/ANY/SOME subquery'"; a derived table may be paged.

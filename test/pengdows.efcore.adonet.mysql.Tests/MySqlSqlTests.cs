@@ -13,6 +13,13 @@ public class MySqlSqlTests
         Assert.EndsWith("'ANSI_QUOTES', 'NO_BACKSLASH_ESCAPES')", MySqlDialect.NoBackslashEscapes.Sql.SessionSetup);
     }
 
+    [Fact]
+    public void Connection_options_disable_affected_rows_mode_for_concurrency()
+    {
+        Assert.Equal("false", MySqlDialect.Instance.Sql.ConnectionOptions["Use Affected Rows"]);
+        Assert.Equal("false", MySqlDialect.NoBackslashEscapes.Sql.ConnectionOptions["Use Affected Rows"]);
+    }
+
     private static BlogContext Context(Action<DbContextOptionsBuilder> configure)
     {
         var builder = new DbContextOptionsBuilder<BlogContext>();

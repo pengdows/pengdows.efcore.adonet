@@ -370,6 +370,21 @@ public class SaveChangesTests
     }
 
     [Fact]
+    public async Task Parameter_limit_splits_multi_statement_save_changes_batches()
+    {
+        await using var context = _db.Context(TestDialects.ParameterCapOf34);
+        _db.Connection.EnqueueMultiResultReader([[FakeDatabase.Row("Id", 1)], [FakeDatabase.Row("Id", 2)]]);
+        _db.Returns(FakeDatabase.Row("Id", 3));
+
+        context.AddRange(NewItem("a"), NewItem("b"), NewItem("c"));
+        await context.SaveChangesAsync(Ct);
+
+        Assert.Equal(2, _db.Commands.Count);
+        Assert.Equal(2, CountOf("INSERT INTO", _db.Commands[0]));
+        Assert.Equal(1, CountOf("INSERT INTO", _db.Commands[1]));
+    }
+
+    [Fact]
     public async Task Single_statement_dialects_never_batch()
     {
         await using var context = _db.Context(TestDialects.Ansi, o => o.MaxBatchSize(50));

@@ -128,6 +128,10 @@ public static class TestDialects
     public static readonly IAdoNetDialect BatchesOfTwo = new PartsDialect(
         "Batches of two", capabilities: new DatabaseCapabilities { SupportsMultipleStatementsPerCommand = true, DefaultMaxBatchSize = 2 });
 
+    public static readonly IAdoNetDialect ParameterCapOf34 = new PartsDialect(
+        "Parameter cap of 34",
+        capabilities: new DatabaseCapabilities { SupportsMultipleStatementsPerCommand = true, DefaultMaxBatchSize = 50, MaxParametersPerCommand = 34 });
+
     public static readonly IAdoNetDialect ColonParameters = new PartsDialect(
         "Colon", new PartsSql(parameterMarker: ":", parameterNameIncludesMarker: false, supportsSchemas: false));
 

@@ -1,0 +1,15 @@
+# MySQL EF Core specification run
+# Date: 2026-10-27
+# EF Core: 10.0.11
+# Server: MySQL 8.4 (Testcontainers)
+# Driver: MySqlConnector 2.6.2 via pengdows.efcore.adonet.mysql
+# Command: dotnet test test/pengdows.efcore.adonet.Specification.Tests/pengdows.efcore.adonet.Specification.Tests.csproj --no-restore --filter FullyQualifiedName~Specification.Tests.MySql --logger trx;LogFileName=mysql-full-review.trx --verbosity quiet
+passed	failed	skipped	total	duration
+29903	0	437	30340	9m18s
+
+# Targeted JSON slice (same date and environment; retained for the duplicate-discovery audit)
+json_passed	json_failed	json_skipped	json_total
+464	0	28	492
+
+# The MySql.Data driver is covered by the provider comparison/conformance project (288 passed, 2 skipped); the generated
+# EF specification matrix currently has one MySqlHost and therefore runs the matrix through MySqlConnector.
