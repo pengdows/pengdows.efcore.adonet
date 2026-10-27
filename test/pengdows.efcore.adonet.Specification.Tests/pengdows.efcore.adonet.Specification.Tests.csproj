@@ -7,11 +7,6 @@
   -->
   <Import Project="..\FunctionalTests.props" />
 
-  <!-- The StormGate packages are built from the sibling pengdows.crud checkout and not yet on nuget.org. -->
-  <PropertyGroup>
-    <RestoreAdditionalProjectSources>$(RestoreAdditionalProjectSources);$(MSBuildThisFileDirectory)..\..\..\pengdows.crud\artifacts\nupkg</RestoreAdditionalProjectSources>
-  </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\src\pengdows.efcore.adonet.sqlserver\pengdows.efcore.adonet.sqlserver.csproj" />
     <ProjectReference Include="..\..\src\pengdows.efcore.adonet.postgresql\pengdows.efcore.adonet.postgresql.csproj" />

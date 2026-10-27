@@ -66,3 +66,44 @@ public sealed class PostgreSqlJsonTests
         Assert.Contains("CAST(e.value #>> '{}' AS integer)", sql, StringComparison.OrdinalIgnoreCase);
     }
 }
+
+public sealed class PostgreSqlJsonIntegrationTests(PostgreSqlFixture fixture) : IClassFixture<PostgreSqlFixture>
+{
+    private sealed class RawDocument
+    {
+        public int Id { get; set; }
+        public string Document { get; set; } = "";
+    }
+
+    private sealed class Context(DbContextOptions<Context> options) : DbContext(options)
+    {
+        public DbSet<RawDocument> Documents => Set<RawDocument>();
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+            => modelBuilder.Entity<RawDocument>().ToTable("ProviderReviewJsonDocuments")
+                .Property(document => document.Document).HasColumnType("jsonb");
+    }
+
+    [Fact]
+    public async Task Json_document_text_comparison_executes_and_returns_the_matching_row()
+    {
+        await fixture.CreateTablesOnceAsync<Context>(o => new(o));
+        const string document = "{\"name\":\"x\"}";
+
+        await using (var context = fixture.CreateContext<Context>(o => new(o)))
+        {
+            context.Documents.Add(new RawDocument { Document = document });
+            await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        await using (var context = fixture.CreateContext<Context>(o => new(o)))
+        {
+            var count = await context.Documents.CountAsync(
+                row => row.Document == document,
+                TestContext.Current.CancellationToken);
+            Assert.Equal(1, count);
+        }
+
+        await fixture.ExecuteAsync("DELETE FROM \"ProviderReviewJsonDocuments\"");
+    }
+}

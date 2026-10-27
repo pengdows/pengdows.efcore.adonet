@@ -24,6 +24,7 @@ public class JsonTests
         public string Hostile { get; set; } = "";
         public int Digit { get; set; }
         public int Underscored { get; set; }
+        public List<sbyte> Signed { get; set; } = [];
     }
 
     public class ComplexDoc
@@ -32,10 +33,17 @@ public class JsonTests
         public Detail Detail { get; set; } = new();
     }
 
+    private class RawDoc
+    {
+        public int Id { get; set; }
+        public string Document { get; set; } = "";
+    }
+
     private sealed class DocContext(DbContextOptions<DocContext> options) : DbContext(options)
     {
         public DbSet<Doc> Docs => Set<Doc>();
         public DbSet<ComplexDoc> ComplexDocs => Set<ComplexDoc>();
+        public DbSet<RawDoc> RawDocs => Set<RawDoc>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -52,6 +60,7 @@ public class JsonTests
                 b.ToJson();
                 b.Property(d => d.Spaced).HasJsonPropertyName("Full name");
             });
+            modelBuilder.Entity<RawDoc>().Property(d => d.Document).HasColumnType("JSON");
         }
     }
 
@@ -144,6 +153,22 @@ public class JsonTests
         Assert.Contains("'$._a_1' RETURNING INTEGER) = 1", context.Docs.Where(d => d.Detail.Underscored == 1).ToQueryString());
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Comparing_a_json_document_with_text_converts_the_text_to_json(bool notEqual)
+    {
+        using var context = Context(new FakeDatabase());
+        var text = "{\"name\":\"x\"}";
+        var query = notEqual
+            ? context.RawDocs.Where(d => d.Document != text)
+            : context.RawDocs.Where(d => d.Document == text);
+
+        var sql = query.ToQueryString();
+
+        Assert.Contains(notEqual ? " <> JSON(" : " = JSON(", sql);
+    }
+
     [Fact]
     public async Task A_member_patched_by_a_bulk_update_is_named_by_the_same_path_a_read_uses()
     {
@@ -153,5 +178,21 @@ public class JsonTests
         await context.ComplexDocs.ExecuteUpdateAsync(s => s.SetProperty(d => d.Detail.Spaced, "b"), Ct);
 
         Assert.Contains("JSON_SET(\"c\".\"Detail\", '$.\"Full name\"', ", db.Commands[0]);
+    }
+
+    [Fact]
+    public async Task A_signed_byte_json_collection_is_not_written_as_base64()
+    {
+        var db = new FakeDatabase();
+        await using var context = Context(db);
+        var doc = new Doc { Id = 1, Detail = new Detail { Signed = [1, 2] } };
+        context.Attach(doc);
+        doc.Detail.Signed = [3, -4];
+
+        await Assert.ThrowsAnyAsync<Exception>(() => context.SaveChangesAsync(Ct));
+
+        Assert.Contains("JSON_SET", db.Commands[0]);
+        Assert.DoesNotContain("base64", db.Commands[0], StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("[3,-4]", db.Parameters[0], StringComparison.Ordinal);
     }
 }

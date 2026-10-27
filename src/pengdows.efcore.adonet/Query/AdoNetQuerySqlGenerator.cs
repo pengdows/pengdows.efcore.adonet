@@ -335,11 +335,9 @@ internal class AdoNetQuerySqlGenerator(
         // equals no document, so the text is turned into a JSON value first.
         if (sqlBinaryExpression is { OperatorType: ExpressionType.Equal or ExpressionType.NotEqual }
             && dialect.Json is { } json
-            && (IsJsonDocument(sqlBinaryExpression.Left, json) ? sqlBinaryExpression.Right : IsJsonDocument(sqlBinaryExpression.Right, json) ? sqlBinaryExpression.Left : null)
-                is SqlConstantExpression or SqlParameterExpression)
+            && FindJsonTextOperand(sqlBinaryExpression, json) is { } text)
         {
             var jsonOnLeft = IsJsonDocument(sqlBinaryExpression.Left, json);
-            var text = jsonOnLeft ? sqlBinaryExpression.Right : sqlBinaryExpression.Left;
             void Operand(Expression e)
             {
                 if (ReferenceEquals(e, text))
@@ -363,6 +361,23 @@ internal class AdoNetQuerySqlGenerator(
 
     private static bool IsJsonDocument(SqlExpression operand, JsonSyntax json)
         => operand is ColumnExpression && string.Equals(operand.TypeMapping?.StoreType, json.StoreType, StringComparison.OrdinalIgnoreCase);
+
+    private static SqlExpression? FindJsonTextOperand(SqlBinaryExpression expression, JsonSyntax json)
+    {
+        if (IsJsonDocument(expression.Left, json)
+            && expression.Right is SqlConstantExpression or SqlParameterExpression)
+        {
+            return expression.Right;
+        }
+
+        if (IsJsonDocument(expression.Right, json)
+            && expression.Left is SqlConstantExpression or SqlParameterExpression)
+        {
+            return expression.Left;
+        }
+
+        return null;
+    }
 
     // An operand written into an operator template is parenthesized when it is an operation itself: databases order bitwise
     // operators differently (in some & binds tighter than |, in others they are equal).

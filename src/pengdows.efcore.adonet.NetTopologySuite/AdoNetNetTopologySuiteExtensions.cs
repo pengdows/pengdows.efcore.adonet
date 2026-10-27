@@ -1,5 +1,5 @@
-// Independent implementation. Behaviour reference (not copied): EF Core's SQLite NetTopologySuite plugin
-// (MIT, .NET Foundation): https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.NTS/Infrastructure/SqliteNetTopologySuiteOptionsExtension.cs
+// Adapted from EF Core's SQLite NetTopologySuite plugin (MIT, .NET Foundation):
+// https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.NTS/Infrastructure/SqliteNetTopologySuiteOptionsExtension.cs
 // Copyright (c) .NET Foundation. Licensed under the MIT license.
 
 using System.Diagnostics.CodeAnalysis;
