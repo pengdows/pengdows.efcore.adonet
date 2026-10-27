@@ -33,7 +33,7 @@ internal sealed class AdoNetQueryTranslationPostprocessor(
 ///     A row value has no type mapping of its own: it is written from its values, each of which has one. A JSON array table
 ///     over a parameter takes its element type from how the query uses the elements, and the parameter is then serialized as a
 ///     JSON array of that type; the element columns read out of it take the same type.
-///     Adapted from EF Core's SQLite provider (MIT, .NET Foundation):
+///     Behaviour reference (not copied): EF Core's SQLite provider (MIT, .NET Foundation):
 ///     https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.Core/Query/Internal/SqliteTypeMappingPostprocessor.cs
 /// </summary>
 internal sealed class AdoNetTypeMappingPostprocessor(
@@ -53,48 +53,65 @@ internal sealed class AdoNetTypeMappingPostprocessor(
 
     protected override Expression VisitExtension(Expression expression)
     {
-        switch (expression)
+        if (expression is RowValueSqlExpression rowValue)
         {
-            case RowValueSqlExpression rowValue:
-                return rowValue.Update(rowValue.Values.Select(v => (SqlExpression)Visit(v)).ToList());
+            return rowValue.Update(rowValue.Values.Select(value => (SqlExpression)Visit(value)).ToList());
+        }
 
-            case JsonArrayTableExpression table:
-                return WithElementType(table, ElementTypeMapping(table));
+        if (expression is JsonArrayTableExpression jsonTable)
+        {
+            return WithElementType(jsonTable, FindElementMapping(jsonTable));
+        }
 
-            case SelectExpression select:
+        if (expression is SelectExpression select)
+        {
+            return VisitSelectWithArrayMappings(select);
+        }
+
+        if (expression is ColumnExpression { Name: JsonArrayTableExpression.ValueColumn } valueColumn
+            && _arrayTables?.TryGetValue(valueColumn.TableAlias, out var elementMapping) is true)
+        {
+            var typedColumn = valueColumn.TypeMapping == null
+                ? valueColumn.ApplyTypeMapping(elementMapping)
+                : valueColumn;
+            return elementMapping.ClrType == typeof(byte[]) && binaryValue != null
+                ? RelationalDependencies.SqlExpressionFactory.Call(binaryValue, [typedColumn], typeof(byte[]), elementMapping)!
+                : typedColumn;
+        }
+
+        return base.VisitExtension(expression);
+    }
+
+    private Expression VisitSelectWithArrayMappings(SelectExpression select)
+    {
+        var outerMappings = _arrayTables;
+        var localMappings = outerMappings;
+        foreach (var table in select.Tables.OfType<JsonArrayTableExpression>())
+        {
+            var mapping = FindElementMapping(table);
+            if (mapping == null)
             {
-                var outer = _arrayTables;
-                foreach (var table in select.Tables.OfType<JsonArrayTableExpression>())
-                {
-                    if (ElementTypeMapping(table) is { } mapping)
-                    {
-                        _arrayTables = _arrayTables == outer ? new Dictionary<string, Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping>(outer ?? []) : _arrayTables;
-                        _arrayTables![table.Alias] = mapping;
-                    }
-                }
-
-                var visited = base.VisitExtension(expression);
-                _arrayTables = outer;
-                return visited;
+                continue;
             }
 
-            case ColumnExpression { Name: JsonArrayTableExpression.ValueColumn } column
-                when _arrayTables?.TryGetValue(column.TableAlias, out var elementMapping) is true:
-            {
-                var typed = column.TypeMapping == null ? column.ApplyTypeMapping(elementMapping) : column;
-                return (elementMapping.ClrType == typeof(byte[])) && (binaryValue != null)
-                    ? RelationalDependencies.SqlExpressionFactory.Call(binaryValue, [typed], typeof(byte[]), elementMapping)!
-                    : typed;
-            }
+            localMappings ??= new Dictionary<string, Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping>(outerMappings ?? []);
+            localMappings[table.Alias] = mapping;
+        }
 
-            default:
-                return base.VisitExtension(expression);
+        _arrayTables = localMappings;
+        try
+        {
+            return base.VisitExtension(select);
+        }
+        finally
+        {
+            _arrayTables = outerMappings;
         }
     }
 
     // A column collection's element mapping comes from the model; a parameter's is inferred from its use, or else the default
     // for the element type.
-    private Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping? ElementTypeMapping(JsonArrayTableExpression table)
+    private Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping? FindElementMapping(JsonArrayTableExpression table)
         => table.ElementTypeMapping
             ?? (TryGetInferredTypeMapping(table.Alias, JsonArrayTableExpression.ValueColumn, out var inferred) ? inferred : null)
             ?? _typeMappingSource.FindMapping(JsonArrayTableExpression.ElementType(table.Json.Type), _model);
