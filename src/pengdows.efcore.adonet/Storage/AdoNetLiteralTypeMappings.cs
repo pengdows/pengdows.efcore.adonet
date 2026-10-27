@@ -199,7 +199,7 @@ public class AdoNetDateTimeTypeMapping : DateTimeTypeMapping
         // TIMESTAMP WITHOUT TIME ZONE represents a wall-clock value. Drivers such as Npgsql
         // reject a UTC DateTime for that store type, even though the underlying instant is not
         // part of the SQL value. Normalize only the Kind marker before binding.
-        if (parameter.Value is DateTime value && StoreType.Contains("WITHOUT TIME ZONE", StringComparison.OrdinalIgnoreCase))
+        if (parameter.Value is DateTime value && !StoreType.Contains("WITH TIME ZONE", StringComparison.OrdinalIgnoreCase))
         {
             parameter.Value = DateTime.SpecifyKind(value, DateTimeKind.Unspecified);
         }
