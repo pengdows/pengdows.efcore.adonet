@@ -71,6 +71,19 @@ internal sealed class SqlServerSql : AnsiSqlDialect
     public override KeyRetrieval Keys { get; } = KeyRetrieval.SelectAfter("SCOPE_IDENTITY()", "@@ROWCOUNT");
     public override DmlSyntax Dml => DmlSyntax.TargetAliasFrom;
     public override FunctionSyntax Functions { get; } = new SqlServerFunctions();
+    public override JsonSyntax Json { get; } = new(
+        "nvarchar(max)",
+        "JSON_VALUE({0}, {1})",
+        "JSON_QUERY({0}, {1})",
+        "CONVERT({2}, JSON_VALUE({0}, {1}))",
+        "CONVERT(bit, JSON_VALUE({0}, {1}))",
+        binaryValue: null,
+        concatenate: "CONCAT({0}, {1})",
+        set: "JSON_MODIFY({0}, {1}, {2})",
+        fromText: "JSON_QUERY({0})")
+    {
+        ArrayElements = "OPENJSON({0})"
+    };
     public override bool PreferExistsToIn => true;
     public override string CurrentSchema => "SCHEMA_NAME()";
 
