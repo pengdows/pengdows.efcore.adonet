@@ -111,4 +111,24 @@ internal sealed class PostgreSqlFunctions : FunctionSyntax
 
     public override string? OffsetDateTime => "({0} AT TIME ZONE 'UTC')";
     public override string? RoundDigits => "ROUND(CAST({0} AS numeric), {1})";
+
+    // PostgreSQL's interval arithmetic preserves fractional amounts and is the ISO-shaped
+    // equivalent of the date/time arithmetic exposed by the shared EF translator.
+    public override string? AddYears => "({0} + ({1} * INTERVAL '1 year'))";
+    public override string? AddMonths => "({0} + ({1} * INTERVAL '1 month'))";
+    public override string? AddDays => "({0} + ({1} * INTERVAL '1 day'))";
+    public override string? AddMicroseconds => "({0} + ({1} * INTERVAL '1 microsecond'))";
+
+    public override string? DateDifference => "({0} - {1})";
+    public override string? DateDifferenceTotalDays => "(EXTRACT(EPOCH FROM ({0} - {1})) / 86400.0)";
+    public override string? TimeSpanTotalDays => "(EXTRACT(EPOCH FROM {0}) / 86400.0)";
+    public override string? TimeOfDay => "CAST({0} AS time)";
+    public override string? TimeSpanAdd => "({0} + {1})";
+    public override string? TimeSpanSubtract => "({0} - {1})";
+    public override string? TimeSpanHours => "EXTRACT(HOUR FROM {0})";
+    public override string? TimeSpanMinutes => "EXTRACT(MINUTE FROM {0})";
+    public override string? TimeSpanSeconds => "FLOOR(EXTRACT(SECOND FROM {0}))";
+    public override string? TimeSpanMilliseconds => "((EXTRACT(MICROSECONDS FROM {0}) % 1000000) / 1000)";
+    public override string? TimeSpanMicroseconds => "EXTRACT(MICROSECONDS FROM {0}) % 1000";
+    public override string? TimeSpanNanoseconds => "0";
 }
