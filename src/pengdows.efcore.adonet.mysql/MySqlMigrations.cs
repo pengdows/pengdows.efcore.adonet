@@ -70,8 +70,8 @@ internal partial class MySqlMigrationsSqlGenerator(MigrationsSqlGeneratorDepende
         => builder.Append(" AUTO_INCREMENT");
 
     // InnoDB wants an AUTO_INCREMENT column to lead an index. In a composite key led by another column (an owned
-    // collection's owner key, then its own number) it doesn't, so it gets a unique constraint of its own. Adapted from
-    // Pomelo's MySqlMigrationsSqlGenerator (MIT, Pomelo Foundation):
+    // collection's owner key, then its own number) it doesn't, so it gets a unique constraint of its own. Behaviour reference
+    // (not copied): Pomelo's MySqlMigrationsSqlGenerator (MIT, Pomelo Foundation):
     // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Migrations/MySqlMigrationsSqlGenerator.cs
     protected override void Generate(CreateTableOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
     {
@@ -131,7 +131,7 @@ internal partial class MySqlMigrationsSqlGenerator(MigrationsSqlGeneratorDepende
     }
 
     // TEXT, BLOB, JSON and GEOMETRY columns take no literal default, but (MySQL 8.0.13+) take an expression default.
-    // Adapted from Pomelo's MySqlMigrationsSqlGenerator.DefaultValue (MIT, Pomelo Foundation):
+    // Behaviour reference (not copied): Pomelo's MySqlMigrationsSqlGenerator.DefaultValue (MIT, Pomelo Foundation):
     // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Migrations/MySqlMigrationsSqlGenerator.cs
     private static readonly string[] ExpressionDefaultTypes =
         ["TINYTEXT", "TEXT", "MEDIUMTEXT", "LONGTEXT", "TINYBLOB", "BLOB", "MEDIUMBLOB", "LONGBLOB", "JSON", "GEOMETRY", "POINT", "LINESTRING", "POLYGON"];

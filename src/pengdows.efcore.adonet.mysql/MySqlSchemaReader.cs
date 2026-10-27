@@ -1,5 +1,5 @@
-// Portions adapted from Pomelo's MySqlDatabaseModelFactory.
-// Copyright (c) Pomelo Foundation. Licensed under the MIT license.
+// Behaviour reference (not copied): Pomelo's MySqlDatabaseModelFactory (MIT, Pomelo Foundation):
+// https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Scaffolding/Internal/MySqlDatabaseModelFactory.cs
 
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -13,9 +13,7 @@ namespace pengdows.efcore.adonet.mysql;
 ///     MySQL's catalog: the database is the schema; a column's full type is <c>COLUMN_TYPE</c>, its generation and
 ///     <c>AUTO_INCREMENT</c> are in <c>EXTRA</c>, and its default is the bare value unless the server marks it an expression;
 ///     indexes are in <c>STATISTICS</c>, where unique constraints also appear (so only the primary key is read as a key); a
-///     foreign key names its principal in <c>KEY_COLUMN_USAGE</c>; there are no sequences. Adapted from Pomelo's
-///     MySqlDatabaseModelFactory (MIT, Pomelo Foundation):
-///     https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Scaffolding/Internal/MySqlDatabaseModelFactory.cs
+///     foreign key names its principal in <c>KEY_COLUMN_USAGE</c>; there are no sequences.
 /// </summary>
 internal sealed partial class MySqlSchemaReader : InformationSchemaReader
 {
@@ -80,16 +78,24 @@ internal sealed partial class MySqlSchemaReader : InformationSchemaReader
             column.DefaultValueSql = null;
         }
 
-        column.ValueGenerated = extra.Contains("auto_increment", StringComparison.OrdinalIgnoreCase)
-            ? ValueGenerated.OnAdd
-            : extra.Contains("on update", StringComparison.OrdinalIgnoreCase)
-                ? ValueGenerated.OnAddOrUpdate
-                : null;
+        column.ValueGenerated = GeneratedValue(extra);
         column.Comment = Text(row, "COLUMN_COMMENT") is { Length: > 0 } comment ? comment : null;
 
         // A collation is the column's own only where it differs from its table's.
         column.Collation = Text(row, "COLLATION_NAME") is { } collation && (collation != Text(row, "TABLE_COLLATION")) ? collation : null;
         return column;
+    }
+
+    private static ValueGenerated? GeneratedValue(string extra)
+    {
+        if (extra.Contains("auto_increment", StringComparison.OrdinalIgnoreCase))
+        {
+            return ValueGenerated.OnAdd;
+        }
+
+        return extra.Contains("on update", StringComparison.OrdinalIgnoreCase)
+            ? ValueGenerated.OnAddOrUpdate
+            : null;
     }
 
     // Upper case, as the dialect writes types, outside the quoted values of an ENUM or SET.
