@@ -1,5 +1,5 @@
-// Portions adapted from Pomelo's MySqlUpdateSqlGenerator.
-// Copyright (c) Pomelo Foundation. Licensed under the MIT license.
+// Behaviour reference (not copied): Pomelo's MySqlUpdateSqlGenerator (MIT, Pomelo Foundation):
+// https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Update/Internal/MySqlUpdateSqlGenerator.cs
 
 using System.Globalization;
 using System.Text;
@@ -96,7 +96,7 @@ internal class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependenc
     // Where the driver returns no output parameters from a text CALL, each output goes through a session variable: set before
     // the call (an input-output one to its input), passed in the parameter's place, and selected back after it. With other
     // outputs, a rows-affected one filters that row, so a procedure that changed no row returns none: a concurrency failure.
-    // Adapted from Pomelo's MySqlUpdateSqlGenerator (MIT, Pomelo Foundation):
+    // Behaviour reference (not copied): Pomelo's MySqlUpdateSqlGenerator (MIT, Pomelo Foundation):
     // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Update/Internal/MySqlUpdateSqlGenerator.cs
     public override ResultSetMapping AppendStoredProcedureCall(
         StringBuilder commandStringBuilder,
@@ -118,58 +118,89 @@ internal class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependenc
                 + "result set, so it can have neither result columns nor a return value.");
         }
 
+        AppendOutputVariableInitialization(commandStringBuilder, outputs, template);
+        AppendProcedureInvocation(commandStringBuilder, command, procedure, outputs, template);
+        var rowsAffected = outputs.FirstOrDefault(o => o.Column == command.RowsAffectedColumn);
+        AppendOutputProjection(commandStringBuilder, outputs, rowsAffected, template);
+        requiresTransaction = true;
+        return OutputResultMapping(rowsAffected, outputs.Count);
+    }
+
+    private void AppendOutputVariableInitialization(
+        StringBuilder builder,
+        IReadOnlyList<IColumnModification> outputs,
+        string template)
+    {
         var terminator = SqlGenerationHelper.StatementTerminator;
         foreach (var output in outputs)
         {
-            commandStringBuilder.Append("SET ").Append(Variable(template, output)).Append(" = ");
-            if (((IStoreStoredProcedureParameter)output.Column!).Direction.HasFlag(System.Data.ParameterDirection.Input))
+            builder.Append("SET ").Append(Variable(template, output)).Append(" = ");
+            var parameter = (IStoreStoredProcedureParameter)output.Column!;
+            if (parameter.Direction.HasFlag(System.Data.ParameterDirection.Input))
             {
-                SqlGenerationHelper.GenerateParameterNamePlaceholder(commandStringBuilder, ParameterName(output));
+                SqlGenerationHelper.GenerateParameterNamePlaceholder(builder, ParameterName(output));
             }
             else
             {
-                commandStringBuilder.Append("NULL");
+                builder.Append("NULL");
             }
 
-            commandStringBuilder.AppendLine(terminator);
+            builder.AppendLine(terminator);
         }
+    }
 
-        commandStringBuilder.Append("CALL ");
-        SqlGenerationHelper.DelimitIdentifier(commandStringBuilder, procedure.Name, procedure.Schema);
-        commandStringBuilder.Append('(');
+    private void AppendProcedureInvocation(
+        StringBuilder builder,
+        IReadOnlyModificationCommand command,
+        IStoreStoredProcedure procedure,
+        IReadOnlyList<IColumnModification> outputs,
+        string template)
+    {
+        builder.Append("CALL ");
+        SqlGenerationHelper.DelimitIdentifier(builder, procedure.Name, procedure.Schema);
+        builder.Append('(');
+
         var first = true;
         foreach (var modification in command.ColumnModifications.Where(m => m.Column is IStoreStoredProcedureParameter))
         {
             if (!first)
             {
-                commandStringBuilder.Append(", ");
+                builder.Append(", ");
             }
 
             first = false;
-            if (AdoNetModificationCommand.IsOutput(modification))
+            if (outputs.Contains(modification))
             {
-                commandStringBuilder.Append(Variable(template, modification));
+                builder.Append(Variable(template, modification));
             }
             else
             {
-                SqlGenerationHelper.GenerateParameterNamePlaceholder(commandStringBuilder, ParameterName(modification));
+                SqlGenerationHelper.GenerateParameterNamePlaceholder(builder, ParameterName(modification));
             }
         }
 
-        commandStringBuilder.Append(')').AppendLine(terminator);
-        commandStringBuilder.Append("SELECT ").AppendJoin(", ", outputs.Select(o => Variable(template, o)));
-        var rowsAffected = outputs.FirstOrDefault(o => o.Column == command.RowsAffectedColumn);
+        builder.Append(')').AppendLine(SqlGenerationHelper.StatementTerminator);
+    }
+
+    private void AppendOutputProjection(
+        StringBuilder builder,
+        IReadOnlyList<IColumnModification> outputs,
+        IColumnModification? rowsAffected,
+        string template)
+    {
+        builder.Append("SELECT ").AppendJoin(", ", outputs.Select(o => Variable(template, o)));
         if ((rowsAffected != null) && (outputs.Count > 1))
         {
-            commandStringBuilder.AppendLine().Append("WHERE ").Append(Variable(template, rowsAffected)).Append(" = 1");
+            builder.AppendLine().Append("WHERE ").Append(Variable(template, rowsAffected)).Append(" = 1");
         }
 
-        commandStringBuilder.AppendLine(terminator);
-        requiresTransaction = true;
-        return (rowsAffected != null) && (outputs.Count == 1)
+        builder.AppendLine(SqlGenerationHelper.StatementTerminator);
+    }
+
+    private static ResultSetMapping OutputResultMapping(IColumnModification? rowsAffected, int outputCount)
+        => (rowsAffected != null) && (outputCount == 1)
             ? ResultSetMapping.LastInResultSet | ResultSetMapping.ResultSetWithRowsAffectedOnly
             : ResultSetMapping.LastInResultSet;
-    }
 
     private static string ParameterName(IColumnModification modification)
         => modification.UseOriginalValueParameter ? modification.OriginalParameterName! : modification.ParameterName!;
