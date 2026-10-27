@@ -5,6 +5,7 @@ namespace pengdows.efcore.adonet.Specification.Tests;
 public abstract partial class SqlExecutorAdoNetTest<THost>
 {
     // EF expects -1 rows affected, as SQL Server reports for a procedure that returns rows; the driver's own count is checked.
+    // TODO(LICENSE-AUDIT): Add the pinned upstream source URL for this adapted MIT test code.
     // Adapted from EF Core's SqlExecutorTestBase (MIT, .NET Foundation).
     public override async Task Executes_stored_procedure(bool async)
     {

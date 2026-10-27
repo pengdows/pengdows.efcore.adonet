@@ -11,7 +11,10 @@ namespace pengdows.efcore.adonet.Query;
 ///     <c>CASE WHEN condition THEN TRUE ELSE FALSE END</c>. With bitwise operators, comparisons and negations of bool values
 ///     stay values: <c>a ^ b</c>, <c>~(a ^ b)</c>, <c>~a</c>. Runs after null semantics have been applied.
 /// </summary>
-/// <remarks>Adapted from EF Core's SQL Server <c>SearchConditionConverter</c> (MIT, .NET Foundation).</remarks>
+/// <remarks>
+///     TODO(LICENSE-AUDIT): Add the pinned upstream source URL for this adapted MIT code.
+///     Adapted from EF Core's SQL Server <c>SearchConditionConverter</c> (MIT, .NET Foundation).
+/// </remarks>
 internal class AdoNetSearchConditionConverter(ISqlExpressionFactory sqlExpressionFactory, bool bitwiseOperators = false) : ExpressionVisitor
 {
     [return: NotNullIfNotNull(nameof(expression))]

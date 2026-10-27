@@ -8,7 +8,10 @@ using Microsoft.EntityFrameworkCore.Storage;
 namespace pengdows.efcore.adonet.Query;
 
 /// <summary>An ISO row value, <c>(a, b)</c>: one side of a tuple comparison.</summary>
-/// <remarks>Adapted from npgsql/efcore.pg's PgRowValueExpression (PostgreSQL License).</remarks>
+/// <remarks>
+///     TODO(LICENSE-AUDIT): Add the pinned upstream source URL for this PostgreSQL-license adaptation.
+///     Adapted from npgsql/efcore.pg's PgRowValueExpression (PostgreSQL License).
+/// </remarks>
 internal sealed class RowValueSqlExpression(IReadOnlyList<SqlExpression> values, Type type, RelationalTypeMapping? typeMapping = null)
     : SqlExpression(type, typeMapping), IEquatable<RowValueSqlExpression>
 {

@@ -9,7 +9,10 @@ namespace pengdows.efcore.adonet.Query;
 ///     Leaves tuples built in a query unevaluated where the dialect has row values: a row value is written from its parts
 ///     and can't be one parameter, so <c>new Tuple&lt;string&gt;("London")</c> must stay a construction.
 /// </summary>
-/// <remarks>Follows npgsql/efcore.pg's NpgsqlEvaluatableExpressionFilter (PostgreSQL License).</remarks>
+/// <remarks>
+///     TODO(LICENSE-AUDIT): Add the pinned upstream source URL for this PostgreSQL-license behavior reference.
+///     Follows npgsql/efcore.pg's NpgsqlEvaluatableExpressionFilter (PostgreSQL License).
+/// </remarks>
 internal sealed class AdoNetEvaluatableExpressionFilter(
     EvaluatableExpressionFilterDependencies dependencies,
     RelationalEvaluatableExpressionFilterDependencies relationalDependencies,

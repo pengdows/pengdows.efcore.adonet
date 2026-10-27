@@ -290,6 +290,7 @@ internal class AdoNetQueryableMethodTranslatingExpressionVisitor : RelationalQue
     }
 
     // A JSON array table ordered by its ordinal is in its natural order, so Distinct after it isn't Distinct after an ordering.
+    // TODO(LICENSE-AUDIT): Add the pinned upstream source URL for this adapted MIT code.
     // Adapted from EF Core's SQLite provider (MIT, .NET Foundation).
     // A JSON collection of structural types is that table, pushed down into a subquery ordered by the same ordinal.
     protected override bool IsNaturallyOrdered(SelectExpression selectExpression)

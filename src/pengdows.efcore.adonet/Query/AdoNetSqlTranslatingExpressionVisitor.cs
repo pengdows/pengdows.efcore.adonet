@@ -11,7 +11,10 @@ namespace pengdows.efcore.adonet.Query;
 ///     the pattern a second parameter computed from the first with its wildcards escaped, so an index can serve the
 ///     prefix match. Everything else goes to the translators.
 /// </summary>
-/// <remarks>Follows EF Core's SQL Server provider (MIT, .NET Foundation).</remarks>
+/// <remarks>
+///     TODO(LICENSE-AUDIT): Add the pinned upstream source URL for this MIT behavior reference.
+///     Follows EF Core's SQL Server provider (MIT, .NET Foundation).
+/// </remarks>
 internal class AdoNetSqlTranslatingExpressionVisitor : RelationalSqlTranslatingExpressionVisitor
 {
     private readonly QueryCompilationContext _queryCompilationContext;

@@ -107,6 +107,7 @@ internal class AdoNetSqlNullabilityProcessor(
     // SQL's row equality is NULL where any pair holds a NULL; .NET's tuple equality compares nulls as values. Pairs where
     // that can differ are taken out of the row and compared on their own, with EF's null semantics, joined by AND (for =)
     // or OR (for <>); the rest stay a row value.
+    // TODO(LICENSE-AUDIT): Add the pinned upstream source URL and verify the retained copyright notice.
     // Adapted from npgsql/efcore.pg's NpgsqlSqlNullabilityProcessor (PostgreSQL License).
     private SqlExpression VisitRowValueComparison(
         SqlBinaryExpression comparison,
