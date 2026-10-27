@@ -3,6 +3,7 @@
 
 using System.Data;
 using System.Diagnostics;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -72,6 +73,12 @@ internal sealed class AdoNetModificationCommand : ModificationCommand
     protected override void ProcessSinglePropertyJsonUpdate(ref ColumnModificationParameters parameters)
     {
         var mapping = parameters.Property!.GetTypeMapping();
+        if (parameters.Property.IsPrimitiveCollection && parameters.Value is byte[] bytes)
+        {
+            parameters = parameters with { Value = JsonSerializer.Serialize(bytes) };
+            return;
+        }
+
         if ((Nullable.GetUnderlyingType(mapping.Converter?.ProviderClrType ?? parameters.Property.ClrType)
                 ?? mapping.Converter?.ProviderClrType ?? parameters.Property.ClrType) != typeof(bool))
         {
