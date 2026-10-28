@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Migrations.Operations;
@@ -99,6 +100,32 @@ internal class DuckDbMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies d
             },
             model,
             builder);
+
+    // DuckDB's CREATE SEQUENCE takes no type (AS bigint); its values are BIGINT. Behaviour reference (not copied):
+    // https://github.com/skuirrels/DuckDB.EFCoreProvider/blob/f49a8c3e25f28055ad139383d25e09cede39c6f8/src/DuckDB.EFCoreProvider/Migrations/DuckDBMigrationsSqlGenerator.cs
+    protected override void Generate(CreateSequenceOperation operation, IModel? model, MigrationCommandListBuilder builder)
+    {
+        builder
+            .Append("CREATE SEQUENCE ")
+            .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Name, operation.Schema))
+            .Append(" START WITH ")
+            .Append(Dependencies.TypeMappingSource.GetMapping(typeof(long)).GenerateSqlLiteral(operation.StartValue));
+        SequenceOptions(operation, model, builder);
+        builder.AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
+        EndStatement(builder);
+    }
+
+    protected override void Generate(AlterSequenceOperation operation, IModel? model, MigrationCommandListBuilder builder)
+        => throw SequenceUnchangeable(operation.Name, "alter");
+
+    protected override void Generate(RestartSequenceOperation operation, IModel? model, MigrationCommandListBuilder builder)
+        => throw SequenceUnchangeable(operation.Name, "restart");
+
+    protected override void Generate(RenameSequenceOperation operation, IModel? model, MigrationCommandListBuilder builder)
+        => throw SequenceUnchangeable(operation.Name, "rename");
+
+    private static NotSupportedException SequenceUnchangeable(string name, string change)
+        => new($"DuckDB can't {change} sequence '{name}': its sequences can only be created and dropped. Drop it and create it anew.");
 
     private static string SequenceName(string table, string column)
         => $"{table}_{column}_seq";
