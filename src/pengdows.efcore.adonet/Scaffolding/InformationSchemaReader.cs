@@ -9,8 +9,7 @@ using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
 namespace pengdows.efcore.adonet.Scaffolding;
 
 /// <summary>
-///     Reads a database's schema into EF's <see cref="DatabaseModel" /> (reverse engineering, and the migrations suites' check
-///     of what a migration made). Each part comes from one query of flat rows, ISO's <c>INFORMATION_SCHEMA</c> by default,
+///     Reads a database's schema from ISO's <c>INFORMATION_SCHEMA</c>. Each part comes from one query of flat rows, ISO's by default,
 ///     which a database overrides where its catalog differs; the rows are assembled here. <c>{schema}</c> in a query is the
 ///     dialect's <see cref="ISqlDialect.CurrentSchema" />.
 /// </summary>
@@ -24,7 +23,7 @@ namespace pengdows.efcore.adonet.Scaffolding;
 ///     indexes <c>SCHEMA, TABLE, NAME, IS_UNIQUE, COLUMN, POSITION, IS_DESCENDING, FILTER</c>;
 ///     sequences <c>SCHEMA, NAME, DATA_TYPE, START, INCREMENT, MIN, MAX, CYCLE</c>.
 /// </remarks>
-public class InformationSchemaReader
+public class InformationSchemaReader : SchemaReader
 {
     public static readonly InformationSchemaReader Iso = new();
 
@@ -64,19 +63,7 @@ public class InformationSchemaReader
             + "INCREMENT AS \"INCREMENT\", MINIMUM_VALUE AS \"MIN\", MAXIMUM_VALUE AS \"MAX\", CYCLE_OPTION AS \"CYCLE\" "
             + "FROM INFORMATION_SCHEMA.SEQUENCES WHERE SEQUENCE_SCHEMA = {schema}";
 
-    /// <summary>The schema a model is scaffolded into, or null where the database has none of its own.</summary>
-    public virtual bool ScaffoldsSchemas
-        => true;
-
-    /// <summary>Whether constraints read back with the names they were created with; false where the database renames them.</summary>
-    public virtual bool KeepsConstraintNames
-        => true;
-
-    /// <summary>Whether an index's filter (a partial index's predicate) is read; false where the database has no filtered indexes.</summary>
-    public virtual bool ReadsIndexFilters
-        => true;
-
-    public virtual DatabaseModel Read(DbConnection connection, DatabaseModelFactoryOptions options, ISqlDialect sql)
+    public override DatabaseModel Read(DbConnection connection, DatabaseModelFactoryOptions options, ISqlDialect sql)
     {
         var schema = sql.CurrentSchema
             ?? throw new NotSupportedException("Reading a schema needs ISqlDialect.CurrentSchema, the schema to read.");
@@ -171,18 +158,6 @@ public class InformationSchemaReader
     /// <summary>The column's default as SQL; ISO's catalog already holds it so.</summary>
     protected virtual string? DefaultValueSql(IReadOnlyDictionary<string, object?> row)
         => Text(row, "DEFAULT");
-
-    /// <summary>A foreign key's delete rule as EF's referential action.</summary>
-    protected virtual ReferentialAction? DeleteAction(string? rule)
-        => rule?.ToUpperInvariant() switch
-        {
-            "CASCADE" => ReferentialAction.Cascade,
-            "SET NULL" => ReferentialAction.SetNull,
-            "SET DEFAULT" => ReferentialAction.SetDefault,
-            "RESTRICT" => ReferentialAction.Restrict,
-            "NO ACTION" => ReferentialAction.NoAction,
-            _ => null
-        };
 
     private void ReadKeys(DbConnection connection, string schema, Dictionary<(string?, string), DatabaseTable> tables)
     {
@@ -293,20 +268,6 @@ public class InformationSchemaReader
 
     private string? SchemaOf(IReadOnlyDictionary<string, object?> row, string column)
         => ScaffoldsSchemas ? Text(row, column) : null;
-
-    protected static string? Text(IReadOnlyDictionary<string, object?> row, string column)
-        => row.TryGetValue(column, out var value) && value is not null and not DBNull
-            ? Convert.ToString(value, CultureInfo.InvariantCulture)
-            : null;
-
-    protected static long? Long(IReadOnlyDictionary<string, object?> row, string column)
-        => row.TryGetValue(column, out var value) && value is not null and not DBNull
-            ? Convert.ToInt64(value, CultureInfo.InvariantCulture)
-            : null;
-
-    protected static bool Bool(IReadOnlyDictionary<string, object?> row, string column)
-        => row.TryGetValue(column, out var value) && value is not null and not DBNull
-            && (value is bool b ? b : Convert.ToInt64(value, CultureInfo.InvariantCulture) != 0);
 
     private static object? Scalar(DbConnection connection, string sql)
     {

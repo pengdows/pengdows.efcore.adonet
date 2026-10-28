@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore.Update;
+using pengdows.efcore.adonet.Metadata;
 
 namespace pengdows.efcore.adonet.Update;
 
@@ -45,7 +46,7 @@ internal class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependenc
                 ?? property.GetTypeMapping().Converter?.ProviderClrType ?? property.ClrType) == typeof(bool));
         var providerType = property?.GetTypeMapping().Converter?.ProviderClrType ?? property?.ClrType;
         var storeType = property?.GetRelationalTypeMapping().StoreType ?? "";
-        var scalarNeedsText = json.UsesBinaryDocument
+        var scalarNeedsText = (json.ScalarValue != null)
             && !isText
             && (providerType == typeof(DateTime) || providerType == typeof(DateTimeOffset) || providerType == typeof(DateOnly)
                 || providerType == typeof(TimeOnly) || providerType == typeof(TimeSpan) || providerType == typeof(Guid)
@@ -62,20 +63,19 @@ internal class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependenc
         updateSqlGeneratorHelper.DelimitIdentifier(column, columnModification.ColumnName);
 
         var replacement = value.ToString();
-        if (json.UsesBinaryDocument
-            && columnModification.Value is null)
+        if ((json.NullValue is { } nullValue) && (columnModification.Value is null))
         {
-            // jsonb_set propagates SQL NULL, but an EF nullable JSON property means the JSON
+            // The set function propagates SQL NULL, but an EF nullable JSON property means the JSON
             // literal null and must preserve the surrounding document.
-            replacement = "CAST('null' AS jsonb)";
+            replacement = nullValue;
         }
         else if (scalarNeedsText)
         {
-            replacement = providerType == typeof(byte[])
-                // EF's JSON byte[] mapping already supplies the base64 text; wrapping it as a
-                // JSON string must not encode that text a second time.
-                ? $"(jsonb_build_array(CAST({replacement} AS text)) -> 0)"
-                : $"(jsonb_build_array(CAST({replacement} AS text)) -> 0)";
+            // As text, so it's stored as a JSON string. EF's JSON byte[] mapping already supplies the base64 text; wrapping it
+            // as a JSON string must not encode that text a second time.
+            var text = dialect.TypeMappings.Cast(dialect.TypeMappings.GetStoreType(typeof(string))!)
+                .Replace("{0}", replacement, StringComparison.Ordinal);
+            replacement = json.ScalarValue!.Replace("{0}", text, StringComparison.Ordinal);
         }
         else if (providerType == typeof(bool) && json.SetBooleanValue is { } setBooleanValue)
         {
@@ -85,9 +85,9 @@ internal class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependenc
         {
             replacement = json.FromText.Replace("{0}", replacement, StringComparison.Ordinal);
         }
-        else if (json.UsesBinaryDocument)
+        else if (json.ScalarValue is { } scalarValue)
         {
-            replacement = $"(jsonb_build_array({replacement}) -> 0)";
+            replacement = scalarValue.Replace("{0}", replacement, StringComparison.Ordinal);
         }
 
         stringBuilder.Append(
@@ -213,6 +213,34 @@ internal class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependenc
         => template.Replace("{0}", "_out_" + ParameterName(modification), StringComparison.Ordinal);
 
     public override ResultSetMapping AppendInsertOperation(
+        StringBuilder commandStringBuilder,
+        IReadOnlyModificationCommand command,
+        int commandPosition,
+        out bool requiresTransaction)
+    {
+        if ((dialect.Sql.IdentityInsert is not { } identityInsert) || !command.ColumnModifications.Any(WritesIdentity))
+        {
+            return AppendInsertWithKeys(commandStringBuilder, command, commandPosition, out requiresTransaction);
+        }
+
+        var table = SqlGenerationHelper.DelimitIdentifier(command.TableName, command.Schema);
+        AppendTableStatement(commandStringBuilder, identityInsert.Enable, table);
+        var mapping = AppendInsertWithKeys(commandStringBuilder, command, commandPosition, out requiresTransaction);
+        AppendTableStatement(commandStringBuilder, identityInsert.Disable, table);
+        return mapping;
+    }
+
+    // A key the application set, written into a column the database numbers. A table-per-type derived table copies its key
+    // from the root row, so its column is no identity column (AdoNetAnnotationProvider).
+    private static bool WritesIdentity(IColumnModification modification)
+        => modification.IsWrite && (modification.Column is IColumn column) && AdoNetAnnotationProvider.IsIdentity(column);
+
+    private void AppendTableStatement(StringBuilder commandStringBuilder, string template, string delimitedTable)
+        => commandStringBuilder
+            .Append(template.Replace("{0}", delimitedTable, StringComparison.Ordinal))
+            .AppendLine(SqlGenerationHelper.StatementTerminator);
+
+    private ResultSetMapping AppendInsertWithKeys(
         StringBuilder commandStringBuilder,
         IReadOnlyModificationCommand command,
         int commandPosition,

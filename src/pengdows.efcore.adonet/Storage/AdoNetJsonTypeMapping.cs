@@ -60,8 +60,8 @@ internal sealed class AdoNetJsonTypeMapping : JsonTypeMapping
         }
 
         // JSON partial updates can carry a native provider value (interval, timestamp, UUID, ...).
-        // Marking those parameters as jsonb makes the driver parse their display text before SQL can
-        // convert them into JSON strings. Force jsonb only for already encoded JSON documents.
+        // Marking those parameters as binary JSON makes the driver parse their display text before SQL can
+        // convert them into JSON strings. Force binary JSON only for already encoded JSON documents.
         if (parameter.Value is not JsonDocument && parameter.Value is not JsonElement
             && !(parameter.Value is string text && IsJson(text)))
         {

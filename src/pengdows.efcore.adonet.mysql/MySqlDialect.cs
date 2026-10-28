@@ -46,7 +46,7 @@ public sealed class MySqlDialect : AdoNetDialect
         SupportsAmbientTransactions = true
     };
 
-    public override pengdows.efcore.adonet.Scaffolding.InformationSchemaReader SchemaReader
+    public override pengdows.efcore.adonet.Scaffolding.SchemaReader SchemaReader
         => MySqlSchemaReader.Instance;
 
     public override void ConfigureServices(IServiceCollection services)

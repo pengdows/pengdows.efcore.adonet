@@ -21,6 +21,13 @@ machinery, conventions, type mappings) are reached through EF's interfaces, neve
 | `AdoNetMigrationsSqlGenerator`, `AdoNetHistoryRepository` | Plugins: subclassed in `ConfigureServices` for what a database's DDL or history table does differently. |
 | `IAdoNetBulkLoader`, `AdoNetInsertBulkLoader`, `BulkLoad`, `BulkColumn` | Plugins: a native bulk loader replaces or extends the core's INSERT loader. |
 | `AdoNetAnnotationNames` | Plugins and migrations: the annotations the core reads (identity columns). |
+| `IdentityInsertSyntax`, `ISqlDialect.IdentityInsert` | Plugins: a database that refuses an explicit value for an identity column unless told (SQL Server's `IDENTITY_INSERT`); the core's update and seed-data SQL wrap such inserts. |
+| `IDatabaseCapabilities.SupportsMultipleActiveReadersFor`, `ReadsBinaryAsStream` | Plugins: driver facts that depend on the connection string (SqlClient's `MultipleActiveResultSets`), or a driver that returns binary only as a stream (DuckDB.NET 1.5.6.1). Default implementations, so existing dialects are unchanged. |
+| `ITypeMappingDialect.ParameterDbType` | Plugins: the `DbType` a parameter binds as, for drivers that convert EF's standard one wrongly where a statement doesn't fix the type (DuckDB.NET 1.5.6.1). |
+| `JsonSyntax.ScalarValue`, `JsonSyntax.NullValue` | Plugins: how the JSON set function takes a scalar and JSON's null, so the core writes no database's JSON functions. |
+| `SpatialParameterBinding.UserDefinedType` | Plugins: a spatial value bound as the database's own geometry type (SQL Server's UDT); named for the mechanism, not the database. |
+| `Scaffolding.SchemaReader` (base of `InformationSchemaReader`) | Plugins: a database whose catalog isn't `INFORMATION_SCHEMA` (SQLite) reads its schema without inheriting ISO's queries. |
+| `AdoNetTimeSpanTypeMapping.TypeMappings` | Plugins: a subclass's `Clone` (PostgreSQL's interval mapping) passes the dialect on. |
 
 ### Raw ADO.NET objects handed out
 

@@ -67,6 +67,7 @@ override pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.Generate
 override pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.Generate(Microsoft.EntityFrameworkCore.Migrations.Operations.CreateTableOperation! operation, Microsoft.EntityFrameworkCore.Metadata.IModel? model, Microsoft.EntityFrameworkCore.Migrations.MigrationCommandListBuilder! builder, bool terminate = true) -> void
 override pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.Generate(Microsoft.EntityFrameworkCore.Migrations.Operations.DropIndexOperation! operation, Microsoft.EntityFrameworkCore.Metadata.IModel? model, Microsoft.EntityFrameworkCore.Migrations.MigrationCommandListBuilder! builder, bool terminate = true) -> void
 override pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.Generate(Microsoft.EntityFrameworkCore.Migrations.Operations.DropTableOperation! operation, Microsoft.EntityFrameworkCore.Metadata.IModel? model, Microsoft.EntityFrameworkCore.Migrations.MigrationCommandListBuilder! builder, bool terminate = true) -> void
+override pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.Generate(Microsoft.EntityFrameworkCore.Migrations.Operations.InsertDataOperation! operation, Microsoft.EntityFrameworkCore.Metadata.IModel? model, Microsoft.EntityFrameworkCore.Migrations.MigrationCommandListBuilder! builder, bool terminate = true) -> void
 override pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.Generate(Microsoft.EntityFrameworkCore.Migrations.Operations.EnsureSchemaOperation! operation, Microsoft.EntityFrameworkCore.Metadata.IModel? model, Microsoft.EntityFrameworkCore.Migrations.MigrationCommandListBuilder! builder) -> void
 override pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.Generate(Microsoft.EntityFrameworkCore.Migrations.Operations.RenameColumnOperation! operation, Microsoft.EntityFrameworkCore.Metadata.IModel? model, Microsoft.EntityFrameworkCore.Migrations.MigrationCommandListBuilder! builder) -> void
 override pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.Generate(Microsoft.EntityFrameworkCore.Migrations.Operations.RenameIndexOperation! operation, Microsoft.EntityFrameworkCore.Metadata.IModel? model, Microsoft.EntityFrameworkCore.Migrations.MigrationCommandListBuilder! builder) -> void
@@ -585,15 +586,18 @@ virtual pengdows.efcore.adonet.Scaffolding.InformationSchemaReader.KeysSql.get -
 virtual pengdows.efcore.adonet.Scaffolding.InformationSchemaReader.ForeignKeysSql.get -> string!
 virtual pengdows.efcore.adonet.Scaffolding.InformationSchemaReader.IndexesSql.get -> string?
 virtual pengdows.efcore.adonet.Scaffolding.InformationSchemaReader.SequencesSql.get -> string?
-virtual pengdows.efcore.adonet.Scaffolding.InformationSchemaReader.ScaffoldsSchemas.get -> bool
-virtual pengdows.efcore.adonet.Scaffolding.InformationSchemaReader.Read(System.Data.Common.DbConnection! connection, Microsoft.EntityFrameworkCore.Scaffolding.DatabaseModelFactoryOptions! options, pengdows.efcore.adonet.ISqlDialect! sql) -> Microsoft.EntityFrameworkCore.Scaffolding.Metadata.DatabaseModel!
+virtual pengdows.efcore.adonet.Scaffolding.SchemaReader.ScaffoldsSchemas.get -> bool
+override pengdows.efcore.adonet.Scaffolding.InformationSchemaReader.Read(System.Data.Common.DbConnection! connection, Microsoft.EntityFrameworkCore.Scaffolding.DatabaseModelFactoryOptions! options, pengdows.efcore.adonet.ISqlDialect! sql) -> Microsoft.EntityFrameworkCore.Scaffolding.Metadata.DatabaseModel!
+abstract pengdows.efcore.adonet.Scaffolding.SchemaReader.Read(System.Data.Common.DbConnection! connection, Microsoft.EntityFrameworkCore.Scaffolding.DatabaseModelFactoryOptions! options, pengdows.efcore.adonet.ISqlDialect! sql) -> Microsoft.EntityFrameworkCore.Scaffolding.Metadata.DatabaseModel!
+pengdows.efcore.adonet.Scaffolding.SchemaReader
+pengdows.efcore.adonet.Scaffolding.SchemaReader.SchemaReader() -> void
 virtual pengdows.efcore.adonet.Scaffolding.InformationSchemaReader.Column(System.Collections.Generic.IReadOnlyDictionary<string!, object?>! row) -> Microsoft.EntityFrameworkCore.Scaffolding.Metadata.DatabaseColumn!
 virtual pengdows.efcore.adonet.Scaffolding.InformationSchemaReader.StoreType(System.Collections.Generic.IReadOnlyDictionary<string!, object?>! row) -> string!
 virtual pengdows.efcore.adonet.Scaffolding.InformationSchemaReader.DefaultValueSql(System.Collections.Generic.IReadOnlyDictionary<string!, object?>! row) -> string?
-virtual pengdows.efcore.adonet.Scaffolding.InformationSchemaReader.DeleteAction(string? rule) -> Microsoft.EntityFrameworkCore.Migrations.ReferentialAction?
-static pengdows.efcore.adonet.Scaffolding.InformationSchemaReader.Text(System.Collections.Generic.IReadOnlyDictionary<string!, object?>! row, string! column) -> string?
-static pengdows.efcore.adonet.Scaffolding.InformationSchemaReader.Long(System.Collections.Generic.IReadOnlyDictionary<string!, object?>! row, string! column) -> long?
-static pengdows.efcore.adonet.Scaffolding.InformationSchemaReader.Bool(System.Collections.Generic.IReadOnlyDictionary<string!, object?>! row, string! column) -> bool
+virtual pengdows.efcore.adonet.Scaffolding.SchemaReader.DeleteAction(string? rule) -> Microsoft.EntityFrameworkCore.Migrations.ReferentialAction?
+static pengdows.efcore.adonet.Scaffolding.SchemaReader.Text(System.Collections.Generic.IReadOnlyDictionary<string!, object?>! row, string! column) -> string?
+static pengdows.efcore.adonet.Scaffolding.SchemaReader.Long(System.Collections.Generic.IReadOnlyDictionary<string!, object?>! row, string! column) -> long?
+static pengdows.efcore.adonet.Scaffolding.SchemaReader.Bool(System.Collections.Generic.IReadOnlyDictionary<string!, object?>! row, string! column) -> bool
 pengdows.efcore.adonet.Scaffolding.AdoNetDatabaseModelFactory
 pengdows.efcore.adonet.Scaffolding.AdoNetDatabaseModelFactory.AdoNetDatabaseModelFactory(pengdows.efcore.adonet.IAdoNetDialect! dialect) -> void
 override pengdows.efcore.adonet.Scaffolding.AdoNetDatabaseModelFactory.Create(string! connectionString, Microsoft.EntityFrameworkCore.Scaffolding.DatabaseModelFactoryOptions! options) -> Microsoft.EntityFrameworkCore.Scaffolding.Metadata.DatabaseModel!
@@ -601,12 +605,12 @@ override pengdows.efcore.adonet.Scaffolding.AdoNetDatabaseModelFactory.Create(Sy
 pengdows.efcore.adonet.Design.AdoNetDesignTimeServices
 pengdows.efcore.adonet.Design.AdoNetDesignTimeServices.AdoNetDesignTimeServices() -> void
 virtual pengdows.efcore.adonet.Design.AdoNetDesignTimeServices.ConfigureDesignTimeServices(Microsoft.Extensions.DependencyInjection.IServiceCollection! serviceCollection) -> void
-pengdows.efcore.adonet.IAdoNetDialect.SchemaReader.get -> pengdows.efcore.adonet.Scaffolding.InformationSchemaReader?
-virtual pengdows.efcore.adonet.AdoNetDialect.SchemaReader.get -> pengdows.efcore.adonet.Scaffolding.InformationSchemaReader?
+pengdows.efcore.adonet.IAdoNetDialect.SchemaReader.get -> pengdows.efcore.adonet.Scaffolding.SchemaReader?
+virtual pengdows.efcore.adonet.AdoNetDialect.SchemaReader.get -> pengdows.efcore.adonet.Scaffolding.SchemaReader?
 pengdows.efcore.adonet.Design.AdoNetDesignTimeServices.AdoNetDesignTimeServices(pengdows.efcore.adonet.IAdoNetDialect! dialect) -> void
 virtual pengdows.efcore.adonet.Design.AdoNetDesignTimeServices.Dialect.get -> pengdows.efcore.adonet.IAdoNetDialect!
-virtual pengdows.efcore.adonet.Scaffolding.InformationSchemaReader.KeepsConstraintNames.get -> bool
-virtual pengdows.efcore.adonet.Scaffolding.InformationSchemaReader.ReadsIndexFilters.get -> bool
+virtual pengdows.efcore.adonet.Scaffolding.SchemaReader.KeepsConstraintNames.get -> bool
+virtual pengdows.efcore.adonet.Scaffolding.SchemaReader.ReadsIndexFilters.get -> bool
 virtual pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.FillNullsWithDefault(Microsoft.EntityFrameworkCore.Migrations.Operations.AlterColumnOperation! operation, Microsoft.EntityFrameworkCore.Migrations.MigrationCommandListBuilder! builder) -> void
 pengdows.efcore.adonet.ISqlDialect.Spatial.get -> pengdows.efcore.adonet.SpatialSyntax?
 virtual pengdows.efcore.adonet.AnsiSqlDialect.Spatial.get -> pengdows.efcore.adonet.SpatialSyntax?
@@ -615,7 +619,7 @@ pengdows.efcore.adonet.SpatialBinary.Wkb = 0 -> pengdows.efcore.adonet.SpatialBi
 pengdows.efcore.adonet.SpatialBinary.SridPrefixedWkb = 1 -> pengdows.efcore.adonet.SpatialBinary
 pengdows.efcore.adonet.SpatialParameterBinding
 pengdows.efcore.adonet.SpatialParameterBinding.Binary = 0 -> pengdows.efcore.adonet.SpatialParameterBinding
-pengdows.efcore.adonet.SpatialParameterBinding.SqlServerUdt = 1 -> pengdows.efcore.adonet.SpatialParameterBinding
+pengdows.efcore.adonet.SpatialParameterBinding.UserDefinedType = 1 -> pengdows.efcore.adonet.SpatialParameterBinding
 pengdows.efcore.adonet.SpatialSyntax
 pengdows.efcore.adonet.SpatialSyntax.SpatialSyntax() -> void
 static pengdows.efcore.adonet.SpatialSyntax.Iso.get -> pengdows.efcore.adonet.SpatialSyntax!
@@ -643,3 +647,21 @@ pengdows.efcore.adonet.JsonSyntax.StoresDocumentAsText.get -> bool
 pengdows.efcore.adonet.JsonSyntax.StoresDocumentAsText.init -> void
 pengdows.efcore.adonet.ISqlDialect.SupportsNullOrderingClauses.get -> bool
 virtual pengdows.efcore.adonet.AnsiSqlDialect.SupportsNullOrderingClauses.get -> bool
+pengdows.efcore.adonet.IdentityInsertSyntax
+pengdows.efcore.adonet.IdentityInsertSyntax.Disable.get -> string!
+pengdows.efcore.adonet.IdentityInsertSyntax.Enable.get -> string!
+pengdows.efcore.adonet.IdentityInsertSyntax.IdentityInsertSyntax(string! enable, string! disable) -> void
+pengdows.efcore.adonet.ISqlDialect.IdentityInsert.get -> pengdows.efcore.adonet.IdentityInsertSyntax?
+virtual pengdows.efcore.adonet.AnsiSqlDialect.IdentityInsert.get -> pengdows.efcore.adonet.IdentityInsertSyntax?
+pengdows.efcore.adonet.IDatabaseCapabilities.SupportsMultipleActiveReadersFor(string? connectionString) -> bool
+virtual pengdows.efcore.adonet.DatabaseCapabilities.SupportsMultipleActiveReadersFor(string? connectionString) -> bool
+pengdows.efcore.adonet.JsonSyntax.NullValue.get -> string?
+pengdows.efcore.adonet.JsonSyntax.NullValue.init -> void
+pengdows.efcore.adonet.JsonSyntax.ScalarValue.get -> string?
+pengdows.efcore.adonet.JsonSyntax.ScalarValue.init -> void
+pengdows.efcore.adonet.IDatabaseCapabilities.ReadsBinaryAsStream.get -> bool
+virtual pengdows.efcore.adonet.DatabaseCapabilities.ReadsBinaryAsStream.get -> bool
+virtual pengdows.efcore.adonet.DatabaseCapabilities.ReadsBinaryAsStream.init -> void
+pengdows.efcore.adonet.ITypeMappingDialect.ParameterDbType(System.Type! clrType, System.Data.DbType standard) -> System.Data.DbType
+virtual pengdows.efcore.adonet.AnsiTypeMappings.ParameterDbType(System.Type! clrType, System.Data.DbType standard) -> System.Data.DbType
+pengdows.efcore.adonet.Storage.AdoNetTimeSpanTypeMapping.TypeMappings.get -> pengdows.efcore.adonet.ITypeMappingDialect!

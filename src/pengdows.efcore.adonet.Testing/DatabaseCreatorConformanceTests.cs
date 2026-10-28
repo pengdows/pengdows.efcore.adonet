@@ -196,4 +196,155 @@ public abstract class DatabaseCreatorConformanceTests<TFixture>(TFixture fixture
         Assert.Contains(Fixture.Quote("Blogs"), script);
         Assert.Contains(Fixture.Quote("Posts"), script);
     }
+
+    /// <summary>
+    ///     Two tables whose foreign keys refer to each other: EF creates both, then adds the keys, which some databases take
+    ///     only in CREATE TABLE. The keys are enforced afterwards. Behaviour reference (not copied):
+    ///     https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.Core/Migrations/SqliteMigrationsSqlGenerator.cs
+    ///     Runs on: MySQL, PostgreSQL, SQL Server, flatfile, SQLite and DuckDB.
+    /// </summary>
+    [Fact]
+    public async Task Ensure_created_creates_tables_whose_foreign_keys_refer_to_each_other()
+    {
+        var connectionString = NewDatabase();
+        await using (var context = Cyclic(connectionString))
+        {
+            Assert.True(await context.Database.EnsureCreatedAsync(Ct));
+            // Each row refers to the other, so EF needs two saves: the rows, then the reference that closes the cycle.
+            var household = new Household { Name = "home" };
+            var person = new Person { Name = "head", Household = household };
+            context.Add(person);
+            await context.SaveChangesAsync(Ct);
+            household.Head = person;
+            await context.SaveChangesAsync(Ct);
+        }
+
+        await using (var context = Cyclic(connectionString))
+        {
+            var household = await context.Set<Household>().Include(h => h.Head).SingleAsync(Ct);
+            Assert.Equal("head", household.Head!.Name);
+
+            context.Add(new Person { Name = "stray", HouseholdId = 999_999 });
+            await Assert.ThrowsAsync<DbUpdateException>(() => context.SaveChangesAsync(Ct));
+        }
+    }
+
+    private CyclicContext Cyclic(string connectionString)
+    {
+        var context = Fixture.CreateContext<CyclicContext>(o => new CyclicContext(o));
+        context.Database.SetConnectionString(connectionString);
+        return context;
+    }
+
+    private sealed class Household
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+        public int? HeadId { get; set; }
+        public Person? Head { get; set; }
+    }
+
+    private sealed class Person
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+        public int? HouseholdId { get; set; }
+        public Household? Household { get; set; }
+    }
+
+    private sealed class CyclicContext(DbContextOptions<CyclicContext> options) : DbContext(options)
+    {
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Household>().HasOne(h => h.Head).WithMany().HasForeignKey(h => h.HeadId).OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<Person>().HasOne(p => p.Household).WithMany().HasForeignKey(p => p.HouseholdId).OnDelete(DeleteBehavior.Restrict);
+        }
+    }
+
+    /// <summary>
+    ///     One table reached from another by two paths of cascading deletes (a diamond): every database creates it, and deleting
+    ///     the root deletes its dependents, by the database or, where it allows one cascade path only, by EF. Behaviour
+    ///     reference (not copied):
+    ///     https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.SqlServer/Metadata/Conventions/SqlServerOnDeleteConvention.cs
+    ///     Runs on: MySQL, PostgreSQL, SQL Server, flatfile, SQLite and DuckDB.
+    /// </summary>
+    [Fact]
+    public async Task Ensure_created_creates_a_table_reached_by_two_cascade_paths_and_deletes_cascade()
+    {
+        var connectionString = NewDatabase();
+        await using (var context = Diamond(connectionString))
+        {
+            Assert.True(await context.Database.EnsureCreatedAsync(Ct));
+            var root = new Root();
+            var left = new Left { Root = root };
+            var right = new Right { Root = root };
+            context.Add(new Leaf { Left = left, Right = right });
+            await context.SaveChangesAsync(Ct);
+        }
+
+        await using (var context = Diamond(connectionString))
+        {
+            var root = await context.Set<Root>().Include(r => r.Lefts).ThenInclude(l => l.Leaves)
+                .Include(r => r.Rights).ThenInclude(r => r.Leaves).SingleAsync(Ct);
+            context.Remove(root);
+            await context.SaveChangesAsync(Ct);
+        }
+
+        await using (var context = Diamond(connectionString))
+        {
+            Assert.Equal(0, await context.Set<Leaf>().CountAsync(Ct));
+            Assert.Equal(0, await context.Set<Left>().CountAsync(Ct) + await context.Set<Right>().CountAsync(Ct));
+        }
+    }
+
+    private DiamondContext Diamond(string connectionString)
+    {
+        var context = Fixture.CreateContext<DiamondContext>(o => new DiamondContext(o));
+        context.Database.SetConnectionString(connectionString);
+        return context;
+    }
+
+    private sealed class Root
+    {
+        public int Id { get; set; }
+        public List<Left> Lefts { get; set; } = [];
+        public List<Right> Rights { get; set; } = [];
+    }
+
+    private sealed class Left
+    {
+        public int Id { get; set; }
+        public int RootId { get; set; }
+        public Root Root { get; set; } = null!;
+        public List<Leaf> Leaves { get; set; } = [];
+    }
+
+    private sealed class Right
+    {
+        public int Id { get; set; }
+        public int RootId { get; set; }
+        public Root Root { get; set; } = null!;
+        public List<Leaf> Leaves { get; set; } = [];
+    }
+
+    private sealed class Leaf
+    {
+        public int Id { get; set; }
+        public int LeftId { get; set; }
+        public Left Left { get; set; } = null!;
+        public int RightId { get; set; }
+        public Right Right { get; set; } = null!;
+    }
+
+    // Every relationship is required, so EF's conventions cascade each delete.
+    private sealed class DiamondContext(DbContextOptions<DiamondContext> options) : DbContext(options)
+    {
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Root>();
+            modelBuilder.Entity<Left>();
+            modelBuilder.Entity<Right>();
+            modelBuilder.Entity<Leaf>();
+        }
+    }
 }

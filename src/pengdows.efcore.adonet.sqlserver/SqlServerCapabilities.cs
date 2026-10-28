@@ -29,6 +29,11 @@ internal sealed record SqlServerCapabilities : DatabaseCapabilities
     // A connection that couldn't be made (a network-level failure, error 203 with a Win32 cause) is worth retrying too.
     private const int ConnectionFailed = 203;
 
+    // SqlClient holds several open readers on a connection only with MultipleActiveResultSets, which each connection string
+    // chooses.
+    public override bool SupportsMultipleActiveReadersFor(string? connectionString)
+        => (connectionString != null) && new SqlConnectionStringBuilder(connectionString).MultipleActiveResultSets;
+
     public override bool IsTransient(Exception exception)
         => base.IsTransient(exception)
             || ((exception is SqlException sql)

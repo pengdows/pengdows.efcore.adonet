@@ -140,6 +140,14 @@ noted so they can be removed once the fix ships.
   accepts either the event or a refusal to reopen (Npgsql refuses), since some drivers reopen a disposed connection.
 - **Status:** read in source, not yet reported; no pull request.
 
+### An interval with negative months reads as `TimeSpan.Zero`
+
+- **Defect:** reading an interval as a `TimeSpan` refuses positive months but returns `TimeSpan.Zero` for negative ones,
+  silently. Months have no fixed length, so neither has a `TimeSpan`.
+- **Status:** [#6682](https://github.com/npgsql/npgsql/pull/6682) open.
+- **Our work-around:** the PostgreSQL dialect maps `TimeSpan` over `interval` to `PostgreSqlIntervalTypeMapping`, which reads
+  `NpgsqlInterval` and refuses any months. Covered by `PostgreSqlIntervalTests`, buffered and streamed.
+
 ## MySQL Server (8.4.11)
 
 ### JSON_TABLE over an outer column reads it as empty in a semijoin or a merged lateral table
@@ -162,6 +170,15 @@ noted so they can be removed once the fix ships.
   completed ("an oversight when the .NET 5 DbTransaction interface was added"); a later release reports true.
 - **Effect here:** none. Whether there are savepoints is the dialect's to say; MySQL's dialect has ISO savepoints, used
   through the driver's methods where it reports them and as SQL until then.
+
+### A prepared NULL `DbType.Object` parameter is rejected (not reached)
+
+- **Defect:** `DbType.Object` maps to `MySqlDbType.Vector`, so MySQL 8.4 rejects a prepared command with a NULL
+  `DbType.Object` parameter. Issue [#1679](https://github.com/mysql-net/MySqlConnector/issues/1679); our
+  [#1680](https://github.com/mysql-net/MySqlConnector/pull/1680) was closed for the maintainer's
+  [#1681](https://github.com/mysql-net/MySqlConnector/pull/1681), merged 2026-10-25, unreleased after 2.6.2.
+- **Not reached:** neither EF nor this provider calls `DbCommand.Prepare()`, and the MySQL dialect binds no parameter as
+  `DbType.Object`. Only a user's own interceptor that prepares commands could meet it.
 
 ### SingleStore: savepoints succeed and do nothing (declined)
 
@@ -257,8 +274,8 @@ Pomelo 9.0.1 against MySQL 8.4. Searched Pomelo's issues: neither is reported.
 - **History:** deliberate upstream since 2021 (`863a426` "Throw exception if already Closed"; `c0ea769` kept it).
 - **Status: fixed upstream.** Our pull request (from `pengdows/DuckDB.NET`, commit `a16b0af` "Allow Close to be called more
   than once") is merged; the next DuckDB.NET release after 1.5.6.1 includes it.
-- **Our work-around (test harness only):** the test store closes its connection only when it is open. Remove it with the
-  update to that release.
+- **Our work-around:** the provider's connection (`AdoNetRelationalConnection`) and the test store close a connection only
+  when it is open. Remove the test store's with the update to that release.
 
 ### `GetFieldValue<byte[]>` on a BLOB column throws
 
@@ -272,8 +289,29 @@ Pomelo 9.0.1 against MySQL 8.4. Searched Pomelo's issues: neither is reported.
   DuckDB (and 18 tests of EF's specification suites: value converters, binary keys, many-to-many joins).
 - **Status: fixed upstream.** [#384](https://github.com/Giorgi/DuckDB.NET/pull/384) "Return byte arrays from typed BLOB
   reads", merged 2026-10-26 (f86315d): `GetFieldValue<byte[]>` returns the bytes, also for a BLOB inside a struct, map or
-  list; `GetValue` and `GetStream` keep returning a stream. In the next release after 1.5.6.1: then remove the skip in
-  `test/pengdows.efcore.adonet.duckdb.Tests/Fixtures.cs`.
+  list; `GetValue` and `GetStream` keep returning a stream. In the next release after 1.5.6.1.
+- **Our work-around:** the DuckDB dialect declares `IDatabaseCapabilities.ReadsBinaryAsStream`; its readers are wrapped
+  (`BinaryAsStreamReader`) so each binary value is copied out of the driver's stream while its row is current. The
+  key-column test runs on DuckDB again. Drop the capability with the update to that release.
+
+### Parameters whose type the statement doesn't fix are converted by DbType, wrongly for some
+
+- **Defect:** where DuckDB can't infer a parameter's type (a raw query's argument, a projection), 1.5.6.1 converts the value
+  by its `DbType`. It has no conversion for `Decimal` or `DateTime2`, so it sends the current culture's text (`1234,5`
+  under de-DE); a `Time`-typed `TimeSpan` goes through `TimeOnly.FromTimeSpan`, which throws for a negative span or one of a
+  day or more.
+- **Status:** [#382](https://github.com/Giorgi/DuckDB.NET/pull/382) open.
+- **Our work-around:** the DuckDB dialect's `ParameterDbType` binds `decimal` as `Currency`, `DateTime` as `DateTime`, and
+  `TimeSpan` (an `INTERVAL` here) as `Object`, all of which 1.5.6.1 converts correctly. Covered by
+  `ProviderConformanceTests.Raw_query_arguments_read_back_under_a_comma_decimal_culture` and
+  `DuckDbIntervalParameterTests`.
+
+### Foreign keys are checked against rows deleted earlier in the same transaction (engine, documented)
+
+- **Behavior:** deleting a parent after its child in one transaction fails with "Violates foreign key constraint because key
+  ... is still referenced", DuckDB's documented foreign key limitation. EF deletes children first, in one SaveChanges.
+- **Found by:** `DatabaseCreatorConformanceTests.Ensure_created_creates_a_table_reached_by_two_cascade_paths_and_deletes_cascade`,
+  a `[SKIP:DuckDB]` capability skip.
 
 ### Driver fixes merged upstream, not yet released (we pin 1.5.6.1)
 
@@ -329,7 +367,9 @@ plain ADO.NET:
   `OverflowException` when any row holds a double beyond decimal's range (1E+29, 1.7976931348623157E+308), and a literal
   beyond it (`"D" < 1.7976931348623157E+308`) throws for every row. ISO: an approximate numeric literal (one with an
   exponent) is a floating-point value, and comparing approximate with exact numerics is done as approximate. Found by
-  `LiteralConformanceTests.Floating_point_constants_at_the_edges_of_their_types`.
+  `LiteralConformanceTests.Floating_point_constants_at_the_edges_of_their_types`. **Fixed** in pengdows.flatfile 37a379d
+  ("Preserve approximate numeric semantics"), shipped in preview.17. The preview.16 package was built from 00f2ee9, three
+  minutes before that fix, though its tag is later, so preview.16 still negated a double through `decimal`.
 - No `POWER` ("Unsupported scalar function 'POWER'"). Found by `TranslationConformanceTests.Math_on_doubles`.
 - Interval literals take one field and no precision (`SqlParser.ParseIntervalLiteral`): ISO's
   `INTERVAL '0 01:02:03.5' DAY TO SECOND`, `INTERVAL '01:02:03' HOUR TO SECOND` and `DAY(8) TO SECOND` are rejected.

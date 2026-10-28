@@ -2,6 +2,7 @@ using System.Globalization;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.DependencyInjection;
+using pengdows.efcore.adonet.Scaffolding;
 
 namespace pengdows.efcore.adonet.sqlite;
 
@@ -13,9 +14,9 @@ public class SqliteDialect : AdoNetDialect
     {
     }
 
-    // No INFORMATION_SCHEMA: the catalog is sqlite_master and PRAGMA table_info, which this reader doesn't speak.
-    public override pengdows.efcore.adonet.Scaffolding.InformationSchemaReader? SchemaReader
-        => null;
+    // No INFORMATION_SCHEMA: the catalog is sqlite_master and the PRAGMA table functions.
+    public override SchemaReader SchemaReader
+        => SqliteSchemaReader.Instance;
 
     public override string Name => "SQLite";
     public override ISqlDialect Sql { get; } = new SqliteSql();
@@ -71,6 +72,7 @@ internal class SqliteSql : AnsiSqlDialect
     public override LateralJoinSyntax? LateralJoins => null;
     public override PagingSyntax Paging { get; } = PagingSyntax.LimitOffset(noLimitValue: "-1");
     public override FunctionSyntax Functions { get; } = new SqliteFunctions();
+    public override JsonSyntax Json { get; } = SqliteJson.Syntax;
 
     public override string HasTablesSql
         => "SELECT COUNT(*) FROM \"sqlite_master\" WHERE \"type\" = 'table' AND \"rootpage\" IS NOT NULL";
@@ -133,6 +135,50 @@ internal sealed class SqliteFunctions : FunctionSyntax
     // The % operator, as the database's EF Core provider writes it.
     public override string? Modulo => null;
 
+    public override string? Trim => "TRIM({0})";
+    public override string? Upper => "UPPER({0})";
+    public override string? Lower => "LOWER({0})";
+    public override string? Replace => "REPLACE({0}, {1}, {2})";
+    public override string? Round => "ROUND({0})";
+    public override string? RoundDigits => "ROUND({0}, {1})";
+    public override string? Power => "POW({0}, {1})";
+    public override string? Sqrt => "SQRT({0})";
+    public override string? Acos => "ACOS({0})";
+    public override string? Asin => "ASIN({0})";
+    public override string? Atan => "ATAN({0})";
+    public override string? Atan2 => "ATAN2({0}, {1})";
+    public override string? Acosh => "ACOSH({0})";
+    public override string? Asinh => "ASINH({0})";
+    public override string? Atanh => "ATANH({0})";
+    public override string? Cos => "COS({0})";
+    public override string? Cosh => "COSH({0})";
+    public override string? Sin => "SIN({0})";
+    public override string? Sinh => "SINH({0})";
+    public override string? Tan => "TAN({0})";
+    public override string? Tanh => "TANH({0})";
+    public override string? Exp => "EXP({0})";
+    public override string? Ln => "LN({0})";
+    public override string? Log10 => "LOG10({0})";
+    public override string? LogBase => "LOG({1}, {0})";
+    public override string? Log2 => "LOG2({0})";
+    public override string? Sign => "SIGN({0})";
+    public override string? Truncate => "TRUNC({0})";
+    public override string? Degrees => "DEGREES({0})";
+    public override string? Radians => "RADIANS({0})";
+    public override string? Greatest => "MAX({0}, {1})";
+    public override string? Least => "MIN({0}, {1})";
+    public override string? DayOfYear => "CAST(STRFTIME('%j', {0}) AS INTEGER)";
+    public override string? DayOfWeek => "CAST(STRFTIME('%w', {0}) AS INTEGER)";
+    public override string? Millisecond => "CAST((CAST(STRFTIME('%f', {0}) AS REAL) * 1000) AS INTEGER) % 1000";
+    public override string? DateOf => "STRFTIME('%Y-%m-%d 00:00:00', {0})";
+    public override string? Now => "STRFTIME('%Y-%m-%d %H:%M:%f', 'now', 'localtime')";
+    public override string? UtcNow => "STRFTIME('%Y-%m-%d %H:%M:%f', 'now')";
+    public override string? Today => "STRFTIME('%Y-%m-%d 00:00:00', 'now', 'localtime')";
+    public override string? AddYears => "STRFTIME('%Y-%m-%d %H:%M:%f', {0}, CAST({1} AS TEXT) || ' years')";
+    public override string? AddMonths => "STRFTIME('%Y-%m-%d %H:%M:%f', {0}, CAST({1} AS TEXT) || ' months')";
+    public override string? AddDays => "STRFTIME('%Y-%m-%d %H:%M:%f', {0}, CAST({1} AS TEXT) || ' days')";
+    public override string? DayNumber => "CAST(JULIANDAY({0}) - JULIANDAY('0001-01-01') AS INTEGER)";
+
     public override string? OffsetDateTime => "SUBSTR({0}, 1, LENGTH({0}) - 6)";
     public override string? TrimStart => "LTRIM({0})";
     public override string? TrimEnd => "RTRIM({0})";
@@ -146,4 +192,23 @@ internal sealed class SqliteFunctions : FunctionSyntax
     public override string? Hour => "CAST(STRFTIME('%H', {0}) AS INTEGER)";
     public override string? Minute => "CAST(STRFTIME('%M', {0}) AS INTEGER)";
     public override string? Second => "CAST(STRFTIME('%S', {0}) AS INTEGER)";
+}
+
+internal static class SqliteJson
+{
+    public static JsonSyntax Syntax { get; } = new(
+        "TEXT",
+        "json_extract({0}, {1})",
+        "json_extract({0}, {1})",
+        "CAST(json_extract({0}, {1}) AS {2})",
+        "CASE json_extract({0}, {1}) WHEN 1 THEN TRUE WHEN 0 THEN FALSE END",
+        "CAST(json_extract({0}, {1}) AS BLOB)",
+        "({0} || {1})",
+        "json_set({0}, {1}, {2})",
+        "json({0})")
+    {
+        StoresDocumentAsText = true,
+        ArrayElements = "(SELECT CAST(key AS INTEGER) AS {1}, CAST(value AS {3}) AS {2} FROM json_each({0}))",
+        ArrayElementsTextType = "TEXT"
+    };
 }

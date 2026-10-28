@@ -29,3 +29,23 @@ public class DuckDbSqlTests
         Assert.Matches(@"LIMIT \$p\w*\s+OFFSET \$p\w*", sql);
     }
 }
+
+/// <summary>
+///     A TimeSpan is an INTERVAL here, any length and sign. Where the statement doesn't fix a parameter's type, DuckDB.NET
+///     1.5.6.1 converts a DbType.Time one with TimeOnly.FromTimeSpan, which refuses a negative span or one of a day or more.
+/// </summary>
+public class DuckDbIntervalParameterTests(DuckDbFixture fixture) : IClassFixture<DuckDbFixture>
+{
+    [Theory]
+    [InlineData("-1.02:03:04.5")]
+    [InlineData("2.00:00:00")]
+    [InlineData("00:00:01")]
+    public async Task Interval_arguments_of_any_length_and_sign_read_back(string text)
+    {
+        var span = TimeSpan.Parse(text, System.Globalization.CultureInfo.InvariantCulture);
+        await using var context = fixture.CreateContext();
+        var sql = "SELECT {0} AS " + fixture.Quote("Value");
+
+        Assert.Equal(span, await context.Database.SqlQueryRaw<TimeSpan>(sql, span).SingleAsync(TestContext.Current.CancellationToken));
+    }
+}

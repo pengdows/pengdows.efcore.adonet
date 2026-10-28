@@ -71,24 +71,19 @@ public sealed class SqlServerHost : ServerHost
     protected override IEnumerable<string> RecreateSql(string database)
         => [$"IF DB_ID(N'{database}') IS NOT NULL BEGIN ALTER DATABASE [{database}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [{database}]; END", $"CREATE DATABASE [{database}]"];
 
+    // With MultipleActiveResultSets, as Microsoft's SQL Server test store connects: EF's suites lazy-load while a query is
+    // still being read. Behaviour reference (not copied):
+    // https://github.com/dotnet/efcore/blob/v10.0.11/test/EFCore.SqlServer.FunctionalTests/TestUtilities/SqlServerTestStore.cs
     public override string ConnectionStringFor(string database)
-        => new SqlConnectionStringBuilder(Container.ConnectionString) { InitialCatalog = database }.ConnectionString;
+        => new SqlConnectionStringBuilder(Container.ConnectionString) { InitialCatalog = database, MultipleActiveResultSets = true }.ConnectionString;
 
     public override DbConnection CreateConnection(string connectionString) => new SqlConnection(connectionString);
 
     public override DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, string connectionString, Action<AdoNetDbContextOptionsBuilder> configure)
-        => builder.UseAdoNetSqlServer(connectionString, OneInsertPerCommand(configure)).AddInterceptors(SqlServerIdentityInsert.Instance);
+        => builder.UseAdoNetSqlServer(connectionString, configure);
 
     public override DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, DbConnection connection, Action<AdoNetDbContextOptionsBuilder> configure)
-        => builder.UseAdoNetSqlServer(connection, contextOwnsConnection: false, OneInsertPerCommand(configure)).AddInterceptors(SqlServerIdentityInsert.Instance);
-
-    // SqlServerIdentityInsert turns IDENTITY_INSERT on for one table at a time.
-    private static Action<AdoNetDbContextOptionsBuilder> OneInsertPerCommand(Action<AdoNetDbContextOptionsBuilder> configure)
-        => o =>
-        {
-            configure(o);
-            o.MaxBatchSize(1);
-        };
+        => builder.UseAdoNetSqlServer(connection, contextOwnsConnection: false, configure);
 }
 
 public sealed class PostgreSqlHost : ServerHost

@@ -34,7 +34,7 @@ public class SqlServerSqlTests
     [Fact]
     public void Declares_spatial_parameter_binding_explicitly()
     {
-        Assert.Equal(SpatialParameterBinding.SqlServerUdt, SqlServerDialect.Instance.Sql.Spatial!.ParameterBinding);
+        Assert.Equal(SpatialParameterBinding.UserDefinedType, SqlServerDialect.Instance.Sql.Spatial!.ParameterBinding);
     }
 
     [Fact]
@@ -305,15 +305,6 @@ public class SqlServerSqlTests
         Assert.Contains("CONVERT(date, [b].[CreatedAt])", sql);
         Assert.Contains("DATEPART(microsecond, [b].[CreatedAt]) % 1000", sql);
         Assert.Contains("DATEPART(nanosecond, [b].[CreatedAt]) % 1000", sql);
-    }
-
-    [Fact]
-    public void Treats_a_canceled_token_as_query_cancellation()
-    {
-        using var context = Context(b => b.UseAdoNetSqlServer("Server=localhost"));
-        var detector = context.GetService<IExceptionDetector>();
-
-        Assert.True(detector.IsCancellation(new InvalidOperationException(), new CancellationToken(canceled: true)));
     }
 
     [Fact]

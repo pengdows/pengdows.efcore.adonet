@@ -79,6 +79,12 @@ internal class DuckDbMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies d
         }
     }
 
+    // DuckDB takes a foreign key only in CREATE TABLE, and can't drop a table another refers to, to rebuild it with one.
+    protected override void Generate(AddForeignKeyOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
+        => throw new NotSupportedException(
+            $"DuckDB can't add foreign key '{operation.Name}' to existing table '{operation.Table}': it takes foreign keys only "
+            + "in CREATE TABLE, so a key added later, or one closing a cycle of keys between tables, can't be declared.");
+
     protected override void ForeignKeyConstraint(AddForeignKeyOperation operation, IModel? model, MigrationCommandListBuilder builder)
         => base.ForeignKeyConstraint(
             new AddForeignKeyOperation

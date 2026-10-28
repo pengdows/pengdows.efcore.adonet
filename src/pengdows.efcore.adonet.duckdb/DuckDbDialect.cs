@@ -20,7 +20,10 @@ public sealed class DuckDbDialect : AdoNetDialect
     {
         SupportsMultipleStatementsPerCommand = true,
         DefaultMaxBatchSize = 128,
-        MaxParametersPerCommand = 65535
+        MaxParametersPerCommand = 65535,
+        // DuckDB.NET 1.5.6.1 returns a BLOB only as a stream; GetFieldValue<byte[]> throws InvalidCastException. Fixed
+        // upstream, unreleased: https://github.com/Giorgi/DuckDB.NET/pull/384
+        ReadsBinaryAsStream = true
     };
 
     public override void ConfigureServices(IServiceCollection services)
@@ -70,6 +73,18 @@ internal sealed class DuckDbFunctions : FunctionSyntax
 
 internal sealed class DuckDbTypeMappings : AnsiTypeMappings
 {
+    // DuckDB.NET 1.5.6.1 converts a parameter whose type the statement doesn't fix by its DbType. It has no conversion for
+    // Decimal or DateTime2, sending such a value as the current culture's text; Currency and DateTime are its own for decimal
+    // and DateTime (https://github.com/Giorgi/DuckDB.NET/pull/382). A Time-typed TimeSpan is made a time of day, refusing a
+    // negative span or one of a day or more; any other TimeSpan is an INTERVAL, which is its store type here.
+    public override System.Data.DbType ParameterDbType(Type clrType, System.Data.DbType standard)
+        => clrType == typeof(decimal) ? System.Data.DbType.Currency
+            : clrType == typeof(TimeSpan) ? System.Data.DbType.Object
+            : standard;
+
+    public override System.Data.DbType DateTimeDbType
+        => System.Data.DbType.DateTime;
+
     public override string? GetStoreType(Type clrType)
         => clrType == typeof(byte[]) ? "BLOB" : base.GetStoreType(clrType);
 

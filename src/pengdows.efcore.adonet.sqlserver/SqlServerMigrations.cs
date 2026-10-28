@@ -21,6 +21,34 @@ internal class SqlServerMigrationsSqlGenerator(MigrationsSqlGeneratorDependencie
         base.ForeignKeyAction(referentialAction, builder);
     }
 
+    // A computed column has no type of its own: name AS (expression), PERSISTED to store it, then any collation. Behaviour
+    // reference (not copied):
+    // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.SqlServer/Migrations/SqlServerMigrationsSqlGenerator.cs
+    protected override void ComputedColumnDefinition(
+        string? schema,
+        string table,
+        string name,
+        ColumnOperation operation,
+        IModel? model,
+        MigrationCommandListBuilder builder)
+    {
+        builder
+            .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(name))
+            .Append(" AS (")
+            .Append(operation.ComputedColumnSql!)
+            .Append(")");
+
+        if (operation.IsStored == true)
+        {
+            builder.Append(" PERSISTED");
+        }
+
+        if (operation.Collation != null)
+        {
+            builder.Append(" COLLATE ").Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Collation));
+        }
+    }
+
     protected override void IdentityDefinition(string? schema, string table, string name, ColumnOperation operation, MigrationCommandListBuilder builder)
         => builder.Append(" IDENTITY");
 

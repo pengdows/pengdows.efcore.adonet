@@ -194,6 +194,9 @@ public class ReshapeMigration : Migration
         migrationBuilder.RenameTable("Authors", newName: "Writers").Annotation(AdoNetAnnotationNames.IdentityColumns, new[] { "Id" });
     }
 
+    protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        => MigrationTargets.Shelves(modelBuilder, codeLength: 20, codeRequired: false);
+
     protected override void Down(MigrationBuilder migrationBuilder)
     {
         migrationBuilder.RenameTable("Writers", newName: "Authors").Annotation(AdoNetAnnotationNames.IdentityColumns, new[] { "Id" });
@@ -216,6 +219,47 @@ public class AlterCodeMigration : Migration
     protected override void Down(MigrationBuilder migrationBuilder)
         => migrationBuilder.AlterColumn<string>(
             "Code", "Shelves", maxLength: 20, nullable: true, oldMaxLength: 40, oldNullable: false, oldDefaultValue: "none");
+
+    protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        => MigrationTargets.Shelves(modelBuilder, codeLength: 40, codeRequired: true);
+}
+
+/// <summary>
+///     The schema after a migration, as the designer file EF scaffolds beside one records it: a database that rebuilds a
+///     table to change it (SQLite) builds the new table from this.
+/// </summary>
+internal static class MigrationTargets
+{
+    public static void Shelves(ModelBuilder modelBuilder, int codeLength, bool codeRequired)
+    {
+        modelBuilder.Entity("Writers", b =>
+        {
+            b.Property<int>("Id").ValueGeneratedOnAdd().HasAnnotation(AdoNetAnnotationNames.Identity, true);
+            b.Property<string>("FullName").IsRequired().HasMaxLength(100);
+            b.HasKey("Id").HasName("PK_Authors");
+            b.ToTable("Writers");
+        });
+
+        modelBuilder.Entity("Shelves", b =>
+        {
+            b.Property<int>("Id").ValueGeneratedOnAdd().HasAnnotation(AdoNetAnnotationNames.Identity, true);
+            b.Property<int>("AuthorId");
+            b.Property<int>("Capacity").HasDefaultValue(10);
+            var code = b.Property<string>("Code").HasMaxLength(codeLength);
+            if (codeRequired)
+            {
+                code.IsRequired().HasDefaultValue("none");
+            }
+
+            b.Property<string>("Label").HasMaxLength(50);
+            b.HasKey("Id").HasName("PK_Shelves");
+            b.HasIndex("AuthorId").HasDatabaseName("IX_Shelves_AuthorId");
+            b.HasIndex("Label").IsUnique().HasDatabaseName("IX_Shelves_Label");
+            b.HasOne("Writers", null).WithMany().HasForeignKey("AuthorId").HasConstraintName("FK_Shelves_Authors")
+                .OnDelete(DeleteBehavior.NoAction);
+            b.ToTable("Shelves");
+        });
+    }
 }
 
 /// <summary>A context whose only migration fails while its SQL is generated, after EF has begun its transaction.</summary>

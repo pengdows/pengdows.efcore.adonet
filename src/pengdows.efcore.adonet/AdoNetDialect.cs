@@ -23,7 +23,7 @@ public abstract class AdoNetDialect : IAdoNetDialect
     {
     }
 
-    public virtual Scaffolding.InformationSchemaReader? SchemaReader
+    public virtual Scaffolding.SchemaReader? SchemaReader
         => Scaffolding.InformationSchemaReader.Iso;
 
     public override string ToString()
@@ -71,6 +71,8 @@ public class AnsiSqlDialect : ISqlDialect
     public virtual string DefaultValues => "DEFAULT VALUES";
     public virtual string? CurrentSchema => null;
     public virtual SavepointSyntax? Savepoints => SavepointSyntax.Iso;
+
+    public virtual IdentityInsertSyntax? IdentityInsert => null;
 
     // ISO SQL has no CREATE DATABASE: each dialect says how its databases are made.
     public virtual DatabaseLifecycle? Databases => null;
@@ -184,6 +186,9 @@ public class AnsiTypeMappings : ITypeMappingDialect
     public virtual bool WritesDateTimeOffsetAsUtc
         => false;
 
+    public virtual System.Data.DbType ParameterDbType(Type clrType, System.Data.DbType standard)
+        => standard;
+
     public virtual string CastTarget(string storeType)
         => storeType;
 
@@ -224,6 +229,13 @@ public record DatabaseCapabilities : IDatabaseCapabilities
 
     /// <summary>False, the safe assumption: a split query is buffered.</summary>
     public virtual bool SupportsMultipleActiveReaders { get; init; }
+
+    /// <summary>False: drivers read a binary value as <c>byte[]</c>.</summary>
+    public virtual bool ReadsBinaryAsStream { get; init; }
+
+    /// <summary><see cref="SupportsMultipleActiveReaders" />, whatever the connection string.</summary>
+    public virtual bool SupportsMultipleActiveReadersFor(string? connectionString)
+        => SupportsMultipleActiveReaders;
 
     /// <summary>
     ///     What the driver reports as transient (<see cref="System.Data.Common.DbException.IsTransient" />), or a timeout; a

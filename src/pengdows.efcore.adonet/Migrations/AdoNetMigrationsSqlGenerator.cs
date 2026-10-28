@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Migrations.Operations;
@@ -32,6 +33,33 @@ public class AdoNetMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dep
 
         base.Generate(operation, model, builder, terminate);
     }
+
+    // Seed data naming a generated key column, where the database refuses explicit values for one unless told
+    // (ISqlDialect.IdentityInsert). Seed rows are written by the update SQL generator, but without the columns it would
+    // recognize the key by, so the table is looked up here.
+    protected override void Generate(InsertDataOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
+    {
+        if ((Dialect.Sql.IdentityInsert is not { } identityInsert) || !WritesIdentity(operation, model))
+        {
+            base.Generate(operation, model, builder, terminate);
+            return;
+        }
+
+        var table = Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Table, operation.Schema);
+        builder.Append(identityInsert.Enable.Replace("{0}", table, StringComparison.Ordinal))
+            .AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
+        base.Generate(operation, model, builder, terminate: false);
+        builder.Append(identityInsert.Disable.Replace("{0}", table, StringComparison.Ordinal))
+            .AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
+        if (terminate)
+        {
+            EndStatement(builder);
+        }
+    }
+
+    private static bool WritesIdentity(InsertDataOperation operation, IModel? model)
+        => model?.GetRelationalModel().FindTable(operation.Table, operation.Schema) is { } table
+            && table.Columns.Any(c => operation.Columns.Contains(c.Name) && Metadata.AdoNetAnnotationProvider.IsIdentity(c));
 
     protected override void Generate(DropTableOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
     {

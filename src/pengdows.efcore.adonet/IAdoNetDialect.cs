@@ -28,7 +28,7 @@ public interface IAdoNetDialect
     void ConfigureServices(IServiceCollection services);
 
     /// <summary>Reads the database's schema (reverse engineering); null where the dialect can't.</summary>
-    Scaffolding.InformationSchemaReader? SchemaReader { get; }
+    Scaffolding.SchemaReader? SchemaReader { get; }
 }
 
 /// <summary>The SQL text: identifiers, parameters, literals, and the grammar parts that differ between databases.</summary>
@@ -116,6 +116,12 @@ public interface ISqlDialect
     ///     driver implements the methods, and a driver may report them on a server that ignores them.
     /// </summary>
     SavepointSyntax? Savepoints { get; }
+
+    /// <summary>
+    ///     How an INSERT writes an application-set value into a generated key column; null where the database takes one as
+    ///     it takes any other value.
+    /// </summary>
+    IdentityInsertSyntax? IdentityInsert => null;
 
     /// <summary>How a database is created and deleted; null when the dialect can do neither.</summary>
     DatabaseLifecycle? Databases { get; }
@@ -209,6 +215,14 @@ public interface ITypeMappingDialect
     System.Data.DbType DateTimeDbType { get; }
 
     /// <summary>
+    ///     The DbType a parameter of <paramref name="clrType" /> binds as, given EF's <paramref name="standard" /> one: that one,
+    ///     unless the driver converts it wrongly where a statement doesn't fix the parameter's type (one sends a Decimal as the
+    ///     current culture's text; one makes a Time-typed TimeSpan a time of day, refusing a negative one).
+    /// </summary>
+    System.Data.DbType ParameterDbType(Type clrType, System.Data.DbType standard)
+        => standard;
+
+    /// <summary>
     ///     Whether the driver writes a DateTimeOffset parameter only at offset zero, so one is converted to UTC (the same
     ///     instant) before it binds. False where the driver takes any offset.
     /// </summary>
@@ -256,6 +270,21 @@ public interface IDatabaseCapabilities
     ///     buffered, so each command runs after the previous reader is read and closed.
     /// </summary>
     bool SupportsMultipleActiveReaders { get; }
+
+    /// <summary>
+    ///     <see cref="SupportsMultipleActiveReaders" /> for connections made from <paramref name="connectionString" />, where a
+    ///     driver lets each connection choose (null when the context has none yet). Queries compiled for one answer aren't
+    ///     reused for the other.
+    /// </summary>
+    bool SupportsMultipleActiveReadersFor(string? connectionString)
+        => SupportsMultipleActiveReaders;
+
+    /// <summary>
+    ///     Whether the driver hands a binary value back only as a stream, refusing <c>GetFieldValue&lt;byte[]&gt;</c>. Its readers
+    ///     then copy each binary value out while its row is current.
+    /// </summary>
+    bool ReadsBinaryAsStream
+        => false;
 
     /// <summary>
     ///     Whether a failure may succeed if retried (a deadlock, a dropped connection, a busy server), for a retrying

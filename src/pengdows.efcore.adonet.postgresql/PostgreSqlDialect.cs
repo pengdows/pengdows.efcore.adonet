@@ -46,6 +46,8 @@ public sealed class PostgreSqlDialect : AdoNetDialect
         new EntityFrameworkRelationalServicesBuilder(services)
             .TryAdd<IMigrationsSqlGenerator, PostgreSqlMigrationsSqlGenerator>();
         services.TryAddScoped<IAdoNetBulkLoader, PostgreSqlBulkLoader>();
+        new EntityFrameworkRelationalServicesBuilder(services)
+            .TryAdd<Microsoft.EntityFrameworkCore.Storage.IRelationalTypeMappingSourcePlugin, PostgreSqlIntervalTypeMappingPlugin>();
     }
 }
 
@@ -189,6 +191,8 @@ internal static class PostgreSqlJson
             "CAST({0} AS jsonb)")
     {
         UsesBinaryDocument = true,
+        ScalarValue = "(jsonb_build_array({0}) -> 0)",
+        NullValue = "CAST('null' AS jsonb)",
         // The shared query generator supplies the table alias after this expression. Wrapping the
         // set-returning function gives PostgreSQL stable column names matching the shared JSON AST.
         // jsonb_array_elements returns jsonb. Extract the scalar text before casting it to the

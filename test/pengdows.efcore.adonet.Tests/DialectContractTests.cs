@@ -118,9 +118,9 @@ public class DialectContractTests
     [Fact]
     public void Core_source_names_no_database()
     {
-        const string BehaviourReference = "Behaviour reference (not copied): https://github.com/";
+        const string BehaviourReference = "Behaviour reference (not copied)";
         var core = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../src/pengdows.efcore.adonet"));
-        string[] names = ["SQL Server", "T-SQL", "PostgreSQL", "Npgsql", "MySQL", "MariaDB", "SQLite", "DuckDB", "Oracle", "SqlClient", "MySqlConnector"];
+        string[] names = ["SQL Server", "T-SQL", "PostgreSQL", "Npgsql", "MySQL", "MariaDB", "SQLite", "DuckDB", "Oracle", "SqlClient", "MySqlConnector", "SqlServer", "Sqlite", "PostgreSql", "MySql", "DuckDb", "jsonb"];
 
         var named = Directory.EnumerateFiles(core, "*.cs", SearchOption.AllDirectories)
             .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
@@ -129,7 +129,8 @@ public class DialectContractTests
             // where they point.
             .Where(l => !l.Text.Contains("(MIT, .NET Foundation)", StringComparison.Ordinal)
                 && !l.Text.Contains("(PostgreSQL License)", StringComparison.Ordinal)
-                && !l.Text.Contains(BehaviourReference, StringComparison.Ordinal))
+                && !l.Text.Contains(BehaviourReference, StringComparison.Ordinal)
+                && !l.Text.Contains("https://github.com/", StringComparison.Ordinal))
             .Where(l => names.Any(n => l.Text.Contains(n, StringComparison.Ordinal)))
             .Select(l => $"{l.File}:{l.Line}: {l.Text.Trim()}")
             .ToList();

@@ -24,8 +24,14 @@ public sealed class DuckDbFixture : ProviderFixture
         ["Migrations_apply_synchronously_too"] = DependentAlter,
         ["Alter_column_changes_size_nullability_and_default"] = DependentAlter,
 
-        // GetFieldValue<byte[]> on a BLOB: InvalidCastException, the driver returns an UnmanagedMemoryStream.
-        ["Unsized_key_and_index_columns_are_created_and_hold_long_values"] = "DuckDB.NET 1.5.6.1 can't read a BLOB as byte[]"
+        // CREATE TABLE can't name a table not yet created, ALTER TABLE can't add a foreign key, and a table another refers
+        // to can't be dropped to rebuild it: a cycle of foreign keys can't be declared at all.
+        ["Ensure_created_creates_tables_whose_foreign_keys_refer_to_each_other"] = "DuckDB 1.5 can't declare foreign keys that refer to each other",
+
+        // EF deletes the leaf, then its parents, in one transaction; DuckDB still counts the deleted leaf as referencing them
+        // ("Violates foreign key constraint ... still referenced", its documented foreign key limitation).
+        ["Ensure_created_creates_a_table_reached_by_two_cascade_paths_and_deletes_cascade"] =
+            "DuckDB 1.5 checks foreign keys against rows deleted earlier in the same transaction"
     };
 
     private const string DependentAlter = "DuckDB 1.5 can't ALTER a table that has indexes or foreign keys";

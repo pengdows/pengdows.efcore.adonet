@@ -16,8 +16,11 @@ public enum SpatialParameterBinding
     /// <summary>The driver receives the dialect's configured binary representation.</summary>
     Binary,
 
-    /// <summary>The driver receives SQL Server's geometry/geography UDT binary representation.</summary>
-    SqlServerUdt
+    /// <summary>
+    ///     The driver receives the database's own geometry type, a user-defined type the driver binds from its serialized
+    ///     form, rather than plain well-known binary.
+    /// </summary>
+    UserDefinedType
 }
 
 /// <summary>

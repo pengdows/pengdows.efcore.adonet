@@ -23,9 +23,6 @@ public class SqliteFixture : ProviderFixture
 
     public override IReadOnlyDictionary<string, string> KnownEngineGaps { get; } = new Dictionary<string, string>
     {
-        // EF's own SQLite provider rebuilds the table instead; this dialect refuses rather than pretend.
-        ["Alter_column_changes_size_nullability_and_default"] = "SQLite has no ALTER COLUMN",
-
         // A NUMERIC column keeps an integer past 2^63 as REAL: 123456789012345678901 reads back as 123456789012345680000.
         ["Wide_decimals_and_ansi_strings_round_trip"] = "SQLite has no exact decimal type past 64-bit integers"
     };

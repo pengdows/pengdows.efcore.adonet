@@ -144,7 +144,7 @@ public class AdoNetDecimalTypeMapping : DecimalTypeMapping
     private readonly ITypeMappingDialect _dialect;
 
     public AdoNetDecimalTypeMapping(string storeType, ITypeMappingDialect dialect, int? precision = null, int? scale = null)
-        : base(storeType, precision: precision, scale: scale)
+        : base(storeType, dialect.ParameterDbType(typeof(decimal), System.Data.DbType.Decimal), precision, scale)
         => _dialect = dialect;
 
     protected AdoNetDecimalTypeMapping(RelationalTypeMappingParameters parameters, ITypeMappingDialect dialect)
@@ -287,12 +287,16 @@ public class AdoNetTimeSpanTypeMapping : TimeSpanTypeMapping
     private readonly ITypeMappingDialect _dialect;
 
     public AdoNetTimeSpanTypeMapping(string storeType, ITypeMappingDialect dialect)
-        : base(storeType)
+        : base(storeType, dialect.ParameterDbType(typeof(TimeSpan), System.Data.DbType.Time))
         => _dialect = dialect;
 
     protected AdoNetTimeSpanTypeMapping(RelationalTypeMappingParameters parameters, ITypeMappingDialect dialect)
         : base(parameters)
         => _dialect = dialect;
+
+    /// <summary>The dialect's store type names and literals, for a subclass's <see cref="Clone" />.</summary>
+    protected ITypeMappingDialect TypeMappings
+        => _dialect;
 
     protected override RelationalTypeMapping Clone(RelationalTypeMappingParameters parameters)
         => new AdoNetTimeSpanTypeMapping(parameters, _dialect);

@@ -289,6 +289,7 @@ pengdows.efcore.adonet.Testing.ProviderConformanceTests<TFixture>.Fixture.get ->
 pengdows.efcore.adonet.Testing.ProviderConformanceTests<TFixture>.Has_tables() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.ProviderConformanceTests<TFixture>.InitializeAsync() -> System.Threading.Tasks.ValueTask
 pengdows.efcore.adonet.Testing.ProviderConformanceTests<TFixture>.Insert_of_a_row_with_no_columns_to_write_reads_back_its_key() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.ProviderConformanceTests<TFixture>.Insert_keeps_explicit_values_for_generated_keys() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.ProviderConformanceTests<TFixture>.Insert_reads_back_generated_keys() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.ProviderConformanceTests<TFixture>.Insert_uses_the_dialects_generated_value_strategy() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.ProviderConformanceTests<TFixture>.ProviderConformanceTests(TFixture! fixture) -> void
@@ -414,3 +415,8 @@ virtual pengdows.efcore.adonet.Testing.ProviderFixture.ModelSequences.get -> Sys
 virtual pengdows.efcore.adonet.Testing.ProviderFixture.StorableOffset.get -> System.TimeSpan
 virtual pengdows.efcore.adonet.Testing.ProviderFixture.UseProvider(Microsoft.EntityFrameworkCore.DbContextOptionsBuilder! builder) -> void
 pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Date_arithmetic() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.DatabaseCreatorConformanceTests<TFixture>.Ensure_created_creates_tables_whose_foreign_keys_refer_to_each_other() -> System.Threading.Tasks.Task!
+override pengdows.efcore.adonet.Testing.AlterCodeMigration.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder! modelBuilder) -> void
+override pengdows.efcore.adonet.Testing.ReshapeMigration.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder! modelBuilder) -> void
+pengdows.efcore.adonet.Testing.DatabaseCreatorConformanceTests<TFixture>.Ensure_created_creates_a_table_reached_by_two_cascade_paths_and_deletes_cascade() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.ProviderConformanceTests<TFixture>.Raw_query_arguments_read_back_under_a_comma_decimal_culture() -> System.Threading.Tasks.Task!

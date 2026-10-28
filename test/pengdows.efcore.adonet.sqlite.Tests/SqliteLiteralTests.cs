@@ -39,24 +39,3 @@ public class SqliteCastTests
     public void Decimal_casts_compute_as_real(string storeType, string target)
         => Assert.Equal(target, SqliteDialect.Instance.TypeMappings.CastTarget(storeType));
 }
-
-/// <summary>SQLite has no ALTER COLUMN: the dialect refuses rather than report a migration it didn't apply.</summary>
-public class SqliteMigrationsTests
-{
-    [Fact]
-    public void Altering_a_column_is_refused()
-    {
-        using var context = new pengdows.efcore.adonet.Testing.BlogContext(
-            new Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<pengdows.efcore.adonet.Testing.BlogContext>()
-                .UseAdoNetSqlite("Data Source=:memory:").Options);
-        var generator = Microsoft.EntityFrameworkCore.Infrastructure.AccessorExtensions
-            .GetService<Microsoft.EntityFrameworkCore.Migrations.IMigrationsSqlGenerator>(context);
-        var alter = new Microsoft.EntityFrameworkCore.Migrations.Operations.AlterColumnOperation
-        {
-            Table = "T", Name = "C", ClrType = typeof(int), IsNullable = true,
-            OldColumn = new Microsoft.EntityFrameworkCore.Migrations.Operations.AddColumnOperation { Table = "T", Name = "C", ClrType = typeof(int) }
-        };
-
-        Assert.Contains("ALTER COLUMN", Assert.Throws<NotSupportedException>(() => generator.Generate([alter])).Message);
-    }
-}

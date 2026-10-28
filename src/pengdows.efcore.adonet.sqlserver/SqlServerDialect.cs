@@ -43,8 +43,7 @@ public sealed class SqlServerDialect : AdoNetDialect
 
         new EntityFrameworkRelationalServicesBuilder(services)
             .TryAdd<IMigrationsSqlGenerator, SqlServerMigrationsSqlGenerator>()
-            .TryAdd<IRelationalQueryStringFactory, SqlServerQueryStringFactory>()
-            .TryAdd<IExceptionDetector, SqlServerExceptionDetector>();
+            .TryAdd<IRelationalQueryStringFactory, SqlServerQueryStringFactory>();
         services.TryAddScoped<IAdoNetBulkLoader, SqlServerBulkLoader>();
     }
 }
@@ -91,7 +90,7 @@ internal sealed class SqlServerSql : AnsiSqlDialect
     public override SpatialSyntax Spatial { get; } = new()
     {
         Binary = SpatialBinary.Wkb,
-        ParameterBinding = SpatialParameterBinding.SqlServerUdt,
+        ParameterBinding = SpatialParameterBinding.UserDefinedType,
         FromText = "geometry::STGeomFromText({0}, {1})",
         StoreType = _ => "geometry",
         Functions = new Dictionary<string, string?>(StringComparer.Ordinal)
@@ -146,6 +145,11 @@ internal sealed class SqlServerSql : AnsiSqlDialect
             ["OgcGeometryType"] = "CASE {0}.STGeometryType() WHEN 'Point' THEN 1 WHEN 'LineString' THEN 2 WHEN 'Polygon' THEN 3 WHEN 'MultiPoint' THEN 4 WHEN 'MultiLineString' THEN 5 WHEN 'MultiPolygon' THEN 6 WHEN 'GeometryCollection' THEN 7 END"
         }
     };
+    // An explicit value for an IDENTITY column needs IDENTITY_INSERT, which one table per session may have on. Behaviour
+    // reference (not copied):
+    // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.SqlServer/Migrations/SqlServerMigrationsSqlGenerator.cs
+    public override IdentityInsertSyntax IdentityInsert { get; } = new("SET IDENTITY_INSERT {0} ON", "SET IDENTITY_INSERT {0} OFF");
+
     public override bool PreferExistsToIn => true;
     public override string CurrentSchema => "SCHEMA_NAME()";
 

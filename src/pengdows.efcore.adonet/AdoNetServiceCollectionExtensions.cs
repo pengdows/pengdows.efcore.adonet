@@ -44,6 +44,7 @@ public static class AdoNetServiceCollectionExtensions
             .TryAdd<IRelationalAnnotationProvider, AdoNetAnnotationProvider>()
             .TryAdd<IMigrationsAnnotationProvider, AdoNetMigrationsAnnotationProvider>()
             .TryAdd<IQueryCompilationContextFactory, AdoNetQueryCompilationContextFactory>()
+            .TryAdd<ICompiledQueryCacheKeyGenerator, AdoNetCompiledQueryCacheKeyGenerator>()
             .TryAdd<IQuerySqlGeneratorFactory, AdoNetQuerySqlGeneratorFactory>()
             .TryAdd<IMethodCallTranslatorProvider, AdoNetMethodCallTranslatorProvider>()
             .TryAdd<IMemberTranslatorProvider, AdoNetMemberTranslatorProvider>()
@@ -56,6 +57,8 @@ public static class AdoNetServiceCollectionExtensions
             .TryAdd<IModificationCommandBatchFactory, AdoNetModificationCommandBatchFactory>()
             .TryAdd<IRelationalParameterBasedSqlProcessorFactory, AdoNetParameterBasedSqlProcessorFactory>()
             .TryAdd<IValueGeneratorSelector, AdoNetValueGeneratorSelector>()
+            .TryAdd<IInterceptor, BinaryAsStreamReaderInterceptor>()
+            .TryAdd<IExceptionDetector, AdoNetExceptionDetector>()
             .TryAdd<ISingletonOptions, IAdoNetSingletonOptions>(p => p.GetRequiredService<IAdoNetSingletonOptions>())
             .TryAddProviderSpecificServices(b => b
                 .TryAddSingleton(dialect)

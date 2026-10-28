@@ -58,6 +58,10 @@ internal class AdoNetRelationalConnection : RelationalConnection
     protected override bool SupportsAmbientTransactions
         => _capabilities.SupportsAmbientTransactions;
 
+    /// <summary>Whether this context's connections hold several open readers, which can depend on its connection string.</summary>
+    internal bool SupportsMultipleActiveReaders
+        => _capabilities.SupportsMultipleActiveReadersFor(ConnectionString ?? _extension.DataSource?.ConnectionString);
+
     // ConnectionString, not the options' value, so Database.SetConnectionString is honored; a connection string may
     // also arrive that way, or a whole connection through SetDbConnection, after the context is built.
     protected override DbConnection CreateDbConnection()

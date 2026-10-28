@@ -1,21 +1,232 @@
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Migrations.Operations;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using pengdows.efcore.adonet.Migrations;
 
 namespace pengdows.efcore.adonet.sqlite;
 
+/// <summary>
+///     SQLite's ALTER TABLE renames and adds columns, nothing more. A constraint added to a table created in the same
+///     migration goes into its CREATE TABLE, since SQLite checks a foreign key's table only when the key is used; any other
+///     change of a table's constraints or columns rebuilds the table from the migration's target model, keeping its rows.
+///     Behaviour reference (not copied):
+///     https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.Core/Migrations/SqliteMigrationsSqlGenerator.cs
+/// </summary>
 internal class SqliteMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dependencies, IAdoNetDialect dialect)
     : AdoNetMigrationsSqlGenerator(dependencies, dialect)
 {
+    public override IReadOnlyList<MigrationCommand> Generate(
+        IReadOnlyList<MigrationOperation> operations,
+        IModel? model = null,
+        MigrationsSqlGenerationOptions options = MigrationsSqlGenerationOptions.Default)
+        => base.Generate(Rewrite(operations, model), model, options);
+
+    private List<MigrationOperation> Rewrite(IReadOnlyList<MigrationOperation> operations, IModel? model)
+    {
+        var created = operations.OfType<CreateTableOperation>().ToDictionary(c => (c.Name, c.Schema));
+        var folded = new HashSet<MigrationOperation>(operations.Where(o => FoldIntoCreateTable(o, created)));
+        var rebuilt = new Dictionary<(string Table, string? Schema), int>();
+        for (var i = 0; i < operations.Count; i++)
+        {
+            if (!folded.Contains(operations[i]) && NeedsRebuild(operations[i]) is { } table)
+            {
+                rebuilt[table] = i;
+            }
+        }
+
+        foreach (var table in rebuilt.Keys)
+        {
+            if (model == null)
+            {
+                var operation = operations.First(o => NeedsRebuild(o) == table);
+                throw new NotSupportedException(
+                    $"SQLite can't run a {operation.GetType().Name} on table '{table.Table}' except by rebuilding the table, "
+                    + "which needs the migration's target model (its BuildTargetModel).");
+            }
+
+            // The last change rebuilding a table runs the rebuild, which every other change of its columns and indexes is
+            // part of.
+            for (var i = 0; i < operations.Count; i++)
+            {
+                if (PartOfRebuild(operations[i]) == table)
+                {
+                    rebuilt[table] = Math.Max(rebuilt[table], i);
+                }
+            }
+        }
+
+        var rewritten = new List<MigrationOperation>();
+        for (var i = 0; i < operations.Count; i++)
+        {
+            var operation = operations[i];
+            if (folded.Contains(operation))
+            {
+                continue;
+            }
+
+            if ((PartOfRebuild(operation) is { } table) && rebuilt.TryGetValue(table, out var last))
+            {
+                if (i == last)
+                {
+                    rewritten.AddRange(Rebuild(table, operations, model!));
+                }
+
+                continue;
+            }
+
+            rewritten.Add(operation);
+        }
+
+        return rewritten;
+    }
+
+    // A constraint added to a table this migration creates is declared with it; the table holds no rows to check yet.
+    private static bool FoldIntoCreateTable(
+        MigrationOperation operation, Dictionary<(string Name, string? Schema), CreateTableOperation> created)
+    {
+        switch (operation)
+        {
+            case AddForeignKeyOperation key when created.TryGetValue((key.Table, key.Schema), out var create):
+                create.ForeignKeys.Add(key);
+                return true;
+            case AddPrimaryKeyOperation key when created.TryGetValue((key.Table, key.Schema), out var create):
+                create.PrimaryKey = key;
+                return true;
+            case AddUniqueConstraintOperation unique when created.TryGetValue((unique.Table, unique.Schema), out var create):
+                create.UniqueConstraints.Add(unique);
+                return true;
+            case AddCheckConstraintOperation check when created.TryGetValue((check.Table, check.Schema), out var create):
+                create.CheckConstraints.Add(check);
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    // Changes ALTER TABLE can't make. A dropped column is SQLite's own DROP COLUMN (3.35), which refuses, loudly, a column
+    // still in a key or constraint, unless its table is rebuilt anyway.
+    private static (string Table, string? Schema)? NeedsRebuild(MigrationOperation operation)
+        => operation switch
+        {
+            AddForeignKeyOperation o => (o.Table, o.Schema),
+            DropForeignKeyOperation o => (o.Table, o.Schema),
+            AddPrimaryKeyOperation o => (o.Table, o.Schema),
+            DropPrimaryKeyOperation o => (o.Table, o.Schema),
+            AddUniqueConstraintOperation o => (o.Table, o.Schema),
+            DropUniqueConstraintOperation o => (o.Table, o.Schema),
+            AddCheckConstraintOperation o => (o.Table, o.Schema),
+            DropCheckConstraintOperation o => (o.Table, o.Schema),
+            AlterColumnOperation o => (o.Table, o.Schema),
+            _ => null
+        };
+
+    // Changes a rebuild makes too, as the target model has them.
+    private static (string Table, string? Schema)? PartOfRebuild(MigrationOperation operation)
+        => NeedsRebuild(operation) ?? operation switch
+        {
+            AddColumnOperation o => (o.Table, o.Schema),
+            DropColumnOperation o => (o.Table, o.Schema),
+            RenameColumnOperation o => (o.Table, o.Schema),
+            CreateIndexOperation o => (o.Table, o.Schema),
+            DropIndexOperation { Table: { } t } o => (t, o.Schema),
+            _ => null
+        };
+
+    // The table as the target model has it, created beside the old one, the old rows copied across (a renamed column from
+    // its old name; a column this migration adds takes its default), the old table dropped and the new one renamed into
+    // its place, then its indexes. Foreign keys are off meanwhile, so dropping the old table cascades nowhere; SQLite
+    // ignores the pragma inside a transaction, so both run outside the migration's.
+    private IEnumerable<MigrationOperation> Rebuild(
+        (string Table, string? Schema) name, IReadOnlyList<MigrationOperation> operations, IModel model)
+    {
+        var table = model.GetRelationalModel().FindTable(name.Table, name.Schema)
+            ?? throw new InvalidOperationException($"SQLite can't rebuild table '{name.Table}': the target model has no such table.");
+        var temporary = "ef_temp_" + table.Name;
+        var added = operations.OfType<AddColumnOperation>().Where(o => (o.Table, o.Schema) == name).Select(o => o.Name).ToHashSet();
+        var renamed = operations.OfType<RenameColumnOperation>().Where(o => (o.Table, o.Schema) == name)
+            .ToDictionary(o => o.NewName, o => o.Name);
+        var copied = table.Columns.Where(c => !added.Contains(c.Name)).Select(c => c.Name).ToList();
+        var helper = Dependencies.SqlGenerationHelper;
+
+        yield return new SqlOperation { Sql = "PRAGMA foreign_keys = OFF;", SuppressTransaction = true };
+        yield return CreateTable(table, temporary);
+        yield return new SqlOperation
+        {
+            Sql = $"INSERT INTO {helper.DelimitIdentifier(temporary, table.Schema)} ({string.Join(", ", copied.Select(c => helper.DelimitIdentifier(c)))}) "
+                + $"SELECT {string.Join(", ", copied.Select(c => helper.DelimitIdentifier(renamed.GetValueOrDefault(c, c))))} "
+                + $"FROM {helper.DelimitIdentifier(table.Name, table.Schema)};"
+        };
+        yield return new DropTableOperation { Name = table.Name, Schema = table.Schema };
+        yield return new RenameTableOperation { Name = temporary, Schema = table.Schema, NewName = table.Name, NewSchema = table.Schema };
+        yield return new SqlOperation { Sql = "PRAGMA foreign_keys = ON;", SuppressTransaction = true };
+        foreach (var index in table.Indexes)
+        {
+            yield return CreateIndexOperation.CreateFrom(index);
+        }
+    }
+
+    private static CreateTableOperation CreateTable(ITable table, string name)
+    {
+        var create = new CreateTableOperation { Name = name, Schema = table.Schema, Comment = table.Comment };
+        if (table.PrimaryKey != null)
+        {
+            create.PrimaryKey = AddPrimaryKeyOperation.CreateFrom(table.PrimaryKey);
+            create.PrimaryKey.Table = name;
+        }
+
+        foreach (var column in table.Columns)
+        {
+            var add = new AddColumnOperation
+            {
+                Table = name,
+                Schema = table.Schema,
+                Name = column.Name,
+                ClrType = column.ProviderClrType,
+                ColumnType = column.StoreType,
+                IsNullable = column.IsNullable,
+                DefaultValue = column.DefaultValue,
+                DefaultValueSql = column.DefaultValueSql,
+                ComputedColumnSql = column.ComputedColumnSql,
+                IsStored = column.IsStored,
+                Collation = column.Collation,
+                Comment = column.Comment
+            };
+            add.AddAnnotations(column.GetAnnotations());
+            create.Columns.Add(add);
+        }
+
+        foreach (var key in table.ForeignKeyConstraints)
+        {
+            var add = AddForeignKeyOperation.CreateFrom(key);
+            add.Table = name;
+            create.ForeignKeys.Add(add);
+        }
+
+        foreach (var unique in table.UniqueConstraints.Where(c => !c.GetIsPrimaryKey()))
+        {
+            var add = AddUniqueConstraintOperation.CreateFrom(unique);
+            add.Table = name;
+            create.UniqueConstraints.Add(add);
+        }
+
+        foreach (var check in table.CheckConstraints)
+        {
+            var add = AddCheckConstraintOperation.CreateFrom(check);
+            add.Table = name;
+            create.CheckConstraints.Add(add);
+        }
+
+        return create;
+    }
+
     // A single INTEGER primary key column is the rowid, which the database assigns.
     protected override void IdentityDefinition(string? schema, string table, string name, ColumnOperation operation, MigrationCommandListBuilder builder)
     {
     }
-
-    protected override void Generate(AlterColumnOperation operation, IModel? model, MigrationCommandListBuilder builder)
-        => throw new NotSupportedException(
-            "SQLite has no ALTER COLUMN; changing a column needs the table rebuilt, which this dialect doesn't do yet.");
 }
 
 internal class SqliteHistoryRepository(HistoryRepositoryDependencies dependencies, IAdoNetDialect dialect)

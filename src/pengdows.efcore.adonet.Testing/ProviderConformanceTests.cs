@@ -64,6 +64,71 @@ public abstract class ProviderConformanceTests<TFixture>(TFixture fixture) : ICl
         Assert.DoesNotContain(0, tallies.Select(t => t.Id));
     }
 
+    /// <summary>
+    ///     EF sends a key the application set, even on a column the database generates, and the row keeps it: two tables in
+    ///     one SaveChanges, mixed with rows whose keys the database numbers. Behaviour reference (not copied):
+    ///     https://github.com/dotnet/efcore/blob/v10.0.11/test/EFCore.Specification.Tests/StoreGeneratedTestBase.cs
+    ///     Runs on: MySQL, PostgreSQL, SQL Server, flatfile, SQLite, and DuckDB.
+    /// </summary>
+    [Fact]
+    public async Task Insert_keeps_explicit_values_for_generated_keys()
+    {
+        var explicitBlog = NewBlog("explicit");
+        explicitBlog.Id = 1_000_001;
+        explicitBlog.Posts.Add(new Post { Id = 2_000_001, Title = "explicit post" });
+        explicitBlog.Posts.Add(new Post { Title = "generated post" });
+        var generatedBlog = NewBlog("generated");
+        var laterBlog = NewBlog("later");
+        laterBlog.Id = 1_000_002;
+
+        await using (var context = Fixture.CreateContext())
+        {
+            context.AddRange(explicitBlog, generatedBlog, laterBlog);
+            await context.SaveChangesAsync(Ct);
+        }
+
+        await using (var context = Fixture.CreateContext())
+        {
+            var blogs = await context.Blogs.OrderBy(b => b.Name).Select(b => new { b.Name, b.Id }).ToListAsync(Ct);
+            var posts = await context.Posts.OrderBy(p => p.Title).Select(p => new { p.Title, p.Id, p.BlogId }).ToListAsync(Ct);
+
+            Assert.Equal(1_000_001, blogs.Single(b => b.Name == "explicit").Id);
+            Assert.Equal(1_000_002, blogs.Single(b => b.Name == "later").Id);
+            Assert.Equal(generatedBlog.Id, blogs.Single(b => b.Name == "generated").Id);
+            Assert.DoesNotContain(generatedBlog.Id, new[] { 0, 1_000_001, 1_000_002 });
+            Assert.Equal(2_000_001, posts.Single(p => p.Title == "explicit post").Id);
+            Assert.All(posts, p => Assert.Equal(1_000_001, p.BlogId));
+        }
+    }
+
+    /// <summary>
+    ///     A parameter whose type only the value says (a raw query's argument) reads back the same whatever the current culture:
+    ///     DuckDB.NET 1.5.6.1 sends one as the culture's text (https://github.com/Giorgi/DuckDB.NET/pull/382), so 1234.5 is
+    ///     1234,5 under de-DE. Runs on: MySQL, PostgreSQL, SQL Server, flatfile, SQLite, and DuckDB.
+    /// </summary>
+    [Fact]
+    public async Task Raw_query_arguments_read_back_under_a_comma_decimal_culture()
+    {
+        var culture = System.Globalization.CultureInfo.CurrentCulture;
+        System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("de-DE");
+        try
+        {
+            await using var context = Fixture.CreateContext();
+            // The value is a parameter; only the quoted column name is SQL text.
+            var sql = "SELECT {0} AS " + Fixture.Quote("Value");
+
+            Assert.Equal(1234.5m, await context.Database.SqlQueryRaw<decimal>(sql, 1234.5m).SingleAsync(Ct));
+            Assert.Equal(-0.25, await context.Database.SqlQueryRaw<double>(sql, -0.25).SingleAsync(Ct));
+            Assert.Equal(
+                new DateTime(2026, 12, 31, 23, 59, 58),
+                await context.Database.SqlQueryRaw<DateTime>(sql, new DateTime(2026, 12, 31, 23, 59, 58)).SingleAsync(Ct));
+        }
+        finally
+        {
+            System.Globalization.CultureInfo.CurrentCulture = culture;
+        }
+    }
+
     [Fact]
     public async Task Round_trips_every_mapped_type()
     {

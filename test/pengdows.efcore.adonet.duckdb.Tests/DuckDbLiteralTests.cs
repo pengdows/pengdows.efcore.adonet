@@ -20,6 +20,22 @@ public class DuckDbMigrationsTests
 
         Assert.Contains("DEFAULT nextval('\"s\".\"O''Brien_Id_seq\"')", sql);
     }
+
+    /// <summary>DuckDB has no ALTER TABLE ... ADD FOREIGN KEY: the generator says so, naming the key, before the engine's own error.</summary>
+    [Fact]
+    public void Adding_a_foreign_key_to_an_existing_table_is_refused_by_name()
+    {
+        using var context = new BlogContext(new DbContextOptionsBuilder<BlogContext>().UseAdoNetDuckDb("Data Source=:memory:").Options);
+        var add = new AddForeignKeyOperation
+        {
+            Name = "FK_\"x\"; DROP", Table = "Child", Columns = ["ParentId"], PrincipalTable = "Parent", PrincipalColumns = ["Id"]
+        };
+
+        var refused = Assert.Throws<NotSupportedException>(() => context.GetService<IMigrationsSqlGenerator>().Generate([add]));
+
+        Assert.Contains("FK_\"x\"; DROP", refused.Message);
+        Assert.Contains("Child", refused.Message);
+    }
 }
 
 public class DuckDbLiteralTests

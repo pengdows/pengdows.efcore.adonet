@@ -208,6 +208,19 @@ public sealed class SavepointSyntax(string create, string rollbackTo, string? re
 }
 
 /// <summary>
+///     Statements around an INSERT that writes a key the application set into a column the database generates, for a database
+///     that refuses one otherwise; <c>{0}</c> is the delimited table. Each insert is wrapped on its own, so a batch writing
+///     several tables never has two switched on at once.
+/// </summary>
+/// <param name="enable">Run before the insert.</param>
+/// <param name="disable">Run after it.</param>
+public sealed class IdentityInsertSyntax(string enable, string disable)
+{
+    public string Enable { get; } = enable;
+    public string Disable { get; } = disable;
+}
+
+/// <summary>
 ///     How a subquery correlated with the rows before it is joined: what EF calls <c>CROSS APPLY</c> and <c>OUTER APPLY</c>.
 /// </summary>
 /// <param name="crossJoin">Written before the joined table when every row needs a match.</param>
@@ -464,6 +477,15 @@ public sealed class JsonSyntax(
 
     /// <summary>Whether the database stores JSON in a native binary document type.</summary>
     public bool UsesBinaryDocument { get; init; }
+
+    /// <summary>
+    ///     A SQL value <c>{0}</c> as a JSON scalar, for <see cref="Set" />; null where the set function takes a SQL value as it is.
+    ///     A value JSON holds as a string (a date, a uuid, bytes as base64) is converted to text first.
+    /// </summary>
+    public string? ScalarValue { get; init; }
+
+    /// <summary>JSON's null, for <see cref="Set" /> to store a null property; null where it stores SQL NULL as JSON null.</summary>
+    public string? NullValue { get; init; }
 
     /// <summary>
     ///     Whether a JSON column is plain text, so it compares with a string as text and the string takes no
