@@ -20,6 +20,8 @@ internal sealed class SqlServerConventionSetBuilder(
         var conventionSet = base.CreateConventionSet();
         conventionSet.ModelFinalizingConventions.Add(new SqlServerNullableUniqueIndexConvention(sqlGenerationHelper));
         conventionSet.ModelFinalizingConventions.Add(new SqlServerSingleCascadePathConvention());
+        conventionSet.ModelFinalizingConventions.Add(new SqlServerValueGenerationConvention(sqlGenerationHelper));
+        conventionSet.ModelFinalizingConventions.Add(new SqlServerMemoryOptimizedTablesConvention());
         return conventionSet;
     }
 }
