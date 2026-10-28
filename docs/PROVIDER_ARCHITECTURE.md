@@ -33,6 +33,45 @@ boundaries. A new boolean belongs in a capability object only when it describes 
 real driver/database fact; a new SQL template belongs in `ISqlDialect`; a new EF
 service belongs in `ConfigureServices`.
 
+## Capability matrix: settings the core reads from a dialect
+
+The executable record is `DialectCapabilityMatrixTests` (a change to a dialect that moves a cell fails there until this table
+and the reason beside it are updated on purpose). Each difference is classified by where it comes from.
+
+| Provider | `NULLS FIRST/LAST` (`ISqlDialect.SupportsNullOrderingClauses`) | `DateTimeOffset` only at offset zero (`WritesDateTimeOffsetAsUtc`) | JSON document is plain text (`StoresDocumentAsText`) | JSON is a binary document (`UsesBinaryDocument`) |
+|---|---|---|---|---|
+| SQL Server | no (engine) | no | yes (engine: `nvarchar(max)`) | no |
+| PostgreSQL | yes | yes (driver: Npgsql) | no | yes (engine: `jsonb`) |
+| MySQL | no (engine) | no | no | no |
+| SQLite | yes | no | no | no |
+| DuckDB | yes | no | no | no |
+| FlatFile | yes | no | no | no |
+
+### Null ordering (`ReverseNullOrdering`)
+
+EF's specification tests, .NET and SQL Server sort nulls first. PostgreSQL, DuckDB and the FlatFile engine sort them last by
+default; SQLite, MySQL and SQL Server sort them first. The option writes `NULLS FIRST` (ascending) and `NULLS LAST`
+(descending) on every ORDER BY so the first group matches the second. It is internal, as in Npgsql and the DuckDB providers it
+follows, and a dialect whose engine takes no such clause (`SupportsNullOrderingClauses` false) refuses it when the context
+starts. A null-first order also needs indexes created with the matching order to be used, which is why it is not a public
+setting; the test hosts for PostgreSQL, DuckDB and FlatFile turn it on.
+
+### `DateTimeOffset` on PostgreSQL
+
+Npgsql refuses to write a `timestamptz` value whose offset is not zero, where every other driver stores the instant.
+PostgreSQL itself stores only the instant. The PostgreSQL dialect converts a non-zero offset to UTC (the same instant) before
+it binds, so EF's contract, an instant that round-trips, holds as on the other providers; the offset is not kept and reads
+back as zero. Npgsql's own provider chooses to throw instead and overrides the corresponding EF tests; this provider follows
+EF's contract first (behaviour-precedence rule). DB impact: PostgreSQL only; a write that used to fail now succeeds and
+loses its offset, never its instant.
+
+### JSON column compared with text
+
+A JSON column compared with a constant or parameter is written as `column = <text converted to JSON>` (the dialect's
+`FromText`), because a bare string is a JSON string scalar to MySQL and equals no document. A column that stores its document
+as plain text (SQL Server) compares as text and takes no conversion. DB impact: MySQL (`CAST(x AS JSON)`) and PostgreSQL
+(`CAST(x AS jsonb)`); covered by `JsonEqualityTests` and the specification suites.
+
 ## Migration rules
 
 1. Add or strengthen a shared contract test before changing a provider.
