@@ -7,7 +7,13 @@ public enum SpatialBinary
     Wkb,
 
     /// <summary>A four-byte little-endian SRID, then well-known binary.</summary>
-    SridPrefixedWkb
+    SridPrefixedWkb,
+
+    /// <summary>
+    ///     The GAIA geometry BLOB: a header with the byte order, SRID and bounding rectangle, then the geometry in its own
+    ///     encoding. Its coordinates are those the column's type names (a <c>Z</c>, <c>M</c> or <c>ZM</c> suffix).
+    /// </summary>
+    Gaia
 }
 
 /// <summary>How the ADO.NET provider receives a spatial parameter.</summary>

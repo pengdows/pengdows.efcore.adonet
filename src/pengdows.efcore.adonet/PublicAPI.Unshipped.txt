@@ -629,6 +629,7 @@ virtual pengdows.efcore.adonet.AnsiSqlDialect.Spatial.get -> pengdows.efcore.ado
 pengdows.efcore.adonet.SpatialBinary
 pengdows.efcore.adonet.SpatialBinary.Wkb = 0 -> pengdows.efcore.adonet.SpatialBinary
 pengdows.efcore.adonet.SpatialBinary.SridPrefixedWkb = 1 -> pengdows.efcore.adonet.SpatialBinary
+pengdows.efcore.adonet.SpatialBinary.Gaia = 2 -> pengdows.efcore.adonet.SpatialBinary
 pengdows.efcore.adonet.SpatialParameterBinding
 pengdows.efcore.adonet.SpatialParameterBinding.Binary = 0 -> pengdows.efcore.adonet.SpatialParameterBinding
 pengdows.efcore.adonet.SpatialParameterBinding.UserDefinedType = 1 -> pengdows.efcore.adonet.SpatialParameterBinding
