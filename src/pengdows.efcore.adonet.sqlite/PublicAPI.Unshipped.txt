@@ -24,3 +24,10 @@ static readonly pengdows.efcore.adonet.sqlite.SqliteDialect.Instance -> pengdows
 pengdows.efcore.adonet.sqlite.SqliteDesignTimeServices
 pengdows.efcore.adonet.sqlite.SqliteDesignTimeServices.SqliteDesignTimeServices() -> void
 override pengdows.efcore.adonet.sqlite.SqliteDialect.SchemaReader.get -> pengdows.efcore.adonet.Scaffolding.SchemaReader!
+pengdows.efcore.adonet.sqlite.SqliteDbFunctionsExtensions
+static pengdows.efcore.adonet.sqlite.SqliteDbFunctionsExtensions.Glob(this Microsoft.EntityFrameworkCore.DbFunctions! _, string! matchExpression, string! pattern) -> bool
+static pengdows.efcore.adonet.sqlite.SqliteDbFunctionsExtensions.Hex(this Microsoft.EntityFrameworkCore.DbFunctions! _, byte[]! bytes) -> string!
+static pengdows.efcore.adonet.sqlite.SqliteDbFunctionsExtensions.Unhex(this Microsoft.EntityFrameworkCore.DbFunctions! _, string! value) -> byte[]?
+static pengdows.efcore.adonet.sqlite.SqliteDbFunctionsExtensions.Unhex(this Microsoft.EntityFrameworkCore.DbFunctions! _, string! value, string! ignoreChars) -> byte[]?
+static pengdows.efcore.adonet.sqlite.SqliteDbFunctionsExtensions.Substr(this Microsoft.EntityFrameworkCore.DbFunctions! _, byte[]! bytes, int startIndex) -> byte[]!
+static pengdows.efcore.adonet.sqlite.SqliteDbFunctionsExtensions.Substr(this Microsoft.EntityFrameworkCore.DbFunctions! _, byte[]! bytes, int startIndex, int length) -> byte[]!

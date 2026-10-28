@@ -35,7 +35,10 @@ public class SqliteDialect : AdoNetDialect
     public override void ConfigureServices(IServiceCollection services)
         => new EntityFrameworkRelationalServicesBuilder(services)
             .TryAdd<IMigrationsSqlGenerator, SqliteMigrationsSqlGenerator>()
-            .TryAdd<IHistoryRepository, SqliteHistoryRepository>();
+            .TryAdd<IHistoryRepository, SqliteHistoryRepository>()
+            .TryAdd<Microsoft.EntityFrameworkCore.Query.IMethodCallTranslatorPlugin, SqliteMethodCallTranslatorPlugin>()
+            .TryAdd<Microsoft.EntityFrameworkCore.Query.IMemberTranslatorPlugin, SqliteMemberTranslatorPlugin>()
+            .TryAdd<Microsoft.EntityFrameworkCore.Diagnostics.IInterceptor, SqliteConnectionFunctionsInterceptor>();
 }
 
 /// <summary>SQLite before 3.35 has no RETURNING; keys come back through <c>last_insert_rowid()</c>.</summary>
@@ -175,13 +178,47 @@ internal sealed class SqliteFunctions : FunctionSyntax
     public override string? DayOfWeek => "CAST(STRFTIME('%w', {0}) AS INTEGER)";
     public override string? Millisecond => "CAST((CAST(STRFTIME('%f', {0}) AS REAL) * 1000) AS INTEGER) % 1000";
     public override string? DateOf => "STRFTIME('%Y-%m-%d 00:00:00', {0})";
-    public override string? Now => "STRFTIME('%Y-%m-%d %H:%M:%f', 'now', 'localtime')";
-    public override string? UtcNow => "STRFTIME('%Y-%m-%d %H:%M:%f', 'now')";
+    // A computed date and time drops its fraction's trailing zeros, and a bare point, so it is the text Microsoft.Data.Sqlite
+    // writes for the same value and compares equal to it. Behaviour reference (not copied):
+    // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.Core/Query/Internal/Translators/SqliteDateTimeMethodTranslator.cs
+    public override string? Now => "RTRIM(RTRIM(STRFTIME('%Y-%m-%d %H:%M:%f', 'now', 'localtime'), '0'), '.')";
+    public override string? UtcNow => "RTRIM(RTRIM(STRFTIME('%Y-%m-%d %H:%M:%f', 'now'), '0'), '.')";
     public override string? Today => "STRFTIME('%Y-%m-%d 00:00:00', 'now', 'localtime')";
-    public override string? AddYears => "STRFTIME('%Y-%m-%d %H:%M:%f', {0}, CAST({1} AS TEXT) || ' years')";
-    public override string? AddMonths => "STRFTIME('%Y-%m-%d %H:%M:%f', {0}, CAST({1} AS TEXT) || ' months')";
-    public override string? AddDays => "STRFTIME('%Y-%m-%d %H:%M:%f', {0}, CAST({1} AS TEXT) || ' days')";
+    public override string? AddYears => "RTRIM(RTRIM(STRFTIME('%Y-%m-%d %H:%M:%f', {0}, CAST({1} AS TEXT) || ' years'), '0'), '.')";
+    public override string? AddMonths => "RTRIM(RTRIM(STRFTIME('%Y-%m-%d %H:%M:%f', {0}, CAST({1} AS TEXT) || ' months'), '0'), '.')";
+    public override string? AddDays => "RTRIM(RTRIM(STRFTIME('%Y-%m-%d %H:%M:%f', {0}, CAST({1} AS TEXT) || ' days'), '0'), '.')";
+
+    // Hours, minutes, seconds and milliseconds come as microseconds; STRFTIME keeps milliseconds.
+    public override string? AddMicroseconds
+        => "RTRIM(RTRIM(STRFTIME('%Y-%m-%d %H:%M:%f', {0}, CAST(({1}) / 1000000.0 AS TEXT) || ' seconds'), '0'), '.')";
+
+    public override string? TimeOfDay => "RTRIM(RTRIM(STRFTIME('%H:%M:%f', {0}), '0'), '.')";
+
+    // ISO's CAST(x AS DATE) is a NUMERIC cast in SQLite: the year alone.
+    public override string? DateFromDateTime => "DATE({0})";
     public override string? DayNumber => "CAST(JULIANDAY({0}) - JULIANDAY('0001-01-01') AS INTEGER)";
+
+    // INSTR from a position: the position in the rest of the string, made absolute; 0 when absent.
+    public override string? PositionFrom
+        => "CASE WHEN INSTR(SUBSTR({1}, {2}), {0}) > 0 THEN INSTR(SUBSTR({1}, {2}), {0}) + {2} - 1 ELSE 0 END";
+
+    // Regex.IsMatch: REGEXP calls the regexp function SqliteConnectionFunctionsInterceptor gives each connection.
+    public override string? RegexIsMatch => "({0} REGEXP {1})";
+
+    // A blob's LENGTH is its bytes. SQLite has no function giving a byte as a number, so one is read from its two hex digits.
+    public override string? ByteLength => "LENGTH({0})";
+
+    public override string? ByteAt
+        => "((INSTR('0123456789ABCDEF', SUBSTR(HEX(SUBSTR({0}, {1}, 1)), 1, 1)) - 1) * 16 "
+            + "+ INSTR('0123456789ABCDEF', SUBSTR(HEX(SUBSTR({0}, {1}, 1)), 2, 1)) - 1)";
+
+    // The byte as a one-byte blob (CHAR would make a byte above 127 two bytes of UTF-8).
+    public override string? BytesContain => "(INSTR({0}, UNHEX(PRINTF('%02X', {1}))) > 0)";
+
+    // NUMERIC affinity stores a whole decimal as an INTEGER, and SQLite divides two INTEGERs as integers; its % truncates
+    // both operands to integers, where MOD keeps the fraction (SQLite 3.35's math functions).
+    public override string? DecimalDivide => "CAST({0} AS REAL) / {1}";
+    public override string? FractionalModulo => "MOD({0}, {1})";
 
     public override string? OffsetDateTime => "SUBSTR({0}, 1, LENGTH({0}) - 6)";
     public override string? TrimStart => "LTRIM({0})";

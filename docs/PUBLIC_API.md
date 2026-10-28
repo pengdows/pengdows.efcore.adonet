@@ -39,6 +39,7 @@ machinery, conventions, type mappings) are reached through EF's interfaces, neve
 | `JsonSyntax.Equality` | Plugins: a database whose JSON is text underneath (MariaDB) compares a JSON column with JSON text through its own function, not `=`. |
 | `AdoNetDbFunctionsExtensions.DateDiffYear` … `DateDiffMicrosecond`, `FunctionSyntax.DateDiff`, `DateDiffUnit` | Applications: date and time differences in whole units, as Microsoft's SQL Server and Pomelo's MySQL `EF.Functions.DateDiff*`; plugins give each unit's template, null where the database has none. |
 | `PostgreSqlDbFunctionsExtensions.ILike` | Applications: PostgreSQL's case-insensitive `ILIKE`, with or without an escape character, as Npgsql's `EF.Functions.ILike`. |
+| `SqliteDbFunctionsExtensions` (`Glob`, `Hex`, `Unhex`, `Substr`) | Applications: SQLite's GLOB, HEX, UNHEX and SUBSTR over a blob, as Microsoft's SQLite `EF.Functions` of the same names. |
 | `MySqlFullTextExtensions` (`IsFullText`, `Match`, `IsMatch`), `MySqlMatchSearchMode` | Applications: MySQL `FULLTEXT` indexes and `MATCH ... AGAINST` in its three search modes, as Pomelo's. |
 | `MySqlModelOptionsExtensions` (`HasCharSet`, `HasPrefixLength`, `IsSpatial`) | Applications: a column's, table's or database's character set, index prefix lengths and `SPATIAL` indexes in migrations, as Pomelo's. |
 | `MySqlDialect.MariaDb` | Applications: MariaDB, which has no `LATERAL` (queries needing one are refused), writes table value constructor rows without `ROW`, and has no JSON type to `CAST` to. Chosen with `UseDialect`, as `SingleStore` is. |
