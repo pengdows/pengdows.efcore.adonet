@@ -17,7 +17,7 @@ public static class AdoNetAnnotationNames
     public const string IdentityColumns = Prefix + "IdentityColumns";
 
     /// <summary>
-    ///     On an entity type: false when its table can't take the dialect's RETURNING clause (a table with triggers, or a
+    ///     On an entity type, or the mapping fragment of one of its split tables: false when the table can't take the dialect's RETURNING clause (a table with triggers, or a
     ///     virtual table), so its keys come back through <see cref="ISqlDialect.KeysWithoutReturning" />.
     /// </summary>
     public const string UseReturningClause = Prefix + "UseReturningClause";

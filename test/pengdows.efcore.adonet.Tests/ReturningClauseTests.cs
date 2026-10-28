@@ -76,6 +76,38 @@ public class ReturningClauseTests
         Assert.Contains("RETURNING \"Id\"", Assert.Single(_db.Commands));
     }
 
+    // Entity splitting: the annotation on one table's mapping fragment applies to that table alone.
+    [Fact]
+    public async Task A_split_table_without_the_returning_clause_checks_rows_with_the_rows_affected_function()
+    {
+        await using var context = _db.ContextOf<SplitContext>(WithFallback, o => new SplitContext(o));
+        context.Remove(new Item { Id = 2 });
+
+        await Assert.ThrowsAsync<DbUpdateConcurrencyException>(() => context.SaveChangesAsync(Ct));
+
+        var command = Assert.Single(_db.Commands);
+        var details = command[command.IndexOf("DELETE FROM \"ItemDetails\"", StringComparison.Ordinal)..];
+        var items = command[command.IndexOf("DELETE FROM \"Item\"\n", StringComparison.Ordinal)..];
+        Assert.Contains("SELECT changes();", details.Split("DELETE FROM \"Item\"\n")[0]);
+        Assert.DoesNotContain("RETURNING", details.Split("DELETE FROM \"Item\"\n")[0]);
+        Assert.Contains("RETURNING 1", items.Split("DELETE FROM \"ItemDetails\"")[0]);
+    }
+
+    public sealed class SplitContext(DbContextOptions<SplitContext> options) : DbContext(options)
+    {
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Item>().Ignore(i => i.Parts);
+            modelBuilder.Entity<Item>().SplitToTable(
+                "ItemDetails",
+                t =>
+                {
+                    t.Property(i => i.Name);
+                    t.MappingFragment.SetAnnotation(AdoNetAnnotationNames.UseReturningClause, false);
+                });
+        }
+    }
+
     private sealed class FallbackSql : AnsiSqlDialect
     {
         public override SelectAfterKeyRetrieval? KeysWithoutReturning { get; } = KeyRetrieval.SelectAfter("last_insert_rowid()", "changes()");

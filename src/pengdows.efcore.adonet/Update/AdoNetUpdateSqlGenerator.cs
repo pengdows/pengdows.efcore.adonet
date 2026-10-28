@@ -511,7 +511,14 @@ internal class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependenc
     private KeyRetrieval KeysFor(IReadOnlyModificationCommand command)
         => (dialect.Sql.Keys is ReturningKeyRetrieval)
             && (dialect.Sql.KeysWithoutReturning is { } withoutReturning)
-            && (command.Table?.EntityTypeMappings.Any(m => m.TypeBase.FindAnnotation(AdoNetAnnotationNames.UseReturningClause)?.Value is false) == true)
+            && (command.Table is { } table)
+            && table.EntityTypeMappings.Any(m => UsesReturningClause(m.TypeBase, table) is false)
                 ? withoutReturning
                 : dialect.Sql.Keys;
+
+    // An entity type split across tables says so for one table on that table's mapping fragment, else for all its tables.
+    private static bool? UsesReturningClause(ITypeBase type, ITable table)
+        => ((type as IEntityType)?.FindMappingFragment(StoreObjectIdentifier.Table(table.Name, table.Schema))
+                ?.FindAnnotation(AdoNetAnnotationNames.UseReturningClause)?.Value as bool?)
+            ?? (type.FindAnnotation(AdoNetAnnotationNames.UseReturningClause)?.Value as bool?);
 }
