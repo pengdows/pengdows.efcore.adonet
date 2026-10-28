@@ -358,7 +358,7 @@ failure in the specification suite that matches one of these is the driver's, no
 When the release ships: update `DuckDB.NET.Data` and `DuckDB.NET.Data.Full`, remove the test store's close-only-if-open
 check, and rerun the DuckDB specification suite.
 
-## pengdows.crud.fakeDb (2.0.6-rc2)
+## pengdows.crud.fakeDb (2.0.6-rc3)
 
 Gaps that keep core paths out of reach of fakeDb tests (REVIEW_POLICY: a gap is added to fakeDb, never mocked around):
 
