@@ -19,7 +19,8 @@ internal class AdoNetMethodCallTranslatorProvider : RelationalMethodCallTranslat
             new AdoNetStringMethodTranslator(sqlExpressionFactory, dependencies.RelationalTypeMappingSource, dialect.Functions),
             new AdoNetMathTranslator(sqlExpressionFactory, dependencies.RelationalTypeMappingSource, dialect.Functions),
             new AdoNetDateTimeMethodTranslator(sqlExpressionFactory, dependencies.RelationalTypeMappingSource, dialect.Functions),
-            new AdoNetMiscellaneousTranslator(sqlExpressionFactory, dependencies.RelationalTypeMappingSource, dialect.Functions)
+            new AdoNetMiscellaneousTranslator(sqlExpressionFactory, dependencies.RelationalTypeMappingSource, dialect.Functions),
+            new AdoNetDbFunctionsTranslator(sqlExpressionFactory, dependencies.RelationalTypeMappingSource, dialect.Functions)
         ]);
     }
 }
@@ -576,5 +577,34 @@ internal class AdoNetMiscellaneousTranslator(
         }
 
         return null;
+    }
+}
+
+/// <summary>EF.Functions.DateDiff*: the dialect's count of units, the two values given one type mapping.</summary>
+internal class AdoNetDbFunctionsTranslator(
+    ISqlExpressionFactory sqlExpressionFactory,
+    IRelationalTypeMappingSource typeMappingSource,
+    FunctionSyntax functions) : IMethodCallTranslator
+{
+    public SqlExpression? Translate(
+        SqlExpression? instance,
+        MethodInfo method,
+        IReadOnlyList<SqlExpression> arguments,
+        IDiagnosticsLogger<DbLoggerCategory.Query> logger)
+    {
+        if ((method.DeclaringType != typeof(AdoNetDbFunctionsExtensions))
+            || !method.Name.StartsWith("DateDiff", StringComparison.Ordinal)
+            || !Enum.TryParse<DateDiffUnit>(method.Name["DateDiff".Length..], out var unit)
+            || (functions.DateDiff(unit) is not { } template))
+        {
+            return null;
+        }
+
+        var mapping = ExpressionExtensions.InferTypeMapping(arguments[1], arguments[2]);
+        return sqlExpressionFactory.Call(
+            template,
+            [sqlExpressionFactory.ApplyTypeMapping(arguments[1], mapping)!, sqlExpressionFactory.ApplyTypeMapping(arguments[2], mapping)!],
+            method.ReturnType,
+            typeMappingSource.FindMapping(typeof(int)));
     }
 }

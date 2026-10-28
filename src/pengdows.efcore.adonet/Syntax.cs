@@ -620,6 +620,13 @@ public sealed class JsonSyntax(
     public bool StoresDocumentAsText { get; init; }
 
     /// <summary>
+    ///     Whether the JSON documents <c>{0}</c> and <c>{1}</c> are equal, for a JSON column compared with JSON text: null to
+    ///     compare with <c>=</c> after <see cref="FromText" />. For a database whose JSON is text underneath, where <c>=</c>
+    ///     compares spellings, not documents.
+    /// </summary>
+    public string? Equality { get; init; }
+
+    /// <summary>
     ///     The elements of the JSON array <c>{0}</c> as a table, for querying a primitive collection: a column named <c>{1}</c>
     ///     that orders the elements, and one named <c>{2}</c> holding each element as the store type <c>{3}</c>. The table's alias
     ///     follows it. Null where the dialect can't; a collection is then queried only as a whole.

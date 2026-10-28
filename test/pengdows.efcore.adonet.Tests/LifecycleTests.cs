@@ -60,7 +60,8 @@ public class LifecycleTests
             await context.Items.ToListAsync(Ct);
 
             connection = Assert.Single(factory.CreatedConnections);
-            Assert.Equal(2, connection.OpenCount);
+            // fakeDb counts synchronous and asynchronous opens apart.
+            Assert.Equal(2, connection.OpenCount + connection.OpenAsyncCount);
             Assert.Equal(2, connection.CloseCount);
             Assert.Equal(ConnectionState.Closed, connection.State);
         }
@@ -143,7 +144,7 @@ public class LifecycleTests
             await transaction.CommitAsync(Ct);
         }
 
-        Assert.Equal(1, db.Connection.OpenCount);
+        Assert.Equal(1, db.Connection.OpenCount + db.Connection.OpenAsyncCount);
         Assert.Equal(ConnectionState.Closed, db.Connection.State);
     }
 
@@ -201,16 +202,47 @@ public class LifecycleTests
         await Assert.ThrowsAsync<NotSupportedException>(() => transaction.ReleaseSavepointAsync("s1", Ct));
     }
 
-    // Microsoft.Data.Sqlite implements savepoints (SupportsSavepoints true); a dialect for a server that ignores them must
-    // still refuse, not hand them to the driver.
+    // A driver that implements savepoints and says so (DbTransaction.SupportsSavepoints true, as Npgsql and
+    // Microsoft.Data.Sqlite do): fakeDb's transaction, overridden to report them and record each call.
+    private sealed class SavepointConnection : fakeDbConnection
+    {
+        public List<string> Savepoints { get; } = [];
+
+        protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel)
+            => new SavepointTransaction(this, isolationLevel);
+
+        protected override ValueTask<DbTransaction> BeginDbTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken)
+            => ValueTask.FromResult<DbTransaction>(new SavepointTransaction(this, isolationLevel));
+    }
+
+    private sealed class SavepointTransaction(SavepointConnection connection, IsolationLevel isolationLevel)
+        : fakeDbTransaction(connection, isolationLevel)
+    {
+        public override bool SupportsSavepoints
+            => true;
+
+        public override void Save(string savepointName)
+            => connection.Savepoints.Add("Save " + savepointName);
+
+        public override void Rollback(string savepointName)
+            => connection.Savepoints.Add("Rollback " + savepointName);
+
+        public override void Release(string savepointName)
+            => connection.Savepoints.Add("Release " + savepointName);
+    }
+
+    private static ItemContext SavepointContext(SavepointConnection connection, IAdoNetDialect dialect)
+        => new(new DbContextOptionsBuilder<ItemContext>()
+            .UseAdoNet(connection, contextOwnsConnection: false, o => o.UseDialect(dialect))
+            .AllowManyDialects()
+            .Options);
+
+    // A dialect for a server that ignores savepoints must refuse them even where the driver has them, not hand them to it.
     [Fact]
     public async Task A_dialect_without_savepoints_has_none_even_where_the_driver_has_them()
     {
-        await using var connection = new Microsoft.Data.Sqlite.SqliteConnection("Data Source=:memory:");
-        await using var context = new ItemContext(new DbContextOptionsBuilder<ItemContext>()
-            .UseAdoNet(connection, contextOwnsConnection: false, o => o.UseDialect(TestDialects.NoSavepoints))
-            .AllowManyDialects()
-            .Options);
+        await using var connection = new SavepointConnection { ConnectionString = "Data Source=fake;EmulatedProduct=PostgreSql" };
+        await using var context = SavepointContext(connection, TestDialects.NoSavepoints);
         await using var transaction = await context.Database.BeginTransactionAsync(Ct);
 
         Assert.True(transaction.GetDbTransaction().SupportsSavepoints);
@@ -218,6 +250,23 @@ public class LifecycleTests
         await Assert.ThrowsAsync<NotSupportedException>(() => transaction.CreateSavepointAsync("s1", Ct));
         Assert.Throws<NotSupportedException>(() => transaction.RollbackToSavepoint("s1"));
         Assert.Throws<NotSupportedException>(() => transaction.ReleaseSavepoint("s1"));
+        Assert.Empty(connection.Savepoints);
+    }
+
+    // Where the dialect has savepoints and the driver implements them, they go through the driver, in its own syntax: no SQL.
+    [Fact]
+    public async Task Savepoints_the_driver_has_go_through_the_driver()
+    {
+        await using var connection = new SavepointConnection { ConnectionString = "Data Source=fake;EmulatedProduct=PostgreSql" };
+        await using var context = SavepointContext(connection, AdoNetDialect.Ansi);
+        await using var transaction = await context.Database.BeginTransactionAsync(Ct);
+
+        Assert.True(transaction.SupportsSavepoints);
+        transaction.CreateSavepoint("s1");
+        await transaction.RollbackToSavepointAsync("s1", Ct);
+        await transaction.ReleaseSavepointAsync("s1", Ct);
+
+        Assert.Equal(["Save s1", "Rollback s1", "Release s1"], connection.Savepoints);
     }
 
     [Fact]

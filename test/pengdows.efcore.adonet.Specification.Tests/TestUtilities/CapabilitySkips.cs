@@ -105,6 +105,10 @@ public sealed class CapabilitySkips : IDbContextOptionsExtension
             {
                 throw new CapabilitySkipException($"[SKIP:{dialect.Name}] {e.Message}");
             }
+            catch (pengdows.efcore.adonet.Query.OuterReferenceInDerivedTableNotSupportedException e)
+            {
+                throw new CapabilitySkipException($"[SKIP:{dialect.Name}] {e.Message}");
+            }
         }
     }
 

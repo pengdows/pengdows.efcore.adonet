@@ -89,7 +89,19 @@ internal partial class MySqlMigrationsSqlGenerator(MigrationsSqlGeneratorDepende
             });
         }
 
-        base.Generate(operation, model, builder, terminate);
+        // The table's DEFAULT CHARACTER SET goes after its definition, before the terminator.
+        base.Generate(operation, model, builder, terminate: false);
+        if (operation[MySqlModelOptionsExtensions.CharSetAnnotation] is string charSet)
+        {
+            builder.Append(" DEFAULT CHARACTER SET ").Append(charSet);
+        }
+
+        if (terminate)
+        {
+            builder.AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
+            EndStatement(builder);
+        }
+
         if (operation.Comment != null)
         {
             TableComment(operation.Name, operation.Schema, operation.Comment, builder);
@@ -112,6 +124,12 @@ internal partial class MySqlMigrationsSqlGenerator(MigrationsSqlGeneratorDepende
         IModel? model,
         MigrationCommandListBuilder builder)
     {
+        // A column's CHARACTER SET follows its type.
+        if ((operation[MySqlModelOptionsExtensions.CharSetAnnotation] is string charSet) && (operation.ComputedColumnSql == null))
+        {
+            operation.ColumnType = (operation.ColumnType ?? GetColumnType(schema, table, name, operation, model)) + " CHARACTER SET " + charSet;
+        }
+
         base.ColumnDefinition(schema, table, name, operation, model, builder);
 
         // A row version is a TIMESTAMP(6) the server sets on every insert and update. Behaviour reference (not copied):
@@ -127,6 +145,46 @@ internal partial class MySqlMigrationsSqlGenerator(MigrationsSqlGeneratorDepende
         {
             builder.Append(" COMMENT ").Append(Dialect.Sql.StringLiteral(operation.Comment));
         }
+    }
+
+    // A prefix length indexes a column's first characters: col(n).
+    protected override void GenerateIndexColumnList(CreateIndexOperation operation, IModel? model, MigrationCommandListBuilder builder)
+    {
+        var prefixLengths = operation[MySqlModelOptionsExtensions.PrefixLengthAnnotation] as int[] ?? [];
+        for (var i = 0; i < operation.Columns.Length; i++)
+        {
+            if (i > 0)
+            {
+                builder.Append(", ");
+            }
+
+            builder.Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Columns[i]));
+            if ((i < prefixLengths.Length) && (prefixLengths[i] > 0))
+            {
+                builder.Append("(").Append(prefixLengths[i].ToString(System.Globalization.CultureInfo.InvariantCulture)).Append(")");
+            }
+
+            if ((operation.IsDescending is not null) && ((operation.IsDescending.Length == 0) || operation.IsDescending[i]))
+            {
+                builder.Append(" DESC");
+            }
+        }
+    }
+
+    // CREATE FULLTEXT INDEX for an index marked IsFullText.
+    protected override void IndexTraits(MigrationOperation operation, IModel? model, MigrationCommandListBuilder builder)
+    {
+        if (operation[MySqlFullTextExtensions.FullTextAnnotation] is true)
+        {
+            builder.Append("FULLTEXT ");
+        }
+
+        if (operation[MySqlModelOptionsExtensions.SpatialAnnotation] is true)
+        {
+            builder.Append("SPATIAL ");
+        }
+
+        base.IndexTraits(operation, model, builder);
     }
 
     private void TableComment(string table, string? schema, string comment, MigrationCommandListBuilder builder)

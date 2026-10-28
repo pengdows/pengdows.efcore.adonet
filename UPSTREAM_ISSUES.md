@@ -116,6 +116,15 @@ noted so they can be removed once the fix ships.
 - **Here:** a set-operation operand over a multi-row VALUES is parenthesized.
 - **Status:** not reported.
 
+### Specification tests: `Can_apply_two_migrations_in_transaction_async` doesn't await its transaction
+
+- **Defect:** `MigrationsInfrastructureTestBase` 10.0.11 writes `using var transaction = db.Database.BeginTransactionAsync();`:
+  the application's begin is never awaited, so it races the migrator's own begin.
+- **Effect upstream:** a driver whose begin does asynchronous I/O sometimes loses the race ("The connection is already in a
+  transaction"); seen once in a full MySQL run through MySqlConnector, passing alone.
+- **Here:** the shared specification override awaits it, as EF's `main` does.
+- **Status:** fixed on `main` (already `await using ... await` at f249a6e0); not in 10.0.11.
+
 ## dotnet/SqlClient (Microsoft.Data.SqlClient 7.1.1)
 
 ### `SqlTransaction.SupportsSavepoints` is false although it has savepoints
@@ -227,6 +236,15 @@ noted so they can be removed once the fix ships.
 Found by running the shared MySQL suites through Oracle's driver as well as MySqlConnector (the dialect is
 driver-neutral). Checked against the user's open pull requests there (#95-#115) and fork (pengdows/mysql-connector-net
 #1-#5): neither is covered.
+
+Reported at bugs.mysql.com, ADO.NET contract gaps in the driver (no workaround here unless an entry below says so):
+[#121583](https://bugs.mysql.com/bug.php?id=121583) `GetOrdinal` doesn't prefer an exact-case column match;
+[#121584](https://bugs.mysql.com/bug.php?id=121584) `DbParameter` defaults differ from ADO.NET's;
+[#121585](https://bugs.mysql.com/bug.php?id=121585) reader value access throws the wrong exception for an invalid state;
+[#121586](https://bugs.mysql.com/bug.php?id=121586) undefined `UpdatedRowSource` values are accepted;
+[#121587](https://bugs.mysql.com/bug.php?id=121587) the savepoint methods don't match `SupportsSavepoints`;
+[#121616](https://bugs.mysql.com/bug.php?id=121616) (contribution) infer a `char` parameter as a fixed-length string;
+[#121617](https://bugs.mysql.com/bug.php?id=121617) (contribution) report `Connecting` before `Open` when a connection opens.
 
 ### `DbType.DateTime2` maps to `MySqlDbType.Blob`
 
@@ -340,28 +358,29 @@ failure in the specification suite that matches one of these is the driver's, no
 When the release ships: update `DuckDB.NET.Data` and `DuckDB.NET.Data.Full`, remove the test store's close-only-if-open
 check, and rerun the DuckDB specification suite.
 
-## pengdows.crud.fakeDb (2.0.5; source at 2.0.6)
+## pengdows.crud.fakeDb (2.0.6-rc1)
 
 Gaps that keep core paths out of reach of fakeDb tests (REVIEW_POLICY: a gap is added to fakeDb, never mocked around):
 
-- No savepoints: `fakeDbTransaction.SupportsSavepoints` is false and `Save`/`Rollback(name)` throw, so the core's use of a
-  driver's own savepoints is only covered by the integration suites (SQLite, PostgreSQL, flatfile). A switch to emulate
-  them would cover it.
 - No `System.Transactions` enlistment: `fakeDbConnection` doesn't override `DbConnection.EnlistTransaction`, so a context
   inside a `TransactionScope` on a dialect whose driver enlists fails with `NotSupportedException`. Ambient transactions
   are only covered by EF's Transaction specification suite on the server databases.
-- 2.0.5 always reports `RecordsAffected = 0` for a batch's reader, so a successful plain-statement write (sequence-key
-  dialects) can't be scripted; 2.0.6's `RecordsAffectedOverride` should allow it once published.
-- 2.0.5's `CreateDataSource` returns .NET's default data source, and the factory doesn't list the data sources it made,
-  so two core tests keep a hand-written factory: `ConnectionSourceTests.CountingFactory` (one data source per connection
-  string) and `ConfigurationRulesTests.TrackingFactory` (data sources disposed with the service provider). fakeDb's source
-  (built locally as 2.0.6.1) has `SupportsNativeDataSource`, `CreatedDataSources` and `FakeDbDataSource.WasDisposed`, which
-  replace both once published; nuget.org's latest is 2.0.5.
-- 2.0.5's `fakeDbConnection` names no `DbProviderFactory` (`DbProviderFactories.GetFactory(connection)` is null); the
-  source reports the factory that created it. The core's database creator therefore prefers the factory the context was
-  configured with, and only then asks the connection.
+- The `Npgsql()` driver preset reports no savepoints and refuses them, where Npgsql implements them and says so
+  (`SupportsSavepoints` true). No preset reports them; the core's driver-savepoint path is tested through an overridden
+  `fakeDbTransaction` (`LifecycleTests.SavepointConnection`).
 - A dialect is registered by factory type and `fakeDbFactory` is sealed, so a test that registers one needs a factory type
   of its own (`ProbedFactory`, `UnknownFactory`); both hand out fakeDb connections.
+
+Closed by 2.0.6-rc1, and used:
+
+- Savepoints: `fakeDbDriverQuirks.SavepointsWorkButUnreported` (SqlClient, MySqlConnector) and an overridable transaction
+  replace the Microsoft.Data.Sqlite stand-in for a driver that has savepoints.
+- `fakeDbFactory.SupportsNativeDataSource`, `CreatedDataSources` and `FakeDbDataSource.WasDisposed` replace the two
+  hand-written factories (`ConnectionSourceTests`, `ConfigurationRulesTests`).
+- A connection names the factory that created it (`DbProviderFactories.GetFactory(connection)`).
+- `fakeDbDataReader.RecordsAffectedOverride` lets a batch's reader report rows affected (not yet used).
+- Behaviour change: `OpenCount` counts only synchronous opens, `OpenAsyncCount` the asynchronous ones; the lifecycle tests
+  count both.
 
 ## pengdows.flatfile (0.2.1-preview.10)
 

@@ -390,6 +390,21 @@ public class TranslationTests
         { "PadRight with a character", i => i.Name!.PadRight(5, '*') == "a", "RPAD(\"i\".\"Name\", 5, '*')" }
     };
 
+    // EF.Functions.DateDiff*: the dialect's count of units from the first to the second; untranslated where it has none.
+    [Fact]
+    public void Date_differences_are_the_dialects()
+    {
+        var dialect = new PartsDialect("Date differences", new PartsSql(functions: new DateDiffs()));
+
+        Assert.Contains("DATEDIFF(day, \"i\".\"At\", \"i\".\"At\")", Sql(dialect, c => c.Items.Where(i => EF.Functions.DateDiffDay(i.At, i.At) > 1)));
+        Assert.Contains("DATEDIFF(microsecond, ", Sql(dialect, c => c.Items.Where(i => EF.Functions.DateDiffMicrosecond(i.At, i.At) > 1)));
+        Assert.Contains("DATEDIFF(month, ", Sql(dialect, c => c.Items.Where(i => EF.Functions.DateDiffMonth(i.AtOffset, i.AtOffset) > 1)));
+        Assert.Contains("SELECT DATEDIFF(year, \"i\".\"At\", ", Sql(dialect, c => c.Items.Select(i => EF.Functions.DateDiffYear(i.At, new DateTime(2027, 3, 5)))));
+        Assert.Contains(
+            "could not be translated",
+            Assert.Throws<InvalidOperationException>(() => Ansi(c => c.Items.Where(i => EF.Functions.DateDiffDay(i.At, i.At) > 1))).Message);
+    }
+
     [Theory]
     [MemberData(nameof(PaddingTranslations))]
     public void Padding_is_the_dialects(string _, Expression<Func<Item, bool>> predicate, string expected)
@@ -473,6 +488,13 @@ public sealed class CastLiteralTypeMappings : AnsiTypeMappings
 
 /// <summary>A database with no SUBSTRING.</summary>
 /// <summary>A database whose trims take a set of characters, as PostgreSQL's BTRIM/LTRIM/RTRIM do.</summary>
+/// <summary>A database with DATEDIFF, as SQL Server's.</summary>
+public sealed class DateDiffs : FunctionSyntax
+{
+    public override string DateDiff(DateDiffUnit unit)
+        => "DATEDIFF(" + unit.ToString().ToLowerInvariant() + ", {0}, {1})";
+}
+
 /// <summary>A database with LPAD/RPAD, as PostgreSQL's, written to keep a longer string whole as .NET's PadLeft does.</summary>
 public sealed class Padding : FunctionSyntax
 {

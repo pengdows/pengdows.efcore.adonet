@@ -33,6 +33,34 @@ public class MySqlSqlTests
         return context.Blogs.Where(b => b.Name == name).OrderBy(b => b.Id).Skip(5).Take(10).ToQueryString();
     }
 
+    public class Server
+    {
+        public int Id { get; set; }
+        public System.Net.IPAddress? Address { get; set; }
+    }
+
+    private sealed class ServerContext(DbContextOptions<ServerContext> options) : DbContext(options)
+    {
+        public DbSet<Server> Servers => Set<Server>();
+    }
+
+    // CAST(x AS CHAR(n)) takes the connection's collation as strongly as a column has its own, so against a column in another
+    // collation it fails ("Illegal mix of collations": MariaDB 11's utf8mb4_uca1400_ai_ci beside MySqlConnector's
+    // utf8mb4_general_ci). CONCAT yields to the column, and LEFT keeps the truncation to n.
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void A_sized_text_cast_yields_to_the_columns_collation(bool mariaDb)
+    {
+        using var context = new ServerContext(new DbContextOptionsBuilder<ServerContext>()
+            .UseAdoNetMySql("Server=localhost", o => o.UseDialect(mariaDb ? MySqlDialect.MariaDb : MySqlDialect.Instance))
+            .Options);
+
+        var sql = context.Servers.Where(s => s.Address == System.Net.IPAddress.Loopback).ToQueryString();
+
+        Assert.Contains("= LEFT(CONCAT('127.0.0.1'), 45)", sql);
+    }
+
     [Fact]
     public void Uses_backticks_and_a_limit_for_offset_only()
     {
@@ -166,5 +194,55 @@ public class MySqlNamedColumnTypeTests
 
         Assert.Contains("\"Flag\" boolean NOT NULL", script);
         Assert.Contains("\"Other\" bool NOT NULL", script);
+    }
+}
+
+/// <summary>
+///     MariaDB speaks MySQL's dialect but has no LATERAL derived tables (MDEV-19078), writes a table value constructor's rows
+///     as plain <c>(...)</c> without <c>ROW</c>, and has no JSON type to CAST to: JSON is an alias of LONGTEXT, and a JSON
+///     function's result is what JSON_SET takes as JSON rather than as a string.
+/// </summary>
+public class MariaDbSqlTests
+{
+    [Fact]
+    public void MariaDb_has_no_lateral_joins_rows_without_ROW_and_json_from_a_json_function()
+    {
+        Assert.Equal("MariaDB", MySqlDialect.MariaDb.Name);
+        Assert.Null(MySqlDialect.MariaDb.Sql.LateralJoins);
+        Assert.False(MySqlDialect.MariaDb.Sql.SupportsOuterReferencesInDerivedTables);
+        Assert.True(MySqlDialect.Instance.Sql.SupportsOuterReferencesInDerivedTables);
+        Assert.Equal("", MySqlDialect.MariaDb.Sql.ValuesRowPrefix);
+        Assert.Equal("JSON_COMPACT({0})", MySqlDialect.MariaDb.Sql.Json!.FromText);
+        Assert.Equal("JSON_EQUALS({0}, {1})", MySqlDialect.MariaDb.Sql.Json!.Equality);
+        Assert.Null(MySqlDialect.Instance.Sql.Json!.Equality);
+        Assert.NotNull(MySqlDialect.Instance.Sql.LateralJoins);
+        Assert.Equal("ROW", MySqlDialect.Instance.Sql.ValuesRowPrefix);
+    }
+
+    // MariaDB's spatial functions: ST_GeomFromText without MySQL's axis-order option (its x is always the longitude),
+    // ST_NumInteriorRings without the singular synonym, and no ST_IsValid; its REGEXP is PCRE, with no REGEXP_LIKE, and
+    // (?-i) makes it case-sensitive whatever the collation.
+    [Fact]
+    public void MariaDb_writes_its_own_spatial_and_regex_functions()
+    {
+        var spatial = MySqlDialect.MariaDb.Sql.Spatial!;
+        Assert.Equal("ST_GeomFromText({0}, {1})", spatial.FromText);
+        Assert.Equal("ST_NumInteriorRings({0})", spatial.Functions["NumInteriorRings"]);
+        Assert.Null(spatial.Functions["IsValid"]);
+        Assert.Equal("CASE WHEN {1} = '' THEN TRUE ELSE {0} REGEXP CONCAT('(?-i)', {1}) END", MySqlDialect.MariaDb.Sql.Functions.RegexIsMatch);
+        Assert.Contains("REGEXP_LIKE", MySqlDialect.Instance.Sql.Functions.RegexIsMatch);
+    }
+
+    [Fact]
+    public void A_query_with_a_lateral_join_is_refused_on_MariaDb()
+    {
+        using var context = new BlogContext(new DbContextOptionsBuilder<BlogContext>()
+            .UseAdoNetMySql("Server=localhost", o => o.UseDialect(MySqlDialect.MariaDb))
+            .Options);
+
+        Assert.ThrowsAny<InvalidOperationException>(
+            () => context.Blogs
+                .SelectMany(b => context.Posts.Where(p => p.Id > b.Id).OrderBy(p => p.Id).Take(1), (b, p) => new { b.Id, p.Title })
+                .ToQueryString());
     }
 }

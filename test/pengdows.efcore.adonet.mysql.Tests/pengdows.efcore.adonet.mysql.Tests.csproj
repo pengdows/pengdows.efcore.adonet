@@ -6,6 +6,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\pengdows.efcore.adonet.mysql\pengdows.efcore.adonet.mysql.csproj" />
     <ProjectReference Include="..\..\src\pengdows.efcore.adonet.Testing\pengdows.efcore.adonet.Testing.csproj" />
+    <ProjectReference Include="..\..\src\pengdows.efcore.adonet.NetTopologySuite\pengdows.efcore.adonet.NetTopologySuite.csproj" />
     <PackageReference Include="Testcontainers.MySql" />
     <PackageReference Include="Testcontainers.MariaDb" />
     <!-- Oracle's driver (GPL-2 with the FOSS exception), test-only: the same dialect must work through it. Never shipped. -->

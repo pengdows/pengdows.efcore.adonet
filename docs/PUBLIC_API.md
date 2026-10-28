@@ -34,6 +34,13 @@ machinery, conventions, type mappings) are reached through EF's interfaces, neve
 | `SqlServerDialect.ForCompatibilityLevel`, `CompatibilityLevel` | Applications: a database at an older compatibility level gets only the T-SQL it has (Microsoft's `UseCompatibilityLevel`); one dialect instance per level. |
 | `DmlSyntax.Iso` | Plugins: ISO SQL:2003 DML, which has no `UPDATE ... FROM`: an update through a join is written with correlated `EXISTS` and scalar subqueries. |
 | `ISqlDialect.SupportsStoredProcedures` | Plugins: a database without stored procedures (SQLite, DuckDB, FlatFile) has a model mapped to them refused when the context starts, as Microsoft's SQLite provider does. `AnsiSqlDialect` says true. |
+| `ISqlDialect.SupportsOuterReferencesInDerivedTables` | Plugins: a database whose derived tables can't read the outer row (MariaDB, MySQL before 8.0.14) has queries EF translates to one refused, as Pomelo does on such servers. `AnsiSqlDialect` says true. |
+| `JsonSyntax.Equality` | Plugins: a database whose JSON is text underneath (MariaDB) compares a JSON column with JSON text through its own function, not `=`. |
+| `AdoNetDbFunctionsExtensions.DateDiffYear` … `DateDiffMicrosecond`, `FunctionSyntax.DateDiff`, `DateDiffUnit` | Applications: date and time differences in whole units, as Microsoft's SQL Server and Pomelo's MySQL `EF.Functions.DateDiff*`; plugins give each unit's template, null where the database has none. |
+| `PostgreSqlDbFunctionsExtensions.ILike` | Applications: PostgreSQL's case-insensitive `ILIKE`, with or without an escape character, as Npgsql's `EF.Functions.ILike`. |
+| `MySqlFullTextExtensions` (`IsFullText`, `Match`, `IsMatch`), `MySqlMatchSearchMode` | Applications: MySQL `FULLTEXT` indexes and `MATCH ... AGAINST` in its three search modes, as Pomelo's. |
+| `MySqlModelOptionsExtensions` (`HasCharSet`, `HasPrefixLength`, `IsSpatial`) | Applications: a column's, table's or database's character set, index prefix lengths and `SPATIAL` indexes in migrations, as Pomelo's. |
+| `MySqlDialect.MariaDb` | Applications: MariaDB, which has no `LATERAL` (queries needing one are refused), writes table value constructor rows without `ROW`, and has no JSON type to `CAST` to. Chosen with `UseDialect`, as `SingleStore` is. |
 
 ### Raw ADO.NET objects handed out
 
@@ -56,8 +63,8 @@ entry points follow EF's `Use...` overload conventions, and overrides of EF virt
 
 Each plugin exposes its dialect (`XxxDialect.Instance`, constructed nowhere else) and its `UseAdoNetXxx` entry points:
 a connection string, a connection, a data source, or one set later. The dialect's parts, migrations generator, history
-repository and native loader are `internal`; they are reached through `IAdoNetDialect`. `MySqlDialect.NoBackslashEscapes`
-and `LegacySqliteDialect` are dialect variants for server or engine settings.
+repository and native loader are `internal`; they are reached through `IAdoNetDialect`. `MySqlDialect.NoBackslashEscapes`,
+`MySqlDialect.SingleStore`, `MySqlDialect.MariaDb` and `LegacySqliteDialect` are dialect variants for server or engine settings.
 
 ## Testing (`pengdows.efcore.adonet.Testing`)
 

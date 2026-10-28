@@ -98,6 +98,11 @@ as plain text (SQL Server) compares as text and takes no conversion. DB impact: 
 | SQLite has no ALTER for constraints or columns | Engine DDL | SQLite's migrations generator: fold into a same-migration `CREATE TABLE`, otherwise rebuild from the target model |
 | DuckDB can't declare a foreign key after `CREATE TABLE` | Engine DDL | DuckDB's migrations generator refuses by name; a capability skip in the suites |
 | SQL Server refuses two cascade paths to a table | Engine DDL | SQL Server's convention set: the second path cascades in EF (`ClientCascade`) |
+| MariaDB speaks MySQL but has no `LATERAL`, no `ROW` in a table value constructor, no JSON type to `CAST` to, and other spatial and regex functions | SQL | `MySqlDialect.MariaDb`, chosen with `UseDialect`: lateral joins refused, `VALUES (...)`, `JSON_COMPACT`, `ST_NumInteriorRings`, PCRE `REGEXP` with `(?-i)`; its sessions take the database's collation |
+| MariaDB's derived tables can't read the outer row (MySQL's can since 8.0.14) | Engine SQL | `ISqlDialect.SupportsOuterReferencesInDerivedTables`; the core refuses such a query at translation, `VALUES` included; a capability skip in the suites |
+| MariaDB's JSON is `LONGTEXT`, so `=` compares spellings | SQL | `JsonSyntax.Equality`: `JSON_EQUALS` for a JSON column compared with JSON text |
+| MariaDB reports integer display widths (`BIGINT(20)`) | Catalog | MySQL's schema reader drops them but for `TINYINT(1)` and `ZEROFILL`, as MySQL 8.0.19 does |
+| Parallel migrators can deadlock inserting the lock row | Engine | The history repository waits out a refusal the dialect calls transient (`IDatabaseCapabilities.IsTransient`) like a held lock |
 | A catalog other than `INFORMATION_SCHEMA` | Engine catalog | `Scaffolding.SchemaReader`; `InformationSchemaReader` is ISO's |
 | A driver reports a cancel as its own exception | Every driver | The core's exception detector: a failure after the token is canceled is the cancellation |
 

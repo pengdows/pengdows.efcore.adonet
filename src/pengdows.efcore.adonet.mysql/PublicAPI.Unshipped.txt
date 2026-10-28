@@ -21,3 +21,23 @@ static readonly pengdows.efcore.adonet.mysql.MySqlDialect.SingleStore -> pengdow
 override pengdows.efcore.adonet.mysql.MySqlDialect.SchemaReader.get -> pengdows.efcore.adonet.Scaffolding.SchemaReader!
 pengdows.efcore.adonet.mysql.MySqlDesignTimeServices
 pengdows.efcore.adonet.mysql.MySqlDesignTimeServices.MySqlDesignTimeServices() -> void
+pengdows.efcore.adonet.mysql.MySqlFullTextExtensions
+pengdows.efcore.adonet.mysql.MySqlMatchSearchMode
+pengdows.efcore.adonet.mysql.MySqlMatchSearchMode.Boolean = 2 -> pengdows.efcore.adonet.mysql.MySqlMatchSearchMode
+pengdows.efcore.adonet.mysql.MySqlMatchSearchMode.NaturalLanguage = 0 -> pengdows.efcore.adonet.mysql.MySqlMatchSearchMode
+pengdows.efcore.adonet.mysql.MySqlMatchSearchMode.NaturalLanguageWithQueryExpansion = 1 -> pengdows.efcore.adonet.mysql.MySqlMatchSearchMode
+static pengdows.efcore.adonet.mysql.MySqlFullTextExtensions.IsFullText(this Microsoft.EntityFrameworkCore.Metadata.Builders.IndexBuilder! indexBuilder, bool fullText = true) -> Microsoft.EntityFrameworkCore.Metadata.Builders.IndexBuilder!
+static pengdows.efcore.adonet.mysql.MySqlFullTextExtensions.IsFullText<TEntity>(this Microsoft.EntityFrameworkCore.Metadata.Builders.IndexBuilder<TEntity>! indexBuilder, bool fullText = true) -> Microsoft.EntityFrameworkCore.Metadata.Builders.IndexBuilder<TEntity>!
+static pengdows.efcore.adonet.mysql.MySqlFullTextExtensions.IsMatch(this Microsoft.EntityFrameworkCore.DbFunctions! _, string! property, string! pattern, pengdows.efcore.adonet.mysql.MySqlMatchSearchMode searchMode) -> bool
+static pengdows.efcore.adonet.mysql.MySqlFullTextExtensions.Match(this Microsoft.EntityFrameworkCore.DbFunctions! _, string! property, string! pattern, pengdows.efcore.adonet.mysql.MySqlMatchSearchMode searchMode) -> double
+pengdows.efcore.adonet.mysql.MySqlModelOptionsExtensions
+static pengdows.efcore.adonet.mysql.MySqlModelOptionsExtensions.HasCharSet(this Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder! propertyBuilder, string! charSet) -> Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder!
+static pengdows.efcore.adonet.mysql.MySqlModelOptionsExtensions.HasCharSet<TProperty>(this Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder<TProperty>! propertyBuilder, string! charSet) -> Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder<TProperty>!
+static pengdows.efcore.adonet.mysql.MySqlModelOptionsExtensions.HasCharSet(this Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder! entityTypeBuilder, string! charSet) -> Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder!
+static pengdows.efcore.adonet.mysql.MySqlModelOptionsExtensions.HasCharSet<TEntity>(this Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<TEntity!>! entityTypeBuilder, string! charSet) -> Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<TEntity!>!
+static pengdows.efcore.adonet.mysql.MySqlModelOptionsExtensions.HasCharSet(this Microsoft.EntityFrameworkCore.ModelBuilder! modelBuilder, string! charSet) -> Microsoft.EntityFrameworkCore.ModelBuilder!
+static pengdows.efcore.adonet.mysql.MySqlModelOptionsExtensions.HasPrefixLength(this Microsoft.EntityFrameworkCore.Metadata.Builders.IndexBuilder! indexBuilder, params int[]! prefixLengths) -> Microsoft.EntityFrameworkCore.Metadata.Builders.IndexBuilder!
+static pengdows.efcore.adonet.mysql.MySqlModelOptionsExtensions.HasPrefixLength<TEntity>(this Microsoft.EntityFrameworkCore.Metadata.Builders.IndexBuilder<TEntity>! indexBuilder, params int[]! prefixLengths) -> Microsoft.EntityFrameworkCore.Metadata.Builders.IndexBuilder<TEntity>!
+static pengdows.efcore.adonet.mysql.MySqlModelOptionsExtensions.IsSpatial(this Microsoft.EntityFrameworkCore.Metadata.Builders.IndexBuilder! indexBuilder, bool spatial = true) -> Microsoft.EntityFrameworkCore.Metadata.Builders.IndexBuilder!
+static pengdows.efcore.adonet.mysql.MySqlModelOptionsExtensions.IsSpatial<TEntity>(this Microsoft.EntityFrameworkCore.Metadata.Builders.IndexBuilder<TEntity>! indexBuilder, bool spatial = true) -> Microsoft.EntityFrameworkCore.Metadata.Builders.IndexBuilder<TEntity>!
+static readonly pengdows.efcore.adonet.mysql.MySqlDialect.MariaDb -> pengdows.efcore.adonet.mysql.MySqlDialect!

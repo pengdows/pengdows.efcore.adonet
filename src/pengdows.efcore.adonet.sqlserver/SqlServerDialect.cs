@@ -213,6 +213,11 @@ internal sealed class SqlServerFunctions(int compatibilityLevel) : FunctionSynta
     public override string? Modulo => null;
 
     public override string Concat => "{0} + {1}";
+
+    // DATEDIFF counts the unit's boundaries crossed. Behaviour reference (not copied):
+    // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.SqlServer/Query/Internal/Translators/SqlServerDateDiffFunctionsTranslator.cs
+    public override string? DateDiff(DateDiffUnit unit)
+        => "DATEDIFF(" + unit.ToString().ToLowerInvariant() + ", {0}, {1})";
     public override string? TrimStart => "LTRIM({0})";
     public override string? TrimEnd => "RTRIM({0})";
 

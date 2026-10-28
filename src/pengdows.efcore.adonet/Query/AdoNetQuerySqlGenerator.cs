@@ -440,6 +440,16 @@ internal class AdoNetQuerySqlGenerator(
             return false;
         }
 
+        // A database whose JSON is text underneath compares documents with its own function, as JSON, not as text.
+        if (json.Equality != null)
+        {
+            var notEqual = expression.OperatorType == ExpressionType.NotEqual;
+            Sql.Append(notEqual ? "NOT (" : "");
+            SqlTemplate.Write(json.Equality, [expression.Left, expression.Right], s => Sql.Append(s), e => Visit(e));
+            Sql.Append(notEqual ? ")" : "");
+            return true;
+        }
+
         WriteJsonComparisonOperand(expression.Left, text, json);
         Sql.Append(expression.OperatorType == ExpressionType.Equal ? " = " : " <> ");
         WriteJsonComparisonOperand(expression.Right, text, json);

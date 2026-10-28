@@ -10,4 +10,5 @@ public static class SingleWriter
     public const string DuckDb = "DuckDB: one writer";
     public const string FlatFile = "pengdows.flatfile: one writer";
     public const string MySql = "MySQL: shared stores";
+    public const string MariaDb = "MariaDB: shared stores";
 }

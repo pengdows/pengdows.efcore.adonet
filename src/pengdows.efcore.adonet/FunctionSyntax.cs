@@ -182,6 +182,12 @@ public class FunctionSyntax
     public virtual string? TrimEndCharacter => "TRIM(TRAILING {1} FROM {0})";
 
     /// <summary>
+    ///     <c>EF.Functions.DateDiff*</c>: the number of <paramref name="unit" />s from <c>{0}</c> to <c>{1}</c>, as the database
+    ///     counts them (some count unit boundaries crossed, some whole units, as their EF providers do); null where it has none.
+    /// </summary>
+    public virtual string? DateDiff(DateDiffUnit unit) => null;
+
+    /// <summary>
     ///     <c>{0}</c> padded on the left to <c>{1}</c> characters with the one-character string <c>{2}</c>, and kept whole when
     ///     already as long (<c>String.PadLeft</c>; SQL's LPAD would cut it); null where the database has no padding (ISO).
     /// </summary>
@@ -385,6 +391,20 @@ public class FunctionSyntax
             (nameof(TimeSpanMicroseconds), TimeSpanMicroseconds, 1), (nameof(TimeSpanNanoseconds), TimeSpanNanoseconds, 1),
             (nameof(TimeDifference), TimeDifference, 2), (nameof(OffsetNow), OffsetNow, 0),
             (nameof(UnixSeconds), UnixSeconds, 1), (nameof(UnixMilliseconds), UnixMilliseconds, 1),
-            (nameof(ByteLength), ByteLength, 1), (nameof(ByteAt), ByteAt, 2), (nameof(BytesContain), BytesContain, 2)
+            (nameof(ByteLength), ByteLength, 1), (nameof(ByteAt), ByteAt, 2), (nameof(BytesContain), BytesContain, 2),
+            .. Enum.GetValues<DateDiffUnit>().Select(unit => (nameof(DateDiff) + unit, DateDiff(unit), 2))
         ];
+}
+
+/// <summary>The units of <see cref="FunctionSyntax.DateDiff" />.</summary>
+public enum DateDiffUnit
+{
+    Year,
+    Month,
+    Day,
+    Hour,
+    Minute,
+    Second,
+    Millisecond,
+    Microsecond
 }

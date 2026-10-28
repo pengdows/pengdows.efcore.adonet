@@ -259,6 +259,7 @@ pengdows.efcore.adonet.ISqlDialect.StringLiteral(string! value) -> string!
 pengdows.efcore.adonet.ISqlDialect.SupportsSchemas.get -> bool
 pengdows.efcore.adonet.ISqlDialect.SupportsStoredProcedures.get -> bool
 pengdows.efcore.adonet.ISqlDialect.GeneratesCompositeKeyValues.get -> bool
+pengdows.efcore.adonet.ISqlDialect.SupportsOuterReferencesInDerivedTables.get -> bool
 pengdows.efcore.adonet.ISqlDialect.TrueLiteral.get -> string!
 pengdows.efcore.adonet.ITypeMappingDialect
 pengdows.efcore.adonet.ITypeMappingDialect.CastTarget(string! storeType) -> string!
@@ -418,6 +419,7 @@ virtual pengdows.efcore.adonet.AnsiSqlDialect.StringLiteral(string! value) -> st
 virtual pengdows.efcore.adonet.AnsiSqlDialect.SupportsSchemas.get -> bool
 virtual pengdows.efcore.adonet.AnsiSqlDialect.SupportsStoredProcedures.get -> bool
 virtual pengdows.efcore.adonet.AnsiSqlDialect.GeneratesCompositeKeyValues.get -> bool
+virtual pengdows.efcore.adonet.AnsiSqlDialect.SupportsOuterReferencesInDerivedTables.get -> bool
 virtual pengdows.efcore.adonet.AnsiSqlDialect.TrueLiteral.get -> string!
 virtual pengdows.efcore.adonet.AnsiTypeMappings.CastTarget(string! storeType) -> string!
 virtual pengdows.efcore.adonet.AnsiTypeMappings.DateTimeDbType.get -> System.Data.DbType
@@ -676,3 +678,64 @@ pengdows.efcore.adonet.ITypeMappingDialect.ParameterDbType(System.Type! clrType,
 virtual pengdows.efcore.adonet.AnsiTypeMappings.ParameterDbType(System.Type! clrType, System.Data.DbType standard) -> System.Data.DbType
 pengdows.efcore.adonet.ITypeMappingDialect.RowVersionStoreType(System.Type! clrType) -> string?
 virtual pengdows.efcore.adonet.AnsiTypeMappings.RowVersionStoreType(System.Type! clrType) -> string?
+pengdows.efcore.adonet.AdoNetDbFunctionsExtensions
+pengdows.efcore.adonet.DateDiffUnit
+pengdows.efcore.adonet.DateDiffUnit.Year = 0 -> pengdows.efcore.adonet.DateDiffUnit
+pengdows.efcore.adonet.DateDiffUnit.Month = 1 -> pengdows.efcore.adonet.DateDiffUnit
+pengdows.efcore.adonet.DateDiffUnit.Day = 2 -> pengdows.efcore.adonet.DateDiffUnit
+pengdows.efcore.adonet.DateDiffUnit.Hour = 3 -> pengdows.efcore.adonet.DateDiffUnit
+pengdows.efcore.adonet.DateDiffUnit.Minute = 4 -> pengdows.efcore.adonet.DateDiffUnit
+pengdows.efcore.adonet.DateDiffUnit.Second = 5 -> pengdows.efcore.adonet.DateDiffUnit
+pengdows.efcore.adonet.DateDiffUnit.Millisecond = 6 -> pengdows.efcore.adonet.DateDiffUnit
+pengdows.efcore.adonet.DateDiffUnit.Microsecond = 7 -> pengdows.efcore.adonet.DateDiffUnit
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffYear(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTime start, System.DateTime end) -> int
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffYear(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTime? start, System.DateTime? end) -> int?
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffYear(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTimeOffset start, System.DateTimeOffset end) -> int
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffYear(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTimeOffset? start, System.DateTimeOffset? end) -> int?
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffYear(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateOnly start, System.DateOnly end) -> int
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffYear(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateOnly? start, System.DateOnly? end) -> int?
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffMonth(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTime start, System.DateTime end) -> int
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffMonth(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTime? start, System.DateTime? end) -> int?
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffMonth(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTimeOffset start, System.DateTimeOffset end) -> int
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffMonth(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTimeOffset? start, System.DateTimeOffset? end) -> int?
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffMonth(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateOnly start, System.DateOnly end) -> int
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffMonth(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateOnly? start, System.DateOnly? end) -> int?
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffDay(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTime start, System.DateTime end) -> int
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffDay(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTime? start, System.DateTime? end) -> int?
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffDay(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTimeOffset start, System.DateTimeOffset end) -> int
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffDay(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTimeOffset? start, System.DateTimeOffset? end) -> int?
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffDay(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateOnly start, System.DateOnly end) -> int
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffDay(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateOnly? start, System.DateOnly? end) -> int?
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffHour(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTime start, System.DateTime end) -> int
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffHour(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTime? start, System.DateTime? end) -> int?
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffHour(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTimeOffset start, System.DateTimeOffset end) -> int
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffHour(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTimeOffset? start, System.DateTimeOffset? end) -> int?
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffHour(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateOnly start, System.DateOnly end) -> int
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffHour(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateOnly? start, System.DateOnly? end) -> int?
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffMinute(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTime start, System.DateTime end) -> int
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffMinute(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTime? start, System.DateTime? end) -> int?
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffMinute(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTimeOffset start, System.DateTimeOffset end) -> int
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffMinute(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTimeOffset? start, System.DateTimeOffset? end) -> int?
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffMinute(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateOnly start, System.DateOnly end) -> int
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffMinute(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateOnly? start, System.DateOnly? end) -> int?
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffSecond(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTime start, System.DateTime end) -> int
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffSecond(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTime? start, System.DateTime? end) -> int?
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffSecond(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTimeOffset start, System.DateTimeOffset end) -> int
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffSecond(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTimeOffset? start, System.DateTimeOffset? end) -> int?
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffSecond(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateOnly start, System.DateOnly end) -> int
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffSecond(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateOnly? start, System.DateOnly? end) -> int?
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffMillisecond(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTime start, System.DateTime end) -> int
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffMillisecond(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTime? start, System.DateTime? end) -> int?
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffMillisecond(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTimeOffset start, System.DateTimeOffset end) -> int
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffMillisecond(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTimeOffset? start, System.DateTimeOffset? end) -> int?
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffMillisecond(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateOnly start, System.DateOnly end) -> int
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffMillisecond(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateOnly? start, System.DateOnly? end) -> int?
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffMicrosecond(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTime start, System.DateTime end) -> int
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffMicrosecond(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTime? start, System.DateTime? end) -> int?
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffMicrosecond(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTimeOffset start, System.DateTimeOffset end) -> int
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffMicrosecond(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTimeOffset? start, System.DateTimeOffset? end) -> int?
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffMicrosecond(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateOnly start, System.DateOnly end) -> int
+static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffMicrosecond(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateOnly? start, System.DateOnly? end) -> int?
+virtual pengdows.efcore.adonet.FunctionSyntax.DateDiff(pengdows.efcore.adonet.DateDiffUnit unit) -> string?
+pengdows.efcore.adonet.JsonSyntax.Equality.get -> string?
+pengdows.efcore.adonet.JsonSyntax.Equality.init -> void

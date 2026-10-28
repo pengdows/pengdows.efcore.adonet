@@ -14,7 +14,7 @@ import collections, glob, os, re, sys
 import xml.etree.ElementTree as E
 
 NS = {'t': 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}
-HOSTS = ['SqlServer', 'PostgreSql', 'MySql', 'Sqlite', 'DuckDb', 'FlatFile']
+HOSTS = ['SqlServer', 'PostgreSql', 'MySql', 'MariaDb', 'Sqlite', 'DuckDb', 'FlatFile']
 OUTCOMES = {'Passed': 'passed', 'Failed': 'failed', 'NotExecuted': 'skipped'}
 
 

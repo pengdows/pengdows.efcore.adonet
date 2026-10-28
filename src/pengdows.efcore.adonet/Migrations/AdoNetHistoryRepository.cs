@@ -176,9 +176,20 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
     }
 
     // Each way out is bounded: a refusal with no holder is retried once, a stale holder is taken over once, and waiting
-    // ends at the deadline.
+    // ends at the deadline. A transient refusal with no holder (a deadlock victim among parallel inserts of the row) is
+    // waited out like a held lock.
     private Retry Next(string? holder, DbException refused, DateTime deadline, Refusals refusals)
     {
+        if ((holder == null) && Dialect.Capabilities.IsTransient(refused))
+        {
+            if (DateTime.UtcNow >= deadline)
+            {
+                ExceptionDispatchInfo.Throw(refused);
+            }
+
+            return Retry.AfterDelay;
+        }
+
         if (holder == null)
         {
             refusals.Unheld++;

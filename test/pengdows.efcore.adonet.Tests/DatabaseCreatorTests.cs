@@ -107,7 +107,8 @@ public class DatabaseCreatorTests
             .AllowManyDialects()
             .Options);
 
-        await Assert.ThrowsAnyAsync<Exception>(() => context.GetService<IRelationalDatabaseCreator>().DeleteAsync(Ct));
+        // Whether fakeDb then accepts the DROP doesn't matter here: the pool is cleared before it.
+        await Record.ExceptionAsync(() => context.GetService<IRelationalDatabaseCreator>().DeleteAsync(Ct));
 
         Assert.Equal(1, PoolingConnection.Cleared);
     }

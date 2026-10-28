@@ -84,7 +84,7 @@ public class ConfigurationRulesTests
     [Fact]
     public void Data_sources_the_provider_creates_are_disposed_with_its_service_provider()
     {
-        var factory = new TrackingFactory();
+        var factory = new fakeDbFactory(SupportedDatabase.PostgreSql) { SupportsNativeDataSource = true };
         var services = new ServiceCollection().AddEntityFrameworkAdoNet(AdoNetDialect.Ansi).BuildServiceProvider();
 
         using (var context = Context(b => b.UseAdoNet(factory, ConnectionString, AdoNetDialect.Ansi).UseInternalServiceProvider(services)))
@@ -92,9 +92,9 @@ public class ConfigurationRulesTests
             context.Database.GetDbConnection();
         }
 
-        Assert.False(factory.Created.Single().IsDisposed);
+        Assert.False(factory.CreatedDataSources.Single().WasDisposed);
         services.Dispose();
-        Assert.True(factory.Created.Single().IsDisposed);
+        Assert.True(factory.CreatedDataSources.Single().WasDisposed);
     }
 
     [Fact]
@@ -159,39 +159,5 @@ public class ConfigurationRulesTests
     {
         protected override DbProviderFactory DbProviderFactory
             => new ProbedFactory();
-    }
-
-    // fakeDb 2.0.5's factory creates .NET's default data source; a FakeDbDataSource with WasDisposed needs
-    // SupportsNativeDataSource, unpublished (UPSTREAM_ISSUES.md, pengdows.crud.fakeDb).
-    private sealed class TrackingFactory : DbProviderFactory
-    {
-        public List<TrackingDataSource> Created { get; } = [];
-
-        public override DbConnection CreateConnection()
-            => new fakeDbConnection();
-
-        public override DbDataSource CreateDataSource(string connectionString)
-        {
-            var dataSource = new TrackingDataSource(connectionString);
-            Created.Add(dataSource);
-            return dataSource;
-        }
-    }
-
-    private sealed class TrackingDataSource(string connectionString) : DbDataSource
-    {
-        public bool IsDisposed { get; private set; }
-
-        public override string ConnectionString
-            => connectionString;
-
-        protected override DbConnection CreateDbConnection()
-            => new fakeDbConnection { ConnectionString = connectionString };
-
-        protected override void Dispose(bool disposing)
-        {
-            IsDisposed = true;
-            base.Dispose(disposing);
-        }
     }
 }

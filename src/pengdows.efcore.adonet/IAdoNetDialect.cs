@@ -84,6 +84,13 @@ public interface ISqlDialect
     /// </summary>
     bool GeneratesCompositeKeyValues { get; }
 
+    /// <summary>
+    ///     Whether a derived table (a subquery in FROM) may read a column of a table outside it: an outer reference (ISO
+    ///     9075-2 6.7). Where it may not, nothing in a derived table reads outside it at any depth, and a query EF translates
+    ///     to one that does is refused; a subquery that isn't in FROM, or a table function in FROM, still reads the outer row.
+    /// </summary>
+    bool SupportsOuterReferencesInDerivedTables { get; }
+
     /// <summary>The marker that precedes a named parameter in SQL text (<c>@</c>, <c>:</c>, <c>$</c>).</summary>
     string ParameterMarker { get; }
 

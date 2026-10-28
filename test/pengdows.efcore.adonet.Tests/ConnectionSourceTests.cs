@@ -1,5 +1,6 @@
 using System.Data.Common;
-using Microsoft.Data.Sqlite;
+using pengdows.crud.enums;
+using pengdows.crud.fakeDb;
 using Microsoft.EntityFrameworkCore;
 
 using pengdows.efcore.adonet.Testing;
@@ -15,7 +16,7 @@ public class ConnectionSourceTests
     [Fact]
     public void A_factory_is_used_through_one_data_source_per_connection_string()
     {
-        var factory = new CountingFactory();
+        var factory = PoolingFactory();
 
         using (var first = Context(factory, "Data Source=a;Mode=Memory"))
         using (var second = Context(factory, "Data Source=a;Mode=Memory"))
@@ -26,41 +27,25 @@ public class ConnectionSourceTests
             other.Database.GetDbConnection();
         }
 
-        Assert.Equal(["Data Source=a;Mode=Memory", "Data Source=b;Mode=Memory"], factory.DataSourcesCreated);
+        Assert.Equal(["Data Source=a;Mode=Memory", "Data Source=b;Mode=Memory"], DataSourcesCreated(factory));
     }
 
     [Fact]
     public void Set_connection_string_is_honored()
     {
-        var factory = new CountingFactory();
+        var factory = PoolingFactory();
         using var context = Context(factory, "Data Source=a;Mode=Memory");
 
         context.Database.SetConnectionString("Data Source=c;Mode=Memory");
 
         Assert.Equal("Data Source=c;Mode=Memory", context.Database.GetDbConnection().ConnectionString);
-        Assert.Equal(["Data Source=c;Mode=Memory"], factory.DataSourcesCreated);
+        Assert.Equal(["Data Source=c;Mode=Memory"], DataSourcesCreated(factory));
     }
 
-    /// <summary>A provider that, like Npgsql and MySqlConnector, would pool per data source.</summary>
-    /// <remarks>
-    ///     Hand-written only until fakeDb publishes <c>fakeDbFactory.CreatedDataSources</c> (in its source, not in 2.0.5);
-    ///     see UPSTREAM_ISSUES.md, pengdows.crud.fakeDb.
-    /// </remarks>
-    private sealed class CountingFactory : DbProviderFactory
-    {
-        public List<string> DataSourcesCreated { get; } = [];
+    /// <summary>A provider that, like Npgsql and MySqlConnector, pools per data source.</summary>
+    private static fakeDbFactory PoolingFactory()
+        => new(SupportedDatabase.PostgreSql) { SupportsNativeDataSource = true };
 
-        public override DbConnection CreateConnection()
-            => SqliteFactory.Instance.CreateConnection();
-
-        public override DbDataSource CreateDataSource(string connectionString)
-        {
-            lock (DataSourcesCreated)
-            {
-                DataSourcesCreated.Add(connectionString);
-            }
-
-            return base.CreateDataSource(connectionString);
-        }
-    }
+    private static IEnumerable<string> DataSourcesCreated(fakeDbFactory factory)
+        => factory.CreatedDataSources.Select(d => d.ConnectionString);
 }

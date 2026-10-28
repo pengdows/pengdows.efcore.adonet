@@ -228,6 +228,30 @@ public class HistoryRepositoryTests
         Assert.Equal(4, commands.NonQueries.Count(c => c.StartsWith(AppLockInsert, StringComparison.Ordinal)));
     }
 
+    // Parallel migrators insert the lock row together; when its holder deletes it, the database may refuse a waiting insert
+    // as a deadlock victim, with no lock held. That refusal is transient (IDatabaseCapabilities.IsTransient), so it is tried
+    // again, however often, until the deadline.
+    [Fact]
+    public async Task A_transient_refusal_while_no_lock_is_held_is_tried_again()
+    {
+        var commands = new CommandLog { FailTransiently = AppLockInsert, TransientFailures = 3, Holder = null };
+        await using var context = Context(configure: b => b.AddInterceptors(commands));
+        var history = context.GetService<IHistoryRepository>();
+
+        _db.Connection.EnqueueScalarResult(1);
+        using (history.AcquireDatabaseLock())
+        {
+        }
+
+        commands.TransientFailures = 3;
+        _db.Connection.EnqueueScalarResult(1);
+        await using (await history.AcquireDatabaseLockAsync(Ct))
+        {
+        }
+
+        Assert.Equal(8, commands.NonQueries.Count(c => c.StartsWith(AppLockInsert, StringComparison.Ordinal)));
+    }
+
     [Fact]
     public void A_failed_migrations_transaction_is_rolled_back_before_a_synchronous_release_too()
     {
@@ -341,6 +365,12 @@ public class HistoryRepositoryTests
 
     private sealed class HolderUnavailable() : DbException("holder unavailable");
 
+    // A deadlock victim: InnoDB refuses one of several inserts waiting on a released row's key.
+    private sealed class Deadlock() : DbException("deadlock")
+    {
+        public override bool IsTransient => true;
+    }
+
     private sealed class TransactionLog(List<string> events) : DbTransactionInterceptor
     {
         public override Task TransactionRolledBackAsync(DbTransaction transaction, TransactionEndEventData eventData, CancellationToken cancellationToken = default)
@@ -366,6 +396,8 @@ public class HistoryRepositoryTests
         public List<string>? Events { get; init; }
         public string? FailFirst { get; init; }
         public string? FailAlways { get; init; }
+        public string? FailTransiently { get; init; }
+        public int TransientFailures { get; set; }
         public string? Holder { get; init; }
         public bool HolderFails { get; init; }
 
@@ -412,6 +444,12 @@ public class HistoryRepositoryTests
             if (FailAlways != null && sql.StartsWith(FailAlways, StringComparison.Ordinal))
             {
                 throw new LockConflict();
+            }
+
+            if ((TransientFailures > 0) && (FailTransiently != null) && sql.StartsWith(FailTransiently, StringComparison.Ordinal))
+            {
+                TransientFailures--;
+                throw new Deadlock();
             }
 
             if (!_failed && FailFirst != null && sql.StartsWith(FailFirst, StringComparison.Ordinal))

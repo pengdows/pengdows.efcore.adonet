@@ -59,6 +59,10 @@ internal sealed class DuckDbSql : AnsiSqlDialect
 /// </summary>
 internal sealed class DuckDbFunctions : FunctionSyntax
 {
+    // date_diff counts the unit's boundaries crossed.
+    public override string? DateDiff(DateDiffUnit unit)
+        => "DATE_DIFF('" + unit.ToString().ToLowerInvariant() + "', {0}, {1})";
+
     // CURRENT_TIMESTAMP is an instant shown in the session's time zone; AT TIME ZONE 'UTC' gives its UTC timestamp.
     public override string? UtcNow => "(CURRENT_TIMESTAMP AT TIME ZONE 'UTC')";
 

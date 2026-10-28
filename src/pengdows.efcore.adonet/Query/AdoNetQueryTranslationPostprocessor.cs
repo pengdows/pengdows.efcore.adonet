@@ -21,6 +21,12 @@ internal sealed class AdoNetQueryTranslationPostprocessor(
                 $"This query joins a subquery correlated with the rows before it (a lateral join, EF's APPLY), which {dialect.Name} doesn't have.");
         }
 
+        if (!dialect.Sql.SupportsOuterReferencesInDerivedTables && OuterReferenceInDerivedTableFinder.Finds(processed))
+        {
+            throw new OuterReferenceInDerivedTableNotSupportedException(
+                $"This query reads the outer row from inside a derived table (a subquery in FROM), which {dialect.Name} doesn't allow.");
+        }
+
         return processed;
     }
 
@@ -167,6 +173,88 @@ internal sealed class LateralJoinFinder : ExpressionVisitor
 
 /// <summary>A query that needs a lateral join, on a database that has none: the dialect's capability, not a translation bug.</summary>
 internal sealed class LateralJoinNotSupportedException(string message) : InvalidOperationException(message);
+
+/// <summary>
+///     Whether a translated query has a derived table (a subquery, set operation or VALUES in FROM, joined other than laterally) in
+///     which anything, at any depth, reads a column of a table outside it. A lateral join reads the rows before it by
+///     definition, and is refused on its own where the database has none.
+/// </summary>
+internal sealed class OuterReferenceInDerivedTableFinder : ExpressionVisitor
+{
+    private bool _found;
+
+    public static bool Finds(Expression expression)
+    {
+        var finder = new OuterReferenceInDerivedTableFinder();
+        finder.Visit(expression);
+        return finder._found;
+    }
+
+    public override Expression? Visit(Expression? node)
+    {
+        if (_found)
+        {
+            return node;
+        }
+
+        if (node is ShapedQueryExpression shaped)
+        {
+            Visit(shaped.QueryExpression);
+            Visit(shaped.ShaperExpression);
+            return node;
+        }
+
+        if (node is SelectExpression select)
+        {
+            foreach (var table in select.Tables)
+            {
+                if ((table is not (CrossApplyExpression or OuterApplyExpression))
+                    && (Unwrap(table) is SelectExpression or SetOperationBase or ValuesExpression)
+                    && ReadsOutside(Unwrap(table)))
+                {
+                    _found = true;
+                    return node;
+                }
+            }
+        }
+
+        return base.Visit(node);
+    }
+
+    private static TableExpressionBase Unwrap(TableExpressionBase table)
+        => table is JoinExpressionBase join ? join.Table : table;
+
+    private static bool ReadsOutside(TableExpressionBase derived)
+    {
+        var aliases = new AliasCollector();
+        aliases.Visit(derived);
+        return aliases.Read.Except(aliases.Defined).Any();
+    }
+
+    private sealed class AliasCollector : ExpressionVisitor
+    {
+        public HashSet<string> Defined { get; } = [];
+        public HashSet<string> Read { get; } = [];
+
+        public override Expression? Visit(Expression? node)
+        {
+            if (node is TableExpressionBase { Alias: { } alias })
+            {
+                Defined.Add(alias);
+            }
+
+            if (node is ColumnExpression column)
+            {
+                Read.Add(column.TableAlias);
+            }
+
+            return base.Visit(node);
+        }
+    }
+}
+
+/// <summary>A derived table that reads the outer row, on a database that allows none: the dialect's capability, not a translation bug.</summary>
+internal sealed class OuterReferenceInDerivedTableNotSupportedException(string message) : InvalidOperationException(message);
 
 internal sealed class AdoNetQueryTranslationPostprocessorFactory(
     QueryTranslationPostprocessorDependencies dependencies,

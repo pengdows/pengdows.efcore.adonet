@@ -99,8 +99,15 @@ internal sealed partial class MySqlSchemaReader : InformationSchemaReader
     }
 
     // Upper case, as the dialect writes types, outside the quoted values of an ENUM or SET.
+    // MySQL dropped integer display widths in 8.0.19 but for TINYINT(1) and ZEROFILL, where they still mean something to a
+    // client; MariaDB reports them all (BIGINT(20)), and they don't change the values.
     protected override string StoreType(IReadOnlyDictionary<string, object?> row)
-        => QuotedOrNot().Replace(Text(row, "COLUMN_TYPE")!, m => m.Value.StartsWith('\'') ? m.Value : m.Value.ToUpperInvariant());
+    {
+        var type = QuotedOrNot().Replace(Text(row, "COLUMN_TYPE")!, m => m.Value.StartsWith('\'') ? m.Value : m.Value.ToUpperInvariant());
+        return (type.StartsWith("TINYINT(1)", StringComparison.Ordinal) || type.Contains("ZEROFILL", StringComparison.Ordinal))
+            ? type
+            : IntegerDisplayWidth().Replace(type, "$1");
+    }
 
     // COLUMN_DEFAULT is the bare value; an expression (DEFAULT_GENERATED) or CURRENT_TIMESTAMP is SQL already, and a bit
     // value keeps its b'...' form.
@@ -129,6 +136,9 @@ internal sealed partial class MySqlSchemaReader : InformationSchemaReader
 
     [GeneratedRegex(@"'(?:[^']|'')*'|[^']+")]
     private static partial Regex QuotedOrNot();
+
+    [GeneratedRegex(@"^(TINYINT|SMALLINT|MEDIUMINT|INT|BIGINT)\(\d+\)")]
+    private static partial Regex IntegerDisplayWidth();
 
     [GeneratedRegex(@"^\((.*)\)$", RegexOptions.Singleline)]
     private static partial Regex OuterParentheses();

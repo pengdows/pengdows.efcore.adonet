@@ -103,4 +103,37 @@ public class JsonEqualityTests
 
         Assert.Contains(@"WHERE ""r"".""Body"" = '[1]'", context.Rows.Where(r => r.Body == "[1]").ToQueryString());
     }
+
+    // A database whose JSON is text underneath (MariaDB's is LONGTEXT) compares two documents as text, so two spellings of
+    // one document differ; its own equality function compares them as JSON.
+    private static readonly IAdoNetDialect EqualityDialect = new PartsDialect(
+        "Json equality function",
+        new PartsSql(json: new JsonSyntax(
+            "JSON",
+            "JSON_VALUE({0}, {1})",
+            "JSON_QUERY({0}, {1})",
+            "CAST(JSON_VALUE({0}, {1}) AS {2})",
+            booleanValue: null,
+            binaryValue: null,
+            "CONCAT({0}, {1})",
+            "JSON_SET({0}, {1}, {2})",
+            "JSON_COMPACT({0})")
+        {
+            Equality = "JSON_EQUALS({0}, {1})"
+        }));
+
+    private static string WithEquality(Func<NativeContext, IQueryable<Row>> query)
+    {
+        using var context = new FakeDatabase().ContextOf<NativeContext>(EqualityDialect, o => new NativeContext(o));
+        return query(context).ToQueryString().ReplaceLineEndings("\n");
+    }
+
+    [Fact]
+    public void A_dialect_with_a_json_equality_function_compares_documents_with_it()
+    {
+        Assert.Contains(@"WHERE JSON_EQUALS(""r"".""Body"", '[1,10]')", WithEquality(c => c.Rows.Where(r => r.Body == "[1,10]")));
+        Assert.Contains(@"WHERE NOT (JSON_EQUALS(""r"".""Body"", '{}'))", WithEquality(c => c.Rows.Where(r => r.Body != "{}")));
+        Assert.Contains(@"WHERE JSON_EQUALS('[2]', ""r"".""Body"")", WithEquality(c => c.Rows.Where(r => "[2]" == r.Body)));
+        Assert.DoesNotContain("JSON_EQUALS", WithEquality(c => c.Rows.Where(r => r.Other == "[1]")));
+    }
 }

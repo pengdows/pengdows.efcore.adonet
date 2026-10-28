@@ -174,7 +174,7 @@ public class MySqlHost : ServerHost
 
     // The test databases are utf8mb4_0900_as_cs.
     public override string NonDefaultCollation => "utf8mb4_bin";
-    public override string CaseInsensitiveCollation => "utf8mb4_0900_ai_ci";
+    public override string CaseInsensitiveCollation => DatabaseCollation;
     public override string CaseSensitiveCollation => "utf8mb4_bin";
 
     public override UpdateProcedures UpdateProcedures => MySqlUpdateProcedures.Instance;
@@ -198,9 +198,14 @@ public class MySqlHost : ServerHost
 
     private static readonly RunContainer Container = new(() => new MySqlBuilder("mysql:8.4").Build());
 
+    protected virtual string ContainerConnectionString => Container.ConnectionString;
+
+    // The character set's case-insensitive collation, which the test databases take.
+    protected virtual string DatabaseCollation => "utf8mb4_0900_ai_ci";
+
     // Root, so each test store can have its own database.
     protected override string AdminConnectionString
-        => new MySqlConnectionStringBuilder(Container.ConnectionString) { UserID = "root", Database = "" }.ConnectionString;
+        => new MySqlConnectionStringBuilder(ContainerConnectionString) { UserID = "root", Database = "" }.ConnectionString;
 
     public override IAdoNetDialect Dialect => MySqlDialect.Instance;
 
@@ -211,7 +216,7 @@ public class MySqlHost : ServerHost
         => [$"DROP DATABASE IF EXISTS `{database}`"];
 
     protected override IEnumerable<string> CreateSql(string database)
-        => [$"CREATE DATABASE `{database}` CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci"];
+        => [$"CREATE DATABASE `{database}` CHARACTER SET utf8mb4 COLLATE {DatabaseCollation}"];
 
     // With the user variables the dialect reads procedure outputs through, which a connection opened before the provider
     // sees it must already allow.
@@ -241,15 +246,33 @@ public class MySqlHost : ServerHost
 
     public override DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, string connectionString, Action<AdoNetDbContextOptionsBuilder> configure)
         => UseMySqlData
-            ? builder.UseAdoNet(global::MySql.Data.MySqlClient.MySqlClientFactory.Instance, connectionString, MySqlDialect.Instance, configure)
-            : builder.UseAdoNetMySql(connectionString, configure);
+            ? builder.UseAdoNet(global::MySql.Data.MySqlClient.MySqlClientFactory.Instance, connectionString, Dialect, configure)
+            : builder.UseAdoNetMySql(connectionString, o =>
+            {
+                o.UseDialect(Dialect);
+                configure(o);
+            });
 
     public override DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, DbConnection connection, Action<AdoNetDbContextOptionsBuilder> configure)
         => builder.UseAdoNet(connection, contextOwnsConnection: false, o =>
         {
-            o.UseDialect(MySqlDialect.Instance);
+            o.UseDialect(Dialect);
             configure(o);
         });
+}
+
+/// <summary>
+///     The MariaDB variant of the MySQL dialect on MariaDB 11.4, through MySqlConnector: the same host but the server, which
+///     has no utf8mb4_0900 collations (its Unicode 14 ones are utf8mb4_uca1400).
+/// </summary>
+public sealed class MariaDbHost : MySqlHost
+{
+    public override IAdoNetDialect Dialect => MySqlDialect.MariaDb;
+
+    private static readonly RunContainer Container = new(() => new Testcontainers.MariaDb.MariaDbBuilder("mariadb:11.4").Build());
+
+    protected override string ContainerConnectionString => Container.ConnectionString;
+    protected override string DatabaseCollation => "utf8mb4_uca1400_ai_ci";
 }
 
 /// <summary>An embedded database: a file or folder per test store, under one temporary directory for the run.</summary>

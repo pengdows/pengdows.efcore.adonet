@@ -25,10 +25,17 @@ public sealed class MySqlDialect : AdoNetDialect
     /// </summary>
     public static readonly MySqlDialect SingleStore = new(backslashEscapes: true, savepoints: false, name: "SingleStore");
 
-    private MySqlDialect(bool backslashEscapes, bool savepoints = true, string? name = null)
+    /// <summary>
+    ///     MariaDB, its own engine since 10.0: no LATERAL derived tables (https://jira.mariadb.org/browse/MDEV-19078), so a
+    ///     query needing one is refused; a table value constructor's rows without <c>ROW</c>; and JSON text made JSON through
+    ///     a JSON function, since its JSON is an alias of LONGTEXT and there is no JSON type to CAST to.
+    /// </summary>
+    public static readonly MySqlDialect MariaDb = new(backslashEscapes: true, name: "MariaDB", mariaDb: true);
+
+    private MySqlDialect(bool backslashEscapes, bool savepoints = true, string? name = null, bool mariaDb = false)
     {
         Name = name ?? (backslashEscapes ? "MySQL" : "MySQL (NO_BACKSLASH_ESCAPES)");
-        Sql = new MySqlSql(backslashEscapes, savepoints);
+        Sql = new MySqlSql(backslashEscapes, savepoints, mariaDb);
     }
 
     public override string Name { get; }
@@ -53,10 +60,12 @@ public sealed class MySqlDialect : AdoNetDialect
         => new EntityFrameworkRelationalServicesBuilder(services)
             .TryAdd<IMigrationsSqlGenerator, MySqlMigrationsSqlGenerator>()
             .TryAdd<IHistoryRepository, MySqlHistoryRepository>()
-            .TryAdd<Microsoft.EntityFrameworkCore.Diagnostics.IInterceptor, MySqlDataValueReaderInterceptor>();
+            .TryAdd<Microsoft.EntityFrameworkCore.Diagnostics.IInterceptor, MySqlDataValueReaderInterceptor>()
+            .TryAdd<Microsoft.EntityFrameworkCore.Metadata.IRelationalAnnotationProvider, MySqlAnnotationProvider>()
+            .TryAdd<Microsoft.EntityFrameworkCore.Query.IMethodCallTranslatorPlugin, MySqlFullTextTranslatorPlugin>();
 }
 
-internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = true) : AnsiSqlDialect
+internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = true, bool mariaDb = false) : AnsiSqlDialect
 {
     public override IsolationLevel DefaultTransactionIsolationLevel => IsolationLevel.ReadCommitted;
     public override bool KeepConnectionOpenAfterSuppressedTransaction => true;
@@ -73,7 +82,8 @@ internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = t
     // MySQL's json type and functions. JSON_UNQUOTE turns a JSON null into the text "null", so a string is read only when the
     // value isn't null; a bool compares against JSON true and false; typed values unquote and CAST the extracted scalar.
     // JSON_VALUE's RETURNING form does not accept a computed path expression on MySQL, while JSON_EXTRACT does.
-    // A patch value given as JSON text is CAST to JSON.
+    // A patch value given as JSON text is CAST to JSON; MariaDB has no JSON type to CAST to, and takes a JSON function's
+    // result as JSON.
     public override JsonSyntax Json { get; } = new(
         "json",
         "CASE JSON_TYPE(JSON_EXTRACT({0}, {1})) WHEN 'NULL' THEN NULL ELSE JSON_UNQUOTE(JSON_EXTRACT({0}, {1})) END",
@@ -87,7 +97,7 @@ internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = t
         "FROM_BASE64(JSON_UNQUOTE(JSON_EXTRACT({0}, {1})))",
         "CONCAT({0}, {1})",
         "JSON_SET({0}, {1}, {2})",
-        "CAST({0} AS JSON)")
+        mariaDb ? "JSON_COMPACT({0})" : "CAST({0} AS JSON)")
     {
         // FOR ORDINALITY numbers the elements in array order.
         ArrayElements = "JSON_TABLE({0}, '$[*]' COLUMNS ({1} FOR ORDINALITY, {2} {3} PATH '$'))",
@@ -101,7 +111,10 @@ internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = t
         // An IN or EXISTS subquery turned into a semijoin, or a lateral derived table merged into its query, over a JSON_TABLE of
         // an outer column reads the column as empty ("The document is empty"); the semijoin case is fixed in 9.3.0
         // (https://bugs.mysql.com/bug.php?id=114897, UPSTREAM_ISSUES.md).
-        ArrayElementsHint = "/*+ NO_SEMIJOIN() NO_MERGE() */"
+        ArrayElementsHint = "/*+ NO_SEMIJOIN() NO_MERGE() */",
+
+        // MariaDB's JSON is LONGTEXT, so = compares spellings (its JSON functions write "[1, 2]", EF writes "[1,2]").
+        Equality = mariaDb ? "JSON_EQUALS({0}, {1})" : null
     };
 
     // ISO quoted identifiers ("name"), which MySQL reads only under ANSI_QUOTES: each session adds it to its sql_mode, and sets
@@ -124,9 +137,13 @@ internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = t
     {
         Binary = SpatialBinary.SridPrefixedWkb,
         StoresZAndM = false,
-        FromText = "ST_GeomFromText({0}, {1}, 'axis-order=long-lat')",
+        // MariaDB has no axis-order option: its x is always the longitude.
+        FromText = mariaDb ? "ST_GeomFromText({0}, {1})" : "ST_GeomFromText({0}, {1}, 'axis-order=long-lat')",
         Functions = new Dictionary<string, string?>
         {
+            // MariaDB has only the plural name, and no validity test.
+            ["NumInteriorRings"] = "ST_NumInteriorRings({0})",
+            ["IsValid"] = mariaDb ? null : "ST_IsValid({0})",
             ["Boundary"] = null,
             ["PointOnSurface"] = null,
             ["InteriorPoint"] = null,
@@ -144,9 +161,15 @@ internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = t
     public override PagingSyntax Paging { get; } = PagingSyntax.LimitOffset(noLimitValue: "18446744073709551615").WithValueLimitsOnly();
     public override KeyRetrieval Keys { get; } = KeyRetrieval.SelectAfter("LAST_INSERT_ID()", "ROW_COUNT()");
     public override DmlSyntax Dml => DmlSyntax.MultiTable;
-    public override FunctionSyntax Functions { get; } = new MySqlFunctions();
+    public override FunctionSyntax Functions { get; } = new MySqlFunctions(mariaDb);
     public override string DefaultValues => "() VALUES ()";
-    public override string ValuesRowPrefix => "ROW";
+    public override string ValuesRowPrefix => mariaDb ? "" : "ROW";
+    public override LateralJoinSyntax? LateralJoins => mariaDb ? null : LateralJoinSyntax.Iso;
+
+    // MySQL reads an outer column in a derived table since 8.0.14; MariaDB doesn't (its "Unknown column" in WHERE), as
+    // Pomelo's OuterReferenceInMultiLevelSubquery says. Behaviour reference (not copied):
+    // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Infrastructure/MariaDbServerVersion.cs
+    public override bool SupportsOuterReferencesInDerivedTables => !mariaDb;
 
     // Neither driver returns output parameters from a text CALL: each output goes through a user variable, which both
     // drivers take for a missing parameter unless the connection allows user variables. As Pomelo does. Behaviour reference
@@ -176,8 +199,15 @@ internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = t
 ///     <c>||</c> means OR. FLOOR and CEILING of a DECIMAL return BIGINT; adding 0.0 keeps the result a decimal. The SECOND
 ///     part is already whole, and CAST has no INTEGER target.
 /// </summary>
-internal sealed class MySqlFunctions : FunctionSyntax
+internal sealed class MySqlFunctions(bool mariaDb = false) : FunctionSyntax
 {
+    // TIMESTAMPDIFF counts whole units; it has no MILLISECOND, so microseconds are divided. Behaviour reference (not copied):
+    // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Query/Internal/MySqlDateDiffFunctionsTranslator.cs
+    public override string? DateDiff(DateDiffUnit unit)
+        => unit == DateDiffUnit.Millisecond
+            ? "(TIMESTAMPDIFF(MICROSECOND, {0}, {1}) DIV 1000)"
+            : "TIMESTAMPDIFF(" + unit.ToString().ToUpperInvariant() + ", {0}, {1})";
+
     public override string? PadLeft => "CASE WHEN CHAR_LENGTH({0}) >= {1} THEN {0} ELSE LPAD({0}, {1}, {2}) END";
     public override string? PadRight => "CASE WHEN CHAR_LENGTH({0}) >= {1} THEN {0} ELSE RPAD({0}, {1}, {2}) END";
 
@@ -225,8 +255,11 @@ internal sealed class MySqlFunctions : FunctionSyntax
     public override string? PositionFrom => "LOCATE({0}, {1}, {2})";
 
     // 'c': case-sensitive whatever the collation, as .NET's Regex. An empty pattern matches everything in .NET and is an error
-    // in MySQL, so it is matched before REGEXP_LIKE sees it.
-    public override string? RegexIsMatch => "CASE WHEN {1} = '' THEN TRUE ELSE REGEXP_LIKE({0}, {1}, 'c') END";
+    // in MySQL, so it is matched before REGEXP_LIKE sees it. MariaDB has no REGEXP_LIKE; its REGEXP is PCRE, where (?-i)
+    // makes the match case-sensitive.
+    public override string? RegexIsMatch => mariaDb
+        ? "CASE WHEN {1} = '' THEN TRUE ELSE {0} REGEXP CONCAT('(?-i)', {1}) END"
+        : "CASE WHEN {1} = '' THEN TRUE ELSE REGEXP_LIKE({0}, {1}, 'c') END";
     public override string? NewGuid => "UUID()";
 
     public override string? DayOfYear => "DAYOFYEAR({0})";
@@ -392,10 +425,21 @@ internal sealed class MySqlTypeMappings : AnsiTypeMappings
     }
 
     // CAST(x AS CHAR) has the connection's collation, and as strongly as a column's (IMPLICIT), so comparing it with a column of
-    // another collation fails ("Illegal mix of collations"). CONCAT(x) converts to text as weakly as a number does, so the
-    // other side's collation wins, as it would for x itself. A sized CHAR(n) keeps CAST, which truncates to n.
+    // another collation fails ("Illegal mix of collations": MariaDB 11's utf8mb4_uca1400_ai_ci beside MySqlConnector's
+    // utf8mb4_general_ci). CONCAT(x) converts to text as weakly as a number does, so the other side's collation wins, as it
+    // would for x itself; LEFT keeps a sized CHAR(n)'s truncation to n.
     public override string Cast(string storeType)
-        => CastTarget(storeType) == "CHAR" ? "CONCAT({0})" : base.Cast(storeType);
+    {
+        var target = CastTarget(storeType);
+        if (target == "CHAR")
+        {
+            return "CONCAT({0})";
+        }
+
+        return target.StartsWith("CHAR(", StringComparison.Ordinal)
+            ? "LEFT(CONCAT({0}), " + target["CHAR(".Length..^1] + ")"
+            : base.Cast(storeType);
+    }
 
     // A DateTime row version is a TIMESTAMP(6), which the migrations give DEFAULT and ON UPDATE CURRENT_TIMESTAMP(6).
     public override string? RowVersionStoreType(Type clrType)

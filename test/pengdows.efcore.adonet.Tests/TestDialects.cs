@@ -53,8 +53,10 @@ public sealed class PartsSql(
     bool keepConnectionOpenAfterSuppressedTransaction = false,
     bool supportsNullOrderingClauses = false,
     bool supportsStoredProcedures = true,
-    bool generatesCompositeKeyValues = true) : AnsiSqlDialect
+    bool generatesCompositeKeyValues = true,
+    bool outerReferencesInDerivedTables = true) : AnsiSqlDialect
 {
+    public override bool SupportsOuterReferencesInDerivedTables => outerReferencesInDerivedTables;
     public override bool SupportsStoredProcedures => supportsStoredProcedures;
     public override bool GeneratesCompositeKeyValues => generatesCompositeKeyValues;
     public override bool SupportsNullOrderingClauses => supportsNullOrderingClauses;
@@ -159,6 +161,10 @@ public static class TestDialects
     public static readonly IAdoNetDialect NoRowValues = new PartsDialect("No row values", new PartsSql(rowValues: false));
     public static readonly IAdoNetDialect ApplyJoins = new PartsDialect("APPLY joins", new PartsSql(lateralJoins: LateralJoinSyntax.Apply));
     public static readonly IAdoNetDialect NoLateralJoins = new PartsDialect("No lateral joins", new PartsSql(noLateralJoins: true));
+    public static readonly IAdoNetDialect NoOuterReferencesInDerivedTables = new PartsDialect(
+        "No outer references in derived tables", new PartsSql(outerReferencesInDerivedTables: false));
+    public static readonly IAdoNetDialect OuterReferencesInDerivedTables = new PartsDialect(
+        "Outer references in derived tables", new PartsSql());
 
     public static readonly IAdoNetDialect NoStoredProcedures
         = new PartsDialect("No stored procedures", new PartsSql(supportsStoredProcedures: false));

@@ -56,6 +56,7 @@ public class AnsiSqlDialect : ISqlDialect
     public virtual bool SupportsSchemas => true;
     public virtual bool SupportsStoredProcedures => true;
     public virtual bool GeneratesCompositeKeyValues => true;
+    public virtual bool SupportsOuterReferencesInDerivedTables => true;
     public virtual string ParameterMarker => "@";
     public virtual bool ParameterNameIncludesMarker => true;
     public virtual string StringLiteral(string value)

@@ -68,6 +68,41 @@ public class QueryGrammarTests
         Assert.Contains("No lateral joins", error.Message);
     }
 
+    // A DISTINCT subquery taken FIRST: a derived table inside the scalar subquery, and its WHERE reads the outer row.
+    private static IQueryable FirstDistinctPartLabelPerItem(ItemContext c)
+        => c.Items.Select(i => i.Parts.Distinct().OrderBy(p => p.Id).Select(p => p.Label).FirstOrDefault());
+
+    // MariaDB's rule (it has no LATERAL, MDEV-19078): nothing inside a derived table may read a table outside it, at any
+    // depth; a subquery that is not a FROM item still reads the outer row.
+    [Fact]
+    public void A_derived_table_reads_the_outer_row_where_the_database_allows_it()
+        => Assert.Contains(@"WHERE ""i"".""Id"" = ""p"".""ItemId""", Sql(TestDialects.OuterReferencesInDerivedTables, FirstDistinctPartLabelPerItem));
+
+    [Fact]
+    public void A_derived_table_reading_the_outer_row_is_refused_where_the_database_has_none()
+    {
+        // Its own type, so a caller (the specification suite's capability skip) can tell the refusal from a translation bug.
+        var error = Assert.Throws<pengdows.efcore.adonet.Query.OuterReferenceInDerivedTableNotSupportedException>(
+            () => Sql(TestDialects.NoOuterReferencesInDerivedTables, FirstDistinctPartLabelPerItem));
+
+        Assert.Contains("No outer references in derived tables", error.Message);
+
+        // An inline collection of the outer row's columns is a VALUES table in FROM.
+        Assert.Throws<pengdows.efcore.adonet.Query.OuterReferenceInDerivedTableNotSupportedException>(
+            () => Sql(TestDialects.NoOuterReferencesInDerivedTables, c => c.Items.Select(i => new[] { i.Id, i.Version }.Max())));
+        Assert.Contains("VALUES", Sql(TestDialects.OuterReferencesInDerivedTables, c => c.Items.Select(i => new[] { i.Id, i.Version }.Max())));
+    }
+
+    [Fact]
+    public void What_reads_the_outer_row_outside_a_derived_table_is_written_where_the_database_has_no_outer_references_in_them()
+    {
+        Assert.Contains("DISTINCT", Sql(TestDialects.NoOuterReferencesInDerivedTables, c => c.Parts.Select(p => p.Label).Distinct().Skip(1)));
+        Assert.Contains("EXISTS", Sql(TestDialects.NoOuterReferencesInDerivedTables, c => c.Items.Where(i => c.Parts.Any(p => p.ItemId == i.Id))));
+        Assert.Contains(
+            @"WHERE ""i"".""Id"" = ""p"".""ItemId""",
+            Sql(TestDialects.NoOuterReferencesInDerivedTables, c => c.Items.Select(i => i.Parts.OrderBy(p => p.Id).Select(p => p.Label).FirstOrDefault())));
+    }
+
     [Fact]
     public void Operators_are_parenthesized_only_where_precedence_needs_it()
     {

@@ -47,10 +47,13 @@ public abstract class TranslationConformanceTests<TFixture>(TFixture fixture) : 
     public ValueTask DisposeAsync()
         => ValueTask.CompletedTask;
 
-    private async Task Server<T>(Expression<Func<Blog, T>> selector)
+    private Task Server<T>(Expression<Func<Blog, T>> selector)
+        => Server(selector, selector.Compile()(Seeded));
+
+    // For a database function, which has no .NET implementation to compute the expected value with.
+    private async Task Server<T>(Expression<Func<Blog, T>> selector, T expected)
     {
         await using var context = Fixture.CreateContext();
-        var expected = selector.Compile()(Seeded);
 
         var actual = await context.Blogs.Select(selector).Distinct().SingleAsync(Ct);
         Assert.Equal(expected, actual);
@@ -138,6 +141,26 @@ public abstract class TranslationConformanceTests<TFixture>(TFixture fixture) : 
         await Server(b => b.Name.PadRight(17, '-'));
         await Server(b => b.Name.PadLeft(3));
         await Server(b => b.Name.PadRight(3, '-'));
+    }
+
+    // EF.Functions.DateDiff*, as SQL Server's and Pomelo's providers have them: whole units apart, so a database counting
+    // boundaries crossed (SQL Server) and one counting whole units (MySQL) agree.
+    [Fact]
+    public async Task Date_differences()
+    {
+        if (Fixture.ExpectedDialect.Sql.Functions.DateDiff(DateDiffUnit.Day) == null)
+        {
+            Fixture.SkipFor("no date difference function");
+        }
+
+        await Server(b => EF.Functions.DateDiffYear(b.CreatedAt, new DateTime(2027, 3, 5, 6, 7, 8, 500)), 3);
+        await Server(b => EF.Functions.DateDiffMonth(b.CreatedAt, new DateTime(2024, 6, 5, 6, 7, 8, 500)), 3);
+        await Server(b => EF.Functions.DateDiffDay(b.CreatedAt, new DateTime(2024, 3, 15, 6, 7, 8, 500)), 10);
+        await Server(b => EF.Functions.DateDiffHour(b.CreatedAt, new DateTime(2024, 3, 5, 11, 7, 8, 500)), 5);
+        await Server(b => EF.Functions.DateDiffMinute(b.CreatedAt, new DateTime(2024, 3, 5, 6, 37, 8, 500)), 30);
+        await Server(b => EF.Functions.DateDiffSecond(b.CreatedAt, new DateTime(2024, 3, 5, 6, 7, 50, 500)), 42);
+        await Server(b => EF.Functions.DateDiffMillisecond(b.CreatedAt, new DateTime(2024, 3, 5, 6, 7, 9, 0)), 500);
+        await Server(b => EF.Functions.DateDiffDay(new DateTime(2024, 3, 15, 6, 7, 8, 500), b.CreatedAt), -10);
     }
 
     [Fact]

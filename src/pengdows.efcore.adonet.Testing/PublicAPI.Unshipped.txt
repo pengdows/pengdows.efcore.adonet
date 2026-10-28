@@ -450,3 +450,4 @@ pengdows.efcore.adonet.Testing.OwnedLinesContext.Owners.get -> Microsoft.EntityF
 pengdows.efcore.adonet.Testing.DatabaseCreatorConformanceTests<TFixture>.Owned_collection_lines_are_numbered_only_where_the_database_generates_a_composite_key_column() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.ProviderConformanceTests<TFixture>.A_deleted_rows_generated_key_is_not_reused() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Padding() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Date_differences() -> System.Threading.Tasks.Task!
