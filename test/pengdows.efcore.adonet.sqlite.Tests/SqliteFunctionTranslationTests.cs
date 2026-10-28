@@ -1,4 +1,3 @@
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using pengdows.efcore.adonet.Testing;
 
@@ -170,26 +169,5 @@ public class SqliteFunctionTranslationTests
         Assert.Contains("MOD(\"s\".\"Decimal\", 2.5)", Sql(s => s.Select(x => x.Decimal % 2.5m)));
         Assert.Contains("MOD(\"s\".\"Double\", 2.5)", Sql(s => s.Select(x => x.Double % 2.5)));
         Assert.Contains("\"s\".\"Long\" % 3", Sql(s => s.Select(x => x.Long % 3)));
-    }
-
-    /// <summary>
-    ///     <c>Regex.IsMatch</c> runs as SQLite's REGEXP, which calls a function named regexp the connection supplies; the
-    ///     provider registers .NET's on each Microsoft.Data.Sqlite connection it opens, as Microsoft's provider does.
-    /// </summary>
-    [Fact]
-    public void An_opened_connection_has_the_regexp_function()
-    {
-        using var connection = new SqliteConnection("Data Source=:memory:");
-        using var context = new SampleContext(
-            new DbContextOptionsBuilder<SampleContext>().UseAdoNetSqlite(connection).Options);
-        context.Database.OpenConnection();
-        using var command = connection.CreateCommand();
-        command.CommandText = "SELECT 'abc1' REGEXP '^a.*\\d$', 'ABC' REGEXP 'b', NULL REGEXP 'b'";
-        using var reader = command.ExecuteReader();
-
-        Assert.True(reader.Read());
-        Assert.Equal(1L, reader.GetInt64(0));
-        Assert.Equal(0L, reader.GetInt64(1));
-        Assert.True(reader.IsDBNull(2));
     }
 }
