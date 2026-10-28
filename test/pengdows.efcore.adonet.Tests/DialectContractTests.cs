@@ -293,10 +293,6 @@ public class DialectContractTests
         }
     }
 
-    // A factory type of its own, since dialects are registered by type and fakeDbFactory is sealed; its connections are fakeDb's.
-    private sealed class UnknownFactory : DbProviderFactory
-    {
-        public override DbConnection CreateConnection()
-            => new pengdows.crud.fakeDb.fakeDbConnection();
-    }
+    // A fakeDb factory under a type of its own, since dialects are registered by factory type, process-wide.
+    private sealed class UnknownFactory() : pengdows.crud.fakeDb.fakeDbFactory(pengdows.crud.enums.SupportedDatabase.Unknown);
 }

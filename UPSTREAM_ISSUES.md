@@ -358,7 +358,7 @@ failure in the specification suite that matches one of these is the driver's, no
 When the release ships: update `DuckDB.NET.Data` and `DuckDB.NET.Data.Full`, remove the test store's close-only-if-open
 check, and rerun the DuckDB specification suite.
 
-## pengdows.crud.fakeDb (2.0.6-rc1)
+## pengdows.crud.fakeDb (2.0.6-rc2)
 
 Gaps that keep core paths out of reach of fakeDb tests (REVIEW_POLICY: a gap is added to fakeDb, never mocked around):
 
@@ -369,7 +369,7 @@ Gaps that keep core paths out of reach of fakeDb tests (REVIEW_POLICY: a gap is 
   (`SupportsSavepoints` true). No preset reports them; the core's driver-savepoint path is tested through an overridden
   `fakeDbTransaction` (`LifecycleTests.SavepointConnection`).
 
-Closed by 2.0.6-rc1, and used:
+Closed by 2.0.6-rc1 and rc2, and used:
 
 - Savepoints: `fakeDbDriverQuirks.SavepointsWorkButUnreported` (SqlClient, MySqlConnector) and an overridable transaction
   replace the Microsoft.Data.Sqlite stand-in for a driver that has savepoints.
@@ -377,6 +377,8 @@ Closed by 2.0.6-rc1, and used:
   hand-written factories (`ConnectionSourceTests`, `ConfigurationRulesTests`).
 - A connection names the factory that created it (`DbProviderFactories.GetFactory(connection)`).
 - `fakeDbDataReader.RecordsAffectedOverride` lets a batch's reader report rows affected (not yet used).
+- `fakeDbFactory` is no longer sealed (rc2): a test that registers a dialect by factory type subclasses it
+  (`ProbedFactory`, `UnknownFactory`) instead of writing a factory of its own.
 - Behaviour change: `OpenCount` counts only synchronous opens, `OpenAsyncCount` the asynchronous ones; the lifecycle tests
   count both.
 

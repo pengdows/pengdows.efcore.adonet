@@ -137,27 +137,10 @@ public class ConfigurationRulesTests
         using var context = Context(b => b.UseAdoNet(dataSource));
 
         Assert.Same(TestDialects.Limit, context.GetService<IAdoNetDialect>());
-        Assert.Equal(1, factory.ConnectionsCreated);
+        Assert.Single(factory.CreatedConnections);
     }
 
-    /// <summary>
-    ///     fakeDb connections under a factory type of their own: dialects are registered by factory type, and fakeDbFactory
-    ///     is sealed, so registering one for it would reach every other test.
-    /// </summary>
-    private sealed class ProbedFactory : DbProviderFactory
-    {
-        public int ConnectionsCreated { get; private set; }
-
-        public override DbConnection CreateConnection()
-        {
-            ConnectionsCreated++;
-            return new ProbedConnection();
-        }
-    }
-
-    private sealed class ProbedConnection : fakeDbConnection
-    {
-        protected override DbProviderFactory DbProviderFactory
-            => new ProbedFactory();
-    }
+    // A fakeDb factory under a type of its own: dialects are registered by factory type, process-wide, so registering one for
+    // fakeDbFactory itself would reach every other test. Its connections report it as their factory.
+    private sealed class ProbedFactory() : fakeDbFactory(SupportedDatabase.PostgreSql);
 }
