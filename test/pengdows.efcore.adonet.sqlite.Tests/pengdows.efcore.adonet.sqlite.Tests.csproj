@@ -6,6 +6,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\pengdows.efcore.adonet.sqlite\pengdows.efcore.adonet.sqlite.csproj" />
     <ProjectReference Include="..\..\src\pengdows.efcore.adonet.Testing\pengdows.efcore.adonet.Testing.csproj" />
+    <ProjectReference Include="..\..\src\pengdows.efcore.adonet.NetTopologySuite\pengdows.efcore.adonet.NetTopologySuite.csproj" />
     <PackageReference Include="pengdows.crud.fakeDb" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />

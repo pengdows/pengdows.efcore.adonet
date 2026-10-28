@@ -27,7 +27,7 @@ public class AdoNetGeometryTypeMapping<TGeometry> : RelationalGeometryTypeMappin
     private readonly ISqlDialect _sql;
 
     public AdoNetGeometryTypeMapping(NtsGeometryServices geometryServices, string storeType, ISqlDialect sql)
-        : base(SpatialValueConverter(geometryServices, sql.Spatial!), storeType, JsonGeometryWktReaderWriter.Instance)
+        : base(SpatialValueConverter(geometryServices, sql.Spatial!, storeType), storeType, JsonGeometryWktReaderWriter.Instance)
     {
         _sql = sql;
         _spatial = sql.Spatial!;
@@ -66,12 +66,43 @@ public class AdoNetGeometryTypeMapping<TGeometry> : RelationalGeometryTypeMappin
     protected override Type WktReaderType
         => typeof(WKTReader);
 
-    private static ValueConverter<TGeometry, byte[]> SpatialValueConverter(NtsGeometryServices services, SpatialSyntax spatial)
+    private static ValueConverter<TGeometry, byte[]> SpatialValueConverter(NtsGeometryServices services, SpatialSyntax spatial, string storeType)
     {
+        if (spatial.Binary == SpatialBinary.Gaia)
+        {
+            return GaiaValueConverter(services, storeType);
+        }
+
         var reader = new WKBReader(services);
         return new ValueConverter<TGeometry, byte[]>(
             g => Encode(g, spatial.Binary, spatial.StoresZAndM),
             b => (TGeometry)Decode(reader, b, spatial.Binary));
+    }
+
+    // The GAIA blob, its coordinates those the column's type names: POINT is XY, POINTZ XYZ, POINTM XYM, POINTZM all four.
+    // Behaviour reference (not copied):
+    // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.NTS/Storage/Internal/SqliteGeometryTypeMapping.cs
+    private static ValueConverter<TGeometry, byte[]> GaiaValueConverter(NtsGeometryServices services, string storeType)
+    {
+        var reader = new GaiaGeoReader(services.DefaultCoordinateSequenceFactory, services.DefaultPrecisionModel);
+        var writer = new GaiaGeoWriter { HandleOrdinates = StoreTypeOrdinates(storeType) };
+        return new ValueConverter<TGeometry, byte[]>(g => writer.Write(g), b => (TGeometry)reader.Read(b));
+    }
+
+    internal static Ordinates StoreTypeOrdinates(string storeType)
+    {
+        var name = storeType.ToUpperInvariant();
+        if (name.EndsWith("ZM", StringComparison.Ordinal))
+        {
+            return Ordinates.XYZM;
+        }
+
+        if (name.EndsWith('Z'))
+        {
+            return Ordinates.XYZ;
+        }
+
+        return name.EndsWith('M') ? Ordinates.XYM : Ordinates.XY;
     }
 
     // Z and M are written where the geometry has them and the database keeps them.

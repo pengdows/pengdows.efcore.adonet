@@ -70,6 +70,11 @@ public class AdoNetSpatialTypeMappingSourcePlugin(NtsGeometryServices geometrySe
             return null;
         }
 
+        return Kind(spatial, storeType) ?? (spatial.Binary == SpatialBinary.Gaia ? Kind(spatial, WithoutOrdinates(storeType)) : null);
+    }
+
+    private static (string Kind, Type Type)? Kind(SpatialSyntax spatial, string storeType)
+    {
         foreach (var candidate in Kinds)
         {
             if (string.Equals(spatial.StoreType(candidate.Kind), storeType, StringComparison.OrdinalIgnoreCase))
@@ -80,4 +85,12 @@ public class AdoNetSpatialTypeMappingSourcePlugin(NtsGeometryServices geometrySe
 
         return null;
     }
+
+    // A GAIA column's type may name its coordinates: POINTZ, POINTM, POINTZM.
+    private static string WithoutOrdinates(string storeType)
+        => storeType.EndsWith("ZM", StringComparison.OrdinalIgnoreCase)
+            ? storeType[..^2]
+            : (storeType.EndsWith('Z') || storeType.EndsWith('z') || storeType.EndsWith('M') || storeType.EndsWith('m'))
+                ? storeType[..^1]
+                : storeType;
 }

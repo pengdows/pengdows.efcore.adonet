@@ -38,7 +38,9 @@ public class SqliteDialect : AdoNetDialect
             .TryAdd<IHistoryRepository, SqliteHistoryRepository>()
             .TryAdd<Microsoft.EntityFrameworkCore.Query.IMethodCallTranslatorPlugin, SqliteMethodCallTranslatorPlugin>()
             .TryAdd<Microsoft.EntityFrameworkCore.Query.IMemberTranslatorPlugin, SqliteMemberTranslatorPlugin>()
-            .TryAdd<Microsoft.EntityFrameworkCore.Diagnostics.IInterceptor, SqliteConnectionFunctionsInterceptor>();
+            .TryAdd<Microsoft.EntityFrameworkCore.Diagnostics.IInterceptor, SqliteConnectionFunctionsInterceptor>()
+            .TryAdd<Microsoft.EntityFrameworkCore.Diagnostics.IInterceptor, SqliteSpatialiteInterceptor>()
+            .TryAdd<Microsoft.EntityFrameworkCore.Metadata.IRelationalAnnotationProvider, SqliteAnnotationProvider>();
 }
 
 /// <summary>SQLite before 3.35 has no RETURNING; keys come back through <c>last_insert_rowid()</c>.</summary>
@@ -83,6 +85,7 @@ internal class SqliteSql : AnsiSqlDialect
     // copied): https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.Core/Update/Internal/SqliteUpdateSqlGenerator.cs
     public override SelectAfterKeyRetrieval? KeysWithoutReturning { get; } = KeyRetrieval.SelectAfter("last_insert_rowid()", "changes()");
     public override FunctionSyntax Functions { get; } = new SqliteFunctions();
+    public override SpatialSyntax Spatial => SqliteSpatial.Syntax;
     public override JsonSyntax Json { get; } = SqliteJson.Syntax;
 
     public override string HasTablesSql

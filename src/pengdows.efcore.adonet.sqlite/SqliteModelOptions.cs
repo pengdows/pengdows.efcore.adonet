@@ -59,6 +59,24 @@ public static class SqliteModelOptionsExtensions
     public static PropertyBuilder<TProperty> UseAutoincrement<TProperty>(this PropertyBuilder<TProperty> propertyBuilder)
         => propertyBuilder.UseIdentityColumn();
 
+    internal const string SridAnnotation = "AdoNet:Sqlite:Srid";
+
+    /// <summary>
+    ///     The spatial reference system of a SpatiaLite geometry column, which AddGeometryColumn declares it with and its values
+    ///     must have. Behaviour reference (not copied):
+    ///     https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.Core/Extensions/SqlitePropertyBuilderExtensions.cs
+    /// </summary>
+    public static PropertyBuilder HasSrid(this PropertyBuilder propertyBuilder, int srid)
+        => propertyBuilder.HasAnnotation(SridAnnotation, srid);
+
+    /// <inheritdoc cref="HasSrid(PropertyBuilder, int)" />
+    public static PropertyBuilder<TProperty> HasSrid<TProperty>(this PropertyBuilder<TProperty> propertyBuilder, int srid)
+        => propertyBuilder.HasAnnotation(SridAnnotation, srid);
+
+    /// <summary>The column's SRID from <see cref="HasSrid(PropertyBuilder, int)" />, or null.</summary>
+    public static int? GetSrid(this IReadOnlyProperty property)
+        => property.FindAnnotation(SridAnnotation)?.Value as int?;
+
     /// <summary>Whether the context's database is SQLite: its dialect is <see cref="SqliteDialect" /> or a variant of it.</summary>
     public static bool IsSqlite(this DatabaseFacade database)
         => ((IInfrastructure<IServiceProvider>)database).Instance.GetService(typeof(IAdoNetDialect)) is SqliteDialect;

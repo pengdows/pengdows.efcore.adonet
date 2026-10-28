@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -230,6 +231,75 @@ internal class SqliteMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies d
     // key after its row is deleted. Behaviour reference (not copied):
     // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.Core/Migrations/SqliteMigrationsSqlGenerator.cs
     protected override void Generate(CreateTableOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
+    {
+        // A SpatiaLite geometry column is declared by AddGeometryColumn after its table, which registers it in the spatial
+        // catalog. Behaviour reference (not copied):
+        // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.Core/Migrations/SqliteMigrationsSqlGenerator.cs
+        var geometryColumns = operation.Columns.Where(c => IsGeometryColumn(c, model)).ToList();
+        foreach (var column in geometryColumns)
+        {
+            operation.Columns.Remove(column);
+        }
+
+        GenerateTable(operation, model, builder, terminate || (geometryColumns.Count > 0));
+        foreach (var column in geometryColumns)
+        {
+            AddGeometryColumn(column, model, builder);
+        }
+    }
+
+    protected override void Generate(AddColumnOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
+    {
+        if (!IsGeometryColumn(operation, model))
+        {
+            base.Generate(operation, model, builder, terminate);
+            return;
+        }
+
+        AddGeometryColumn(operation, model, builder);
+    }
+
+    // SpatiaLite's catalog, made once, before the first geometry column.
+    protected override void Generate(AlterDatabaseOperation operation, IModel? model, MigrationCommandListBuilder builder)
+    {
+        base.Generate(operation, model, builder);
+        if ((operation[SqliteAnnotationProvider.InitSpatialMetaData] is not true)
+            || (operation.OldDatabase[SqliteAnnotationProvider.InitSpatialMetaData] is true))
+        {
+            return;
+        }
+
+        builder.Append("SELECT InitSpatialMetaData()").AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
+        EndStatement(builder);
+    }
+
+    private bool IsGeometryColumn(ColumnOperation operation, IModel? model)
+        => (operation is AddColumnOperation add)
+            && SqliteAnnotationProvider.IsGeometryType(add.ColumnType ?? GetColumnType(add.Schema, add.Table, add.Name, add, model));
+
+    // AddGeometryColumn(table, column, srid, type, dimension, not null); a dimension of -1 takes it from the type's suffix.
+    private void AddGeometryColumn(AddColumnOperation operation, IModel? model, MigrationCommandListBuilder builder)
+    {
+        var text = Dependencies.TypeMappingSource.GetMapping(typeof(string));
+        var number = Dependencies.TypeMappingSource.GetMapping(typeof(long));
+        var type = operation.ColumnType ?? GetColumnType(operation.Schema, operation.Table, operation.Name, operation, model)!;
+        builder
+            .Append("SELECT AddGeometryColumn(")
+            .Append(text.GenerateSqlLiteral(operation.Table))
+            .Append(", ")
+            .Append(text.GenerateSqlLiteral(operation.Name))
+            .Append(", ")
+            .Append(number.GenerateSqlLiteral((long)(operation[SqliteModelOptionsExtensions.SridAnnotation] as int? ?? 0)))
+            .Append(", ")
+            .Append(text.GenerateSqlLiteral(type.ToUpperInvariant()))
+            .Append(", -1, ")
+            .Append(operation.IsNullable ? "0" : "1")
+            .Append(")")
+            .AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
+        EndStatement(builder);
+    }
+
+    private void GenerateTable(CreateTableOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate)
     {
         if ((operation.PrimaryKey is { Columns: [var keyColumn] } key)
             && (operation.Columns.FirstOrDefault(c => c.Name == keyColumn) is { } column)

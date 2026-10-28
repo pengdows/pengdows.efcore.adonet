@@ -6,5 +6,6 @@
     <ProjectReference Include="..\pengdows.efcore.adonet\pengdows.efcore.adonet.csproj" />
     <PackageReference Include="NetTopologySuite" />
     <PackageReference Include="NetTopologySuite.IO.SqlServerBytes" />
+    <PackageReference Include="NetTopologySuite.IO.SpatiaLite" />
   </ItemGroup>
 </Project>
