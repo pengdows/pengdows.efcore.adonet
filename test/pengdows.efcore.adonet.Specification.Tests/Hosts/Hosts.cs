@@ -106,8 +106,15 @@ public sealed class PostgreSqlHost : ServerHost
     // run opens, EF's and the admin ones, and pooling is off so a closed connection frees its server slot at once.
     private const int ConnectionBudget = 22;
 
-    private static readonly Lazy<StormGate> Gate = new(() => StormGate.Create(
-        Npgsql.NpgsqlFactory.Instance, WithoutPooling(Container.ConnectionString), ConnectionBudget, TimeSpan.FromMinutes(5)));
+    // A request for a permit waits up to five minutes, so a saturated gate queues the run instead of failing tests; the gate
+    // belongs to the process and is released with it.
+    private static readonly Lazy<StormGate> Gate = new(() =>
+    {
+        var gate = StormGate.Create(
+            Npgsql.NpgsqlFactory.Instance, WithoutPooling(Container.ConnectionString), ConnectionBudget, TimeSpan.FromMinutes(5));
+        AppDomain.CurrentDomain.ProcessExit += (_, _) => gate.Dispose();
+        return gate;
+    });
 
     private static readonly Lazy<StormGateConnectionInterceptor> Interceptor = new(() => new StormGateConnectionInterceptor(Gate.Value));
 
