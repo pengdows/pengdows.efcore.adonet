@@ -51,6 +51,34 @@ internal sealed class DuckDbSql : AnsiSqlDialect
 
     // DuckDB has no savepoints.
     public override SavepointSyntax? Savepoints => null;
+
+    public override JsonSyntax Json => DuckDbJson.Syntax;
+}
+
+/// <summary>
+///     DuckDB's JSON type and its json extension: a value as text with json_extract_string, a fragment with json_extract, and
+///     an array's elements as the rows of json_each (its key the position, as text). DuckDB has no function to set a value
+///     inside a document, so a JSON property changed alone can't be saved in place (<see cref="JsonSyntax.Set" /> is null).
+///     Behaviour reference (not copied):
+///     https://github.com/skuirrels/DuckDB.EFCoreProvider/tree/f49a8c3e25f28055ad139383d25e09cede39c6f8/src/DuckDB.EFCoreProvider/Query
+/// </summary>
+internal static class DuckDbJson
+{
+    public static JsonSyntax Syntax { get; } = new(
+        "JSON",
+        "json_extract_string({0}, {1})",
+        "json_extract({0}, {1})",
+        "CAST(json_extract_string({0}, {1}) AS {2})",
+        "CAST(json_extract({0}, {1}) AS BOOLEAN)",
+        "from_base64(json_extract_string({0}, {1}))",
+        "({0} || {1})",
+        set: null,
+        "CAST({0} AS JSON)")
+    {
+        ArrayElements = "(SELECT CAST(\"key\" AS INTEGER) AS {1}, CAST(json_extract_string(\"value\", '$') AS {3}) AS {2} FROM json_each({0}))",
+        ArrayElementsTextType = "VARCHAR",
+        ArrayElementsBinaryValue = "from_base64({0})"
+    };
 }
 
 /// <summary>
