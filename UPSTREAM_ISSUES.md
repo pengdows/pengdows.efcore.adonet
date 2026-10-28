@@ -377,6 +377,11 @@ Gaps that keep core paths out of reach of fakeDb tests (REVIEW_POLICY: a gap is 
 - No way to stand in for a driver's user-defined functions: the SQLite plugin registers `regexp` on a Microsoft.Data.Sqlite
   connection only (`SqliteConnection.CreateFunction`), and fakeDb has neither that type nor a function hook, so the tests
   check the SQL sent and that the interceptor skips another driver's connection; running REGEXP is the integration suites'.
+- `fakeDbDataReader.GetInt32` on a value scripted as `long` throws `InvalidCastException`, where MySqlConnector narrows an
+  in-range BIGINT (MySQL's `CAST(x AS SIGNED)` is BIGINT, and EF reads an `int` with `GetInt32`). Even with
+  `EmulatedProduct=MySql` the reader doesn't take on the driver's conversions, so a MySQL test scripts the `int` it expects
+  (`MySqlFunctionExecutionTests.Json_extract_reads_text_scalars_objects_and_arrays`) and the BIGINT-to-`int` read is left
+  to the server suites.
 
 Closed by 2.0.6-rc1 and rc2, and used:
 
