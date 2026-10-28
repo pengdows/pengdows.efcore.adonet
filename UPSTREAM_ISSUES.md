@@ -368,8 +368,6 @@ Gaps that keep core paths out of reach of fakeDb tests (REVIEW_POLICY: a gap is 
 - The `Npgsql()` driver preset reports no savepoints and refuses them, where Npgsql implements them and says so
   (`SupportsSavepoints` true). No preset reports them; the core's driver-savepoint path is tested through an overridden
   `fakeDbTransaction` (`LifecycleTests.SavepointConnection`).
-- A dialect is registered by factory type and `fakeDbFactory` is sealed, so a test that registers one needs a factory type
-  of its own (`ProbedFactory`, `UnknownFactory`); both hand out fakeDb connections.
 
 Closed by 2.0.6-rc1, and used:
 
