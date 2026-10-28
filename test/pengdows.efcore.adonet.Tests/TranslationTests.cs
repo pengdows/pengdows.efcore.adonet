@@ -37,6 +37,25 @@ public class TranslationTests
         Assert.Contains(@"WHERE (""i"".""Version"" + 1) % 2 = 0", Sql(TestDialects.Functions, c => c.Items.Where(i => (i.Version + 1) % 2 == 0)));
     }
 
+    /// <summary>
+    ///     A database that keeps whole decimals as integers divides two of them as integers, and one whose remainder operator
+    ///     truncates its operands to integers loses a fraction; each names its own decimal division and fractional remainder.
+    ///     Integer operands keep the plain operators, and a dialect naming neither keeps them for every type.
+    /// </summary>
+    [Fact]
+    public void Decimal_division_and_fractional_remainders_use_the_dialects_templates()
+    {
+        var dialect = new PartsDialect("Fractional arithmetic", new PartsSql(functions: new FractionalArithmetic()));
+
+        Assert.Contains(@"DIVIDE(""i"".""Price"", (""i"".""Price"" - 1.0))", Sql(dialect, c => c.Items.Select(i => i.Price / (i.Price - 1m))));
+        Assert.Contains(@"FMOD(""i"".""Price"", 2.5)", Sql(dialect, c => c.Items.Select(i => i.Price % 2.5m)));
+        Assert.Contains(@"FMOD(""i"".""Double"", 2.5)", Sql(dialect, c => c.Items.Select(i => i.Double % 2.5)));
+        Assert.Contains(@"""i"".""Version"" / 2", Sql(dialect, c => c.Items.Select(i => i.Version / 2)));
+        Assert.Contains(@"MOD(""i"".""Version"", 2)", Sql(dialect, c => c.Items.Select(i => i.Version % 2)));
+        Assert.Contains(@"""i"".""Price"" / 2.0", Ansi(c => c.Items.Select(i => i.Price / 2m)));
+        Assert.Contains(@"MOD(""i"".""Double"", 2.5)", Ansi(c => c.Items.Select(i => i.Double % 2.5)));
+    }
+
     [Theory]
     [InlineData(0.1f, "0.10000000149011612")]
     [InlineData(float.Epsilon, "1.401298464324817E-45")]
@@ -459,6 +478,13 @@ public sealed class TestFunctions : FunctionSyntax
     public override string ExclusiveOr => "{0} ^ {1}";
     public override char? LikeEscapeCharacter => '!';
     public override string LikeSpecialCharacters => "%_[";
+}
+
+/// <summary>A database that divides whole decimals as integers and truncates a remainder's operands to integers.</summary>
+public sealed class FractionalArithmetic : FunctionSyntax
+{
+    public override string DecimalDivide => "DIVIDE({0}, {1})";
+    public override string FractionalModulo => "FMOD({0}, {1})";
 }
 
 /// <summary>A database whose CAST takes its own target names rather than column types.</summary>

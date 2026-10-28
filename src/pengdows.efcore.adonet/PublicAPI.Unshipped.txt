@@ -739,3 +739,5 @@ static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffMicrosecond(th
 virtual pengdows.efcore.adonet.FunctionSyntax.DateDiff(pengdows.efcore.adonet.DateDiffUnit unit) -> string?
 pengdows.efcore.adonet.JsonSyntax.Equality.get -> string?
 pengdows.efcore.adonet.JsonSyntax.Equality.init -> void
+virtual pengdows.efcore.adonet.FunctionSyntax.FractionalModulo.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.DecimalDivide.get -> string?

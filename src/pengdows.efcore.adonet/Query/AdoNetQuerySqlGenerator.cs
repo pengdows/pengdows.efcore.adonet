@@ -400,6 +400,22 @@ internal class AdoNetQuerySqlGenerator(
             return sqlBinaryExpression;
         }
 
+        if ((sqlBinaryExpression is { OperatorType: ExpressionType.Modulo })
+            && IsFractional(sqlBinaryExpression)
+            && (dialect.Functions.FractionalModulo is { } fractionalModulo))
+        {
+            SqlTemplate.Write(fractionalModulo, [sqlBinaryExpression.Left, sqlBinaryExpression.Right], s => Sql.Append(s), e => Visit(e));
+            return sqlBinaryExpression;
+        }
+
+        if ((sqlBinaryExpression is { OperatorType: ExpressionType.Divide })
+            && (IsOfType(sqlBinaryExpression.Left, typeof(decimal)) || IsOfType(sqlBinaryExpression.Right, typeof(decimal)))
+            && (dialect.Functions.DecimalDivide is { } decimalDivide))
+        {
+            SqlTemplate.Write(decimalDivide, [sqlBinaryExpression.Left, sqlBinaryExpression.Right], s => Sql.Append(s), VisitOperand);
+            return sqlBinaryExpression;
+        }
+
         if (sqlBinaryExpression is { OperatorType: ExpressionType.Modulo } && dialect.Functions.Modulo is { } modulo)
         {
             SqlTemplate.Write(modulo, [sqlBinaryExpression.Left, sqlBinaryExpression.Right], s => Sql.Append(s), e => Visit(e));
@@ -485,6 +501,15 @@ internal class AdoNetQuerySqlGenerator(
 
         return null;
     }
+
+    private static bool IsFractional(SqlBinaryExpression expression)
+        => IsOfType(expression.Left, typeof(decimal)) || IsOfType(expression.Right, typeof(decimal))
+            || IsOfType(expression.Left, typeof(double)) || IsOfType(expression.Right, typeof(double))
+            || IsOfType(expression.Left, typeof(float)) || IsOfType(expression.Right, typeof(float));
+
+    // The operand's provider type: a decimal converted to something else is stored, and computes, as that.
+    private static bool IsOfType(SqlExpression operand, Type type)
+        => (operand.TypeMapping?.Converter?.ProviderClrType ?? Nullable.GetUnderlyingType(operand.Type) ?? operand.Type) == type;
 
     private static bool IsConstantOrParameter(SqlExpression expression)
         => (expression is SqlConstantExpression) || (expression is SqlParameterExpression);

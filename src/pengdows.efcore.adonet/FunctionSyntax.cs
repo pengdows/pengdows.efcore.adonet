@@ -99,6 +99,18 @@ public class FunctionSyntax
     public virtual string? Modulo => "MOD({0}, {1})";
 
     /// <summary>
+    ///     The remainder of <c>{0}</c> divided by <c>{1}</c> when either is a decimal or floating-point number, for a database
+    ///     whose remainder truncates its operands to integers. Null uses <see cref="Modulo" />.
+    /// </summary>
+    public virtual string? FractionalModulo => null;
+
+    /// <summary>
+    ///     The decimal <c>{0}</c> divided by the decimal <c>{1}</c>, for a database that keeps whole decimals as integers and so
+    ///     would divide two of them as integers. Null writes the division operator.
+    /// </summary>
+    public virtual string? DecimalDivide => null;
+
+    /// <summary>
     ///     Integer <c>{0} &amp; {1}</c>. ISO SQL has no bitwise operators: null, the ISO default, leaves them untranslated,
     ///     as for every member here; a database with them names its own.
     /// </summary>
@@ -363,7 +375,8 @@ public class FunctionSyntax
             (nameof(Substring), Substring, 3), (nameof(SubstringFrom), SubstringFrom, 2), (nameof(Position), Position, 2),
             (nameof(Replace), Replace, 3), (nameof(Abs), Abs, 1), (nameof(Floor), Floor, 1), (nameof(Ceiling), Ceiling, 1),
             (nameof(Round), Round, 1), (nameof(RoundDigits), RoundDigits, 2), (nameof(Power), Power, 2),
-            (nameof(Modulo), Modulo, 2), (nameof(BitwiseAnd), BitwiseAnd, 2), (nameof(BitwiseOr), BitwiseOr, 2),
+            (nameof(Modulo), Modulo, 2), (nameof(FractionalModulo), FractionalModulo, 2), (nameof(DecimalDivide), DecimalDivide, 2),
+            (nameof(BitwiseAnd), BitwiseAnd, 2), (nameof(BitwiseOr), BitwiseOr, 2),
             (nameof(BitwiseNot), BitwiseNot, 1), (nameof(ExclusiveOr), ExclusiveOr, 2), (nameof(Sqrt), Sqrt, 1),
             (nameof(Year), Year, 1), (nameof(Month), Month, 1), (nameof(Day), Day, 1), (nameof(Hour), Hour, 1),
             (nameof(Minute), Minute, 1), (nameof(Second), Second, 1), (nameof(OffsetDateTime), OffsetDateTime, 1),
