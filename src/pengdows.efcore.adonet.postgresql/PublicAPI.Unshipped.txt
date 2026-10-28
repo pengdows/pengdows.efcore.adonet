@@ -6,6 +6,17 @@ override pengdows.efcore.adonet.postgresql.PostgreSqlDialect.Sql.get -> pengdows
 override pengdows.efcore.adonet.postgresql.PostgreSqlDialect.TypeMappings.get -> pengdows.efcore.adonet.ITypeMappingDialect!
 pengdows.efcore.adonet.postgresql.PostgreSqlDbContextOptionsBuilderExtensions
 pengdows.efcore.adonet.postgresql.PostgreSqlDialect
+pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchDbFunctionsExtensions
+pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions
+pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchModelExtensions
+pengdows.efcore.adonet.postgresql.PostgreSqlTsRankingNormalization
+pengdows.efcore.adonet.postgresql.PostgreSqlTsRankingNormalization.Default = 0 -> pengdows.efcore.adonet.postgresql.PostgreSqlTsRankingNormalization
+pengdows.efcore.adonet.postgresql.PostgreSqlTsRankingNormalization.DivideBy1PlusLogLength = 1 -> pengdows.efcore.adonet.postgresql.PostgreSqlTsRankingNormalization
+pengdows.efcore.adonet.postgresql.PostgreSqlTsRankingNormalization.DivideByItselfPlusOne = 32 -> pengdows.efcore.adonet.postgresql.PostgreSqlTsRankingNormalization
+pengdows.efcore.adonet.postgresql.PostgreSqlTsRankingNormalization.DivideByLength = 2 -> pengdows.efcore.adonet.postgresql.PostgreSqlTsRankingNormalization
+pengdows.efcore.adonet.postgresql.PostgreSqlTsRankingNormalization.DivideByMeanHarmonicDistanceBetweenExtents = 4 -> pengdows.efcore.adonet.postgresql.PostgreSqlTsRankingNormalization
+pengdows.efcore.adonet.postgresql.PostgreSqlTsRankingNormalization.DivideByUniqueWordCount = 8 -> pengdows.efcore.adonet.postgresql.PostgreSqlTsRankingNormalization
+pengdows.efcore.adonet.postgresql.PostgreSqlTsRankingNormalization.DividesBy1PlusLogUniqueWordCount = 16 -> pengdows.efcore.adonet.postgresql.PostgreSqlTsRankingNormalization
 static pengdows.efcore.adonet.postgresql.PostgreSqlDbContextOptionsBuilderExtensions.RegisterDialect() -> void
 static pengdows.efcore.adonet.postgresql.PostgreSqlDbContextOptionsBuilderExtensions.UseAdoNetPostgreSql(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder! optionsBuilder, string! connectionString, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder!
 static pengdows.efcore.adonet.postgresql.PostgreSqlDbContextOptionsBuilderExtensions.UseAdoNetPostgreSql(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder! optionsBuilder, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder!
@@ -15,6 +26,55 @@ static pengdows.efcore.adonet.postgresql.PostgreSqlDbContextOptionsBuilderExtens
 static pengdows.efcore.adonet.postgresql.PostgreSqlDbContextOptionsBuilderExtensions.UseAdoNetPostgreSql<TContext>(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>! optionsBuilder, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>!
 static pengdows.efcore.adonet.postgresql.PostgreSqlDbContextOptionsBuilderExtensions.UseAdoNetPostgreSql<TContext>(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>! optionsBuilder, System.Data.Common.DbConnection! connection, bool contextOwnsConnection = false, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>!
 static pengdows.efcore.adonet.postgresql.PostgreSqlDbContextOptionsBuilderExtensions.UseAdoNetPostgreSql<TContext>(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>! optionsBuilder, System.Data.Common.DbDataSource! dataSource, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchDbFunctionsExtensions.ArrayToTsVector(this Microsoft.EntityFrameworkCore.DbFunctions! _, string![]! lexemes) -> NpgsqlTypes.NpgsqlTsVector!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchDbFunctionsExtensions.PhraseToTsQuery(this Microsoft.EntityFrameworkCore.DbFunctions! _, string! config, string! query) -> NpgsqlTypes.NpgsqlTsQuery!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchDbFunctionsExtensions.PhraseToTsQuery(this Microsoft.EntityFrameworkCore.DbFunctions! _, string! query) -> NpgsqlTypes.NpgsqlTsQuery!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchDbFunctionsExtensions.PlainToTsQuery(this Microsoft.EntityFrameworkCore.DbFunctions! _, string! config, string! query) -> NpgsqlTypes.NpgsqlTsQuery!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchDbFunctionsExtensions.PlainToTsQuery(this Microsoft.EntityFrameworkCore.DbFunctions! _, string! query) -> NpgsqlTypes.NpgsqlTsQuery!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchDbFunctionsExtensions.ToTsQuery(this Microsoft.EntityFrameworkCore.DbFunctions! _, string! config, string! query) -> NpgsqlTypes.NpgsqlTsQuery!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchDbFunctionsExtensions.ToTsQuery(this Microsoft.EntityFrameworkCore.DbFunctions! _, string! query) -> NpgsqlTypes.NpgsqlTsQuery!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchDbFunctionsExtensions.ToTsVector(this Microsoft.EntityFrameworkCore.DbFunctions! _, string! config, string! document) -> NpgsqlTypes.NpgsqlTsVector!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchDbFunctionsExtensions.ToTsVector(this Microsoft.EntityFrameworkCore.DbFunctions! _, string! document) -> NpgsqlTypes.NpgsqlTsVector!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchDbFunctionsExtensions.Unaccent(this Microsoft.EntityFrameworkCore.DbFunctions! _, string! regDictionary, string! text) -> string!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchDbFunctionsExtensions.Unaccent(this Microsoft.EntityFrameworkCore.DbFunctions! _, string! text) -> string!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchDbFunctionsExtensions.WebSearchToTsQuery(this Microsoft.EntityFrameworkCore.DbFunctions! _, string! config, string! query) -> NpgsqlTypes.NpgsqlTsQuery!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchDbFunctionsExtensions.WebSearchToTsQuery(this Microsoft.EntityFrameworkCore.DbFunctions! _, string! query) -> NpgsqlTypes.NpgsqlTsQuery!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.And(this NpgsqlTypes.NpgsqlTsQuery! query1, NpgsqlTypes.NpgsqlTsQuery! query2) -> NpgsqlTypes.NpgsqlTsQuery!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.Concat(this NpgsqlTypes.NpgsqlTsVector! vector1, NpgsqlTypes.NpgsqlTsVector! vector2) -> NpgsqlTypes.NpgsqlTsVector!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.Contains(this NpgsqlTypes.NpgsqlTsQuery! query1, NpgsqlTypes.NpgsqlTsQuery! query2) -> bool
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.Delete(this NpgsqlTypes.NpgsqlTsVector! vector, string! lexeme) -> NpgsqlTypes.NpgsqlTsVector!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.Delete(this NpgsqlTypes.NpgsqlTsVector! vector, string![]! lexemes) -> NpgsqlTypes.NpgsqlTsVector!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.Filter(this NpgsqlTypes.NpgsqlTsVector! vector, char[]! weights) -> NpgsqlTypes.NpgsqlTsVector!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.GetLength(this NpgsqlTypes.NpgsqlTsVector! vector) -> int
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.GetNodeCount(this NpgsqlTypes.NpgsqlTsQuery! query) -> int
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.GetQueryTree(this NpgsqlTypes.NpgsqlTsQuery! query) -> string!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.GetResultHeadline(this NpgsqlTypes.NpgsqlTsQuery! query, string! config, string! document, string! options) -> string!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.GetResultHeadline(this NpgsqlTypes.NpgsqlTsQuery! query, string! document) -> string!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.GetResultHeadline(this NpgsqlTypes.NpgsqlTsQuery! query, string! document, string! options) -> string!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.IsContainedIn(this NpgsqlTypes.NpgsqlTsQuery! query1, NpgsqlTypes.NpgsqlTsQuery! query2) -> bool
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.Matches(this NpgsqlTypes.NpgsqlTsVector! vector, NpgsqlTypes.NpgsqlTsQuery! query) -> bool
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.Matches(this NpgsqlTypes.NpgsqlTsVector! vector, string! query) -> bool
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.Or(this NpgsqlTypes.NpgsqlTsQuery! query1, NpgsqlTypes.NpgsqlTsQuery! query2) -> NpgsqlTypes.NpgsqlTsQuery!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.Rank(this NpgsqlTypes.NpgsqlTsVector! vector, float[]! weights, NpgsqlTypes.NpgsqlTsQuery! query) -> float
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.Rank(this NpgsqlTypes.NpgsqlTsVector! vector, float[]! weights, NpgsqlTypes.NpgsqlTsQuery! query, pengdows.efcore.adonet.postgresql.PostgreSqlTsRankingNormalization normalization) -> float
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.Rank(this NpgsqlTypes.NpgsqlTsVector! vector, NpgsqlTypes.NpgsqlTsQuery! query) -> float
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.Rank(this NpgsqlTypes.NpgsqlTsVector! vector, NpgsqlTypes.NpgsqlTsQuery! query, pengdows.efcore.adonet.postgresql.PostgreSqlTsRankingNormalization normalization) -> float
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.RankCoverDensity(this NpgsqlTypes.NpgsqlTsVector! vector, float[]! weights, NpgsqlTypes.NpgsqlTsQuery! query) -> float
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.RankCoverDensity(this NpgsqlTypes.NpgsqlTsVector! vector, float[]! weights, NpgsqlTypes.NpgsqlTsQuery! query, pengdows.efcore.adonet.postgresql.PostgreSqlTsRankingNormalization normalization) -> float
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.RankCoverDensity(this NpgsqlTypes.NpgsqlTsVector! vector, NpgsqlTypes.NpgsqlTsQuery! query) -> float
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.RankCoverDensity(this NpgsqlTypes.NpgsqlTsVector! vector, NpgsqlTypes.NpgsqlTsQuery! query, pengdows.efcore.adonet.postgresql.PostgreSqlTsRankingNormalization normalization) -> float
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.Rewrite(this NpgsqlTypes.NpgsqlTsQuery! query, NpgsqlTypes.NpgsqlTsQuery! target, NpgsqlTypes.NpgsqlTsQuery! substitute) -> NpgsqlTypes.NpgsqlTsQuery!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.Rewrite(this NpgsqlTypes.NpgsqlTsQuery! query, string! select) -> NpgsqlTypes.NpgsqlTsQuery!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.SetWeight(this NpgsqlTypes.NpgsqlTsVector! vector, char weight) -> NpgsqlTypes.NpgsqlTsVector!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.SetWeight(this NpgsqlTypes.NpgsqlTsVector! vector, char weight, string![]! lexemes) -> NpgsqlTypes.NpgsqlTsVector!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.SetWeight(this NpgsqlTypes.NpgsqlTsVector! vector, NpgsqlTypes.NpgsqlTsVector.Lexeme.Weight weight) -> NpgsqlTypes.NpgsqlTsVector!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.SetWeight(this NpgsqlTypes.NpgsqlTsVector! vector, NpgsqlTypes.NpgsqlTsVector.Lexeme.Weight weight, string![]! lexemes) -> NpgsqlTypes.NpgsqlTsVector!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.ToNegative(this NpgsqlTypes.NpgsqlTsQuery! query) -> NpgsqlTypes.NpgsqlTsQuery!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.ToPhrase(this NpgsqlTypes.NpgsqlTsQuery! query1, NpgsqlTypes.NpgsqlTsQuery! query2) -> NpgsqlTypes.NpgsqlTsQuery!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.ToPhrase(this NpgsqlTypes.NpgsqlTsQuery! query1, NpgsqlTypes.NpgsqlTsQuery! query2, int distance) -> NpgsqlTypes.NpgsqlTsQuery!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchLinqExtensions.ToStripped(this NpgsqlTypes.NpgsqlTsVector! vector) -> NpgsqlTypes.NpgsqlTsVector!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchModelExtensions.HasGeneratedTsVectorColumn<TEntity>(this Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<TEntity!>! entityTypeBuilder, System.Linq.Expressions.Expression<System.Func<TEntity!, NpgsqlTypes.NpgsqlTsVector!>!>! tsVectorPropertyExpression, string! config, System.Linq.Expressions.Expression<System.Func<TEntity!, object!>!>! includeExpression) -> Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<TEntity!>!
+static pengdows.efcore.adonet.postgresql.PostgreSqlFullTextSearchModelExtensions.IsGeneratedTsVectorColumn(this Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder<NpgsqlTypes.NpgsqlTsVector!>! propertyBuilder, string! config, params string![]! includedPropertyNames) -> Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder<NpgsqlTypes.NpgsqlTsVector!>!
 static readonly pengdows.efcore.adonet.postgresql.PostgreSqlDialect.Instance -> pengdows.efcore.adonet.postgresql.PostgreSqlDialect!
 pengdows.efcore.adonet.postgresql.PostgreSqlDbFunctionsExtensions
 static pengdows.efcore.adonet.postgresql.PostgreSqlDbFunctionsExtensions.ILike(this Microsoft.EntityFrameworkCore.DbFunctions! _, string! matchExpression, string! pattern) -> bool

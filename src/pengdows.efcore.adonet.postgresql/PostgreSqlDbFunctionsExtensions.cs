@@ -36,6 +36,25 @@ public static class PostgreSqlDbFunctionsExtensions
         => throw new InvalidOperationException(CoreStrings.FunctionOnClient(nameof(ArrayContainedBy)));
 }
 
+/// <summary>
+///     Keeps this plugin's server functions in the query: called with constants only (<c>EF.Functions.PlainToTsQuery("cat")</c>),
+///     EF would otherwise evaluate them on the client, where each throws. Behaviour reference (not copied):
+///     https://github.com/npgsql/efcore.pg/blob/v10.0.3/src/EFCore.PG/Query/Internal/NpgsqlEvaluatableExpressionFilter.cs
+/// </summary>
+internal sealed class PostgreSqlEvaluatableExpressionFilterPlugin : IEvaluatableExpressionFilterPlugin
+{
+    private static readonly HashSet<Type> ServerFunctions =
+    [
+        typeof(PostgreSqlDbFunctionsExtensions),
+        typeof(PostgreSqlJsonDbFunctionsExtensions),
+        typeof(PostgreSqlFullTextSearchDbFunctionsExtensions),
+        typeof(PostgreSqlFullTextSearchLinqExtensions)
+    ];
+
+    public bool IsEvaluatableExpression(System.Linq.Expressions.Expression expression)
+        => !((expression is System.Linq.Expressions.MethodCallExpression call) && ServerFunctions.Contains(call.Method.DeclaringType!));
+}
+
 /// <summary>Translates <see cref="PostgreSqlDbFunctionsExtensions" />.</summary>
 internal sealed class PostgreSqlDbFunctionsTranslatorPlugin(ISqlExpressionFactory sqlExpressionFactory, IRelationalTypeMappingSource typeMappingSource)
     : IMethodCallTranslatorPlugin
@@ -43,7 +62,8 @@ internal sealed class PostgreSqlDbFunctionsTranslatorPlugin(ISqlExpressionFactor
     public IEnumerable<IMethodCallTranslator> Translators { get; } =
     [
         new PostgreSqlDbFunctionsTranslator(sqlExpressionFactory, typeMappingSource),
-        new PostgreSqlJsonDbFunctionsTranslator(sqlExpressionFactory, typeMappingSource)
+        new PostgreSqlJsonDbFunctionsTranslator(sqlExpressionFactory, typeMappingSource),
+        new PostgreSqlFullTextSearchTranslator(sqlExpressionFactory, typeMappingSource)
     ];
 }
 

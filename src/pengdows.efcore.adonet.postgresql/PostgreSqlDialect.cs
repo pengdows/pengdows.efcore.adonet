@@ -52,63 +52,10 @@ public sealed class PostgreSqlDialect : AdoNetDialect
             .TryAdd<Microsoft.EntityFrameworkCore.Storage.IRelationalTypeMappingSourcePlugin, PostgreSqlXidTypeMappingPlugin>()
             .TryAdd<Microsoft.EntityFrameworkCore.Query.IMethodCallTranslatorPlugin, PostgreSqlDbFunctionsTranslatorPlugin>()
             .TryAdd<Microsoft.EntityFrameworkCore.Storage.IRelationalTypeMappingSource, PostgreSqlTypeMappingSource>()
+            .TryAdd<Microsoft.EntityFrameworkCore.Metadata.IRelationalAnnotationProvider, PostgreSqlAnnotationProvider>()
+            .TryAdd<Microsoft.EntityFrameworkCore.Query.IEvaluatableExpressionFilterPlugin, PostgreSqlEvaluatableExpressionFilterPlugin>()
             .TryAdd<Microsoft.EntityFrameworkCore.Query.IQuerySqlGeneratorFactory, PostgreSqlQuerySqlGeneratorFactory>()
             .TryAdd<Microsoft.EntityFrameworkCore.Query.IQueryableMethodTranslatingExpressionVisitorFactory, PostgreSqlQueryableMethodTranslatingExpressionVisitorFactory>();
-    }
-}
-
-/// <summary>PostgreSQL requires generated columns to use the SQL:2003 STORED form.</summary>
-internal sealed class PostgreSqlMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dependencies, IAdoNetDialect dialect)
-    : AdoNetMigrationsSqlGenerator(dependencies, dialect)
-{
-    // Every table has PostgreSQL's system columns (xmin, a row version); a model may map them, but no migration declares,
-    // alters or drops one. Behaviour reference (not copied):
-    // https://github.com/npgsql/efcore.pg/blob/v10.0.3/src/EFCore.PG/Migrations/NpgsqlMigrationsSqlGenerator.cs
-    private static readonly HashSet<string> SystemColumns = new(StringComparer.Ordinal) { "tableoid", "xmin", "cmin", "xmax", "cmax", "ctid" };
-
-    protected override void Generate(CreateTableOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
-    {
-        operation.Columns.RemoveAll(c => SystemColumns.Contains(c.Name));
-        base.Generate(operation, model, builder, terminate);
-    }
-
-    protected override void Generate(AddColumnOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
-    {
-        if (!SystemColumns.Contains(operation.Name))
-        {
-            base.Generate(operation, model, builder, terminate);
-        }
-    }
-
-    protected override void Generate(AlterColumnOperation operation, IModel? model, MigrationCommandListBuilder builder)
-    {
-        if (!SystemColumns.Contains(operation.Name))
-        {
-            base.Generate(operation, model, builder);
-        }
-    }
-
-    protected override void Generate(DropColumnOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
-    {
-        if (!SystemColumns.Contains(operation.Name))
-        {
-            base.Generate(operation, model, builder, terminate);
-        }
-    }
-
-    protected override void ColumnDefinition(
-        string? schema,
-        string table,
-        string name,
-        ColumnOperation operation,
-        IModel? model,
-        MigrationCommandListBuilder builder)
-    {
-        base.ColumnDefinition(schema, table, name, operation, model, builder);
-        if ((operation.ComputedColumnSql != null) && (operation.IsStored != true))
-        {
-            builder.Append(" STORED");
-        }
     }
 }
 

@@ -163,8 +163,31 @@ internal sealed class PostgreSqlTypeMappingSource(
     ISqlDialect sql)
     : AdoNetTypeMappingSource(dependencies, relationalDependencies, typeMappings, sql)
 {
+    // PostgreSQL's own types, each read and bound as Npgsql's CLR type for it; the first of a CLR type is its default.
+    private static readonly PostgreSqlProviderTypeMapping[] ProviderTypes =
+    [
+        new(typeof(NpgsqlTypes.NpgsqlTsVector), "tsvector", NpgsqlTypes.NpgsqlDbType.TsVector),
+        new(typeof(NpgsqlTypes.NpgsqlTsQuery), "tsquery", NpgsqlTypes.NpgsqlDbType.TsQuery)
+    ];
+
     protected override RelationalTypeMapping? FindMapping(in RelationalTypeMappingInfo mappingInfo)
-        => FindArrayMapping(mappingInfo) ?? base.FindMapping(mappingInfo);
+        => FindArrayMapping(mappingInfo) ?? FindProviderTypeMapping(mappingInfo) ?? base.FindMapping(mappingInfo);
+
+    private static RelationalTypeMapping? FindProviderTypeMapping(in RelationalTypeMappingInfo mappingInfo)
+    {
+        var storeType = mappingInfo.StoreTypeNameBase ?? mappingInfo.StoreTypeName;
+        foreach (var mapping in ProviderTypes)
+        {
+            var clrMatches = (mappingInfo.ClrType == null) || (mappingInfo.ClrType == mapping.ClrType);
+            var storeMatches = (storeType == null) || string.Equals(storeType, mapping.StoreType, StringComparison.OrdinalIgnoreCase);
+            if (clrMatches && storeMatches && ((mappingInfo.ClrType != null) || (storeType != null)))
+            {
+                return mapping;
+            }
+        }
+
+        return null;
+    }
 
     private RelationalTypeMapping? FindArrayMapping(in RelationalTypeMappingInfo mappingInfo)
     {
