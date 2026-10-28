@@ -137,8 +137,9 @@ internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = t
     public override bool SupportsSchemas => false;
 
     // Geometry columns hold MySQL's own format, a four-byte SRID before the WKB, which the drivers pass as bytes. Constants are
-    // read with x as longitude whatever the SRID. MySQL has no boundary, point-on-surface, relate or ring test, and keeps two
-    // dimensions only. Behaviour reference (not copied):
+    // read with x as longitude whatever the SRID. MySQL 8 has no boundary, point-on-surface or relate, which MariaDB has
+    // (https://mariadb.com/kb/en/geometry-properties/); a ring is a closed simple line on both, as Pomelo emulates it where
+    // ST_IsRing is missing (MariaDB's is TRUE for NULL). Both keep two dimensions only. Behaviour reference (not copied):
     // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/tree/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql.NTS
     public override SpatialSyntax Spatial { get; } = new()
     {
@@ -151,11 +152,11 @@ internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = t
             // MariaDB has only the plural name, and no validity test.
             ["NumInteriorRings"] = "ST_NumInteriorRings({0})",
             ["IsValid"] = mariaDb ? null : "ST_IsValid({0})",
-            ["Boundary"] = null,
-            ["PointOnSurface"] = null,
-            ["InteriorPoint"] = null,
-            ["Relate"] = null,
-            ["IsRing"] = null,
+            ["Boundary"] = mariaDb ? "ST_Boundary({0})" : null,
+            ["PointOnSurface"] = mariaDb ? "ST_PointOnSurface({0})" : null,
+            ["InteriorPoint"] = mariaDb ? "ST_PointOnSurface({0})" : null,
+            ["Relate"] = mariaDb ? "ST_Relate({0}, {1}, {2})" : null,
+            ["IsRing"] = "(ST_IsClosed({0}) AND ST_IsSimple({0}))",
             ["Z"] = null,
             ["M"] = null,
             ["GeometryType"] = "CASE ST_GeometryType({0}) WHEN 'POINT' THEN 'Point' WHEN 'LINESTRING' THEN 'LineString' "

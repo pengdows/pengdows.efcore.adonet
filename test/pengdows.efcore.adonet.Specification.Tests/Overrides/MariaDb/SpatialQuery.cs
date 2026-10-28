@@ -17,11 +17,6 @@ public partial class SpatialQueryMariaDbTest
     public override Task Normalized(bool async)
         => base.Normalized(async);
 
-    [ConditionalTheory(Skip = "[SKIP:MariaDB] MySQL has no ST_Relate")]
-    [MemberData(nameof(IsAsyncData))]
-    public override Task Relate(bool async)
-        => base.Relate(async);
-
     [ConditionalTheory(Skip = "[SKIP:MariaDB] MySQL has no ST_Reverse")]
     [MemberData(nameof(IsAsyncData))]
     public override Task Reverse(bool async)
