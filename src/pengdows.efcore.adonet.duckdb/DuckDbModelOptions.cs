@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace pengdows.efcore.adonet.duckdb;
@@ -19,4 +20,14 @@ public static class DuckDbModelOptionsExtensions
     /// <inheritdoc cref="UseAutoIncrement(PropertyBuilder)" />
     public static PropertyBuilder<TProperty> UseAutoIncrement<TProperty>(this PropertyBuilder<TProperty> propertyBuilder)
         => propertyBuilder.UseIdentityColumn();
+
+    /// <summary>
+    ///     Stores the primitive collection as DuckDB's own LIST of its element's type (<c>INTEGER[]</c>), queried with
+    ///     list_contains, len and indexing, rather than as JSON; <c>HasColumnType("INTEGER[]")</c> does the same.
+    /// </summary>
+    public static PropertyBuilder<List<TElement>> UseList<TElement>(this PropertyBuilder<List<TElement>> propertyBuilder)
+        => propertyBuilder.HasColumnType(
+            (DuckDbDialect.Instance.TypeMappings.GetStoreType(Nullable.GetUnderlyingType(typeof(TElement)) ?? typeof(TElement))
+                ?? throw new NotSupportedException($"DuckDB has no LIST of '{typeof(TElement)}': the element type has no store type."))
+            + "[]");
 }
