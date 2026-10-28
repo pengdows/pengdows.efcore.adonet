@@ -129,7 +129,7 @@ internal sealed class MySqlQueryTranslationPreprocessor(
 }
 
 /// <summary>Carries <see cref="MySqlFullTextExtensions.IsFullText(IndexBuilder, bool)" /> to the indexes migrations see.</summary>
-internal sealed class MySqlAnnotationProvider(RelationalAnnotationProviderDependencies dependencies) : AdoNetAnnotationProvider(dependencies)
+internal sealed partial class MySqlAnnotationProvider(RelationalAnnotationProviderDependencies dependencies) : AdoNetAnnotationProvider(dependencies)
 {
     public override IEnumerable<IAnnotation> For(ITableIndex index, bool designTime)
     {
@@ -185,10 +185,23 @@ internal sealed class MySqlAnnotationProvider(RelationalAnnotationProviderDepend
             yield return annotation;
         }
 
-        if (column.PropertyMappings.Select(m => m.Property.FindAnnotation(MySqlModelOptionsExtensions.CharSetAnnotation)?.Value)
-                .OfType<string>().FirstOrDefault() is { } charSet)
+        if ((column.PropertyMappings.Select(m => m.Property.FindAnnotation(MySqlModelOptionsExtensions.CharSetAnnotation)?.Value)
+                    .OfType<string>().FirstOrDefault()
+                ?? (designTime ? InheritedCharSet(column) : null)) is { } charSet)
         {
             yield return new Annotation(MySqlModelOptionsExtensions.CharSetAnnotation, charSet);
+        }
+
+        // Design time only: the read-optimized model keeps no collation.
+        if (designTime && (column.Collation == null) && IsText(column) && (Entity(column.Table) is { } entityType)
+            && (MySqlDelegation.EntityCollation(entityType, DelegationModes.ApplyToColumns) is { } inheritedCollation))
+        {
+            yield return new Annotation(InheritedCollationAnnotation, inheritedCollation);
+        }
+
+        if (column.PropertyMappings.Any(m => m.Property.FindAnnotation(MySqlModelOptionsExtensions.ValueGenerationStrategyAnnotation)?.Value is MySqlModelOptionsExtensions.ComputedColumnStrategy))
+        {
+            yield return new Annotation(MySqlModelOptionsExtensions.ValueGenerationStrategyAnnotation, MySqlModelOptionsExtensions.ComputedColumnStrategy);
         }
 
         if (column.PropertyMappings.Select(m => m.Property.FindAnnotation(MySqlModelOptionsExtensions.SpatialReferenceSystemAnnotation)?.Value)
@@ -207,7 +220,8 @@ internal sealed class MySqlAnnotationProvider(RelationalAnnotationProviderDepend
         }
     }
 
-    // An entity type's character set (or the model's), collation and table options, on its table.
+    // The table's character set and collation, its entity type's or the model's as their delegation reaches tables, and its
+    // options.
     public override IEnumerable<IAnnotation> For(ITable table, bool designTime)
     {
         foreach (var annotation in base.For(table, designTime))
@@ -215,25 +229,77 @@ internal sealed class MySqlAnnotationProvider(RelationalAnnotationProviderDepend
             yield return annotation;
         }
 
-        if ((EntityTypeAnnotation(table, MySqlModelOptionsExtensions.CharSetAnnotation)
-                ?? table.Model.Model.FindAnnotation(MySqlModelOptionsExtensions.CharSetAnnotation)?.Value as string) is { } charSet)
+        if (!designTime || (Entity(table) is not { } entityType))
+        {
+            yield break;
+        }
+
+        if (MySqlDelegation.EntityCharSet(entityType, DelegationModes.ApplyToTables) is { } charSet)
         {
             yield return new Annotation(MySqlModelOptionsExtensions.CharSetAnnotation, charSet);
         }
 
-        if (EntityTypeAnnotation(table, MySqlModelOptionsExtensions.CollationAnnotation) is { } collation)
+        if (MySqlDelegation.EntityCollation(entityType, DelegationModes.ApplyToTables) is { } collation)
         {
             yield return new Annotation(MySqlModelOptionsExtensions.CollationAnnotation, collation);
         }
 
-        if (EntityTypeAnnotation(table, MySqlModelOptionsExtensions.StoreOptionsAnnotation) is { } options)
+        if (entityType[MySqlModelOptionsExtensions.StoreOptionsAnnotation] is string options)
         {
             yield return new Annotation(MySqlModelOptionsExtensions.StoreOptionsAnnotation, options);
         }
     }
 
-    private static string? EntityTypeAnnotation(ITable table, string name)
-        => table.EntityTypeMappings.Select(m => m.TypeBase.FindAnnotation(name)?.Value).OfType<string>().FirstOrDefault();
+    // The database's character set and collation, where the model's delegation reaches it (ALTER DATABASE). EF's differ
+    // reads a database operation's collation from this annotation, and gives a new database no other.
+    public override IEnumerable<IAnnotation> For(IRelationalModel model, bool designTime)
+    {
+        foreach (var annotation in base.For(model, designTime))
+        {
+            yield return annotation;
+        }
+
+        if (!designTime)
+        {
+            yield break;
+        }
+
+        if (MySqlDelegation.ModelCharSet(model.Model, DelegationModes.ApplyToDatabases) is { } charSet)
+        {
+            yield return new Annotation(MySqlModelOptionsExtensions.CharSetAnnotation, charSet);
+        }
+
+        if (MySqlDelegation.ModelCollation(model.Model, DelegationModes.ApplyToDatabases) is { } collation)
+        {
+            yield return new Annotation(MySqlModelOptionsExtensions.CollationAnnotation, collation);
+        }
+    }
+
+    // A column's collation from its entity type's or the model's delegation, where it has none of its own.
+    internal const string InheritedCollationAnnotation = "MySql:InheritedCollation";
+
+    private static IEntityType? Entity(ITable table)
+        => table.EntityTypeMappings.Select(m => m.TypeBase).OfType<IEntityType>().FirstOrDefault();
+
+    // A text column inherits a character set unless its own collation names another.
+    private static string? InheritedCharSet(IColumn column)
+    {
+        if (!IsText(column) || (Entity(column.Table) is not { } entityType)
+            || (MySqlDelegation.EntityCharSet(entityType, DelegationModes.ApplyToColumns) is not { } charSet))
+        {
+            return null;
+        }
+
+        return (column.Collation is { } collation) && !MySqlDelegation.Compatible(collation, charSet) ? null : charSet;
+    }
+
+    // A string stored as text; not JSON, which takes no character set.
+    private static bool IsText(IColumn column)
+        => column.PropertyMappings.All(m => m.Property.ClrType == typeof(string))
+           && TextStoreType().IsMatch(column.StoreType);
+
+    [System.Text.RegularExpressions.GeneratedRegex(@"^(?:N?(?:VAR)?CHAR|(?:TINY|MEDIUM|LONG)?TEXT|ENUM|SET)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)]
+    private static partial System.Text.RegularExpressions.Regex TextStoreType();
 }
 
 internal sealed class MySqlFullTextTranslatorPlugin(ISqlExpressionFactory sqlExpressionFactory, IRelationalTypeMappingSource typeMappingSource)

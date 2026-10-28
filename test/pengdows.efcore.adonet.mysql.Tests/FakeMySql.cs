@@ -28,17 +28,21 @@ public sealed class FakeMySql
     public TContext Context<TContext>(
         Func<DbContextOptions<TContext>, TContext> create,
         bool mariaDb = false,
-        Action<AdoNetDbContextOptionsBuilder>? adoNet = null)
+        Action<AdoNetDbContextOptionsBuilder>? adoNet = null,
+        Action<DbContextOptionsBuilder<TContext>>? options = null)
         where TContext : DbContext
-        => create(new DbContextOptionsBuilder<TContext>()
+    {
+        var builder = new DbContextOptionsBuilder<TContext>()
             .UseAdoNetMySql(Connection, contextOwnsConnection: false, o =>
             {
                 o.UseDialect(mariaDb ? MySqlDialect.MariaDb : MySqlDialect.Instance);
                 adoNet?.Invoke(o);
             })
             .EnableSensitiveDataLogging()
-            .LogTo(Record, [RelationalEventId.CommandExecuted])
-            .Options);
+            .LogTo(Record, [RelationalEventId.CommandExecuted]);
+        options?.Invoke(builder);
+        return create(builder.Options);
+    }
 
     /// <summary>The next reader returns these rows, each a column name and value in the order the query selects them.</summary>
     public void Returns(params (string Column, object? Value)[][] rows)

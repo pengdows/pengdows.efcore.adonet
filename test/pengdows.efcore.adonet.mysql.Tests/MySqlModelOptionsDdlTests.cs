@@ -122,7 +122,8 @@ public class MySqlModelOptionsDdlTests
 
         Assert.Contains("\"Address_City\" VARCHAR(50) CHARACTER SET latin1 NOT NULL", script);
         Assert.Contains("\"Token\" CHAR(36) NOT NULL COLLATE \"ascii_bin\"", script);
-        Assert.Contains("\"Name\" VARCHAR(200) NOT NULL,", script);
+        // The entity type's character set and collation reach its text columns (Pomelo's delegation); not the GUID collation.
+        Assert.Contains("\"Name\" VARCHAR(200) CHARACTER SET utf8mb4 NOT NULL COLLATE \"utf8mb4_bin\",", script);
     }
 
     // Changed options, character set and collation of an existing table: ALTER TABLE with what changed.

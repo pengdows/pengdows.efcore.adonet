@@ -188,15 +188,29 @@ internal partial class MySqlMigrationsSqlGenerator(MigrationsSqlGeneratorDepende
             operation.Collation = MySqlModelOptionsExtensions.Name(guidCollation, nameof(operation));
         }
 
+        // A text column without a collation of its own takes the one its entity type's or the model's delegation gives it.
+        if ((operation.Collation == null)
+            && (operation.ComputedColumnSql == null)
+            && (operation[MySqlAnnotationProvider.InheritedCollationAnnotation] is string inheritedCollation))
+        {
+            operation.Collation = MySqlModelOptionsExtensions.Name(inheritedCollation, nameof(operation));
+        }
+
         base.ColumnDefinition(schema, table, name, operation, model, builder);
 
-        // A row version is a TIMESTAMP(6) the server sets on every insert and update. Behaviour reference (not copied):
+        // A row version is a TIMESTAMP(6) the server sets on every insert and update; a computed column (UseMySqlComputedColumn)
+        // is a DATETIME or TIMESTAMP it sets so, at the column's precision. Behaviour reference (not copied):
         // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Migrations/MySqlMigrationsSqlGenerator.cs
-        if (operation.IsRowVersion
-            && (operation.DefaultValueSql == null)
-            && (operation.ColumnType ?? "").StartsWith("timestamp", StringComparison.OrdinalIgnoreCase))
+        var columnType = operation.ColumnType ?? GetColumnType(schema, table, name, operation, model) ?? "";
+        var computed = operation[MySqlModelOptionsExtensions.ValueGenerationStrategyAnnotation] is MySqlModelOptionsExtensions.ComputedColumnStrategy;
+        if ((operation.DefaultValueSql == null)
+            && (operation.DefaultValue == null)
+            && (operation.ComputedColumnSql == null)
+            && (DateTimeType().Match(columnType) is { Success: true } dateTime)
+            && ((operation.IsRowVersion && dateTime.Groups["type"].Value.Equals("timestamp", StringComparison.OrdinalIgnoreCase)) || computed))
         {
-            builder.Append(" DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6)");
+            var now = "CURRENT_TIMESTAMP" + dateTime.Groups["precision"].Value;
+            builder.Append(" DEFAULT ").Append(now).Append(" ON UPDATE ").Append(now);
         }
 
         if (operation.Comment != null)
@@ -413,6 +427,37 @@ internal partial class MySqlMigrationsSqlGenerator(MigrationsSqlGeneratorDepende
 
     [System.Text.RegularExpressions.GeneratedRegex("^(?:TIMESTAMP|DATE|TIME) ('.*')$", System.Text.RegularExpressions.RegexOptions.Singleline)]
     private static partial System.Text.RegularExpressions.Regex TypedLiteral();
+
+    // DATETIME or TIMESTAMP, with its fractional precision as written: "(6)".
+    [System.Text.RegularExpressions.GeneratedRegex(@"^(?<type>datetime|timestamp)(?<precision>\(\d\))?$", System.Text.RegularExpressions.RegexOptions.IgnoreCase)]
+    private static partial System.Text.RegularExpressions.Regex DateTimeType();
+
+    // The database's collation, or else its character set: a collation is the more specific. Behaviour reference (not
+    // copied):
+    // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Migrations/MySqlMigrationsSqlGenerator.cs
+    protected override void Generate(AlterDatabaseOperation operation, IModel? model, MigrationCommandListBuilder builder)
+    {
+        // A new database's operation (EF's differ from no model) carries its collation only as the annotation.
+        var charSet = operation[MySqlModelOptionsExtensions.CharSetAnnotation] as string;
+        var collation = operation.Collation ?? operation[MySqlModelOptionsExtensions.CollationAnnotation] as string;
+        var oldCollation = operation.OldDatabase.Collation ?? operation.OldDatabase[MySqlModelOptionsExtensions.CollationAnnotation] as string;
+        if ((collation != null) && (collation != oldCollation))
+        {
+            builder.Append("ALTER DATABASE COLLATE ")
+                .Append(MySqlModelOptionsExtensions.Name(collation, nameof(operation)))
+                .AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
+            EndStatement(builder);
+            return;
+        }
+
+        if ((charSet != null) && (charSet != (operation.OldDatabase[MySqlModelOptionsExtensions.CharSetAnnotation] as string)))
+        {
+            builder.Append("ALTER DATABASE CHARACTER SET ")
+                .Append(MySqlModelOptionsExtensions.Name(charSet, nameof(operation)))
+                .AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
+            EndStatement(builder);
+        }
+    }
 
     protected override void Generate(DropIndexOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
     {

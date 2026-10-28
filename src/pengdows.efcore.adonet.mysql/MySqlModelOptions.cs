@@ -22,6 +22,10 @@ public static partial class MySqlModelOptionsExtensions
     internal const string SpatialReferenceSystemAnnotation = "MySql:SpatialReferenceSystemId";
     internal const string GuidCollationAnnotation = "MySql:GuidCollation";
     internal const string CollationAnnotation = RelationalAnnotationNames.Collation;
+    internal const string CharSetDelegationAnnotation = "MySql:CharSetDelegation";
+    internal const string CollationDelegationAnnotation = "MySql:CollationDelegation";
+    internal const string ValueGenerationStrategyAnnotation = "MySql:ValueGenerationStrategy";
+    internal const string ComputedColumnStrategy = "ComputedColumn";
 
     /// <summary>The column's CHARACTER SET.</summary>
     public static PropertyBuilder HasCharSet(this PropertyBuilder propertyBuilder, string charSet)
@@ -31,18 +35,81 @@ public static partial class MySqlModelOptionsExtensions
     public static PropertyBuilder<TProperty> HasCharSet<TProperty>(this PropertyBuilder<TProperty> propertyBuilder, string charSet)
         => propertyBuilder.HasAnnotation(CharSetAnnotation, charSet);
 
-    /// <summary>The table's DEFAULT CHARACTER SET, which its text columns without one of their own take.</summary>
-    public static EntityTypeBuilder HasCharSet(this EntityTypeBuilder entityTypeBuilder, string charSet)
-        => entityTypeBuilder.HasAnnotation(CharSetAnnotation, charSet);
+    /// <summary>
+    ///     The entity type's CHARACTER SET: its table's default and, explicitly, its text columns', or only those
+    ///     <paramref name="delegationModes" /> names (null: both). A null character set with a delegation keeps the model's
+    ///     from the levels it names.
+    /// </summary>
+    public static EntityTypeBuilder HasCharSet(this EntityTypeBuilder entityTypeBuilder, string? charSet, DelegationModes? delegationModes = null)
+        => Delegated(entityTypeBuilder.Metadata, CharSetAnnotation, CharSetDelegationAnnotation, charSet, delegationModes, entityTypeBuilder);
 
-    /// <summary>The table's DEFAULT CHARACTER SET, which its text columns without one of their own take.</summary>
-    public static EntityTypeBuilder<TEntity> HasCharSet<TEntity>(this EntityTypeBuilder<TEntity> entityTypeBuilder, string charSet)
+    /// <summary>
+    ///     The entity type's CHARACTER SET for its table, and also, explicitly, its text columns when
+    ///     <paramref name="explicitlyDelegateToChildren" />.
+    /// </summary>
+    public static EntityTypeBuilder HasCharSet(this EntityTypeBuilder entityTypeBuilder, string? charSet, bool explicitlyDelegateToChildren)
+        => entityTypeBuilder.HasCharSet(charSet, explicitlyDelegateToChildren ? DelegationModes.ApplyToAll : DelegationModes.ApplyToTables);
+
+    /// <summary>
+    ///     The entity type's CHARACTER SET: its table's default and, explicitly, its text columns', or only those
+    ///     <paramref name="delegationModes" /> names (null: both).
+    /// </summary>
+    public static EntityTypeBuilder<TEntity> HasCharSet<TEntity>(
+        this EntityTypeBuilder<TEntity> entityTypeBuilder,
+        string? charSet,
+        DelegationModes? delegationModes = null)
         where TEntity : class
-        => entityTypeBuilder.HasAnnotation(CharSetAnnotation, charSet);
+        => (EntityTypeBuilder<TEntity>)HasCharSet((EntityTypeBuilder)entityTypeBuilder, charSet, delegationModes);
 
-    /// <summary>Every table's DEFAULT CHARACTER SET, unless its entity type names one.</summary>
-    public static ModelBuilder HasCharSet(this ModelBuilder modelBuilder, string charSet)
-        => modelBuilder.HasAnnotation(CharSetAnnotation, charSet);
+    /// <summary>
+    ///     The entity type's CHARACTER SET for its table, and also, explicitly, its text columns when
+    ///     <paramref name="explicitlyDelegateToChildren" />.
+    /// </summary>
+    public static EntityTypeBuilder<TEntity> HasCharSet<TEntity>(this EntityTypeBuilder<TEntity> entityTypeBuilder, string? charSet, bool explicitlyDelegateToChildren)
+        where TEntity : class
+        => (EntityTypeBuilder<TEntity>)HasCharSet((EntityTypeBuilder)entityTypeBuilder, charSet, explicitlyDelegateToChildren);
+
+    /// <summary>
+    ///     The model's CHARACTER SET: the database's (ALTER DATABASE), every table's default and, explicitly, every text
+    ///     column's, or only those <paramref name="delegationModes" /> names (null: all three). An entity type's or property's
+    ///     own wins below it.
+    /// </summary>
+    public static ModelBuilder HasCharSet(this ModelBuilder modelBuilder, string? charSet, DelegationModes? delegationModes = null)
+        => Delegated(modelBuilder.Model, CharSetAnnotation, CharSetDelegationAnnotation, charSet, delegationModes, modelBuilder);
+
+    /// <summary>
+    ///     The database's CHARACTER SET, and also, explicitly, every table's and text column's when
+    ///     <paramref name="explicitlyDelegateToChildren" />.
+    /// </summary>
+    public static ModelBuilder HasCharSet(this ModelBuilder modelBuilder, string? charSet, bool explicitlyDelegateToChildren)
+        => modelBuilder.HasCharSet(charSet, explicitlyDelegateToChildren ? DelegationModes.ApplyToAll : DelegationModes.ApplyToDatabases);
+
+    /// <summary>
+    ///     The model's collation for the levels <paramref name="delegationModes" /> names (null: the database, every table and
+    ///     every text column), where EF's own <c>UseCollation(collation)</c> is the database's only.
+    /// </summary>
+    public static ModelBuilder UseCollation(this ModelBuilder modelBuilder, string? collation, DelegationModes? delegationModes)
+        => Delegated(modelBuilder.Model, CollationAnnotation, CollationDelegationAnnotation, collation, delegationModes ?? DelegationModes.Default, modelBuilder);
+
+    /// <summary>
+    ///     The model's collation for the database, and also, explicitly, every table and text column unless
+    ///     <paramref name="explicitlyDelegateToChildren" /> is false.
+    /// </summary>
+    public static ModelBuilder UseCollation(this ModelBuilder modelBuilder, string? collation, bool? explicitlyDelegateToChildren)
+        => modelBuilder.UseCollation(collation, explicitlyDelegateToChildren == false ? DelegationModes.ApplyToDatabases : DelegationModes.ApplyToAll);
+
+    private static TBuilder Delegated<TBuilder>(
+        Microsoft.EntityFrameworkCore.Metadata.IMutableAnnotatable target,
+        string valueAnnotation,
+        string delegationAnnotation,
+        string? value,
+        DelegationModes? delegationModes,
+        TBuilder builder)
+    {
+        target.SetOrRemoveAnnotation(valueAnnotation, value == null ? null : Name(value, nameof(value)));
+        target.SetOrRemoveAnnotation(delegationAnnotation, delegationModes);
+        return builder;
+    }
 
     /// <summary>
     ///     Indexes only the first <paramref name="prefixLengths" /> characters (or bytes) of each column, in order; 0 indexes a
@@ -103,14 +170,52 @@ public static partial class MySqlModelOptionsExtensions
     public static PropertyBuilder<TProperty> UseMySqlIdentityColumn<TProperty>(this PropertyBuilder<TProperty> propertyBuilder)
         => propertyBuilder.UseIdentityColumn();
 
-    /// <summary>The table's default COLLATE, which its text columns without one of their own take.</summary>
-    public static EntityTypeBuilder UseCollation(this EntityTypeBuilder entityTypeBuilder, string collation)
-        => entityTypeBuilder.HasAnnotation(CollationAnnotation, Name(collation, nameof(collation)));
+    /// <summary>
+    ///     The entity type's COLLATE: its table's default and, explicitly, its text columns', or only those
+    ///     <paramref name="delegationModes" /> names (null: both).
+    /// </summary>
+    public static EntityTypeBuilder UseCollation(this EntityTypeBuilder entityTypeBuilder, string? collation, DelegationModes? delegationModes = null)
+        => Delegated(entityTypeBuilder.Metadata, CollationAnnotation, CollationDelegationAnnotation, collation, delegationModes, entityTypeBuilder);
 
-    /// <summary>The table's default COLLATE, which its text columns without one of their own take.</summary>
-    public static EntityTypeBuilder<TEntity> UseCollation<TEntity>(this EntityTypeBuilder<TEntity> entityTypeBuilder, string collation)
+    /// <summary>
+    ///     The entity type's COLLATE for its table, and also, explicitly, its text columns when
+    ///     <paramref name="explicitlyDelegateToChildren" />.
+    /// </summary>
+    public static EntityTypeBuilder UseCollation(this EntityTypeBuilder entityTypeBuilder, string? collation, bool explicitlyDelegateToChildren)
+        => entityTypeBuilder.UseCollation(collation, explicitlyDelegateToChildren ? DelegationModes.ApplyToAll : DelegationModes.ApplyToTables);
+
+    /// <summary>
+    ///     The entity type's COLLATE: its table's default and, explicitly, its text columns', or only those
+    ///     <paramref name="delegationModes" /> names (null: both).
+    /// </summary>
+    public static EntityTypeBuilder<TEntity> UseCollation<TEntity>(
+        this EntityTypeBuilder<TEntity> entityTypeBuilder,
+        string? collation,
+        DelegationModes? delegationModes = null)
         where TEntity : class
-        => entityTypeBuilder.HasAnnotation(CollationAnnotation, Name(collation, nameof(collation)));
+        => (EntityTypeBuilder<TEntity>)UseCollation((EntityTypeBuilder)entityTypeBuilder, collation, delegationModes);
+
+    /// <summary>
+    ///     The entity type's COLLATE for its table, and also, explicitly, its text columns when
+    ///     <paramref name="explicitlyDelegateToChildren" />.
+    /// </summary>
+    public static EntityTypeBuilder<TEntity> UseCollation<TEntity>(this EntityTypeBuilder<TEntity> entityTypeBuilder, string? collation, bool explicitlyDelegateToChildren)
+        where TEntity : class
+        => (EntityTypeBuilder<TEntity>)UseCollation((EntityTypeBuilder)entityTypeBuilder, collation, explicitlyDelegateToChildren);
+
+    /// <summary>
+    ///     A date and time the server sets on insert and on every update (<c>DEFAULT CURRENT_TIMESTAMP ON UPDATE
+    ///     CURRENT_TIMESTAMP</c>), read back after each.
+    /// </summary>
+    public static PropertyBuilder UseMySqlComputedColumn(this PropertyBuilder propertyBuilder)
+        => propertyBuilder.ValueGeneratedOnAddOrUpdate().HasAnnotation(ValueGenerationStrategyAnnotation, ComputedColumnStrategy);
+
+    /// <summary>
+    ///     A date and time the server sets on insert and on every update (<c>DEFAULT CURRENT_TIMESTAMP ON UPDATE
+    ///     CURRENT_TIMESTAMP</c>), read back after each.
+    /// </summary>
+    public static PropertyBuilder<TProperty> UseMySqlComputedColumn<TProperty>(this PropertyBuilder<TProperty> propertyBuilder)
+        => (PropertyBuilder<TProperty>)UseMySqlComputedColumn((PropertyBuilder)propertyBuilder);
 
     /// <summary>The COLLATE of every GUID column (CHAR(36)) without a collation of its own.</summary>
     public static ModelBuilder UseGuidCollation(this ModelBuilder modelBuilder, string collation)
@@ -150,6 +255,109 @@ public static partial class MySqlModelOptionsExtensions
 
     [GeneratedRegex(@"^[A-Za-z0-9_]+$")]
     private static partial Regex NamePattern();
+}
+
+/// <summary>
+///     Where a model's or entity type's character set or collation is written, as Pomelo's: <see cref="Default" /> is all of
+///     them. Behaviour reference (not copied):
+///     https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Metadata/DelegationModes.cs
+/// </summary>
+[Flags]
+public enum DelegationModes
+{
+    /// <summary>All of them: <see cref="ApplyToAll" />.</summary>
+    Default = 0,
+
+    /// <summary>The database's (ALTER DATABASE).</summary>
+    ApplyToDatabases = 1 << 0,
+
+    /// <summary>Each table's default.</summary>
+    ApplyToTables = 1 << 1,
+
+    /// <summary>Each text column's, explicitly.</summary>
+    ApplyToColumns = 1 << 2,
+
+    /// <summary>The database, its tables and their text columns.</summary>
+    ApplyToAll = ApplyToDatabases | ApplyToTables | ApplyToColumns
+}
+
+/// <summary>
+///     Which character set and collation each level takes, as Pomelo resolves them: a level's own where its delegation reaches
+///     it, otherwise the level above's where that one's does, unless the two name different character sets. No character set
+///     delegation is all levels, as in Pomelo; EF's own model collation (no delegation) is the database's only. Behaviour
+///     reference (not copied):
+///     https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Metadata/Internal/MySqlAnnotationProvider.cs
+/// </summary>
+internal static class MySqlDelegation
+{
+    public static string? ModelCharSet(Microsoft.EntityFrameworkCore.Infrastructure.IReadOnlyAnnotatable model, DelegationModes level)
+        => (model[MySqlModelOptionsExtensions.CharSetAnnotation] is string charSet)
+           && Applies(model[MySqlModelOptionsExtensions.CharSetDelegationAnnotation] as DelegationModes?, level)
+            ? charSet
+            : null;
+
+    public static string? ModelCollation(Microsoft.EntityFrameworkCore.Infrastructure.IReadOnlyAnnotatable model, DelegationModes level)
+    {
+        if (model[MySqlModelOptionsExtensions.CollationAnnotation] is not string collation)
+        {
+            return null;
+        }
+
+        var reaches = model[MySqlModelOptionsExtensions.CollationDelegationAnnotation] is DelegationModes modes
+            ? Applies(modes, level)
+            : level == DelegationModes.ApplyToDatabases;
+        return reaches ? collation : null;
+    }
+
+    public static string? EntityCharSet(Microsoft.EntityFrameworkCore.Metadata.IReadOnlyTypeBase type, DelegationModes level)
+    {
+        if (Own(type, MySqlModelOptionsExtensions.CharSetAnnotation, MySqlModelOptionsExtensions.CharSetDelegationAnnotation, level, out var own))
+        {
+            return own;
+        }
+
+        var inherited = ModelCharSet(type.Model, level);
+        var collation = Own(type, MySqlModelOptionsExtensions.CollationAnnotation, MySqlModelOptionsExtensions.CollationDelegationAnnotation, level, out var ownCollation)
+            ? ownCollation
+            : ModelCollation(type.Model, level);
+        return (inherited != null) && (collation != null) && !Compatible(collation, inherited) ? null : inherited;
+    }
+
+    public static string? EntityCollation(Microsoft.EntityFrameworkCore.Metadata.IReadOnlyTypeBase type, DelegationModes level)
+    {
+        if (Own(type, MySqlModelOptionsExtensions.CollationAnnotation, MySqlModelOptionsExtensions.CollationDelegationAnnotation, level, out var own))
+        {
+            return own;
+        }
+
+        var inherited = ModelCollation(type.Model, level);
+        return (inherited != null)
+               && Own(type, MySqlModelOptionsExtensions.CharSetAnnotation, MySqlModelOptionsExtensions.CharSetDelegationAnnotation, level, out var charSet)
+               && (charSet != null)
+               && !Compatible(inherited, charSet)
+            ? null
+            : inherited;
+    }
+
+    public static bool Compatible(string collation, string charSet)
+        => string.Equals(collation, charSet, StringComparison.OrdinalIgnoreCase)
+           || collation.StartsWith(charSet + "_", StringComparison.OrdinalIgnoreCase);
+
+    // A level's own setting (a value, or a delegation naming none) where its delegation reaches the level.
+    private static bool Own(
+        Microsoft.EntityFrameworkCore.Infrastructure.IReadOnlyAnnotatable annotatable,
+        string valueAnnotation,
+        string delegationAnnotation,
+        DelegationModes level,
+        out string? value)
+    {
+        value = annotatable[valueAnnotation] as string;
+        var modes = annotatable[delegationAnnotation] as DelegationModes?;
+        return ((value != null) || (modes != null)) && Applies(modes, level);
+    }
+
+    private static bool Applies(DelegationModes? modes, DelegationModes level)
+        => ((modes ?? DelegationModes.Default) == DelegationModes.Default) || modes!.Value.HasFlag(level);
 }
 
 /// <summary>
