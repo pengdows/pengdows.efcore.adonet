@@ -14,6 +14,7 @@ namespace pengdows.efcore.adonet.Query;
 public static class SqlTemplate
 {
     private const string Prefix = "template:";
+    private const string ConditionPrefix = "condition:";
 
     /// <summary>Null when the dialect has no <paramref name="template" />, which leaves the member untranslated.</summary>
     public static SqlExpression? Call(
@@ -27,12 +28,35 @@ public static class SqlTemplate
             : sqlExpressionFactory.Function(
                 Prefix + template, arguments, nullable: true, arguments.Select(_ => true), returnType, typeMapping);
 
+    /// <summary>
+    ///     A template that is a search condition (a predicate such as <c>FREETEXT(...)</c>), not a bool value: where a database's
+    ///     bools are bit values it is written bare where a condition goes and as a <c>CASE</c> where a value goes, never compared
+    ///     with TRUE. The condition is never treated as null. Null when the dialect has no <paramref name="template" />.
+    /// </summary>
+    public static SqlExpression? Condition(
+        this ISqlExpressionFactory sqlExpressionFactory,
+        string? template,
+        IReadOnlyList<SqlExpression> arguments,
+        RelationalTypeMapping? boolTypeMapping)
+        => template == null
+            ? null
+            : sqlExpressionFactory.Function(
+                ConditionPrefix + template, arguments, nullable: false, arguments.Select(_ => false), typeof(bool), boolTypeMapping);
+
     public static bool TryGetTemplate(SqlFunctionExpression function, out string template)
     {
-        var isTemplate = function is { IsBuiltIn: true, Instance: null } && function.Name.StartsWith(Prefix, StringComparison.Ordinal);
-        template = isTemplate ? function.Name[Prefix.Length..] : "";
-        return isTemplate;
+        var prefix = function is not { IsBuiltIn: true, Instance: null } ? null
+            : function.Name.StartsWith(Prefix, StringComparison.Ordinal) ? Prefix
+            : function.Name.StartsWith(ConditionPrefix, StringComparison.Ordinal) ? ConditionPrefix
+            : null;
+        template = prefix == null ? "" : function.Name[prefix.Length..];
+        return prefix != null;
     }
+
+    /// <summary>Whether <paramref name="expression" /> is a <see cref="Condition" /> template.</summary>
+    internal static bool IsCondition(SqlExpression expression)
+        => expression is SqlFunctionExpression { IsBuiltIn: true, Instance: null } function
+            && function.Name.StartsWith(ConditionPrefix, StringComparison.Ordinal);
 
     /// <summary>Writes <paramref name="template" />, visiting each <c>{n}</c> argument where it appears.</summary>
     /// <exception cref="InvalidOperationException">The template is malformed or names an argument there isn't.</exception>

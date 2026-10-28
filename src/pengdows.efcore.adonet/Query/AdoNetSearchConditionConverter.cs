@@ -57,7 +57,7 @@ internal class AdoNetSearchConditionConverter(ISqlExpressionFactory sqlExpressio
         if (expression is SqlExpression sqlExpression)
         {
             var visited = (SqlExpression)base.VisitExtension(sqlExpression);
-            var isCondition = sqlExpression is ExistsExpression or InExpression or LikeExpression;
+            var isCondition = (sqlExpression is ExistsExpression or InExpression or LikeExpression) || SqlTemplate.IsCondition(sqlExpression);
             return ApplyConversion(visited, inSearchConditionContext, isCondition);
         }
 

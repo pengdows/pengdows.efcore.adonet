@@ -18,6 +18,7 @@ machinery, conventions, type mappings) are reached through EF's interfaces, neve
 | `ISqlDialect`, `AnsiSqlDialect`, `ITypeMappingDialect`, `AnsiTypeMappings`, `StoreTypeFacets`, `IDatabaseCapabilities`, `DatabaseCapabilities` | Plugins: the parts of a dialect, with ISO defaults to override. |
 | `PagingSyntax`, `BooleanSyntax`, `KeyRetrieval` (and `ReturningKeyRetrieval`, `SelectAfterKeyRetrieval`, `SequenceKeyRetrieval`), `DmlSyntax`, `FunctionSyntax`, `SavepointSyntax`, `IQuerySqlWriter` | Plugins: grammar parts a dialect chooses or extends; `IQuerySqlWriter` is what a `DmlSyntax` writes through. |
 | `SqlTemplate` (`Call`, `TryGetTemplate`) | Plugins with translators of their own, writing SQL the way `FunctionSyntax` does. `Write` is `internal`. |
+| `SqlTemplate.Condition` | Plugins: a template that is a search condition, not a bool value (SQL Server's `FREETEXT`/`CONTAINS`), written bare in a `WHERE` and as a `CASE` in a projection where bools are bit values. |
 | `AdoNetMigrationsSqlGenerator`, `AdoNetHistoryRepository` | Plugins: subclassed in `ConfigureServices` for what a database's DDL or history table does differently. |
 | `IAdoNetBulkLoader`, `AdoNetInsertBulkLoader`, `BulkLoad`, `BulkColumn` | Plugins: a native bulk loader replaces or extends the core's INSERT loader. |
 | `AdoNetAnnotationNames` | Plugins and migrations: the annotations the core reads (identity columns). |
