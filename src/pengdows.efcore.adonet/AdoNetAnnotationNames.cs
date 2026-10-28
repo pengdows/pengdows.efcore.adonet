@@ -15,4 +15,10 @@ public static class AdoNetAnnotationNames
     ///     dialect can drop or rename their sequences along with it.
     /// </summary>
     public const string IdentityColumns = Prefix + "IdentityColumns";
+
+    /// <summary>
+    ///     On an entity type: false when its table can't take the dialect's RETURNING clause (a table with triggers, or a
+    ///     virtual table), so its keys come back through <see cref="ISqlDialect.KeysWithoutReturning" />.
+    /// </summary>
+    public const string UseReturningClause = Prefix + "UseReturningClause";
 }

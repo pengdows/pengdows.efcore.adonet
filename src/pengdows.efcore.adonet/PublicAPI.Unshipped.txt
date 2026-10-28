@@ -741,3 +741,6 @@ pengdows.efcore.adonet.JsonSyntax.Equality.get -> string?
 pengdows.efcore.adonet.JsonSyntax.Equality.init -> void
 virtual pengdows.efcore.adonet.FunctionSyntax.FractionalModulo.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.DecimalDivide.get -> string?
+pengdows.efcore.adonet.ISqlDialect.KeysWithoutReturning.get -> pengdows.efcore.adonet.SelectAfterKeyRetrieval?
+virtual pengdows.efcore.adonet.AnsiSqlDialect.KeysWithoutReturning.get -> pengdows.efcore.adonet.SelectAfterKeyRetrieval?
+const pengdows.efcore.adonet.AdoNetAnnotationNames.UseReturningClause = "AdoNet:UseReturningClause" -> string!

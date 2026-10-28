@@ -245,7 +245,7 @@ internal class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependenc
         IReadOnlyModificationCommand command,
         int commandPosition,
         out bool requiresTransaction)
-        => dialect.Sql.Keys switch
+        => KeysFor(command) switch
         {
             ReturningKeyRetrieval
                 => AppendInsertReturningOperation(commandStringBuilder, command, commandPosition, out requiresTransaction),
@@ -296,7 +296,7 @@ internal class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependenc
         IReadOnlyModificationCommand command,
         int commandPosition,
         out bool requiresTransaction)
-        => dialect.Sql.Keys switch
+        => KeysFor(command) switch
         {
             ReturningKeyRetrieval
                 => AppendUpdateReturningOperation(commandStringBuilder, command, commandPosition, out requiresTransaction),
@@ -312,7 +312,7 @@ internal class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependenc
         IReadOnlyModificationCommand command,
         int commandPosition,
         out bool requiresTransaction)
-        => dialect.Sql.Keys switch
+        => KeysFor(command) switch
         {
             ReturningKeyRetrieval
                 => AppendDeleteReturningOperation(commandStringBuilder, command, commandPosition, out requiresTransaction),
@@ -501,6 +501,17 @@ internal class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependenc
         return ResultSetMapping.LastInResultSet | ResultSetMapping.ResultSetWithRowsAffectedOnly;
     }
 
+    // Only the SELECT-after strategy reaches these, so it is the dialect's own or its fallback for tables without RETURNING.
     private SelectAfterKeyRetrieval SelectAfter
-        => (SelectAfterKeyRetrieval)dialect.Sql.Keys;
+        => (dialect.Sql.Keys as SelectAfterKeyRetrieval) ?? dialect.Sql.KeysWithoutReturning!;
+
+    // A table that can't take RETURNING (AdoNetAnnotationNames.UseReturningClause false) reads keys back the dialect's other
+    // way. Behaviour reference (not copied):
+    // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.Core/Extensions/SqliteTableExtensions.cs
+    private KeyRetrieval KeysFor(IReadOnlyModificationCommand command)
+        => (dialect.Sql.Keys is ReturningKeyRetrieval)
+            && (dialect.Sql.KeysWithoutReturning is { } withoutReturning)
+            && (command.Table?.EntityTypeMappings.Any(m => m.TypeBase.FindAnnotation(AdoNetAnnotationNames.UseReturningClause)?.Value is false) == true)
+                ? withoutReturning
+                : dialect.Sql.Keys;
 }

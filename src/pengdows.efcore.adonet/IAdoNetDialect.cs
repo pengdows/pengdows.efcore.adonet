@@ -110,6 +110,13 @@ public interface ISqlDialect
     BooleanSyntax Booleans { get; }
     KeyRetrieval Keys { get; }
 
+    /// <summary>
+    ///     How keys come back from a table annotated <see cref="AdoNetAnnotationNames.UseReturningClause" /> false, one that
+    ///     can't take <see cref="Keys" />' RETURNING clause (a table with triggers, or a virtual table); null where every table
+    ///     takes it.
+    /// </summary>
+    SelectAfterKeyRetrieval? KeysWithoutReturning { get; }
+
     /// <summary>How <c>ExecuteDelete</c>/<c>ExecuteUpdate</c> are written.</summary>
     DmlSyntax Dml { get; }
 

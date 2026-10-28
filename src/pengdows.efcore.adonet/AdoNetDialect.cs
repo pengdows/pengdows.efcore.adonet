@@ -68,6 +68,7 @@ public class AnsiSqlDialect : ISqlDialect
     public virtual PagingSyntax Paging => PagingSyntax.OffsetFetch;
     public virtual BooleanSyntax Booleans => BooleanSyntax.Native;
     public virtual KeyRetrieval Keys => KeyRetrieval.Returning;
+    public virtual SelectAfterKeyRetrieval? KeysWithoutReturning => null;
     public virtual DmlSyntax Dml => DmlSyntax.Standard;
     public virtual FunctionSyntax Functions => FunctionSyntax.Iso;
     public virtual bool PreferExistsToIn => false;
