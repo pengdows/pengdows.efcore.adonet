@@ -78,6 +78,10 @@ internal class SqliteSql : AnsiSqlDialect
     // (not copied): https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.Core/Query/Internal/SqliteQueryTranslationPostprocessor.cs
     public override LateralJoinSyntax? LateralJoins => null;
     public override PagingSyntax Paging { get; } = PagingSyntax.LimitOffset(noLimitValue: "-1");
+
+    // A table with triggers, or a virtual table, refuses RETURNING (UseSqlReturningClause(false)). Behaviour reference (not
+    // copied): https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.Core/Update/Internal/SqliteUpdateSqlGenerator.cs
+    public override SelectAfterKeyRetrieval? KeysWithoutReturning { get; } = KeyRetrieval.SelectAfter("last_insert_rowid()", "changes()");
     public override FunctionSyntax Functions { get; } = new SqliteFunctions();
     public override JsonSyntax Json { get; } = SqliteJson.Syntax;
 

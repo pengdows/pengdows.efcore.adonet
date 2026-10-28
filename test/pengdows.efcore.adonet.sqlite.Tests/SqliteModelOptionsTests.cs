@@ -1,0 +1,115 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
+using pengdows.crud.fakeDb;
+
+namespace pengdows.efcore.adonet.sqlite.Tests;
+
+/// <summary>
+///     Microsoft's SQLite model options: <c>UseSqlReturningClause(false)</c> on a table with triggers or a virtual table, which
+///     then reads its keys with <c>last_insert_rowid()</c> and checks rows with <c>changes()</c>; <c>UseAutoincrement</c>; and
+///     <c>IsSqlite</c>. Over fakeDb emulating SQLite, so the statements are scripted and never run. Behaviour reference (not copied):
+///     https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.Core/Extensions/SqliteTableBuilderExtensions.cs
+/// </summary>
+public class SqliteModelOptionsTests
+{
+    private readonly fakeDbConnection _connection = new() { ConnectionString = "Data Source=fake;EmulatedProduct=Sqlite" };
+    private readonly List<string> _commands = [];
+
+    private static CancellationToken Ct
+        => TestContext.Current.CancellationToken;
+
+    private TriggeredContext Context()
+        => new(new DbContextOptionsBuilder<TriggeredContext>()
+            .UseAdoNetSqlite(_connection)
+            .LogTo(m => _commands.Add(m.ReplaceLineEndings("\n")), [RelationalEventId.CommandExecuted])
+            .Options);
+
+    [Fact]
+    public async Task A_table_without_the_returning_clause_reads_its_key_with_last_insert_rowid()
+    {
+        await using var context = Context();
+        _connection.EnqueueReaderResult([new Dictionary<string, object?> { ["Id"] = 5 }]);
+        var audited = new Audited { Name = "x" };
+
+        context.Add(audited);
+        await context.SaveChangesAsync(Ct);
+
+        Assert.Equal(5, audited.Id);
+        var command = Assert.Single(_commands);
+        Assert.DoesNotContain("RETURNING", command);
+        Assert.Contains("WHERE changes() = 1 AND \"Id\" = last_insert_rowid();", command);
+    }
+
+    [Fact]
+    public async Task Other_tables_keep_returning()
+    {
+        await using var context = Context();
+        _connection.EnqueueReaderResult([new Dictionary<string, object?> { ["Id"] = 6 }]);
+
+        context.Add(new Plain { Name = "x" });
+        await context.SaveChangesAsync(Ct);
+
+        Assert.Contains("RETURNING \"Id\"", Assert.Single(_commands));
+    }
+
+    [Fact]
+    public void The_option_is_read_back_and_can_be_turned_on_again()
+    {
+        using var context = Context();
+        var model = context.GetService<IDesignTimeModel>().Model;
+
+        Assert.False(model.FindEntityType(typeof(Audited))!.IsSqlReturningClauseUsed());
+        Assert.True(model.FindEntityType(typeof(Plain))!.IsSqlReturningClauseUsed());
+        Assert.True(model.FindEntityType(typeof(Reenabled))!.IsSqlReturningClauseUsed());
+    }
+
+    [Fact]
+    public void Use_autoincrement_makes_the_column_the_tables_autoincrement_key()
+    {
+        using var context = Context();
+        var property = context.GetService<IDesignTimeModel>().Model.FindEntityType(typeof(Reenabled))!.FindProperty(nameof(Reenabled.Id))!;
+
+        Assert.Equal(ValueGenerated.OnAdd, property.ValueGenerated);
+        Assert.Equal(true, property[AdoNetAnnotationNames.Identity]);
+    }
+
+    [Fact]
+    public void The_context_says_whether_it_is_sqlite()
+    {
+        using var sqlite = Context();
+        using var other = new TriggeredContext(new DbContextOptionsBuilder<TriggeredContext>().UseAdoNet(_connection, contextOwnsConnection: false, o => o.UseDialect(AdoNetDialect.Ansi)).Options);
+
+        Assert.True(sqlite.Database.IsSqlite());
+        Assert.False(other.Database.IsSqlite());
+    }
+
+    public class Audited
+    {
+        public int Id { get; set; }
+        public string? Name { get; set; }
+    }
+
+    public class Plain
+    {
+        public int Id { get; set; }
+        public string? Name { get; set; }
+    }
+
+    public class Reenabled
+    {
+        public int Id { get; set; }
+    }
+
+    public sealed class TriggeredContext(DbContextOptions<TriggeredContext> options) : DbContext(options)
+    {
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Audited>().ToTable(t => t.UseSqlReturningClause(false));
+            modelBuilder.Entity<Plain>();
+            modelBuilder.Entity<Reenabled>().Property(p => p.Id).UseAutoincrement();
+            modelBuilder.Entity<Reenabled>().ToTable(t => t.UseSqlReturningClause(false)).ToTable(t => t.UseSqlReturningClause());
+        }
+    }
+}
