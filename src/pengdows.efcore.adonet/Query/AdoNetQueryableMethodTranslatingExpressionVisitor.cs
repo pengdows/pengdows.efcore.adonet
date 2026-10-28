@@ -137,7 +137,7 @@ internal class AdoNetQueryableMethodTranslatingExpressionVisitor : RelationalQue
         Microsoft.EntityFrameworkCore.Metadata.IProperty? property,
         string tableAlias)
     {
-        if (_dialect.Json?.ArrayElements == null)
+        if ((_dialect.Json?.ArrayElements == null) && (sqlExpression.TypeMapping is not Storage.IArrayTypeMapping))
         {
             return null;
         }
@@ -265,8 +265,62 @@ internal class AdoNetQueryableMethodTranslatingExpressionVisitor : RelationalQue
     // collection[i] is OFFSET i LIMIT 1 over the collection in order. Where OFFSET takes only a value and i is computed (a
     // column), an inline or JSON collection is filtered on its ordinal instead: VALUES numbers its rows from 0 (_ord), a JSON
     // array table from 1.
+    // A collection in the database's own array type, queried whole: its Contains, Count and element at a position are the
+    // array's functions where its mapping names them. Behaviour reference (not copied): Npgsql's array translation
+    // (PostgreSQL License): https://github.com/npgsql/efcore.pg/blob/v10.0.3/src/EFCore.PG/Query/Internal/NpgsqlQueryableMethodTranslatingExpressionVisitor.cs
+    protected override ShapedQueryExpression? TranslateContains(ShapedQueryExpression source, Expression item)
+        => (WholeArray(source) is ({ Contains: { } contains }, var array))
+            && (TranslateExpression(item, applyDefaultTypeMapping: false) is SqlExpression element)
+                ? Scalar(source, _sqlExpressionFactory.Call(
+                    contains,
+                    [array, _sqlExpressionFactory.ApplyTypeMapping(element, (RelationalTypeMapping?)array.TypeMapping!.ElementTypeMapping)!],
+                    typeof(bool),
+                    _typeMappingSource.FindMapping(typeof(bool)))!)
+                : base.TranslateContains(source, item);
+
+    protected override ShapedQueryExpression? TranslateCount(ShapedQueryExpression source, LambdaExpression? predicate)
+        => (predicate == null) && (WholeArray(source) is ({ Count: { } count }, var array))
+            ? Scalar(source, _sqlExpressionFactory.Call(count, [array], typeof(int), _typeMappingSource.FindMapping(typeof(int)))!)
+            : base.TranslateCount(source, predicate);
+
+    // The array of a primitive collection queried with nothing applied to it but its own ordering.
+    private static (Storage.IArrayTypeMapping Mapping, SqlExpression Array)? WholeArray(ShapedQueryExpression source)
+        => source.QueryExpression is SelectExpression
+            {
+                Tables: [JsonArrayTableExpression { Json: { TypeMapping: Storage.IArrayTypeMapping mapping } array }],
+                Predicate: null,
+                GroupBy: [],
+                Having: null,
+                IsDistinct: false,
+                Limit: null,
+                Offset: null
+            }
+            ? (mapping, array)
+            : null;
+
+#pragma warning disable EF1001 // EF's provider-facing SelectExpression constructor, marked internal like the rest of its provider API.
+    private ShapedQueryExpression Scalar(ShapedQueryExpression source, SqlExpression translation)
+    {
+        var select = new SelectExpression(translation, _sqlAliasManager);
+        return source.Update(
+            select,
+            Expression.Convert(new ProjectionBindingExpression(select, new ProjectionMember(), Nullable(translation.Type)), translation.Type));
+    }
+#pragma warning restore EF1001
+
     protected override ShapedQueryExpression? TranslateElementAtOrDefault(ShapedQueryExpression source, Expression index, bool returnDefault)
     {
+        if ((WholeArray(source) is ({ ElementAt: { } elementAt }, var whole))
+            && (TranslateExpression(index) is { } arrayIndex))
+        {
+            var elementMapping = (RelationalTypeMapping)whole.TypeMapping!.ElementTypeMapping!;
+            return Scalar(source, _sqlExpressionFactory.Call(
+                elementAt,
+                [whole, _sqlExpressionFactory.ApplyTypeMapping(arrayIndex, _typeMappingSource.FindMapping(typeof(int)))!],
+                elementMapping.ClrType,
+                elementMapping)!);
+        }
+
         if (!_dialect.Paging.ComputesLimits
             && (source.QueryExpression is SelectExpression
             {

@@ -262,12 +262,14 @@ internal class AdoNetQuerySqlGenerator(
         if (extensionExpression is JsonArrayTableExpression table)
         {
             var helper = Dependencies.SqlGenerationHelper;
+            // A collection in the database's own array type has its own elements table, of the element's own store type.
+            var array = table.Json.TypeMapping as Storage.IArrayTypeMapping;
             WriteTemplate(
-                dialect.Json!.ArrayElements!,
+                array?.Elements ?? dialect.Json!.ArrayElements!,
                 () => Visit(table.Json),
                 () => Sql.Append(helper.DelimitIdentifier(JsonArrayTableExpression.OrdinalColumn)),
                 () => Sql.Append(helper.DelimitIdentifier(JsonArrayTableExpression.ValueColumn)),
-                () => Sql.Append(ArrayElementType(table.ElementTypeMapping!)));
+                () => Sql.Append(array != null ? table.ElementTypeMapping!.StoreType : ArrayElementType(table.ElementTypeMapping!)));
             Sql.Append(AliasSeparator).Append(helper.DelimitIdentifier(table.Alias));
             return table;
         }

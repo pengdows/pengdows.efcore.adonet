@@ -773,3 +773,8 @@ pengdows.efcore.adonet.DateDiffUnit.Quarter = 8 -> pengdows.efcore.adonet.DateDi
 pengdows.efcore.adonet.DateDiffUnit.Week = 9 -> pengdows.efcore.adonet.DateDiffUnit
 pengdows.efcore.adonet.DateDiffUnit.Tick = 10 -> pengdows.efcore.adonet.DateDiffUnit
 pengdows.efcore.adonet.DateDiffUnit.Nanosecond = 11 -> pengdows.efcore.adonet.DateDiffUnit
+pengdows.efcore.adonet.Storage.IArrayTypeMapping
+pengdows.efcore.adonet.Storage.IArrayTypeMapping.Contains.get -> string?
+pengdows.efcore.adonet.Storage.IArrayTypeMapping.Count.get -> string?
+pengdows.efcore.adonet.Storage.IArrayTypeMapping.ElementAt.get -> string?
+pengdows.efcore.adonet.Storage.IArrayTypeMapping.Elements.get -> string!
