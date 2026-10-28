@@ -421,62 +421,63 @@ internal class AdoNetQuerySqlGenerator(
             return sqlBinaryExpression;
         }
 
-        // A native JSON column compared with JSON text: a bare string is a JSON string scalar to some databases, which
-        // equals no document, so the text is turned into a JSON value first.
-        if (sqlBinaryExpression is { OperatorType: ExpressionType.Equal or ExpressionType.NotEqual }
-            && dialect.Json is { } json
-            && FindJsonTextOperand(sqlBinaryExpression, json) is { } text)
+        if (TryWriteJsonEquality(sqlBinaryExpression))
         {
-            var jsonOnLeft = IsJsonDocument(sqlBinaryExpression.Left, json);
-            void Operand(Expression e)
-            {
-                if (ReferenceEquals(e, text))
-                {
-                    // SQL Server's JSON_VALUE result is already a scalar SQL value; wrapping a
-                    // string literal in JSON_QUERY produces an invalid document.
-                    if (json.StoreType.Equals("nvarchar(max)", StringComparison.OrdinalIgnoreCase))
-                    {
-                        Visit(e);
-                    }
-                    else
-                    {
-                        SqlTemplate.Write(json.FromText, [e], s => Sql.Append(s), x => Visit(x));
-                    }
-                }
-                else
-                {
-                    Visit(e);
-                }
-            }
-
-            Operand(sqlBinaryExpression.Left);
-            Sql.Append(sqlBinaryExpression.OperatorType == ExpressionType.Equal ? " = " : " <> ");
-            Operand(sqlBinaryExpression.Right);
             return sqlBinaryExpression;
         }
 
         return base.VisitSqlBinary(sqlBinaryExpression);
     }
 
+    // A JSON column compared with JSON text: a bare string is a JSON string scalar to some databases, which equals no document,
+    // so the text is turned into a JSON value first. A column that stores its document as plain text compares as text.
+    private bool TryWriteJsonEquality(SqlBinaryExpression expression)
+    {
+        if ((expression.OperatorType is not (ExpressionType.Equal or ExpressionType.NotEqual))
+            || (dialect.Json is not { StoresDocumentAsText: false } json)
+            || (FindJsonTextOperand(expression, json) is not { } text))
+        {
+            return false;
+        }
+
+        WriteJsonComparisonOperand(expression.Left, text, json);
+        Sql.Append(expression.OperatorType == ExpressionType.Equal ? " = " : " <> ");
+        WriteJsonComparisonOperand(expression.Right, text, json);
+        return true;
+    }
+
+    private void WriteJsonComparisonOperand(SqlExpression operand, SqlExpression text, JsonSyntax json)
+    {
+        if (!ReferenceEquals(operand, text))
+        {
+            Visit(operand);
+            return;
+        }
+
+        SqlTemplate.Write(json.FromText, [operand], s => Sql.Append(s), e => Visit(e));
+    }
+
     private static bool IsJsonDocument(SqlExpression operand, JsonSyntax json)
-        => operand is ColumnExpression && string.Equals(operand.TypeMapping?.StoreType, json.StoreType, StringComparison.OrdinalIgnoreCase);
+        => (operand is ColumnExpression)
+           && string.Equals(operand.TypeMapping?.StoreType, json.StoreType, StringComparison.OrdinalIgnoreCase);
 
     private static SqlExpression? FindJsonTextOperand(SqlBinaryExpression expression, JsonSyntax json)
     {
-        if (IsJsonDocument(expression.Left, json)
-            && expression.Right is SqlConstantExpression or SqlParameterExpression)
+        if (IsJsonDocument(expression.Left, json) && IsConstantOrParameter(expression.Right))
         {
             return expression.Right;
         }
 
-        if (IsJsonDocument(expression.Right, json)
-            && expression.Left is SqlConstantExpression or SqlParameterExpression)
+        if (IsJsonDocument(expression.Right, json) && IsConstantOrParameter(expression.Left))
         {
             return expression.Left;
         }
 
         return null;
     }
+
+    private static bool IsConstantOrParameter(SqlExpression expression)
+        => (expression is SqlConstantExpression) || (expression is SqlParameterExpression);
 
     // An operand written into an operator template is parenthesized when it is an operation itself: databases order bitwise
     // operators differently (in some & binds tighter than |, in others they are equal).

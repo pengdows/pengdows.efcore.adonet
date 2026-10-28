@@ -153,6 +153,9 @@ public interface ISqlDialect
     /// <summary>Whether the database accepts a native <c>(VALUES (...), (...)) AS alias(column)</c> table expression.</summary>
     bool UsesNativeValuesTable { get; }
 
+    /// <summary>Whether ORDER BY accepts <c>NULLS FIRST</c> and <c>NULLS LAST</c>, which the null-ordering option writes.</summary>
+    bool SupportsNullOrderingClauses => false;
+
     /// <summary>Returns the number of user tables in the current database or schema.</summary>
     string HasTablesSql { get; }
 }

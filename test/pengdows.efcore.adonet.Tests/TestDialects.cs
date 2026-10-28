@@ -50,8 +50,10 @@ public sealed class PartsSql(
     IReadOnlyDictionary<string, string>? connectionOptions = null,
     string? procedureOutputVariable = null,
     System.Data.IsolationLevel defaultTransactionIsolationLevel = System.Data.IsolationLevel.Unspecified,
-    bool keepConnectionOpenAfterSuppressedTransaction = false) : AnsiSqlDialect
+    bool keepConnectionOpenAfterSuppressedTransaction = false,
+    bool supportsNullOrderingClauses = false) : AnsiSqlDialect
 {
+    public override bool SupportsNullOrderingClauses => supportsNullOrderingClauses;
     public override System.Data.IsolationLevel DefaultTransactionIsolationLevel => defaultTransactionIsolationLevel;
     public override bool KeepConnectionOpenAfterSuppressedTransaction => keepConnectionOpenAfterSuppressedTransaction;
     public override string? SessionSetup => sessionSetup;

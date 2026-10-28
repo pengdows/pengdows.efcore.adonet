@@ -71,6 +71,8 @@ internal sealed class PostgreSqlMigrationsSqlGenerator(MigrationsSqlGeneratorDep
 
 internal sealed class PostgreSqlSql : AnsiSqlDialect
 {
+    public override bool SupportsNullOrderingClauses => true;
+
     // Through the postgres database; WITH (FORCE) ends other sessions (PostgreSQL 13+). Behaviour reference (not copied):
     // https://github.com/npgsql/efcore.pg/blob/v10.0.3/src/EFCore.PG/Storage/Internal/NpgsqlDatabaseCreator.cs
     public override DatabaseLifecycle Databases { get; } = DatabaseLifecycle.Server(

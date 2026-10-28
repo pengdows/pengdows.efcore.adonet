@@ -164,6 +164,12 @@ public class AdoNetOptionsExtension : RelationalOptionsExtension
 
         // The dialect partitions the service provider, so this runs once per distinct dialect.
         Validate(Dialect);
+
+        if (_reverseNullOrdering && !Dialect.Sql.SupportsNullOrderingClauses)
+        {
+            throw new NotSupportedException(
+                $"Dialect '{Dialect.Name}' does not accept NULLS FIRST / NULLS LAST in ORDER BY, which ReverseNullOrdering writes.");
+        }
     }
 
     /// <summary>Combinations of dialect parts the provider cannot work with.</summary>

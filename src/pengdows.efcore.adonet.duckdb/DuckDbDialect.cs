@@ -30,6 +30,8 @@ public sealed class DuckDbDialect : AdoNetDialect
 
 internal sealed class DuckDbSql : AnsiSqlDialect
 {
+    public override bool SupportsNullOrderingClauses => true;
+
     // A file with its .wal; :memory: (or no path) exists while open.
     public override DatabaseLifecycle Databases { get; } = DatabaseLifecycle.File(
         "Data Source",

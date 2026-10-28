@@ -52,6 +52,8 @@ public sealed class LegacySqliteDialect : SqliteDialect
 
 internal class SqliteSql : AnsiSqlDialect
 {
+    public override bool SupportsNullOrderingClauses => true;
+
     // A file, created in write-ahead-log mode, with its -wal and -shm files; :memory: or Mode=Memory exists while open.
     // Behaviour reference (not copied):
     // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.Core/Storage/Internal/SqliteDatabaseCreator.cs

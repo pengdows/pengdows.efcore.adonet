@@ -34,6 +34,8 @@ public sealed class FlatFileDialect : AdoNetDialect
 
 internal sealed class FlatFileSql : AnsiSqlDialect
 {
+    public override bool SupportsNullOrderingClauses => true;
+
     // A database is a directory of table files.
     public override DatabaseLifecycle Databases { get; } = DatabaseLifecycle.Directory("path");
 

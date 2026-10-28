@@ -83,6 +83,7 @@ internal sealed class SqlServerSql : AnsiSqlDialect
         fromText: "JSON_QUERY({0})",
         setBooleanValue: "CONVERT(bit, {0})")
     {
+        StoresDocumentAsText = true,
         // OPENJSON's default value column is nvarchar(max); cast it in a derived table so EF's
         // shaper receives the element's declared store type while retaining the array ordinal.
         ArrayElements = "(SELECT CONVERT(int, [key]) AS [key], CONVERT({3}, [value]) AS [value] FROM OPENJSON({0}))"

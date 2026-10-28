@@ -189,7 +189,7 @@ public class JsonTests
         context.Attach(doc);
         doc.Detail.Signed = [3, -4];
 
-        await Assert.ThrowsAnyAsync<Exception>(() => context.SaveChangesAsync(Ct));
+        await Assert.ThrowsAsync<DbUpdateConcurrencyException>(() => context.SaveChangesAsync(Ct)); // fakeDb reports no row updated
 
         Assert.Contains("JSON_SET", db.Commands[0]);
         Assert.DoesNotContain("base64", db.Commands[0], StringComparison.OrdinalIgnoreCase);

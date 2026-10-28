@@ -466,6 +466,12 @@ public sealed class JsonSyntax(
     public bool UsesBinaryDocument { get; init; }
 
     /// <summary>
+    ///     Whether a JSON column is plain text, so it compares with a string as text and the string takes no
+    ///     <see cref="FromText" /> conversion.
+    /// </summary>
+    public bool StoresDocumentAsText { get; init; }
+
+    /// <summary>
     ///     The elements of the JSON array <c>{0}</c> as a table, for querying a primitive collection: a column named <c>{1}</c>
     ///     that orders the elements, and one named <c>{2}</c> holding each element as the store type <c>{3}</c>. The table's alias
     ///     follows it. Null where the dialect can't; a collection is then queried only as a whole.

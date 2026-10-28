@@ -639,3 +639,7 @@ pengdows.efcore.adonet.ISqlDialect.ConnectionOptions.get -> System.Collections.G
 pengdows.efcore.adonet.ISqlDialect.ProcedureOutputVariable.get -> string?
 virtual pengdows.efcore.adonet.AnsiSqlDialect.ConnectionOptions.get -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
 virtual pengdows.efcore.adonet.AnsiSqlDialect.ProcedureOutputVariable.get -> string?
+pengdows.efcore.adonet.JsonSyntax.StoresDocumentAsText.get -> bool
+pengdows.efcore.adonet.JsonSyntax.StoresDocumentAsText.init -> void
+pengdows.efcore.adonet.ISqlDialect.SupportsNullOrderingClauses.get -> bool
+virtual pengdows.efcore.adonet.AnsiSqlDialect.SupportsNullOrderingClauses.get -> bool
