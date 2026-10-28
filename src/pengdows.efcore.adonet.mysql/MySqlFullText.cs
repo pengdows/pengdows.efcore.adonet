@@ -34,14 +34,23 @@ public enum MySqlMatchSearchMode
 public static class MySqlFullTextExtensions
 {
     internal const string FullTextAnnotation = "MySql:FullTextIndex";
+    internal const string FullTextParserAnnotation = "MySql:FullTextParser";
 
-    /// <summary>Makes the index a FULLTEXT index, which MATCH ... AGAINST searches.</summary>
-    public static IndexBuilder IsFullText(this IndexBuilder indexBuilder, bool fullText = true)
-        => indexBuilder.HasAnnotation(FullTextAnnotation, fullText);
+    /// <summary>
+    ///     Makes the index a FULLTEXT index, which MATCH ... AGAINST searches; <paramref name="parser" /> names the full-text
+    ///     parser plugin it uses (<c>WITH PARSER ngram</c>), null for the server's own.
+    /// </summary>
+    public static IndexBuilder IsFullText(this IndexBuilder indexBuilder, bool fullText = true, string? parser = null)
+        => indexBuilder
+            .HasAnnotation(FullTextAnnotation, fullText)
+            .HasAnnotation(FullTextParserAnnotation, parser == null ? null : MySqlModelOptionsExtensions.Name(parser, nameof(parser)));
 
-    /// <summary>Makes the index a FULLTEXT index, which MATCH ... AGAINST searches.</summary>
-    public static IndexBuilder<TEntity> IsFullText<TEntity>(this IndexBuilder<TEntity> indexBuilder, bool fullText = true)
-        => indexBuilder.HasAnnotation(FullTextAnnotation, fullText);
+    /// <summary>
+    ///     Makes the index a FULLTEXT index, which MATCH ... AGAINST searches; <paramref name="parser" /> names the full-text
+    ///     parser plugin it uses (<c>WITH PARSER ngram</c>), null for the server's own.
+    /// </summary>
+    public static IndexBuilder<TEntity> IsFullText<TEntity>(this IndexBuilder<TEntity> indexBuilder, bool fullText = true, string? parser = null)
+        => (IndexBuilder<TEntity>)IsFullText((IndexBuilder)indexBuilder, fullText, parser);
 
     /// <summary>The relevance of <paramref name="property" /> to <paramref name="pattern" />: MATCH (property) AGAINST (pattern).</summary>
     public static double Match(this DbFunctions _, string property, string pattern, MySqlMatchSearchMode searchMode)
@@ -144,9 +153,31 @@ internal sealed class MySqlAnnotationProvider(RelationalAnnotationProviderDepend
         {
             yield return new Annotation(MySqlModelOptionsExtensions.PrefixLengthAnnotation, prefixLengths);
         }
+
+        if (index.MappedIndexes.Select(i => i.FindAnnotation(MySqlFullTextExtensions.FullTextParserAnnotation)?.Value)
+                .OfType<string>().FirstOrDefault() is { } parser)
+        {
+            yield return new Annotation(MySqlFullTextExtensions.FullTextParserAnnotation, parser);
+        }
     }
 
-    // A property's character set, on its column.
+    // A key's prefix lengths, on its primary key or unique constraint.
+    public override IEnumerable<IAnnotation> For(IUniqueConstraint constraint, bool designTime)
+    {
+        foreach (var annotation in base.For(constraint, designTime))
+        {
+            yield return annotation;
+        }
+
+        if (constraint.MappedKeys.Select(k => k.FindAnnotation(MySqlModelOptionsExtensions.PrefixLengthAnnotation)?.Value)
+                .OfType<int[]>().FirstOrDefault() is { } prefixLengths)
+        {
+            yield return new Annotation(MySqlModelOptionsExtensions.PrefixLengthAnnotation, prefixLengths);
+        }
+    }
+
+    // A property's character set and spatial reference system, on its column; the model's GUID collation on a GUID column
+    // without its own.
     public override IEnumerable<IAnnotation> For(IColumn column, bool designTime)
     {
         foreach (var annotation in base.For(column, designTime))
@@ -159,9 +190,24 @@ internal sealed class MySqlAnnotationProvider(RelationalAnnotationProviderDepend
         {
             yield return new Annotation(MySqlModelOptionsExtensions.CharSetAnnotation, charSet);
         }
+
+        if (column.PropertyMappings.Select(m => m.Property.FindAnnotation(MySqlModelOptionsExtensions.SpatialReferenceSystemAnnotation)?.Value)
+                .OfType<int>().Cast<int?>().FirstOrDefault() is { } srid)
+        {
+            yield return new Annotation(MySqlModelOptionsExtensions.SpatialReferenceSystemAnnotation, srid);
+        }
+
+        // Design time only: the read-optimized model keeps no collation.
+        if (designTime
+            && (column.Table.Model.Model.FindAnnotation(MySqlModelOptionsExtensions.GuidCollationAnnotation)?.Value is string guidCollation)
+            && column.PropertyMappings.Any(m => (Nullable.GetUnderlyingType(m.Property.ClrType) ?? m.Property.ClrType) == typeof(Guid))
+            && (column.Collation == null))
+        {
+            yield return new Annotation(MySqlModelOptionsExtensions.GuidCollationAnnotation, guidCollation);
+        }
     }
 
-    // An entity type's character set, or the model's, on its table.
+    // An entity type's character set (or the model's), collation and table options, on its table.
     public override IEnumerable<IAnnotation> For(ITable table, bool designTime)
     {
         foreach (var annotation in base.For(table, designTime))
@@ -169,13 +215,25 @@ internal sealed class MySqlAnnotationProvider(RelationalAnnotationProviderDepend
             yield return annotation;
         }
 
-        if ((table.EntityTypeMappings.Select(m => m.TypeBase.FindAnnotation(MySqlModelOptionsExtensions.CharSetAnnotation)?.Value)
-                    .OfType<string>().FirstOrDefault()
+        if ((EntityTypeAnnotation(table, MySqlModelOptionsExtensions.CharSetAnnotation)
                 ?? table.Model.Model.FindAnnotation(MySqlModelOptionsExtensions.CharSetAnnotation)?.Value as string) is { } charSet)
         {
             yield return new Annotation(MySqlModelOptionsExtensions.CharSetAnnotation, charSet);
         }
+
+        if (EntityTypeAnnotation(table, MySqlModelOptionsExtensions.CollationAnnotation) is { } collation)
+        {
+            yield return new Annotation(MySqlModelOptionsExtensions.CollationAnnotation, collation);
+        }
+
+        if (EntityTypeAnnotation(table, MySqlModelOptionsExtensions.StoreOptionsAnnotation) is { } options)
+        {
+            yield return new Annotation(MySqlModelOptionsExtensions.StoreOptionsAnnotation, options);
+        }
     }
+
+    private static string? EntityTypeAnnotation(ITable table, string name)
+        => table.EntityTypeMappings.Select(m => m.TypeBase.FindAnnotation(name)?.Value).OfType<string>().FirstOrDefault();
 }
 
 internal sealed class MySqlFullTextTranslatorPlugin(ISqlExpressionFactory sqlExpressionFactory, IRelationalTypeMappingSource typeMappingSource)

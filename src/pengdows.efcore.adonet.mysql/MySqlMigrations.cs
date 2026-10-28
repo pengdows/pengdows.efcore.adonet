@@ -89,12 +89,19 @@ internal partial class MySqlMigrationsSqlGenerator(MigrationsSqlGeneratorDepende
             });
         }
 
-        // The table's DEFAULT CHARACTER SET goes after its definition, before the terminator.
+        // The table's DEFAULT CHARACTER SET, COLLATE and other options go after its definition, before the terminator.
         base.Generate(operation, model, builder, terminate: false);
         if (operation[MySqlModelOptionsExtensions.CharSetAnnotation] is string charSet)
         {
             builder.Append(" DEFAULT CHARACTER SET ").Append(charSet);
         }
+
+        if (operation[MySqlModelOptionsExtensions.CollationAnnotation] is string collation)
+        {
+            builder.Append(" COLLATE ").Append(collation);
+        }
+
+        TableOptions(MySqlTableOptions.Deserialize(operation[MySqlModelOptionsExtensions.StoreOptionsAnnotation] as string), builder);
 
         if (terminate)
         {
@@ -114,6 +121,49 @@ internal partial class MySqlMigrationsSqlGenerator(MigrationsSqlGeneratorDepende
         {
             TableComment(operation.Name, operation.Schema, operation.Comment ?? "", builder);
         }
+
+        // A changed default character set or collation, which the columns already there keep.
+        var charSet = operation[MySqlModelOptionsExtensions.CharSetAnnotation] as string;
+        var collation = operation[MySqlModelOptionsExtensions.CollationAnnotation] as string;
+        if (((charSet != null) && (charSet != (operation.OldTable[MySqlModelOptionsExtensions.CharSetAnnotation] as string)))
+            || ((collation != null) && (collation != (operation.OldTable[MySqlModelOptionsExtensions.CollationAnnotation] as string))))
+        {
+            builder.Append("ALTER TABLE ").Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Name, operation.Schema));
+            if (charSet != null)
+            {
+                builder.Append(" CHARACTER SET ").Append(charSet);
+            }
+
+            if (collation != null)
+            {
+                builder.Append(" COLLATE ").Append(collation);
+            }
+
+            builder.AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
+            EndStatement(builder);
+        }
+
+        // The table options added or changed; one removed keeps its value, as Pomelo's do, since MySQL has no way to unset one.
+        var oldOptions = MySqlTableOptions.Deserialize(operation.OldTable[MySqlModelOptionsExtensions.StoreOptionsAnnotation] as string);
+        var changed = MySqlTableOptions.Deserialize(operation[MySqlModelOptionsExtensions.StoreOptionsAnnotation] as string)
+            .Where(o => !(oldOptions.TryGetValue(o.Key, out var old) && (old == o.Value)))
+            .ToDictionary(o => o.Key, o => o.Value);
+        if (changed.Count > 0)
+        {
+            builder.Append("ALTER TABLE ").Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Name, operation.Schema));
+            TableOptions(changed, builder);
+            builder.AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
+            EndStatement(builder);
+        }
+    }
+
+    // Each " name=value", as the model gave them (validated by HasTableOption).
+    private static void TableOptions(Dictionary<string, string> options, MigrationCommandListBuilder builder)
+    {
+        foreach (var (name, value) in options)
+        {
+            builder.Append(" ").Append(name).Append("=").Append(value);
+        }
     }
 
     protected override void ColumnDefinition(
@@ -128,6 +178,14 @@ internal partial class MySqlMigrationsSqlGenerator(MigrationsSqlGeneratorDepende
         if ((operation[MySqlModelOptionsExtensions.CharSetAnnotation] is string charSet) && (operation.ComputedColumnSql == null))
         {
             operation.ColumnType = (operation.ColumnType ?? GetColumnType(schema, table, name, operation, model)) + " CHARACTER SET " + charSet;
+        }
+
+        // A GUID column without a collation of its own takes the model's GUID collation.
+        if ((operation.Collation == null)
+            && (operation.ComputedColumnSql == null)
+            && (operation[MySqlModelOptionsExtensions.GuidCollationAnnotation] is string guidCollation))
+        {
+            operation.Collation = MySqlModelOptionsExtensions.Name(guidCollation, nameof(operation));
         }
 
         base.ColumnDefinition(schema, table, name, operation, model, builder);
@@ -145,30 +203,86 @@ internal partial class MySqlMigrationsSqlGenerator(MigrationsSqlGeneratorDepende
         {
             builder.Append(" COMMENT ").Append(Dialect.Sql.StringLiteral(operation.Comment));
         }
+
+        // A geometry column's spatial reference system: MySQL's SRID attribute (8.0.3), MariaDB's REF_SYSTEM_ID, which its
+        // grammar takes after COMMENT (https://mariadb.com/kb/en/create-table/#column-definitions). Behaviour reference (not
+        // copied):
+        // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Migrations/MySqlMigrationsSqlGenerator.cs
+        if (operation[MySqlModelOptionsExtensions.SpatialReferenceSystemAnnotation] is int srid)
+        {
+            builder
+                .Append(Dialect.Sql is MySqlSql { IsMariaDb: true } ? " REF_SYSTEM_ID=" : " SRID ")
+                .Append(srid.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        }
     }
 
     // A prefix length indexes a column's first characters: col(n).
     protected override void GenerateIndexColumnList(CreateIndexOperation operation, IModel? model, MigrationCommandListBuilder builder)
+        => PrefixedColumns(operation, operation.Columns, operation.IsDescending, builder);
+
+    // A key's prefix lengths, as an index's. Otherwise as EF's own constraint.
+    protected override void PrimaryKeyConstraint(AddPrimaryKeyOperation operation, IModel? model, MigrationCommandListBuilder builder)
+    {
+        ConstraintName(operation.Name, builder);
+        builder.Append("PRIMARY KEY ");
+        IndexTraits(operation, model, builder);
+        builder.Append("(");
+        PrefixedColumns(operation, operation.Columns, null, builder);
+        builder.Append(")");
+    }
+
+    protected override void UniqueConstraint(AddUniqueConstraintOperation operation, IModel? model, MigrationCommandListBuilder builder)
+    {
+        ConstraintName(operation.Name, builder);
+        builder.Append("UNIQUE ");
+        IndexTraits(operation, model, builder);
+        builder.Append("(");
+        PrefixedColumns(operation, operation.Columns, null, builder);
+        builder.Append(")");
+    }
+
+    private void ConstraintName(string? name, MigrationCommandListBuilder builder)
+    {
+        if (name != null)
+        {
+            builder.Append("CONSTRAINT ").Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(name)).Append(" ");
+        }
+    }
+
+    private void PrefixedColumns(MigrationOperation operation, string[] columns, bool[]? isDescending, MigrationCommandListBuilder builder)
     {
         var prefixLengths = operation[MySqlModelOptionsExtensions.PrefixLengthAnnotation] as int[] ?? [];
-        for (var i = 0; i < operation.Columns.Length; i++)
+        for (var i = 0; i < columns.Length; i++)
         {
             if (i > 0)
             {
                 builder.Append(", ");
             }
 
-            builder.Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Columns[i]));
+            builder.Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(columns[i]));
             if ((i < prefixLengths.Length) && (prefixLengths[i] > 0))
             {
                 builder.Append("(").Append(prefixLengths[i].ToString(System.Globalization.CultureInfo.InvariantCulture)).Append(")");
             }
 
-            if ((operation.IsDescending is not null) && ((operation.IsDescending.Length == 0) || operation.IsDescending[i]))
+            if ((isDescending is not null) && ((isDescending.Length == 0) || isDescending[i]))
             {
                 builder.Append(" DESC");
             }
         }
+    }
+
+    // A FULLTEXT index's parser follows its columns. Behaviour reference (not copied):
+    // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Migrations/MySqlMigrationsSqlGenerator.cs
+    protected override void IndexOptions(MigrationOperation operation, IModel? model, MigrationCommandListBuilder builder)
+    {
+        if ((operation[MySqlFullTextExtensions.FullTextAnnotation] is true)
+            && (operation[MySqlFullTextExtensions.FullTextParserAnnotation] is string parser))
+        {
+            builder.Append(" WITH PARSER ").Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(parser));
+        }
+
+        base.IndexOptions(operation, model, builder);
     }
 
     // CREATE FULLTEXT INDEX for an index marked IsFullText.

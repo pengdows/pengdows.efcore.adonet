@@ -71,6 +71,9 @@ public sealed class MySqlDialect : AdoNetDialect
 
 internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = true, bool mariaDb = false) : AnsiSqlDialect
 {
+    // MariaDB's DDL differs from MySQL's where its migrations write it (a column's REF_SYSTEM_ID for MySQL's SRID).
+    internal bool IsMariaDb => mariaDb;
+
     public override IsolationLevel DefaultTransactionIsolationLevel => IsolationLevel.ReadCommitted;
     public override bool KeepConnectionOpenAfterSuppressedTransaction => true;
 
