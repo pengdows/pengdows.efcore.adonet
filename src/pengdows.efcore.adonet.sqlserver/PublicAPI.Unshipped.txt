@@ -158,3 +158,25 @@ static pengdows.efcore.adonet.sqlserver.SqlServerEntityTypeBuilderExtensions.IsM
 static pengdows.efcore.adonet.sqlserver.SqlServerEntityTypeBuilderExtensions.IsMemoryOptimized<TEntity>(this Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<TEntity!>! entityTypeBuilder, bool memoryOptimized = true) -> Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder<TEntity!>!
 static pengdows.efcore.adonet.sqlserver.SqlServerEntityTypeBuilderExtensions.IsMemoryOptimized(this Microsoft.EntityFrameworkCore.Metadata.Builders.TableBuilder! tableBuilder, bool memoryOptimized = true) -> Microsoft.EntityFrameworkCore.Metadata.Builders.TableBuilder!
 static pengdows.efcore.adonet.sqlserver.SqlServerEntityTypeBuilderExtensions.IsMemoryOptimized<TEntity>(this Microsoft.EntityFrameworkCore.Metadata.Builders.TableBuilder<TEntity!>! tableBuilder, bool memoryOptimized = true) -> Microsoft.EntityFrameworkCore.Metadata.Builders.TableBuilder<TEntity!>!
+pengdows.efcore.adonet.sqlserver.SqlServerTableBuilderExtensions
+pengdows.efcore.adonet.sqlserver.SqlServerDbSetExtensions
+static pengdows.efcore.adonet.sqlserver.SqlServerTableBuilderExtensions.IsTemporal(this Microsoft.EntityFrameworkCore.Metadata.Builders.TableBuilder! tableBuilder, bool temporal = true) -> pengdows.efcore.adonet.sqlserver.TemporalTableBuilder!
+static pengdows.efcore.adonet.sqlserver.SqlServerTableBuilderExtensions.IsTemporal(this Microsoft.EntityFrameworkCore.Metadata.Builders.TableBuilder! tableBuilder, System.Action<pengdows.efcore.adonet.sqlserver.TemporalTableBuilder!>! buildAction) -> Microsoft.EntityFrameworkCore.Metadata.Builders.TableBuilder!
+static pengdows.efcore.adonet.sqlserver.SqlServerTableBuilderExtensions.IsTemporal<TEntity>(this Microsoft.EntityFrameworkCore.Metadata.Builders.TableBuilder<TEntity!>! tableBuilder, bool temporal = true) -> pengdows.efcore.adonet.sqlserver.TemporalTableBuilder<TEntity!>!
+static pengdows.efcore.adonet.sqlserver.SqlServerTableBuilderExtensions.IsTemporal<TEntity>(this Microsoft.EntityFrameworkCore.Metadata.Builders.TableBuilder<TEntity!>! tableBuilder, System.Action<pengdows.efcore.adonet.sqlserver.TemporalTableBuilder<TEntity!>!>! buildAction) -> Microsoft.EntityFrameworkCore.Metadata.Builders.TableBuilder<TEntity!>!
+static pengdows.efcore.adonet.sqlserver.SqlServerDbSetExtensions.TemporalAll<TEntity>(this Microsoft.EntityFrameworkCore.DbSet<TEntity!>! source) -> System.Linq.IQueryable<TEntity!>!
+static pengdows.efcore.adonet.sqlserver.SqlServerDbSetExtensions.TemporalAsOf<TEntity>(this Microsoft.EntityFrameworkCore.DbSet<TEntity!>! source, System.DateTime utcPointInTime) -> System.Linq.IQueryable<TEntity!>!
+static pengdows.efcore.adonet.sqlserver.SqlServerDbSetExtensions.TemporalFromTo<TEntity>(this Microsoft.EntityFrameworkCore.DbSet<TEntity!>! source, System.DateTime utcFrom, System.DateTime utcTo) -> System.Linq.IQueryable<TEntity!>!
+static pengdows.efcore.adonet.sqlserver.SqlServerDbSetExtensions.TemporalBetween<TEntity>(this Microsoft.EntityFrameworkCore.DbSet<TEntity!>! source, System.DateTime utcFrom, System.DateTime utcTo) -> System.Linq.IQueryable<TEntity!>!
+static pengdows.efcore.adonet.sqlserver.SqlServerDbSetExtensions.TemporalContainedIn<TEntity>(this Microsoft.EntityFrameworkCore.DbSet<TEntity!>! source, System.DateTime utcFrom, System.DateTime utcTo) -> System.Linq.IQueryable<TEntity!>!
+pengdows.efcore.adonet.sqlserver.TemporalTableBuilder
+pengdows.efcore.adonet.sqlserver.TemporalTableBuilder.UseHistoryTable(string! name) -> pengdows.efcore.adonet.sqlserver.TemporalTableBuilder!
+pengdows.efcore.adonet.sqlserver.TemporalTableBuilder.UseHistoryTable(string! name, string? schema) -> pengdows.efcore.adonet.sqlserver.TemporalTableBuilder!
+pengdows.efcore.adonet.sqlserver.TemporalTableBuilder.HasPeriodStart(string! propertyName) -> pengdows.efcore.adonet.sqlserver.TemporalPeriodPropertyBuilder!
+pengdows.efcore.adonet.sqlserver.TemporalTableBuilder.HasPeriodEnd(string! propertyName) -> pengdows.efcore.adonet.sqlserver.TemporalPeriodPropertyBuilder!
+pengdows.efcore.adonet.sqlserver.TemporalTableBuilder<TEntity>
+pengdows.efcore.adonet.sqlserver.TemporalTableBuilder<TEntity>.UseHistoryTable(string! name) -> pengdows.efcore.adonet.sqlserver.TemporalTableBuilder<TEntity!>!
+pengdows.efcore.adonet.sqlserver.TemporalTableBuilder<TEntity>.UseHistoryTable(string! name, string? schema) -> pengdows.efcore.adonet.sqlserver.TemporalTableBuilder<TEntity!>!
+pengdows.efcore.adonet.sqlserver.TemporalPeriodPropertyBuilder
+pengdows.efcore.adonet.sqlserver.TemporalPeriodPropertyBuilder.HasColumnName(string? name) -> pengdows.efcore.adonet.sqlserver.TemporalPeriodPropertyBuilder!
+pengdows.efcore.adonet.sqlserver.TemporalPeriodPropertyBuilder.HasPrecision(int precision) -> pengdows.efcore.adonet.sqlserver.TemporalPeriodPropertyBuilder!

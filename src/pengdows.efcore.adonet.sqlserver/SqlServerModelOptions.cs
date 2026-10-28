@@ -60,6 +60,15 @@ internal static class SqlServerAnnotationNames
     public const string SequenceName = Prefix + "SequenceName";
     public const string SequenceSchema = Prefix + "SequenceSchema";
     public const string SequenceNameSuffix = Prefix + "SequenceNameSuffix";
+    public const string IsTemporal = Prefix + "IsTemporal";
+    public const string TemporalHistoryTableName = Prefix + "TemporalHistoryTableName";
+    public const string TemporalHistoryTableSchema = Prefix + "TemporalHistoryTableSchema";
+    public const string TemporalPeriodStartPropertyName = Prefix + "TemporalPeriodStartPropertyName";
+    public const string TemporalPeriodStartColumnName = Prefix + "TemporalPeriodStartColumnName";
+    public const string TemporalPeriodEndPropertyName = Prefix + "TemporalPeriodEndPropertyName";
+    public const string TemporalPeriodEndColumnName = Prefix + "TemporalPeriodEndColumnName";
+    public const string TemporalIsPeriodStartColumn = Prefix + "TemporalIsPeriodStartColumn";
+    public const string TemporalIsPeriodEndColumn = Prefix + "TemporalIsPeriodEndColumn";
 
     /// <summary>The sequence <see cref="SqlServerModelBuilderExtensions.UseHiLo" /> draws from when none is named.</summary>
     public const string DefaultHiLoSequenceName = "EntityFrameworkHiLoSequence";

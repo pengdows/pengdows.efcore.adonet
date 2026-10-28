@@ -80,6 +80,16 @@ internal class SqlServerMigrationsSqlGenerator(MigrationsSqlGeneratorDependencie
             builder.Append(" SPARSE");
         }
 
+        if (operation[SqlServerAnnotationNames.TemporalIsPeriodStartColumn] is true)
+        {
+            builder.Append(" GENERATED ALWAYS AS ROW START HIDDEN");
+        }
+
+        if (operation[SqlServerAnnotationNames.TemporalIsPeriodEndColumn] is true)
+        {
+            builder.Append(" GENERATED ALWAYS AS ROW END HIDDEN");
+        }
+
         DefaultValue(operation.DefaultValue, operation.DefaultValueSql, columnType, builder);
 
         if (IsIdentity(operation)
@@ -174,22 +184,128 @@ internal class SqlServerMigrationsSqlGenerator(MigrationsSqlGeneratorDependencie
         }
     }
 
-    // A memory-optimized table is created WITH (MEMORY_OPTIMIZED = ON), outside a transaction, which such DDL refuses.
+    // A memory-optimized table is created WITH (MEMORY_OPTIMIZED = ON), outside a transaction, which such DDL refuses. A
+    // temporal table is created WITH (SYSTEM_VERSIONING = ON (HISTORY_TABLE = schema.name)); HISTORY_TABLE needs a schema, so
+    // without one the statement runs through EXEC with the session's SCHEMA_NAME(). Behaviour reference (not copied):
+    // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.SqlServer/Migrations/SqlServerMigrationsSqlGenerator.cs
     protected override void Generate(CreateTableOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
     {
-        if (!IsMemoryOptimized(operation, model, operation.Schema, operation.Name))
+        var memoryOptimized = IsMemoryOptimized(operation, model, operation.Schema, operation.Name);
+        var temporal = operation[SqlServerAnnotationNames.IsTemporal] is true;
+        if (!memoryOptimized && !temporal)
         {
             base.Generate(operation, model, builder, terminate);
             return;
         }
 
-        base.Generate(operation, model, builder, terminate: false);
-        builder.Append(" WITH (MEMORY_OPTIMIZED = ON)");
+        var options = new List<string>();
+        var historySchema = operation[SqlServerAnnotationNames.TemporalHistoryTableSchema] as string;
+        var historyName = operation[SqlServerAnnotationNames.TemporalHistoryTableName] as string ?? operation.Name + "History";
+        if (temporal && (historySchema != null) && (historySchema != operation.Schema))
+        {
+            Generate(new EnsureSchemaOperation { Name = historySchema }, model, builder);
+        }
+
+        if (temporal && (historySchema != null))
+        {
+            options.Add("SYSTEM_VERSIONING = ON (HISTORY_TABLE = " + Dependencies.SqlGenerationHelper.DelimitIdentifier(historyName, historySchema) + ")");
+        }
+
+        if (memoryOptimized)
+        {
+            options.Add("MEMORY_OPTIMIZED = ON");
+        }
+
+        if (temporal && (historySchema == null))
+        {
+            var table = new MigrationCommandListBuilder(Dependencies);
+            base.Generate(operation, model, table, terminate: false);
+            table.EndCommand();
+            options.Insert(
+                0,
+                "SYSTEM_VERSIONING = ON (HISTORY_TABLE = ' + QUOTENAME(@historyTableSchema) + N'."
+                + Dependencies.SqlGenerationHelper.DelimitIdentifier(historyName).Replace("'", "''", StringComparison.Ordinal) + ")");
+            builder
+                .AppendLine("DECLARE @historyTableSchema sysname = SCHEMA_NAME();")
+                .Append("EXEC(N'")
+                .Append(table.GetCommandList().Single().CommandText.Replace("'", "''", StringComparison.Ordinal))
+                .Append(" WITH (").Append(string.Join(", ", options)).Append(")')");
+        }
+        else
+        {
+            base.Generate(operation, model, builder, terminate: false);
+            builder.Append(" WITH (").Append(string.Join(", ", options)).Append(")");
+        }
+
         if (terminate)
         {
             builder.AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
-            EndStatement(builder, suppressTransaction: true);
+            EndStatement(builder, suppressTransaction: memoryOptimized);
         }
+    }
+
+    // A temporal table names its period after its columns: PERIOD FOR SYSTEM_TIME (start, end).
+    protected override void CreateTableConstraints(CreateTableOperation operation, IModel? model, MigrationCommandListBuilder builder)
+    {
+        base.CreateTableConstraints(operation, model, builder);
+        if ((operation[SqlServerAnnotationNames.IsTemporal] is not true)
+            || (operation[SqlServerAnnotationNames.TemporalPeriodStartColumnName] is not string start)
+            || (operation[SqlServerAnnotationNames.TemporalPeriodEndColumnName] is not string end))
+        {
+            return;
+        }
+
+        builder
+            .AppendLine(",")
+            .Append("PERIOD FOR SYSTEM_TIME(")
+            .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(start))
+            .Append(", ")
+            .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(end))
+            .Append(")");
+    }
+
+    // A temporal table stops versioning before it is dropped, and its history table is dropped after it.
+    protected override void Generate(DropTableOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
+    {
+        if (operation[SqlServerAnnotationNames.IsTemporal] is not true)
+        {
+            base.Generate(operation, model, builder, terminate);
+            return;
+        }
+
+        builder
+            .Append("ALTER TABLE ")
+            .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Name, operation.Schema))
+            .Append(" SET (SYSTEM_VERSIONING = OFF)")
+            .AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
+        EndStatement(builder);
+        base.Generate(operation, model, builder, terminate: true);
+        builder
+            .Append("DROP TABLE ")
+            .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(
+                operation[SqlServerAnnotationNames.TemporalHistoryTableName] as string ?? operation.Name + "History",
+                operation[SqlServerAnnotationNames.TemporalHistoryTableSchema] as string ?? operation.Schema))
+            .AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
+        EndStatement(builder);
+    }
+
+    // Turning versioning on or off, or moving the history table, of an existing table isn't generated: refused, not skipped.
+    protected override void Generate(AlterTableOperation operation, IModel? model, MigrationCommandListBuilder builder)
+    {
+        string[] temporalAnnotations =
+        [
+            SqlServerAnnotationNames.IsTemporal,
+            SqlServerAnnotationNames.TemporalHistoryTableName,
+            SqlServerAnnotationNames.TemporalHistoryTableSchema
+        ];
+        if (temporalAnnotations.Any(a => !Equals(operation[a], operation.OldTable[a])))
+        {
+            throw new NotSupportedException(
+                $"'{operation.Name}' changes whether it is a temporal table, or its history table; write that change in the migration with "
+                + "migrationBuilder.Sql (ALTER TABLE ... SET (SYSTEM_VERSIONING = ...)).");
+        }
+
+        base.Generate(operation, model, builder);
     }
 
     // A memory-optimized table's indexes are part of the table: ALTER TABLE ... ADD INDEX, outside a transaction.

@@ -73,6 +73,7 @@ public sealed class SqlServerDialect : AdoNetDialect
             .TryAdd<IAggregateMethodCallTranslatorPlugin, SqlServerAggregateTranslatorPlugin>()
             .TryAdd<IEvaluatableExpressionFilterPlugin, SqlServerEvaluatableExpressionFilterPlugin>()
             .TryAdd<Microsoft.EntityFrameworkCore.Metadata.IRelationalAnnotationProvider, SqlServerAnnotationProvider>()
+            .TryAdd<IMigrationsAnnotationProvider, SqlServerMigrationsAnnotationProvider>()
             .TryAdd<Microsoft.EntityFrameworkCore.ValueGeneration.IValueGeneratorSelector, SqlServerValueGeneratorSelector>();
         services.TryAddSingleton<SqlServerHiLoStates>();
         services.TryAddScoped<IAdoNetBulkLoader, SqlServerBulkLoader>();

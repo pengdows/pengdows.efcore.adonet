@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.EntityFrameworkCore.Migrations;
 using pengdows.efcore.adonet.Metadata;
 
 namespace pengdows.efcore.adonet.sqlserver;
@@ -27,7 +28,47 @@ internal sealed class SqlServerAnnotationProvider(RelationalAnnotationProviderDe
         {
             yield return new Annotation(SqlServerAnnotationNames.MemoryOptimized, true);
         }
+
+        foreach (var annotation in Temporal(table))
+        {
+            yield return annotation;
+        }
+
+        if (TemporalEntityType(table) is { } entityType)
+        {
+            var store = StoreObjectIdentifier.Table(table.Name, table.Schema);
+            yield return new Annotation(
+                SqlServerAnnotationNames.TemporalPeriodStartColumnName,
+                entityType.FindProperty(SqlServerTemporalConvention.PeriodPropertyName(entityType, start: true))?.GetColumnName(store));
+            yield return new Annotation(
+                SqlServerAnnotationNames.TemporalPeriodEndColumnName,
+                entityType.FindProperty(SqlServerTemporalConvention.PeriodPropertyName(entityType, start: false))?.GetColumnName(store));
+        }
     }
+
+    /// <summary>A temporal table's history table, as a created, altered or dropped table carries it.</summary>
+    internal static IEnumerable<IAnnotation> Temporal(ITable table)
+    {
+        if (TemporalEntityType(table) is not { } entityType)
+        {
+            yield break;
+        }
+
+        yield return new Annotation(SqlServerAnnotationNames.IsTemporal, true);
+        yield return new Annotation(
+            SqlServerAnnotationNames.TemporalHistoryTableName,
+            entityType.FindAnnotation(SqlServerAnnotationNames.TemporalHistoryTableName)?.Value as string ?? table.Name + "History");
+        yield return new Annotation(
+            SqlServerAnnotationNames.TemporalHistoryTableSchema,
+            entityType.FindAnnotation(SqlServerAnnotationNames.TemporalHistoryTableSchema)?.Value as string ?? table.Schema);
+    }
+
+    private static IEntityType? TemporalEntityType(ITable table)
+        => table.EntityTypeMappings
+            .Select(m => m.TypeBase)
+            .OfType<IEntityType>()
+            .Select(e => e.GetRootType())
+            .FirstOrDefault(SqlServerTemporalConvention.IsTemporal);
 
     public override IEnumerable<IAnnotation> For(IColumn column, bool designTime)
     {
@@ -37,6 +78,19 @@ internal sealed class SqlServerAnnotationProvider(RelationalAnnotationProviderDe
         }
 
         var properties = column.PropertyMappings.Select(m => m.Property).ToList();
+        if (TemporalEntityType(column.Table) is { } temporal)
+        {
+            if (properties.Any(p => p.Name == SqlServerTemporalConvention.PeriodPropertyName(temporal, start: true)))
+            {
+                yield return new Annotation(SqlServerAnnotationNames.TemporalIsPeriodStartColumn, true);
+            }
+
+            if (properties.Any(p => p.Name == SqlServerTemporalConvention.PeriodPropertyName(temporal, start: false)))
+            {
+                yield return new Annotation(SqlServerAnnotationNames.TemporalIsPeriodEndColumn, true);
+            }
+        }
+
         if (properties.Any(p => p.FindAnnotation(SqlServerAnnotationNames.Sparse)?.Value is true))
         {
             yield return new Annotation(SqlServerAnnotationNames.Sparse, true);
@@ -197,4 +251,15 @@ internal sealed class SqlServerMemoryOptimizedTablesConvention : IModelFinalizin
             }
         }
     }
+}
+
+/// <summary>A dropped temporal table carries its history table, which is dropped with it.</summary>
+// EF1001: as the core's provider, which this extends.
+#pragma warning disable EF1001
+internal sealed class SqlServerMigrationsAnnotationProvider(MigrationsAnnotationProviderDependencies dependencies)
+    : AdoNetMigrationsAnnotationProvider(dependencies)
+#pragma warning restore EF1001
+{
+    public override IEnumerable<IAnnotation> ForRemove(ITable table)
+        => base.ForRemove(table).Concat(SqlServerAnnotationProvider.Temporal(table));
 }
