@@ -208,12 +208,17 @@ internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = t
 /// </summary>
 internal sealed class MySqlFunctions(bool mariaDb = false) : FunctionSyntax
 {
-    // TIMESTAMPDIFF counts whole units; it has no MILLISECOND, so microseconds are divided. Behaviour reference (not copied):
+    // TIMESTAMPDIFF counts whole units; it has no MILLISECOND, TICK or NANOSECOND, so microseconds are divided or multiplied.
+    // Behaviour reference (not copied):
     // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Query/Internal/MySqlDateDiffFunctionsTranslator.cs
     public override string? DateDiff(DateDiffUnit unit)
-        => unit == DateDiffUnit.Millisecond
-            ? "(TIMESTAMPDIFF(MICROSECOND, {0}, {1}) DIV 1000)"
-            : "TIMESTAMPDIFF(" + unit.ToString().ToUpperInvariant() + ", {0}, {1})";
+        => unit switch
+        {
+            DateDiffUnit.Millisecond => "(TIMESTAMPDIFF(MICROSECOND, {0}, {1}) DIV 1000)",
+            DateDiffUnit.Tick => "(TIMESTAMPDIFF(MICROSECOND, {0}, {1}) * 10)",
+            DateDiffUnit.Nanosecond => "(TIMESTAMPDIFF(MICROSECOND, {0}, {1}) * 1000)",
+            _ => "TIMESTAMPDIFF(" + unit.ToString().ToUpperInvariant() + ", {0}, {1})"
+        };
 
     public override string? PadLeft => "CASE WHEN CHAR_LENGTH({0}) >= {1} THEN {0} ELSE LPAD({0}, {1}, {2}) END";
     public override string? PadRight => "CASE WHEN CHAR_LENGTH({0}) >= {1} THEN {0} ELSE RPAD({0}, {1}, {2}) END";

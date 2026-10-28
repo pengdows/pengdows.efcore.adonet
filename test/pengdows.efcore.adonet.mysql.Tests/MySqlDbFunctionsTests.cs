@@ -180,6 +180,30 @@ public class MySqlDbFunctionsTests
         Assert.Contains("\"a\".\"PublishedAt\" LIKE '2024!_%' ESCAPE '!'", escaped);
     }
 
+    // TIMESTAMPDIFF counts quarters and weeks; it has no tick or nanosecond, so microseconds are multiplied.
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Date_differences_in_quarters_weeks_ticks_and_nanoseconds(bool mariaDb)
+    {
+        using var context = Context(mariaDb);
+
+        var sql = context.Articles
+            .Select(a => new
+            {
+                Q = EF.Functions.DateDiffQuarter(a.PublishedAt, a.PublishedAt),
+                W = EF.Functions.DateDiffWeek(a.Day, a.Day),
+                T = EF.Functions.DateDiffTick(a.PublishedAt, a.PublishedAt),
+                N = EF.Functions.DateDiffNanosecond(a.EditedAt, a.EditedAt)
+            })
+            .ToQueryString();
+
+        Assert.Contains("TIMESTAMPDIFF(QUARTER, \"a\".\"PublishedAt\", \"a\".\"PublishedAt\")", sql);
+        Assert.Contains("TIMESTAMPDIFF(WEEK, \"a\".\"Day\", \"a\".\"Day\")", sql);
+        Assert.Contains("(TIMESTAMPDIFF(MICROSECOND, \"a\".\"PublishedAt\", \"a\".\"PublishedAt\") * 10)", sql);
+        Assert.Contains("(TIMESTAMPDIFF(MICROSECOND, \"a\".\"EditedAt\", \"a\".\"EditedAt\") * 1000)", sql);
+    }
+
     [Fact]
     public void The_functions_throw_outside_a_query()
     {
