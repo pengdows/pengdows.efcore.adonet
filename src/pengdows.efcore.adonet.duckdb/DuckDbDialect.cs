@@ -87,9 +87,10 @@ internal static class DuckDbJson
 /// </summary>
 internal sealed class DuckDbFunctions : FunctionSyntax
 {
-    // date_diff counts the unit's boundaries crossed.
+    // date_diff counts the unit's boundaries crossed; it has no tick, and nanoseconds only for TIMESTAMP_NS, which this
+    // provider doesn't map.
     public override string? DateDiff(DateDiffUnit unit)
-        => "DATE_DIFF('" + unit.ToString().ToLowerInvariant() + "', {0}, {1})";
+        => unit is DateDiffUnit.Tick or DateDiffUnit.Nanosecond ? null : "DATE_DIFF('" + unit.ToString().ToLowerInvariant() + "', {0}, {1})";
 
     // CURRENT_TIMESTAMP is an instant shown in the session's time zone; AT TIME ZONE 'UTC' gives its UTC timestamp.
     public override string? UtcNow => "(CURRENT_TIMESTAMP AT TIME ZONE 'UTC')";

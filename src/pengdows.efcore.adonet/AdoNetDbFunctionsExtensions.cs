@@ -200,4 +200,100 @@ public static class AdoNetDbFunctionsExtensions
     /// <summary>The number of microseconds from <paramref name="start" /> to <paramref name="end" />, as the database counts them.</summary>
     public static int? DateDiffMicrosecond(this DbFunctions _, DateOnly? start, DateOnly? end)
         => throw new InvalidOperationException(CoreStrings.FunctionOnClient(nameof(DateDiffMicrosecond)));
+
+    /// <summary>The number of quarters from <paramref name="start" /> to <paramref name="end" />, as the database counts them.</summary>
+    public static int DateDiffQuarter(this DbFunctions _, DateTime start, DateTime end)
+        => throw new InvalidOperationException(CoreStrings.FunctionOnClient(nameof(DateDiffQuarter)));
+
+    /// <summary>The number of quarters from <paramref name="start" /> to <paramref name="end" />, as the database counts them.</summary>
+    public static int? DateDiffQuarter(this DbFunctions _, DateTime? start, DateTime? end)
+        => throw new InvalidOperationException(CoreStrings.FunctionOnClient(nameof(DateDiffQuarter)));
+
+    /// <summary>The number of quarters from <paramref name="start" /> to <paramref name="end" />, as the database counts them.</summary>
+    public static int DateDiffQuarter(this DbFunctions _, DateTimeOffset start, DateTimeOffset end)
+        => throw new InvalidOperationException(CoreStrings.FunctionOnClient(nameof(DateDiffQuarter)));
+
+    /// <summary>The number of quarters from <paramref name="start" /> to <paramref name="end" />, as the database counts them.</summary>
+    public static int? DateDiffQuarter(this DbFunctions _, DateTimeOffset? start, DateTimeOffset? end)
+        => throw new InvalidOperationException(CoreStrings.FunctionOnClient(nameof(DateDiffQuarter)));
+
+    /// <summary>The number of quarters from <paramref name="start" /> to <paramref name="end" />, as the database counts them.</summary>
+    public static int DateDiffQuarter(this DbFunctions _, DateOnly start, DateOnly end)
+        => throw new InvalidOperationException(CoreStrings.FunctionOnClient(nameof(DateDiffQuarter)));
+
+    /// <summary>The number of quarters from <paramref name="start" /> to <paramref name="end" />, as the database counts them.</summary>
+    public static int? DateDiffQuarter(this DbFunctions _, DateOnly? start, DateOnly? end)
+        => throw new InvalidOperationException(CoreStrings.FunctionOnClient(nameof(DateDiffQuarter)));
+
+    /// <summary>The number of weeks from <paramref name="start" /> to <paramref name="end" />, as the database counts them.</summary>
+    public static int DateDiffWeek(this DbFunctions _, DateTime start, DateTime end)
+        => throw new InvalidOperationException(CoreStrings.FunctionOnClient(nameof(DateDiffWeek)));
+
+    /// <summary>The number of weeks from <paramref name="start" /> to <paramref name="end" />, as the database counts them.</summary>
+    public static int? DateDiffWeek(this DbFunctions _, DateTime? start, DateTime? end)
+        => throw new InvalidOperationException(CoreStrings.FunctionOnClient(nameof(DateDiffWeek)));
+
+    /// <summary>The number of weeks from <paramref name="start" /> to <paramref name="end" />, as the database counts them.</summary>
+    public static int DateDiffWeek(this DbFunctions _, DateTimeOffset start, DateTimeOffset end)
+        => throw new InvalidOperationException(CoreStrings.FunctionOnClient(nameof(DateDiffWeek)));
+
+    /// <summary>The number of weeks from <paramref name="start" /> to <paramref name="end" />, as the database counts them.</summary>
+    public static int? DateDiffWeek(this DbFunctions _, DateTimeOffset? start, DateTimeOffset? end)
+        => throw new InvalidOperationException(CoreStrings.FunctionOnClient(nameof(DateDiffWeek)));
+
+    /// <summary>The number of weeks from <paramref name="start" /> to <paramref name="end" />, as the database counts them.</summary>
+    public static int DateDiffWeek(this DbFunctions _, DateOnly start, DateOnly end)
+        => throw new InvalidOperationException(CoreStrings.FunctionOnClient(nameof(DateDiffWeek)));
+
+    /// <summary>The number of weeks from <paramref name="start" /> to <paramref name="end" />, as the database counts them.</summary>
+    public static int? DateDiffWeek(this DbFunctions _, DateOnly? start, DateOnly? end)
+        => throw new InvalidOperationException(CoreStrings.FunctionOnClient(nameof(DateDiffWeek)));
+
+    /// <summary>The number of ticks (100 nanoseconds) from <paramref name="start" /> to <paramref name="end" />, as the database counts them.</summary>
+    public static int DateDiffTick(this DbFunctions _, DateTime start, DateTime end)
+        => throw new InvalidOperationException(CoreStrings.FunctionOnClient(nameof(DateDiffTick)));
+
+    /// <summary>The number of ticks (100 nanoseconds) from <paramref name="start" /> to <paramref name="end" />, as the database counts them.</summary>
+    public static int? DateDiffTick(this DbFunctions _, DateTime? start, DateTime? end)
+        => throw new InvalidOperationException(CoreStrings.FunctionOnClient(nameof(DateDiffTick)));
+
+    /// <summary>The number of ticks (100 nanoseconds) from <paramref name="start" /> to <paramref name="end" />, as the database counts them.</summary>
+    public static int DateDiffTick(this DbFunctions _, DateTimeOffset start, DateTimeOffset end)
+        => throw new InvalidOperationException(CoreStrings.FunctionOnClient(nameof(DateDiffTick)));
+
+    /// <summary>The number of ticks (100 nanoseconds) from <paramref name="start" /> to <paramref name="end" />, as the database counts them.</summary>
+    public static int? DateDiffTick(this DbFunctions _, DateTimeOffset? start, DateTimeOffset? end)
+        => throw new InvalidOperationException(CoreStrings.FunctionOnClient(nameof(DateDiffTick)));
+
+    /// <summary>The number of ticks (100 nanoseconds) from <paramref name="start" /> to <paramref name="end" />, as the database counts them.</summary>
+    public static int DateDiffTick(this DbFunctions _, DateOnly start, DateOnly end)
+        => throw new InvalidOperationException(CoreStrings.FunctionOnClient(nameof(DateDiffTick)));
+
+    /// <summary>The number of ticks (100 nanoseconds) from <paramref name="start" /> to <paramref name="end" />, as the database counts them.</summary>
+    public static int? DateDiffTick(this DbFunctions _, DateOnly? start, DateOnly? end)
+        => throw new InvalidOperationException(CoreStrings.FunctionOnClient(nameof(DateDiffTick)));
+
+    /// <summary>The number of nanoseconds from <paramref name="start" /> to <paramref name="end" />, as the database counts them.</summary>
+    public static int DateDiffNanosecond(this DbFunctions _, DateTime start, DateTime end)
+        => throw new InvalidOperationException(CoreStrings.FunctionOnClient(nameof(DateDiffNanosecond)));
+
+    /// <summary>The number of nanoseconds from <paramref name="start" /> to <paramref name="end" />, as the database counts them.</summary>
+    public static int? DateDiffNanosecond(this DbFunctions _, DateTime? start, DateTime? end)
+        => throw new InvalidOperationException(CoreStrings.FunctionOnClient(nameof(DateDiffNanosecond)));
+
+    /// <summary>The number of nanoseconds from <paramref name="start" /> to <paramref name="end" />, as the database counts them.</summary>
+    public static int DateDiffNanosecond(this DbFunctions _, DateTimeOffset start, DateTimeOffset end)
+        => throw new InvalidOperationException(CoreStrings.FunctionOnClient(nameof(DateDiffNanosecond)));
+
+    /// <summary>The number of nanoseconds from <paramref name="start" /> to <paramref name="end" />, as the database counts them.</summary>
+    public static int? DateDiffNanosecond(this DbFunctions _, DateTimeOffset? start, DateTimeOffset? end)
+        => throw new InvalidOperationException(CoreStrings.FunctionOnClient(nameof(DateDiffNanosecond)));
+
+    /// <summary>The number of nanoseconds from <paramref name="start" /> to <paramref name="end" />, as the database counts them.</summary>
+    public static int DateDiffNanosecond(this DbFunctions _, DateOnly start, DateOnly end)
+        => throw new InvalidOperationException(CoreStrings.FunctionOnClient(nameof(DateDiffNanosecond)));
+
+    /// <summary>The number of nanoseconds from <paramref name="start" /> to <paramref name="end" />, as the database counts them.</summary>
+    public static int? DateDiffNanosecond(this DbFunctions _, DateOnly? start, DateOnly? end)
+        => throw new InvalidOperationException(CoreStrings.FunctionOnClient(nameof(DateDiffNanosecond)));
 }

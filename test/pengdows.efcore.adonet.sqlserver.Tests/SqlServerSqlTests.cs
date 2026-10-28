@@ -23,6 +23,18 @@ public class SqlServerSqlTests
         return context.Blogs.Where(b => b.Name == name).OrderBy(b => b.Id).Skip(5).Take(10).ToQueryString();
     }
 
+    // DATEDIFF has quarter, week and nanosecond parts, but no tick: a tick difference is left untranslated.
+    [Fact]
+    public void Date_differences_have_quarters_weeks_and_nanoseconds_but_no_ticks()
+    {
+        var functions = SqlServerDialect.Instance.Sql.Functions;
+
+        Assert.Equal("DATEDIFF(quarter, {0}, {1})", functions.DateDiff(DateDiffUnit.Quarter));
+        Assert.Equal("DATEDIFF(week, {0}, {1})", functions.DateDiff(DateDiffUnit.Week));
+        Assert.Equal("DATEDIFF(nanosecond, {0}, {1})", functions.DateDiff(DateDiffUnit.Nanosecond));
+        Assert.Null(functions.DateDiff(DateDiffUnit.Tick));
+    }
+
     [Fact]
     public void Delimits_identifiers_with_brackets()
     {

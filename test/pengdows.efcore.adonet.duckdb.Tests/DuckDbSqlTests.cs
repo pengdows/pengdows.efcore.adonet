@@ -28,6 +28,18 @@ public class DuckDbSqlTests
         Assert.Contains("= $name", sql);
         Assert.Matches(@"LIMIT \$p\w*\s+OFFSET \$p\w*", sql);
     }
+
+    // date_diff has quarter and week parts; a tick or nanosecond difference is left untranslated.
+    [Fact]
+    public void Date_differences_have_quarters_and_weeks_but_no_ticks_or_nanoseconds()
+    {
+        var functions = DuckDbDialect.Instance.Sql.Functions;
+
+        Assert.Equal("DATE_DIFF('quarter', {0}, {1})", functions.DateDiff(DateDiffUnit.Quarter));
+        Assert.Equal("DATE_DIFF('week', {0}, {1})", functions.DateDiff(DateDiffUnit.Week));
+        Assert.Null(functions.DateDiff(DateDiffUnit.Tick));
+        Assert.Null(functions.DateDiff(DateDiffUnit.Nanosecond));
+    }
 }
 
 /// <summary>

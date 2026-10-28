@@ -419,5 +419,11 @@ public enum DateDiffUnit
     Minute,
     Second,
     Millisecond,
-    Microsecond
+    Microsecond,
+    Quarter,
+    Week,
+
+    /// <summary>.NET's 100-nanosecond tick.</summary>
+    Tick,
+    Nanosecond
 }

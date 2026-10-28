@@ -419,6 +419,10 @@ public class TranslationTests
         Assert.Contains("DATEDIFF(microsecond, ", Sql(dialect, c => c.Items.Where(i => EF.Functions.DateDiffMicrosecond(i.At, i.At) > 1)));
         Assert.Contains("DATEDIFF(month, ", Sql(dialect, c => c.Items.Where(i => EF.Functions.DateDiffMonth(i.AtOffset, i.AtOffset) > 1)));
         Assert.Contains("SELECT DATEDIFF(year, \"i\".\"At\", ", Sql(dialect, c => c.Items.Select(i => EF.Functions.DateDiffYear(i.At, new DateTime(2027, 3, 5)))));
+        Assert.Contains("DATEDIFF(quarter, ", Sql(dialect, c => c.Items.Where(i => EF.Functions.DateDiffQuarter(i.At, i.At) > 1)));
+        Assert.Contains("DATEDIFF(week, ", Sql(dialect, c => c.Items.Where(i => EF.Functions.DateDiffWeek(i.AtOffset, i.AtOffset) > 1)));
+        Assert.Contains("DATEDIFF(tick, ", Sql(dialect, c => c.Items.Where(i => EF.Functions.DateDiffTick(i.At, i.At) > 1)));
+        Assert.Contains("DATEDIFF(nanosecond, ", Sql(dialect, c => c.Items.Where(i => EF.Functions.DateDiffNanosecond(i.At, i.At) > 1)));
         Assert.Contains(
             "could not be translated",
             Assert.Throws<InvalidOperationException>(() => Ansi(c => c.Items.Where(i => EF.Functions.DateDiffDay(i.At, i.At) > 1))).Message);
