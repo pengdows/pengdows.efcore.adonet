@@ -103,6 +103,7 @@ as plain text (SQL Server) compares as text and takes no conversion. DB impact: 
 | MariaDB's JSON is `LONGTEXT`, so `=` compares spellings | SQL | `JsonSyntax.Equality`: `JSON_EQUALS` for a JSON column compared with JSON text |
 | MariaDB reports integer display widths (`BIGINT(20)`) | Catalog | MySQL's schema reader drops them but for `TINYINT(1)` and `ZEROFILL`, as MySQL 8.0.19 does |
 | Parallel migrators can deadlock inserting the lock row | Engine | The history repository waits out a refusal the dialect calls transient (`IDatabaseCapabilities.IsTransient`) like a held lock |
+| PostgreSQL has native arrays, which Npgsql maps every primitive collection to | Type mapping and query | Opt-in (`UsePostgreSqlArrays`, or an `xxx[]` column type): PostgreSQL's type mapping source maps `T[]`/`List<T>` to an array, its queryable translator reads one through `unnest ... WITH ORDINALITY` and writes `= ANY`, `cardinality`, subscripts, `&&`, `<@` and `\|\|`; without it a collection is JSON, as on the other providers |
 | A catalog other than `INFORMATION_SCHEMA` | Engine catalog | `Scaffolding.SchemaReader`; `InformationSchemaReader` is ISO's |
 | A driver reports a cancel as its own exception | Every driver | The core's exception detector: a failure after the token is canceled is the cancellation |
 

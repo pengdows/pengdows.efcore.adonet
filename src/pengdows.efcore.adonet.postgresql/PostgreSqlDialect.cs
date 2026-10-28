@@ -50,7 +50,10 @@ public sealed class PostgreSqlDialect : AdoNetDialect
             .TryAdd<Microsoft.EntityFrameworkCore.Diagnostics.IInterceptor, PostgreSqlIntervalReaderInterceptor>()
             .TryAdd<Microsoft.EntityFrameworkCore.Metadata.Conventions.Infrastructure.IProviderConventionSetBuilder, PostgreSqlConventionSetBuilder>()
             .TryAdd<Microsoft.EntityFrameworkCore.Storage.IRelationalTypeMappingSourcePlugin, PostgreSqlXidTypeMappingPlugin>()
-            .TryAdd<Microsoft.EntityFrameworkCore.Query.IMethodCallTranslatorPlugin, PostgreSqlDbFunctionsTranslatorPlugin>();
+            .TryAdd<Microsoft.EntityFrameworkCore.Query.IMethodCallTranslatorPlugin, PostgreSqlDbFunctionsTranslatorPlugin>()
+            .TryAdd<Microsoft.EntityFrameworkCore.Storage.IRelationalTypeMappingSource, PostgreSqlTypeMappingSource>()
+            .TryAdd<Microsoft.EntityFrameworkCore.Query.IQuerySqlGeneratorFactory, PostgreSqlQuerySqlGeneratorFactory>()
+            .TryAdd<Microsoft.EntityFrameworkCore.Query.IQueryableMethodTranslatingExpressionVisitorFactory, PostgreSqlQueryableMethodTranslatingExpressionVisitorFactory>();
     }
 }
 

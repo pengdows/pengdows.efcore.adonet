@@ -18,6 +18,9 @@ internal sealed class PostgreSqlConventionSetBuilder(
     {
         var conventionSet = base.CreateConventionSet();
         conventionSet.ModelFinalizingConventions.Add(new PostgreSqlRowVersionConvention());
+
+        // Before EF's type mapping convention, which maps a property by the column type this one sets.
+        conventionSet.ModelFinalizingConventions.Insert(0, new PostgreSqlArrayConvention((IRelationalTypeMappingSource)Dependencies.TypeMappingSource));
         return conventionSet;
     }
 }
