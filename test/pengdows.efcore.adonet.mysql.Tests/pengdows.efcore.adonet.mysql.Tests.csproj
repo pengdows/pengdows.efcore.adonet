@@ -7,6 +7,7 @@
     <ProjectReference Include="..\..\src\pengdows.efcore.adonet.mysql\pengdows.efcore.adonet.mysql.csproj" />
     <ProjectReference Include="..\..\src\pengdows.efcore.adonet.Testing\pengdows.efcore.adonet.Testing.csproj" />
     <PackageReference Include="Testcontainers.MySql" />
+    <PackageReference Include="Testcontainers.MariaDb" />
     <!-- Oracle's driver (GPL-2 with the FOSS exception), test-only: the same dialect must work through it. Never shipped. -->
     <PackageReference Include="MySql.Data" />
     <!-- Oracle's EF provider is test-only and is used only as an external behavior/performance baseline. -->

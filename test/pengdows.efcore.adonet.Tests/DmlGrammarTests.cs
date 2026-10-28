@@ -59,6 +59,33 @@ public class DmlGrammarTests
         return _db.Commands[^1];
     }
 
+    private async Task<string> CopyItemNamesToPartsOfActiveItems(IAdoNetDialect dialect)
+    {
+        await using var context = _db.Context(dialect);
+        await context.Parts.Join(context.Items, p => p.ItemId, i => i.Id, (p, i) => new { Part = p, Item = i })
+            .Where(x => x.Item.Active)
+            .ExecuteUpdateAsync(s => s.SetProperty(x => x.Part.Label, x => x.Item.Name), Ct);
+        return _db.Commands[^1];
+    }
+
+    // ISO SQL:2003 has no UPDATE ... FROM: an UPDATE through a join keeps its target alone, the joined tables in a correlated
+    // EXISTS, and a value read from them in a correlated scalar subquery. The target takes its correlation name (SQL:2003).
+    [Fact]
+    public async Task Iso_updates_through_a_join_with_correlated_subqueries()
+    {
+        var relabel = await RelabelPartsOfActiveItems(TestDialects.Iso);
+        Assert.Matches(@"^UPDATE ""Parts"" AS ""p""\nSET ""Label"" = @p\nWHERE EXISTS \(SELECT 1 FROM ""Items"" AS ""i"" WHERE ", relabel);
+        Assert.Contains(@"""p"".""ItemId"" = ""i"".""Id""", relabel);
+        Assert.Contains(@"""i"".""Active""", relabel);
+
+        var copy = await CopyItemNamesToPartsOfActiveItems(TestDialects.Iso);
+        Assert.Matches(@"^UPDATE ""Parts"" AS ""p""\nSET ""Label"" = \(SELECT ""i"".""Name"" FROM ""Items"" AS ""i"" WHERE ", copy);
+        Assert.Contains("\nWHERE EXISTS (SELECT 1 FROM \"Items\" AS \"i\" WHERE ", copy);
+
+        Assert.StartsWith("UPDATE \"Items\" AS \"i\"\nSET \"Name\" = @p,", await RenameActive(TestDialects.Iso));
+        Assert.Matches(@"^DELETE FROM ""Parts"" AS ""p""\nWHERE ""p"".""Id"" IN \(", await DeletePartsOfInactiveItems(TestDialects.Iso));
+    }
+
     [Fact]
     public async Task Standard_aliases_the_target_and_uses_a_subquery_for_joins()
     {

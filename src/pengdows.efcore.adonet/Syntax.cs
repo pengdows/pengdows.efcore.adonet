@@ -265,6 +265,13 @@ public abstract class DmlSyntax
     public static DmlSyntax MultiTable { get; } = new MultiTableDml();
 
     /// <summary>
+    ///     ISO SQL:2003, which has no <c>UPDATE ... FROM</c>: the target takes its correlation name, and an UPDATE through a
+    ///     join keeps the target alone, the joined tables in a correlated <c>WHERE EXISTS (SELECT 1 FROM ...)</c>, and a value
+    ///     read from them in a correlated scalar subquery over the same tables.
+    /// </summary>
+    public static DmlSyntax Iso { get; } = new IsoDml();
+
+    /// <summary>
     ///     Whether a DELETE over <paramref name="select" /> can be written as-is; when false, EF rewrites it as
     ///     <c>WHERE key IN (subquery)</c>. Null keeps EF's rule (a single table and a predicate).
     /// </summary>
@@ -389,6 +396,125 @@ public abstract class DmlSyntax
             AppendTables(sql, update.SelectExpression);
             AppendWhere(sql, update.SelectExpression);
             return true;
+        }
+    }
+
+    private sealed class IsoDml : DmlSyntax
+    {
+        public override bool TryGenerateUpdate(IQuerySqlWriter sql, UpdateExpression update)
+        {
+            var select = update.SelectExpression;
+            if (select.Tables.Count == 1)
+            {
+                return false;
+            }
+
+            if (!IsJoinsAndPredicateOnly(select))
+            {
+                throw new NotSupportedException("ExecuteUpdate through a join is written for ISO SQL only over tables and inner joins, filtered.");
+            }
+
+            // The tables other than the target, and every condition: the joins' and the query's.
+            var others = new List<TableExpressionBase>();
+            var conditions = new List<SqlExpression>();
+            foreach (var table in select.Tables)
+            {
+                var (source, condition) = table switch
+                {
+                    InnerJoinExpression inner => (inner.Table, inner.JoinPredicate),
+                    CrossJoinExpression cross => (cross.Table, (SqlExpression?)null),
+                    JoinExpressionBase => throw new NotSupportedException(
+                        "ExecuteUpdate through an outer join can't be written in ISO SQL: it has no UPDATE ... FROM."),
+                    _ => (table, null)
+                };
+                if (condition != null)
+                {
+                    conditions.Add(condition);
+                }
+
+                if (source.Alias != update.Table.Alias)
+                {
+                    others.Add(source);
+                }
+            }
+
+            if (select.Predicate != null)
+            {
+                conditions.Add(select.Predicate);
+            }
+
+            var otherAliases = others.Select(t => t.Alias!).ToHashSet(StringComparer.Ordinal);
+            sql.Append("UPDATE ").AppendIdentifier(update.Table.Name, update.Table.Schema)
+                .Append(" AS ").AppendIdentifier(update.Table.Alias!);
+            sql.AppendLine().Append("SET ");
+            for (var i = 0; i < update.ColumnValueSetters.Count; i++)
+            {
+                if (i > 0)
+                {
+                    sql.Append(", ");
+                }
+
+                var (column, value) = update.ColumnValueSetters[i];
+                sql.AppendIdentifier(column.Name).Append(" = ");
+                if (ColumnAliases.Of(value).Overlaps(otherAliases))
+                {
+                    sql.Append("(SELECT ").Visit(value);
+                    AppendFromWhere(sql, others, conditions);
+                    sql.Append(")");
+                }
+                else
+                {
+                    sql.Visit(value);
+                }
+            }
+
+            sql.AppendLine().Append("WHERE EXISTS (SELECT 1");
+            AppendFromWhere(sql, others, conditions);
+            sql.Append(")");
+            return true;
+        }
+
+        private static void AppendFromWhere(IQuerySqlWriter sql, IReadOnlyList<TableExpressionBase> tables, IReadOnlyList<SqlExpression> conditions)
+        {
+            sql.Append(" FROM ");
+            for (var i = 0; i < tables.Count; i++)
+            {
+                if (i > 0)
+                {
+                    sql.Append(" CROSS JOIN ");
+                }
+
+                sql.Visit(tables[i]);
+            }
+
+            for (var i = 0; i < conditions.Count; i++)
+            {
+                sql.Append(i == 0 ? " WHERE (" : " AND (").Visit(conditions[i]).Append(")");
+            }
+        }
+
+        /// <summary>The aliases of the tables whose columns an expression reads.</summary>
+        private sealed class ColumnAliases : ExpressionVisitor
+        {
+            private readonly HashSet<string> _aliases = new(StringComparer.Ordinal);
+
+            public static HashSet<string> Of(Expression expression)
+            {
+                var visitor = new ColumnAliases();
+                visitor.Visit(expression);
+                return visitor._aliases;
+            }
+
+            protected override Expression VisitExtension(Expression node)
+            {
+                if (node is ColumnExpression column)
+                {
+                    _aliases.Add(column.TableAlias);
+                    return node;
+                }
+
+                return base.VisitExtension(node);
+            }
         }
     }
 

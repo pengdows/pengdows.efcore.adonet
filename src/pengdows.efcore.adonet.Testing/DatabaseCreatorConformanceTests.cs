@@ -65,6 +65,32 @@ public abstract class DatabaseCreatorConformanceTests<TFixture>(TFixture fixture
     private static IRelationalDatabaseCreator Creator(DbContext context)
         => context.GetService<IRelationalDatabaseCreator>();
 
+    // An owned collection's key is (owner, generated Id): a database that generates a column of a key of several numbers
+    // the lines; one that can't refuses the row, as with its own EF Core provider (efcore#26708).
+    [Fact]
+    public async Task Owned_collection_lines_are_numbered_only_where_the_database_generates_a_composite_key_column()
+    {
+        var connectionString = NewDatabase();
+        await using (var context = Fixture.CreateContext<OwnedLinesContext>(o => new OwnedLinesContext(o)))
+        {
+            context.Database.SetConnectionString(connectionString);
+            await context.Database.EnsureCreatedAsync(Ct);
+            context.Add(new LineOwner { Lines = [new OwnedLine { Text = "a" }, new OwnedLine { Text = "b" }] });
+
+            if (!Fixture.ExpectedDialect.Sql.GeneratesCompositeKeyValues)
+            {
+                await Assert.ThrowsAsync<DbUpdateException>(() => context.SaveChangesAsync(Ct));
+                return;
+            }
+
+            await context.SaveChangesAsync(Ct);
+        }
+
+        await using var read = Fixture.CreateContext<OwnedLinesContext>(o => new OwnedLinesContext(o));
+        read.Database.SetConnectionString(connectionString);
+        Assert.Equal(["a", "b"], (await read.Owners.SingleAsync(Ct)).Lines.Select(l => l.Text).Order());
+    }
+
     [Fact]
     public async Task A_database_exists_once_created_and_not_before()
     {

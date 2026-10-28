@@ -18,3 +18,5 @@ static pengdows.efcore.adonet.sqlserver.SqlServerDbContextOptionsBuilderExtensio
 static readonly pengdows.efcore.adonet.sqlserver.SqlServerDialect.Instance -> pengdows.efcore.adonet.sqlserver.SqlServerDialect!
 pengdows.efcore.adonet.sqlserver.SqlServerDesignTimeServices
 pengdows.efcore.adonet.sqlserver.SqlServerDesignTimeServices.SqlServerDesignTimeServices() -> void
+pengdows.efcore.adonet.sqlserver.SqlServerDialect.CompatibilityLevel.get -> int
+static pengdows.efcore.adonet.sqlserver.SqlServerDialect.ForCompatibilityLevel(int compatibilityLevel) -> pengdows.efcore.adonet.sqlserver.SqlServerDialect!

@@ -365,8 +365,43 @@ public class TranslationTests
         { "Contains(char)", i => i.Name!.Contains('a'), "\"i\".\"Name\" LIKE '%a%'" },
         { "Math.Log", i => System.Math.Log(i.Double) > 1, "LN(\"i\".\"Double\")" },
         { "Math.Log(base)", i => System.Math.Log(i.Double, 2) > 1, "LOG(2.0, \"i\".\"Double\")" },
-        { "TimeOnly.Hour", i => i.Time.Hour > 1, "EXTRACT(HOUR FROM \"i\".\"Time\")" }
+        { "TimeOnly.Hour", i => i.Time.Hour > 1, "EXTRACT(HOUR FROM \"i\".\"Time\")" },
+        {
+            "DateTime.UtcNow", i => i.At < DateTime.UtcNow,
+            "CAST(CURRENT_TIMESTAMP AT TIME ZONE INTERVAL '00:00' HOUR TO MINUTE AS TIMESTAMP)"
+        }
     };
+
+    // A trim of several characters removes any of them, in any order (String.Trim(char[])): the dialect's trim of a set,
+    // given the set as one string. ISO's TRIM takes a single character, so without one it isn't translated (above).
+    public static TheoryData<string, Expression<Func<Item, bool>>, string> CharacterSetTrimTranslations => new()
+    {
+        { "Trim", i => i.Name!.Trim('x', 'y') == "a", "BTRIM(\"i\".\"Name\", 'xy')" },
+        { "TrimStart", i => i.Name!.TrimStart('x', 'y') == "a", "LTRIM(\"i\".\"Name\", 'xy')" },
+        { "TrimEnd", i => i.Name!.TrimEnd('x', 'y') == "a", "RTRIM(\"i\".\"Name\", 'xy')" },
+        { "TrimStart of a quote", i => i.Name!.TrimStart('\'', 'y') == "a", "LTRIM(\"i\".\"Name\", '''y')" }
+    };
+
+    // PadLeft/PadRight pad with a space unless given a character; ISO has no padding function, so without the dialect's it
+    // isn't translated (above).
+    public static TheoryData<string, Expression<Func<Item, bool>>, string> PaddingTranslations => new()
+    {
+        { "PadLeft", i => i.Name!.PadLeft(5) == "a", "LPAD(\"i\".\"Name\", 5, ' ')" },
+        { "PadRight with a character", i => i.Name!.PadRight(5, '*') == "a", "RPAD(\"i\".\"Name\", 5, '*')" }
+    };
+
+    [Theory]
+    [MemberData(nameof(PaddingTranslations))]
+    public void Padding_is_the_dialects(string _, Expression<Func<Item, bool>> predicate, string expected)
+        => Assert.Contains(expected, Sql(new PartsDialect("Padding", new PartsSql(functions: new Padding())), c => c.Items.Where(predicate)));
+
+    [Theory]
+    [MemberData(nameof(CharacterSetTrimTranslations))]
+    public void A_trim_of_several_characters_is_the_dialects_trim_of_a_set(
+        string _, Expression<Func<Item, bool>> predicate, string expected)
+        => Assert.Contains(
+            expected,
+            Sql(new PartsDialect("Character set trims", new PartsSql(functions: new CharacterSetTrims())), c => c.Items.Where(predicate)));
 
     [Theory]
     [MemberData(nameof(IsoTranslations))]
@@ -437,6 +472,21 @@ public sealed class CastLiteralTypeMappings : AnsiTypeMappings
 }
 
 /// <summary>A database with no SUBSTRING.</summary>
+/// <summary>A database whose trims take a set of characters, as PostgreSQL's BTRIM/LTRIM/RTRIM do.</summary>
+/// <summary>A database with LPAD/RPAD, as PostgreSQL's, written to keep a longer string whole as .NET's PadLeft does.</summary>
+public sealed class Padding : FunctionSyntax
+{
+    public override string PadLeft => "CASE WHEN CHAR_LENGTH({0}) >= {1} THEN {0} ELSE LPAD({0}, {1}, {2}) END";
+    public override string PadRight => "CASE WHEN CHAR_LENGTH({0}) >= {1} THEN {0} ELSE RPAD({0}, {1}, {2}) END";
+}
+
+public sealed class CharacterSetTrims : FunctionSyntax
+{
+    public override string TrimCharacters => "BTRIM({0}, {1})";
+    public override string TrimStartCharacters => "LTRIM({0}, {1})";
+    public override string TrimEndCharacters => "RTRIM({0}, {1})";
+}
+
 public sealed class NoSubstringFunctions : FunctionSyntax
 {
     public override string? Substring => null;

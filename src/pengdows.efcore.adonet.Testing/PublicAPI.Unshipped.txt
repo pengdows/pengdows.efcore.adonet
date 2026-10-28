@@ -404,6 +404,8 @@ pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.The_differe
 pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Time_spans_add_and_subtract() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.TranslationConformanceTests(TFixture! fixture) -> void
 pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Trimming() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Current_time_in_utc_is_the_servers() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Trimming_a_set_of_characters() -> System.Threading.Tasks.Task!
 static pengdows.efcore.adonet.Testing.MigrationsOptions.ForTestMigrations<TContext>(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>! builder) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>!
 static pengdows.efcore.adonet.Testing.ProviderConformanceTests<TFixture>.NewBlog(string! name, decimal rating = 1, bool active = true) -> pengdows.efcore.adonet.Testing.Blog!
 virtual pengdows.efcore.adonet.Testing.ProviderFixture.ConnectionStringFor(string! database) -> string!
@@ -420,3 +422,31 @@ override pengdows.efcore.adonet.Testing.AlterCodeMigration.BuildTargetModel(Micr
 override pengdows.efcore.adonet.Testing.ReshapeMigration.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder! modelBuilder) -> void
 pengdows.efcore.adonet.Testing.DatabaseCreatorConformanceTests<TFixture>.Ensure_created_creates_a_table_reached_by_two_cascade_paths_and_deletes_cascade() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.ProviderConformanceTests<TFixture>.Raw_query_arguments_read_back_under_a_comma_decimal_culture() -> System.Threading.Tasks.Task!
+override pengdows.efcore.adonet.Testing.ProcedureMappedContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder! modelBuilder) -> void
+pengdows.efcore.adonet.Testing.ProcedureMappedContext
+pengdows.efcore.adonet.Testing.ProcedureMappedContext.ProcedureMappedContext(Microsoft.EntityFrameworkCore.DbContextOptions<pengdows.efcore.adonet.Testing.ProcedureMappedContext!>! options) -> void
+pengdows.efcore.adonet.Testing.ProcedureMappedContext.Widgets.get -> Microsoft.EntityFrameworkCore.DbSet<pengdows.efcore.adonet.Testing.ProcedureWidget!>!
+pengdows.efcore.adonet.Testing.ProcedureWidget
+pengdows.efcore.adonet.Testing.ProcedureWidget.Id.get -> int
+pengdows.efcore.adonet.Testing.ProcedureWidget.Id.set -> void
+pengdows.efcore.adonet.Testing.ProcedureWidget.Name.get -> string?
+pengdows.efcore.adonet.Testing.ProcedureWidget.Name.set -> void
+pengdows.efcore.adonet.Testing.ProcedureWidget.ProcedureWidget() -> void
+pengdows.efcore.adonet.Testing.ProviderConformanceTests<TFixture>.A_model_mapped_to_stored_procedures_starts_only_where_the_database_has_them() -> void
+override pengdows.efcore.adonet.Testing.OwnedLinesContext.OnModelCreating(Microsoft.EntityFrameworkCore.ModelBuilder! modelBuilder) -> void
+pengdows.efcore.adonet.Testing.LineOwner
+pengdows.efcore.adonet.Testing.LineOwner.Id.get -> int
+pengdows.efcore.adonet.Testing.LineOwner.Id.set -> void
+pengdows.efcore.adonet.Testing.LineOwner.LineOwner() -> void
+pengdows.efcore.adonet.Testing.LineOwner.Lines.get -> System.Collections.Generic.List<pengdows.efcore.adonet.Testing.OwnedLine!>!
+pengdows.efcore.adonet.Testing.LineOwner.Lines.set -> void
+pengdows.efcore.adonet.Testing.OwnedLine
+pengdows.efcore.adonet.Testing.OwnedLine.OwnedLine() -> void
+pengdows.efcore.adonet.Testing.OwnedLine.Text.get -> string?
+pengdows.efcore.adonet.Testing.OwnedLine.Text.set -> void
+pengdows.efcore.adonet.Testing.OwnedLinesContext
+pengdows.efcore.adonet.Testing.OwnedLinesContext.OwnedLinesContext(Microsoft.EntityFrameworkCore.DbContextOptions<pengdows.efcore.adonet.Testing.OwnedLinesContext!>! options) -> void
+pengdows.efcore.adonet.Testing.OwnedLinesContext.Owners.get -> Microsoft.EntityFrameworkCore.DbSet<pengdows.efcore.adonet.Testing.LineOwner!>!
+pengdows.efcore.adonet.Testing.DatabaseCreatorConformanceTests<TFixture>.Owned_collection_lines_are_numbered_only_where_the_database_generates_a_composite_key_column() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.ProviderConformanceTests<TFixture>.A_deleted_rows_generated_key_is_not_reused() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Padding() -> System.Threading.Tasks.Task!

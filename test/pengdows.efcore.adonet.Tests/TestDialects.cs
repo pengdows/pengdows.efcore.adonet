@@ -51,8 +51,12 @@ public sealed class PartsSql(
     string? procedureOutputVariable = null,
     System.Data.IsolationLevel defaultTransactionIsolationLevel = System.Data.IsolationLevel.Unspecified,
     bool keepConnectionOpenAfterSuppressedTransaction = false,
-    bool supportsNullOrderingClauses = false) : AnsiSqlDialect
+    bool supportsNullOrderingClauses = false,
+    bool supportsStoredProcedures = true,
+    bool generatesCompositeKeyValues = true) : AnsiSqlDialect
 {
+    public override bool SupportsStoredProcedures => supportsStoredProcedures;
+    public override bool GeneratesCompositeKeyValues => generatesCompositeKeyValues;
     public override bool SupportsNullOrderingClauses => supportsNullOrderingClauses;
     public override System.Data.IsolationLevel DefaultTransactionIsolationLevel => defaultTransactionIsolationLevel;
     public override bool KeepConnectionOpenAfterSuppressedTransaction => keepConnectionOpenAfterSuppressedTransaction;
@@ -140,6 +144,7 @@ public static class TestDialects
     public static readonly IAdoNetDialect UnaliasedTarget = new PartsDialect("Unaliased", new PartsSql(dml: DmlSyntax.UnaliasedTarget));
     public static readonly IAdoNetDialect TargetAliasFrom = new PartsDialect("Alias FROM", new PartsSql(dml: DmlSyntax.TargetAliasFrom));
     public static readonly IAdoNetDialect MultiTable = new PartsDialect("Multi-table", new PartsSql(dml: DmlSyntax.MultiTable));
+    public static readonly IAdoNetDialect Iso = new PartsDialect("ISO DML", new PartsSql(dml: DmlSyntax.Iso));
     public static readonly IAdoNetDialect Functions = new PartsDialect(
         "Functions",
         new PartsSql(functions: new TestFunctions(), stringLiteral: v => "N'" + v.Replace("'", "''").Replace(@"\", @"\\") + "'"));
@@ -154,6 +159,9 @@ public static class TestDialects
     public static readonly IAdoNetDialect NoRowValues = new PartsDialect("No row values", new PartsSql(rowValues: false));
     public static readonly IAdoNetDialect ApplyJoins = new PartsDialect("APPLY joins", new PartsSql(lateralJoins: LateralJoinSyntax.Apply));
     public static readonly IAdoNetDialect NoLateralJoins = new PartsDialect("No lateral joins", new PartsSql(noLateralJoins: true));
+
+    public static readonly IAdoNetDialect NoStoredProcedures
+        = new PartsDialect("No stored procedures", new PartsSql(supportsStoredProcedures: false));
     public static readonly IAdoNetDialect NoEscape = new PartsDialect("No escape", new PartsSql(functions: new NoEscapeFunctions()));
     public static readonly IAdoNetDialect NoFunctions = new PartsDialect("No functions", new PartsSql(functions: new NoFunctions()));
     public static readonly IAdoNetDialect EmulatedExclusiveOr = new PartsDialect(

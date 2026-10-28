@@ -34,6 +34,7 @@ public sealed class FlatFileDialect : AdoNetDialect
 
 internal sealed class FlatFileSql : AnsiSqlDialect
 {
+    public override bool SupportsStoredProcedures => false;
     public override bool SupportsNullOrderingClauses => true;
 
     // A database is a directory of table files.
@@ -41,7 +42,11 @@ internal sealed class FlatFileSql : AnsiSqlDialect
 
     public override string ParameterMarker => ":";
     public override bool ParameterNameIncludesMarker => false;
-    public override KeyRetrieval Keys { get; } = KeyRetrieval.Sequence();
+    // ISO SQL:2003 data change delta tables (T495): SELECT ... FROM FINAL TABLE (INSERT ...) reads generated values back.
+    public override KeyRetrieval Keys { get; } = KeyRetrieval.DeltaTable;
+
+    // ISO SQL:2003 has no UPDATE ... FROM: an update through a join is written with correlated subqueries.
+    public override DmlSyntax Dml => DmlSyntax.Iso;
 
     public override JsonSyntax? Json { get; } = new JsonSyntax(
         "JSON",

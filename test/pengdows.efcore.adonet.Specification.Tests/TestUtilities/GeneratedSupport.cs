@@ -119,19 +119,34 @@ public static class Sprocs
 {
     public static NorthwindProcedures Of<THost>()
         where THost : IDatabaseHost, new()
-        => new THost().Procedures ?? throw new NotSupportedException($"{typeof(THost).Name} has no Northwind stored procedures.");
+        => new THost().Procedures ?? throw CapabilitySkips.NoProcedures<THost>("Northwind stored procedures");
 }
 
-/// <summary>NetTopologySuite's types, on every database whose dialect has spatial columns.</summary>
-public static class SpatialTypes
+/// <summary>
+///     What the suite adds to every context the provider makes: NetTopologySuite's types, on every database whose dialect has
+///     spatial columns, and the capability skips, on every database (<see cref="CapabilitySkips" />).
+/// </summary>
+public static class TestServices
 {
     public static AdoNetDbContextOptionsBuilder Use(IDatabaseHost host, AdoNetDbContextOptionsBuilder options)
-        => host.Dialect.Sql.Spatial == null ? options : pengdows.efcore.adonet.NetTopologySuite.AdoNetNetTopologySuiteExtensions.UseNetTopologySuite(options);
+    {
+        var builder = ((IRelationalDbContextOptionsBuilderInfrastructure)options).OptionsBuilder;
+        ((IDbContextOptionsBuilderInfrastructure)builder).AddOrUpdateExtension(
+            builder.Options.FindExtension<CapabilitySkips>() ?? new CapabilitySkips());
+
+        return host.Dialect.Sql.Spatial == null
+            ? options
+            : pengdows.efcore.adonet.NetTopologySuite.AdoNetNetTopologySuiteExtensions.UseNetTopologySuite(options);
+    }
 
     public static IServiceCollection Add(IDatabaseHost host, IServiceCollection services)
-        => host.Dialect.Sql.Spatial == null
+    {
+        CapabilitySkips.Add(services);
+
+        return host.Dialect.Sql.Spatial == null
             ? services
             : pengdows.efcore.adonet.NetTopologySuite.AdoNetNetTopologySuiteExtensions.AddEntityFrameworkAdoNetNetTopologySuite(services);
+    }
 }
 
 /// <summary>The host's procedures for EF's stored-procedure update suite.</summary>
@@ -149,5 +164,5 @@ public static class UpdateProcedureSql
 
     private static UpdateProcedures Procedures<THost>()
         where THost : IDatabaseHost, new()
-        => new THost().UpdateProcedures ?? throw new NotSupportedException($"{typeof(THost).Name} has no stored procedures.");
+        => new THost().UpdateProcedures ?? throw CapabilitySkips.NoProcedures<THost>("stored procedures");
 }

@@ -181,6 +181,27 @@ public class FunctionSyntax
     /// <summary><c>{0}</c> with the single character <c>{1}</c> removed from its end.</summary>
     public virtual string? TrimEndCharacter => "TRIM(TRAILING {1} FROM {0})";
 
+    /// <summary>
+    ///     <c>{0}</c> padded on the left to <c>{1}</c> characters with the one-character string <c>{2}</c>, and kept whole when
+    ///     already as long (<c>String.PadLeft</c>; SQL's LPAD would cut it); null where the database has no padding (ISO).
+    /// </summary>
+    public virtual string? PadLeft => null;
+
+    /// <summary><c>{0}</c> padded on the right to <c>{1}</c> characters with <c>{2}</c>, kept whole when already as long.</summary>
+    public virtual string? PadRight => null;
+
+    /// <summary>
+    ///     <c>{0}</c> with every character in the string <c>{1}</c> removed from both ends, in any order
+    ///     (<c>String.Trim(char[])</c>); null where the database's trim takes one character, as ISO's does.
+    /// </summary>
+    public virtual string? TrimCharacters => null;
+
+    /// <summary><c>{0}</c> with every character in the string <c>{1}</c> removed from its start; null where there is none.</summary>
+    public virtual string? TrimStartCharacters => null;
+
+    /// <summary><c>{0}</c> with every character in the string <c>{1}</c> removed from its end; null where there is none.</summary>
+    public virtual string? TrimEndCharacters => null;
+
     /// <summary>Whether <c>{0}</c> matches the regular expression <c>{1}</c>, case-sensitively as .NET's.</summary>
     public virtual string? RegexIsMatch => null;
 
@@ -211,8 +232,11 @@ public class FunctionSyntax
     /// <summary>The current local date and time.</summary>
     public virtual string? Now => null;
 
-    /// <summary>The current date and time in UTC.</summary>
-    public virtual string? UtcNow => null;
+    /// <summary>
+    ///     The current date and time in UTC. ISO's CURRENT_TIMESTAMP is the session's time zone; its time zone clause gives the
+    ///     same instant at a displacement of zero (9075-2 6.35).
+    /// </summary>
+    public virtual string? UtcNow => "CAST(CURRENT_TIMESTAMP AT TIME ZONE INTERVAL '00:00' HOUR TO MINUTE AS TIMESTAMP)";
 
     /// <summary>The current local date.</summary>
     public virtual string? Today => null;
@@ -346,6 +370,8 @@ public class FunctionSyntax
             (nameof(Least), Least, 2), (nameof(LeftShift), LeftShift, 2), (nameof(RightShift), RightShift, 2),
             (nameof(PositionFrom), PositionFrom, 3), (nameof(TrimCharacter), TrimCharacter, 2),
             (nameof(TrimStartCharacter), TrimStartCharacter, 2), (nameof(TrimEndCharacter), TrimEndCharacter, 2),
+            (nameof(TrimCharacters), TrimCharacters, 2), (nameof(TrimStartCharacters), TrimStartCharacters, 2),
+            (nameof(TrimEndCharacters), TrimEndCharacters, 2), (nameof(PadLeft), PadLeft, 3), (nameof(PadRight), PadRight, 3),
             (nameof(RegexIsMatch), RegexIsMatch, 2), (nameof(NewGuid), NewGuid, 0), (nameof(DayOfYear), DayOfYear, 1),
             (nameof(DayOfWeek), DayOfWeek, 1), (nameof(Millisecond), Millisecond, 1), (nameof(Microsecond), Microsecond, 1),
             (nameof(Nanosecond), Nanosecond, 1), (nameof(DateOf), DateOf, 1), (nameof(TimeOfDay), TimeOfDay, 1),

@@ -85,12 +85,33 @@ internal class AdoNetStringMethodTranslator(
             return String(template, instance, sqlExpressionFactory.Constant(character.ToString(), mapping));
         }
 
+        // Trim, TrimStart and TrimEnd of several characters: the database's trim of a set, given the set as one string.
+        if ((method.Name is nameof(string.Trim) or nameof(string.TrimStart) or nameof(string.TrimEnd))
+            && (arguments is [SqlConstantExpression { Value: char[] { Length: > 1 } characters }]))
+        {
+            var template = method.Name switch
+            {
+                nameof(string.Trim) => functions.TrimCharacters,
+                nameof(string.TrimStart) => functions.TrimStartCharacters,
+                _ => functions.TrimEndCharacters
+            };
+            return String(template, instance, sqlExpressionFactory.Constant(new string(characters), mapping));
+        }
+
         return (method.Name, parameters.Length, stringArguments) switch
         {
             (nameof(string.IndexOf), 2, false) when parameters[1] == typeof(int) && (parameters[0] == typeof(string) || parameters[0] == typeof(char))
                 => Int(functions.PositionFrom, args[0], instance, OneBased(args[1])) is { } from
                     ? sqlExpressionFactory.Subtract(from, sqlExpressionFactory.Constant(1))
                     : null,
+            (nameof(string.PadLeft), 1, false) when parameters[0] == typeof(int)
+                => String(functions.PadLeft, instance, args[0], sqlExpressionFactory.Constant(" ", mapping)),
+            (nameof(string.PadLeft), 2, false) when (parameters[0] == typeof(int)) && (parameters[1] == typeof(char))
+                => String(functions.PadLeft, instance, args[0], args[1]),
+            (nameof(string.PadRight), 1, false) when parameters[0] == typeof(int)
+                => String(functions.PadRight, instance, args[0], sqlExpressionFactory.Constant(" ", mapping)),
+            (nameof(string.PadRight), 2, false) when (parameters[0] == typeof(int)) && (parameters[1] == typeof(char))
+                => String(functions.PadRight, instance, args[0], args[1]),
             (nameof(string.ToUpper), 0, _) => String(functions.Upper, instance),
             (nameof(string.ToLower), 0, _) => String(functions.Lower, instance),
             (nameof(string.Trim), 0, _) => String(functions.Trim, instance),

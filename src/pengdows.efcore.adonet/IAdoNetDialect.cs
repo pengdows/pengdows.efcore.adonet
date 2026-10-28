@@ -70,6 +70,20 @@ public interface ISqlDialect
     /// <summary>When false, schema names in the model are ignored when generating SQL.</summary>
     bool SupportsSchemas { get; }
 
+    /// <summary>
+    ///     Whether the database has stored procedures. Where it hasn't, a model mapping an entity type's inserts, updates or
+    ///     deletes to them is refused when the context starts.
+    /// </summary>
+    bool SupportsStoredProcedures { get; }
+
+    /// <summary>
+    ///     Whether the database generates a value for a column of a primary key of several columns (an owned collection's
+    ///     own key). Where it can't (a database that generates only a key of one integer column, its row identifier), the
+    ///     database refuses a row that leaves such a column to it, as with the database's own EF Core provider: the model gives
+    ///     the entity type a key of its own (efcore#26708).
+    /// </summary>
+    bool GeneratesCompositeKeyValues { get; }
+
     /// <summary>The marker that precedes a named parameter in SQL text (<c>@</c>, <c>:</c>, <c>$</c>).</summary>
     string ParameterMarker { get; }
 
@@ -183,6 +197,13 @@ public interface ITypeMappingDialect
     ///     <paramref name="storeTypeBase" /> has no facets: <c>varchar</c>, not <c>varchar(30)</c>.
     /// </summary>
     IReadOnlyList<Type> GetClrTypes(string storeTypeBase);
+
+    /// <summary>
+    ///     The store type of a row version of <paramref name="clrType" /> (<c>[Timestamp]</c>, <c>IsRowVersion</c>): a column
+    ///     the database sets on every insert and update. Null where it has none for that type.
+    /// </summary>
+    string? RowVersionStoreType(Type clrType)
+        => null;
 
     /// <summary>
     ///     The size given to a string parameter for an unbounded column when its value fits, so queries don't vary with the

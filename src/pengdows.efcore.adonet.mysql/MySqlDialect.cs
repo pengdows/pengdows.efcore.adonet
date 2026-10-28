@@ -52,7 +52,8 @@ public sealed class MySqlDialect : AdoNetDialect
     public override void ConfigureServices(IServiceCollection services)
         => new EntityFrameworkRelationalServicesBuilder(services)
             .TryAdd<IMigrationsSqlGenerator, MySqlMigrationsSqlGenerator>()
-            .TryAdd<IHistoryRepository, MySqlHistoryRepository>();
+            .TryAdd<IHistoryRepository, MySqlHistoryRepository>()
+            .TryAdd<Microsoft.EntityFrameworkCore.Diagnostics.IInterceptor, MySqlDataValueReaderInterceptor>();
 }
 
 internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = true) : AnsiSqlDialect
@@ -177,6 +178,9 @@ internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = t
 /// </summary>
 internal sealed class MySqlFunctions : FunctionSyntax
 {
+    public override string? PadLeft => "CASE WHEN CHAR_LENGTH({0}) >= {1} THEN {0} ELSE LPAD({0}, {1}, {2}) END";
+    public override string? PadRight => "CASE WHEN CHAR_LENGTH({0}) >= {1} THEN {0} ELSE RPAD({0}, {1}, {2}) END";
+
     // Bitwise operators return a 64-bit unsigned integer (~12 is 18446744073709551603), so each result is read back as signed.
     // Behaviour reference (not copied):
     // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Query/ExpressionVisitors/Internal/BitwiseOperationReturnTypeCorrectingExpressionVisitor.cs
@@ -392,6 +396,10 @@ internal sealed class MySqlTypeMappings : AnsiTypeMappings
     // other side's collation wins, as it would for x itself. A sized CHAR(n) keeps CAST, which truncates to n.
     public override string Cast(string storeType)
         => CastTarget(storeType) == "CHAR" ? "CONCAT({0})" : base.Cast(storeType);
+
+    // A DateTime row version is a TIMESTAMP(6), which the migrations give DEFAULT and ON UPDATE CURRENT_TIMESTAMP(6).
+    public override string? RowVersionStoreType(Type clrType)
+        => clrType == typeof(DateTime) ? "timestamp(6)" : null;
 
     public override string? GetStoreType(Type clrType)
         => StoreTypes.GetValueOrDefault(clrType) ?? base.GetStoreType(clrType);

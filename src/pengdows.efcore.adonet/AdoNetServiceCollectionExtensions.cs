@@ -58,6 +58,7 @@ public static class AdoNetServiceCollectionExtensions
             .TryAdd<IRelationalParameterBasedSqlProcessorFactory, AdoNetParameterBasedSqlProcessorFactory>()
             .TryAdd<IValueGeneratorSelector, AdoNetValueGeneratorSelector>()
             .TryAdd<IInterceptor, BinaryAsStreamReaderInterceptor>()
+            .TryAdd<IModelValidator, AdoNetModelValidator>()
             .TryAdd<IExceptionDetector, AdoNetExceptionDetector>()
             .TryAdd<ISingletonOptions, IAdoNetSingletonOptions>(p => p.GetRequiredService<IAdoNetSingletonOptions>())
             .TryAddProviderSpecificServices(b => b

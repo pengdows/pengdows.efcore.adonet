@@ -54,6 +54,8 @@ public class AnsiSqlDialect : ISqlDialect
     public virtual bool RequiresQuoting(string identifier)
         => true;
     public virtual bool SupportsSchemas => true;
+    public virtual bool SupportsStoredProcedures => true;
+    public virtual bool GeneratesCompositeKeyValues => true;
     public virtual string ParameterMarker => "@";
     public virtual bool ParameterNameIncludesMarker => true;
     public virtual string StringLiteral(string value)
@@ -194,6 +196,9 @@ public class AnsiTypeMappings : ITypeMappingDialect
 
     public virtual string Cast(string storeType)
         => "CAST({0} AS " + CastTarget(storeType) + ")";
+
+    public virtual string? RowVersionStoreType(Type clrType)
+        => null;
 
     public virtual IReadOnlyList<Type> GetClrTypes(string storeTypeBase)
         => ClrTypes.TryGetValue(storeTypeBase, out var types) ? types : [];

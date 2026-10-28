@@ -17,7 +17,7 @@ internal sealed class AdoNetQueryTranslationPostprocessor(
         var processed = base.Process(query);
         if ((dialect.Sql.LateralJoins == null) && LateralJoinFinder.Finds(processed))
         {
-            throw new InvalidOperationException(
+            throw new LateralJoinNotSupportedException(
                 $"This query joins a subquery correlated with the rows before it (a lateral join, EF's APPLY), which {dialect.Name} doesn't have.");
         }
 
@@ -164,6 +164,9 @@ internal sealed class LateralJoinFinder : ExpressionVisitor
         return base.Visit(node);
     }
 }
+
+/// <summary>A query that needs a lateral join, on a database that has none: the dialect's capability, not a translation bug.</summary>
+internal sealed class LateralJoinNotSupportedException(string message) : InvalidOperationException(message);
 
 internal sealed class AdoNetQueryTranslationPostprocessorFactory(
     QueryTranslationPostprocessorDependencies dependencies,

@@ -257,6 +257,8 @@ pengdows.efcore.adonet.ISqlDialect.RowValues.get -> bool
 pengdows.efcore.adonet.ISqlDialect.Savepoints.get -> pengdows.efcore.adonet.SavepointSyntax?
 pengdows.efcore.adonet.ISqlDialect.StringLiteral(string! value) -> string!
 pengdows.efcore.adonet.ISqlDialect.SupportsSchemas.get -> bool
+pengdows.efcore.adonet.ISqlDialect.SupportsStoredProcedures.get -> bool
+pengdows.efcore.adonet.ISqlDialect.GeneratesCompositeKeyValues.get -> bool
 pengdows.efcore.adonet.ISqlDialect.TrueLiteral.get -> string!
 pengdows.efcore.adonet.ITypeMappingDialect
 pengdows.efcore.adonet.ITypeMappingDialect.CastTarget(string! storeType) -> string!
@@ -360,6 +362,7 @@ static pengdows.efcore.adonet.DmlSyntax.AppendTables(pengdows.efcore.adonet.IQue
 static pengdows.efcore.adonet.DmlSyntax.AppendWhere(pengdows.efcore.adonet.IQuerySqlWriter! sql, Microsoft.EntityFrameworkCore.Query.SqlExpressions.SelectExpression! select) -> void
 static pengdows.efcore.adonet.DmlSyntax.IsJoinsAndPredicateOnly(Microsoft.EntityFrameworkCore.Query.SqlExpressions.SelectExpression! select) -> bool
 static pengdows.efcore.adonet.DmlSyntax.MultiTable.get -> pengdows.efcore.adonet.DmlSyntax!
+static pengdows.efcore.adonet.DmlSyntax.Iso.get -> pengdows.efcore.adonet.DmlSyntax!
 static pengdows.efcore.adonet.DmlSyntax.Standard.get -> pengdows.efcore.adonet.DmlSyntax!
 static pengdows.efcore.adonet.DmlSyntax.TargetAliasFrom.get -> pengdows.efcore.adonet.DmlSyntax!
 static pengdows.efcore.adonet.DmlSyntax.UnaliasedTarget.get -> pengdows.efcore.adonet.DmlSyntax!
@@ -413,6 +416,8 @@ virtual pengdows.efcore.adonet.AnsiSqlDialect.RowValues.get -> bool
 virtual pengdows.efcore.adonet.AnsiSqlDialect.Savepoints.get -> pengdows.efcore.adonet.SavepointSyntax?
 virtual pengdows.efcore.adonet.AnsiSqlDialect.StringLiteral(string! value) -> string!
 virtual pengdows.efcore.adonet.AnsiSqlDialect.SupportsSchemas.get -> bool
+virtual pengdows.efcore.adonet.AnsiSqlDialect.SupportsStoredProcedures.get -> bool
+virtual pengdows.efcore.adonet.AnsiSqlDialect.GeneratesCompositeKeyValues.get -> bool
 virtual pengdows.efcore.adonet.AnsiSqlDialect.TrueLiteral.get -> string!
 virtual pengdows.efcore.adonet.AnsiTypeMappings.CastTarget(string! storeType) -> string!
 virtual pengdows.efcore.adonet.AnsiTypeMappings.DateTimeDbType.get -> System.Data.DbType
@@ -546,6 +551,11 @@ virtual pengdows.efcore.adonet.FunctionSyntax.TimeSpanSeconds.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.Today.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.TrimCharacter.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.TrimEndCharacter.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.TrimCharacters.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.PadLeft.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.PadRight.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.TrimStartCharacters.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.TrimEndCharacters.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.TrimStartCharacter.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.Truncate.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.UtcNow.get -> string?
@@ -664,4 +674,5 @@ virtual pengdows.efcore.adonet.DatabaseCapabilities.ReadsBinaryAsStream.get -> b
 virtual pengdows.efcore.adonet.DatabaseCapabilities.ReadsBinaryAsStream.init -> void
 pengdows.efcore.adonet.ITypeMappingDialect.ParameterDbType(System.Type! clrType, System.Data.DbType standard) -> System.Data.DbType
 virtual pengdows.efcore.adonet.AnsiTypeMappings.ParameterDbType(System.Type! clrType, System.Data.DbType standard) -> System.Data.DbType
-pengdows.efcore.adonet.Storage.AdoNetTimeSpanTypeMapping.TypeMappings.get -> pengdows.efcore.adonet.ITypeMappingDialect!
+pengdows.efcore.adonet.ITypeMappingDialect.RowVersionStoreType(System.Type! clrType) -> string?
+virtual pengdows.efcore.adonet.AnsiTypeMappings.RowVersionStoreType(System.Type! clrType) -> string?

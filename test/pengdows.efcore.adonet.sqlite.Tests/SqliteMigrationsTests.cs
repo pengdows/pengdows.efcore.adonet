@@ -32,6 +32,34 @@ public class SqliteMigrationsTests
         return string.Join("", generator.Generate(operations, withModel ? model : null).Select(c => c.CommandText)).ReplaceLineEndings("\n");
     }
 
+    // A generated key of one column is written inline as PRIMARY KEY AUTOINCREMENT, which SQLite allows only there: without it
+    // the key is a plain rowid, and the next insert reuses the highest key after a delete (EF Core's fix-up then gives the
+    // new row the deleted one's navigations).
+    [Fact]
+    public void A_generated_single_column_key_is_an_autoincrement_primary_key()
+    {
+        var sql = Sql(
+        [
+            new CreateTableOperation
+            {
+                Name = "Counters",
+                Columns =
+                {
+                    new AddColumnOperation
+                    {
+                        Name = "Id", Table = "Counters", ClrType = typeof(int), ColumnType = "INTEGER",
+                        [AdoNetAnnotationNames.Identity] = true
+                    },
+                    new AddColumnOperation { Name = "Label", Table = "Counters", ClrType = typeof(string), IsNullable = true }
+                },
+                PrimaryKey = new AddPrimaryKeyOperation { Name = "PK_Counters", Table = "Counters", Columns = ["Id"] }
+            }
+        ], withModel: false);
+
+        Assert.Contains("\"Id\" INTEGER CONSTRAINT \"PK_Counters\" PRIMARY KEY AUTOINCREMENT NOT NULL", sql);
+        Assert.Equal(1, sql.Split("PRIMARY KEY").Length - 1);
+    }
+
     [Fact]
     public void A_foreign_key_closing_a_cycle_goes_into_the_create_table_of_the_same_migration()
     {

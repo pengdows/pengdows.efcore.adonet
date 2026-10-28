@@ -142,7 +142,7 @@ public abstract partial class BadDataJsonDeserializationAdoNetTest<THost>() : gl
     where THost : IDatabaseHost, new()
 {
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => base.OnConfiguring(new THost().UseProvider(optionsBuilder, new THost().ConnectionStringFor("ef_bad_json"), o => SpatialTypes.Use(new THost(), o)));
+        => base.OnConfiguring(new THost().UseProvider(optionsBuilder, new THost().ConnectionStringFor("ef_bad_json"), o => TestServices.Use(new THost(), o)));
 }
 
 /// <summary>EF's BitwiseOperatorTranslationsTestBase.</summary>

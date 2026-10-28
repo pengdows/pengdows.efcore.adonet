@@ -34,7 +34,7 @@ public class SqliteFixture : ProviderFixture
     [
         """
         CREATE TABLE "Blogs" (
-            "Id" INTEGER PRIMARY KEY,
+            "Id" INTEGER PRIMARY KEY AUTOINCREMENT,
             "Name" TEXT NOT NULL,
             "IsActive" BOOLEAN NOT NULL,
             "Rating" DECIMAL(18,2) NOT NULL,
@@ -43,11 +43,11 @@ public class SqliteFixture : ProviderFixture
         """,
         """
         CREATE TABLE "Posts" (
-            "Id" INTEGER PRIMARY KEY,
+            "Id" INTEGER PRIMARY KEY AUTOINCREMENT,
             "BlogId" INTEGER NOT NULL,
             "Title" TEXT NOT NULL)
         """,
-        "CREATE TABLE \"Tallies\" (\"Id\" INTEGER PRIMARY KEY)"
+        "CREATE TABLE \"Tallies\" (\"Id\" INTEGER PRIMARY KEY AUTOINCREMENT)"
     ];
 
     public override async ValueTask DisposeAsync()

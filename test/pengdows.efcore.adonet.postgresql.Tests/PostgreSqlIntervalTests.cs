@@ -14,13 +14,16 @@ public class PostgreSqlIntervalTests(PostgreSqlFixture fixture) : IClassFixture<
         => TestContext.Current.CancellationToken;
 
     // A retrying strategy buffers each result before it's read, through another of EF's reader paths.
-    private async Task<TimeSpan> ReadAsync(string interval, bool buffered = false)
+    private Task<TimeSpan> ReadAsync(string interval, bool buffered = false)
+        => ReadSqlAsync("INTERVAL '" + interval + "'", buffered);
+
+    // The SQL is a constant of the test, not input.
+    private async Task<TimeSpan> ReadSqlAsync(string value, bool buffered)
     {
         await using var context = buffered
             ? fixture.CreateContext<BlogContext>(o => new BlogContext(o), o => o.EnableRetryOnFailure())
             : fixture.CreateContext();
-        // The interval is a constant of the test, not input.
-        var sql = "SELECT INTERVAL '" + interval + "' AS " + fixture.Quote("Value");
+        var sql = "SELECT " + value + " AS " + fixture.Quote("Value");
         return await context.Database.SqlQueryRaw<TimeSpan>(sql).SingleAsync(Ct);
     }
 
@@ -38,4 +41,12 @@ public class PostgreSqlIntervalTests(PostgreSqlFixture fixture) : IClassFixture<
     [InlineData("-3 days -04:05:06.789", "-3.04:05:06.789", true)]
     public async Task An_interval_of_days_and_time_reads_as_its_span(string interval, string expected, bool buffered)
         => Assert.Equal(TimeSpan.Parse(expected, System.Globalization.CultureInfo.InvariantCulture), await ReadAsync(interval, buffered));
+
+    // A TimeSpan is also a time of day, as DateTime.TimeOfDay translates (CAST(... AS time)): read as its span, not refused as
+    // an interval.
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task A_time_of_day_reads_as_its_span(bool buffered)
+        => Assert.Equal(new TimeSpan(0, 13, 14, 15, 123), await ReadSqlAsync("CAST(TIME '13:14:15.123' AS time)", buffered));
 }

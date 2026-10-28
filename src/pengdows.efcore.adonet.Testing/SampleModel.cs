@@ -115,3 +115,39 @@ public class LedgerContext(DbContextOptions<LedgerContext> options) : DbContext(
     protected override void OnModelCreating(ModelBuilder modelBuilder)
         => modelBuilder.Entity<LedgerEntry>().Property(e => e.Big).HasPrecision(38, 0);
 }
+
+/// <summary>An entity whose inserts go through a stored procedure, for the stored-procedure capability.</summary>
+public class ProcedureWidget
+{
+    public int Id { get; set; }
+    public string? Name { get; set; }
+}
+
+public class ProcedureMappedContext(DbContextOptions<ProcedureMappedContext> options) : DbContext(options)
+{
+    public DbSet<ProcedureWidget> Widgets => Set<ProcedureWidget>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+        => modelBuilder.Entity<ProcedureWidget>().InsertUsingStoredProcedure(
+            "ProcedureWidget_Insert", p => p.HasParameter(w => w.Name).HasResultColumn(w => w.Id));
+}
+
+/// <summary>An owner of a collection of owned lines, whose key is (owner, generated Id).</summary>
+public class LineOwner
+{
+    public int Id { get; set; }
+    public List<OwnedLine> Lines { get; set; } = [];
+}
+
+public class OwnedLine
+{
+    public string? Text { get; set; }
+}
+
+public class OwnedLinesContext(DbContextOptions<OwnedLinesContext> options) : DbContext(options)
+{
+    public DbSet<LineOwner> Owners => Set<LineOwner>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+        => modelBuilder.Entity<LineOwner>().OwnsMany(o => o.Lines);
+}

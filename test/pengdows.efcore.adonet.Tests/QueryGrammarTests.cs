@@ -60,7 +60,9 @@ public class QueryGrammarTests
     [Fact]
     public void Correlated_joins_fail_to_translate_without_lateral_joins()
     {
-        var error = Assert.Throws<InvalidOperationException>(() => Sql(TestDialects.NoLateralJoins, FirstPartPerItem));
+        // Its own type, so a caller (the specification suite's capability skip) can tell the refusal from a translation bug.
+        var error = Assert.Throws<pengdows.efcore.adonet.Query.LateralJoinNotSupportedException>(
+            () => Sql(TestDialects.NoLateralJoins, FirstPartPerItem));
 
         Assert.Contains("lateral join", error.Message);
         Assert.Contains("No lateral joins", error.Message);

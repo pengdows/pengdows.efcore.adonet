@@ -33,6 +33,7 @@ public sealed class DuckDbDialect : AdoNetDialect
 
 internal sealed class DuckDbSql : AnsiSqlDialect
 {
+    public override bool SupportsStoredProcedures => false;
     public override bool SupportsNullOrderingClauses => true;
 
     // A file with its .wal; :memory: (or no path) exists while open.
@@ -58,6 +59,16 @@ internal sealed class DuckDbSql : AnsiSqlDialect
 /// </summary>
 internal sealed class DuckDbFunctions : FunctionSyntax
 {
+    // CURRENT_TIMESTAMP is an instant shown in the session's time zone; AT TIME ZONE 'UTC' gives its UTC timestamp.
+    public override string? UtcNow => "(CURRENT_TIMESTAMP AT TIME ZONE 'UTC')";
+
+    // trim/ltrim/rtrim(string, characters) remove any of the characters.
+    public override string? TrimCharacters => "TRIM({0}, {1})";
+    public override string? PadLeft => "CASE WHEN LENGTH({0}) >= {1} THEN {0} ELSE LPAD({0}, {1}, {2}) END";
+    public override string? PadRight => "CASE WHEN LENGTH({0}) >= {1} THEN {0} ELSE RPAD({0}, {1}, {2}) END";
+    public override string? TrimStartCharacters => "LTRIM({0}, {1})";
+    public override string? TrimEndCharacters => "RTRIM({0}, {1})";
+
     // ^ is exponentiation in DuckDB; xor() is exclusive or. Behaviour reference (not copied):
     // https://github.com/skuirrels/DuckDB.EFCoreProvider/blob/f49a8c3e25f28055ad139383d25e09cede39c6f8/src/DuckDB.EFCoreProvider/Query/Internal/DuckDBSqlTranslatingExpressionVisitor.cs
     public override string? BitwiseAnd => "{0} & {1}";

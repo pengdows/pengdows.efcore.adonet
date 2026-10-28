@@ -85,6 +85,59 @@ public abstract class TranslationConformanceTests<TFixture>(TFixture fixture) : 
         await Server(b => b.Name.Trim());
         await Server(b => b.Name.TrimStart());
         await Server(b => b.Name.TrimEnd());
+        await Server(b => b.Name.Trim(' '));
+        await Server(b => b.Name.TrimStart(' '));
+        await Server(b => b.Name.TrimEnd(' '));
+    }
+
+    // String.Trim(char[]) removes any of the characters, in any order: the database's trim of a set of characters, where
+    // it has one (ISO's TRIM takes a single character).
+    [Fact]
+    public async Task Trimming_a_set_of_characters()
+    {
+        if (Fixture.ExpectedDialect.Sql.Functions.TrimCharacters == null)
+        {
+            Fixture.SkipFor("no trim of a set of characters (ISO's TRIM takes one)");
+        }
+
+        await Server(b => b.Name.Trim(' ', 'A', 'b', ']'));
+        await Server(b => b.Name.TrimStart(' ', 'b', 'A'));
+        await Server(b => b.Name.TrimEnd(']', ' ', 'x'));
+        await Server(b => b.Name.Trim(' ', '%'));
+    }
+
+    // DateTime.UtcNow is the server's clock in UTC, read by the database (a predicate isn't evaluated on the client):
+    // within a couple of minutes of this machine's, which the databases under test share.
+    [Fact]
+    public async Task Current_time_in_utc_is_the_servers()
+    {
+        if (Fixture.ExpectedDialect.Sql.Functions.UtcNow == null)
+        {
+            Fixture.SkipFor("no current time in UTC");
+        }
+
+        await using var context = Fixture.CreateContext();
+        var now = await context.Blogs.Where(b => DateTime.UtcNow > b.CreatedAt).Select(b => DateTime.UtcNow).FirstAsync(Ct);
+
+        Assert.InRange(now, DateTime.UtcNow.AddMinutes(-2), DateTime.UtcNow.AddMinutes(2));
+    }
+
+    // String.PadLeft/PadRight: padded to the width with a space or the given character, and a string already as long kept
+    // whole (SQL's LPAD/RPAD would cut it), where the database pads at all (ISO SQL has no padding function).
+    [Fact]
+    public async Task Padding()
+    {
+        if (Fixture.ExpectedDialect.Sql.Functions.PadLeft == null)
+        {
+            Fixture.SkipFor("no padding function (ISO SQL has none)");
+        }
+
+        await Server(b => b.Name.PadLeft(20));
+        await Server(b => b.Name.PadRight(20));
+        await Server(b => b.Name.PadLeft(20, '*'));
+        await Server(b => b.Name.PadRight(17, '-'));
+        await Server(b => b.Name.PadLeft(3));
+        await Server(b => b.Name.PadRight(3, '-'));
     }
 
     [Fact]

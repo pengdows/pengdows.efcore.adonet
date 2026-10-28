@@ -35,7 +35,8 @@ public abstract class ServerHost : IDatabaseHost
     public virtual UpdateProcedures? UpdateProcedures => null;
 
     protected abstract string AdminConnectionString { get; }
-    protected abstract IEnumerable<string> RecreateSql(string database);
+    protected abstract IEnumerable<string> DropSql(string database);
+    protected abstract IEnumerable<string> CreateSql(string database);
     public abstract string ConnectionStringFor(string database);
     public abstract DbConnection CreateConnection(string connectionString);
     public abstract DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, string connectionString, Action<AdoNetDbContextOptionsBuilder> configure);
@@ -49,10 +50,16 @@ public abstract class ServerHost : IDatabaseHost
         return connection;
     }
 
-    public async Task CreateEmptyDatabaseAsync(string database)
+    public Task CreateEmptyDatabaseAsync(string database)
+        => ExecuteAdminAsync([.. DropSql(database), .. CreateSql(database)]);
+
+    public Task DropDatabaseAsync(string database)
+        => ExecuteAdminAsync(DropSql(database));
+
+    private async Task ExecuteAdminAsync(IEnumerable<string> statements)
     {
         await using var connection = await OpenAdminAsync();
-        foreach (var sql in RecreateSql(database))
+        foreach (var sql in statements)
         {
             await using var command = connection.CreateCommand();
             command.CommandText = sql;
@@ -68,8 +75,11 @@ public sealed class SqlServerHost : ServerHost
     protected override string AdminConnectionString => Container.ConnectionString;
     public override IAdoNetDialect Dialect => SqlServerDialect.Instance;
 
-    protected override IEnumerable<string> RecreateSql(string database)
-        => [$"IF DB_ID(N'{database}') IS NOT NULL BEGIN ALTER DATABASE [{database}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [{database}]; END", $"CREATE DATABASE [{database}]"];
+    protected override IEnumerable<string> DropSql(string database)
+        => [$"IF DB_ID(N'{database}') IS NOT NULL BEGIN ALTER DATABASE [{database}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [{database}]; END"];
+
+    protected override IEnumerable<string> CreateSql(string database)
+        => [$"CREATE DATABASE [{database}]"];
 
     // With MultipleActiveResultSets, as Microsoft's SQL Server test store connects: EF's suites lazy-load while a query is
     // still being read. Behaviour reference (not copied):
@@ -120,8 +130,11 @@ public sealed class PostgreSqlHost : ServerHost
     protected override async Task<DbConnection> OpenAdminAsync() => await Gate.Value.OpenAsync();
     public override IAdoNetDialect Dialect => PostgreSqlDialect.Instance;
 
-    protected override IEnumerable<string> RecreateSql(string database)
-        => [$"DROP DATABASE IF EXISTS \"{database}\" WITH (FORCE)", $"CREATE DATABASE \"{database}\""];
+    protected override IEnumerable<string> DropSql(string database)
+        => [$"DROP DATABASE IF EXISTS \"{database}\" WITH (FORCE)"];
+
+    protected override IEnumerable<string> CreateSql(string database)
+        => [$"CREATE DATABASE \"{database}\""];
 
     public override string ConnectionStringFor(string database)
         => new Npgsql.NpgsqlConnectionStringBuilder(Container.ConnectionString) { Database = database, Pooling = false }.ConnectionString;
@@ -194,8 +207,11 @@ public class MySqlHost : ServerHost
     // Keep MySQL's default utf8mb4_0900_ai_ci collation. The shared tests request utf8mb4_bin explicitly when they need
     // ordinal comparison; this is also how Pomelo's Northwind database is configured. Behaviour reference (not copied):
     // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/test/EFCore.MySql.FunctionalTests/TestUtilities/MySqlTestStore.cs
-    protected override IEnumerable<string> RecreateSql(string database)
-        => [$"DROP DATABASE IF EXISTS `{database}`", $"CREATE DATABASE `{database}` CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci"];
+    protected override IEnumerable<string> DropSql(string database)
+        => [$"DROP DATABASE IF EXISTS `{database}`"];
+
+    protected override IEnumerable<string> CreateSql(string database)
+        => [$"CREATE DATABASE `{database}` CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci"];
 
     // With the user variables the dialect reads procedure outputs through, which a connection opened before the provider
     // sees it must already allow.

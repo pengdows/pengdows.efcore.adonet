@@ -8,6 +8,24 @@ public abstract partial class MappingQueryAdoNetTest<THost>
 {
     public partial class AdoNetFixture
     {
+        // The fixture reads the shared Northwind store through a model of only some of its tables and columns, so it must not
+        // be the one to create it: EF's providers read a Northwind database that already exists. The Northwind fixture makes
+        // the store first; EF initializes a shared store once per name, so this fixture's own initialization then finds it.
+        public override async Task InitializeAsync()
+        {
+            var northwind = new NorthwindQueryAdoNetFixture<THost>();
+            try
+            {
+                await northwind.InitializeAsync();
+            }
+            finally
+            {
+                await northwind.DisposeAsync();
+            }
+
+            await base.InitializeAsync();
+        }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder, DbContext context)
         {
             base.OnModelCreating(modelBuilder, context);

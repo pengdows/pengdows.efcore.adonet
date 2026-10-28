@@ -294,10 +294,6 @@ public class AdoNetTimeSpanTypeMapping : TimeSpanTypeMapping
         : base(parameters)
         => _dialect = dialect;
 
-    /// <summary>The dialect's store type names and literals, for a subclass's <see cref="Clone" />.</summary>
-    protected ITypeMappingDialect TypeMappings
-        => _dialect;
-
     protected override RelationalTypeMapping Clone(RelationalTypeMappingParameters parameters)
         => new AdoNetTimeSpanTypeMapping(parameters, _dialect);
 

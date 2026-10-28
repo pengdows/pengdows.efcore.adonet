@@ -83,7 +83,18 @@ as plain text (SQL Server) compares as text and takes no conversion. DB impact: 
 | SqlClient holds several readers only with `MultipleActiveResultSets` | Driver, per connection | `IDatabaseCapabilities.SupportsMultipleActiveReadersFor(connectionString)`; the compiled-query cache is keyed by the answer |
 | DuckDB.NET returns a BLOB only as a stream | Driver | `IDatabaseCapabilities.ReadsBinaryAsStream`; the core wraps readers and copies each value while its row is current |
 | DuckDB.NET converts some untyped parameters wrongly by DbType | Driver | `ITypeMappingDialect.ParameterDbType` |
-| Npgsql misreads an interval with negative months | Driver | A PostgreSQL type mapping plugin (`ConfigureServices`) |
+| Npgsql misreads an interval with negative months | Driver | A PostgreSQL reader interceptor (`ConfigureServices`): a `TimeSpan` read from an interval column goes through `NpgsqlInterval`; in the reader, not the mapping, because a `TimeSpan` may also come from a `time` column and EF buffers through the mapping's reader call |
+| SQLite has no lateral join | Engine SQL | `ISqlDialect.LateralJoins` null; the core refuses such a query at translation; a capability skip in the suites |
+| SQLite reuses the highest rowid after a delete unless the key is `AUTOINCREMENT` | Engine DDL | SQLite's migrations generator writes a generated key of one column inline as `PRIMARY KEY AUTOINCREMENT`, as Microsoft's provider does; EF's fix-up confused a new row with the deleted one it replaced |
+| SQLite can't generate a column of a key of several columns | Engine | `ISqlDialect.GeneratesCompositeKeyValues`; the suites configure owned collections' keys as Microsoft's SQLite tests do (efcore#26708) |
+| MySql.Data casts its own value types (a JSON integer's `BIGINT UNSIGNED` to a byte) and has no `DateOnly`/`TimeOnly` | Driver | A MySQL reader interceptor wraps MySql.Data's reader only (named, not referenced: GPL) and converts as MySqlConnector does |
+| A database's `CURRENT_TIMESTAMP` is the session's zone | SQL | `FunctionSyntax.UtcNow` names UTC for every dialect: ISO's `CAST(CURRENT_TIMESTAMP AT TIME ZONE INTERVAL '00:00' HOUR TO MINUTE AS TIMESTAMP)` by default, `NOW() AT TIME ZONE 'UTC'` (PostgreSQL), `CURRENT_TIMESTAMP AT TIME ZONE 'UTC'` (DuckDB), `SYSUTCDATETIME()`, `UTC_TIMESTAMP(6)` |
+| ISO has no `UPDATE ... FROM` | SQL | `DmlSyntax.Iso` (FlatFile): correlated subqueries |
+| Each server sets a row version its own way | Type mapping and DDL | `ITypeMappingDialect.RowVersionStoreType`: SQL Server `rowversion`; MySQL `TIMESTAMP(6)` with `DEFAULT`/`ON UPDATE CURRENT_TIMESTAMP(6)` in its migrations; PostgreSQL `xid`, read and bound as such by its plugin, the column named `xmin` by its convention and never declared by its migrations |
+| A SQL Server database's compatibility level limits its T-SQL | SQL | `SqlServerDialect.ForCompatibilityLevel`: trims and JSON functions gated at 130, 140 and 160 |
+| PostgreSQL's dialect needs PostgreSQL 13 (jsonpath, `DROP DATABASE ... WITH (FORCE)`), as Npgsql 10 does | SQL | No version option: nothing it translates differs between supported versions |
+| FlatFile reads generated keys back the ISO way | SQL | `KeyRetrieval.DeltaTable` (`SELECT ... FROM FINAL TABLE (INSERT ...)`) over ISO identity columns |
+| SQLite, DuckDB and FlatFile have no stored procedures | Engine | `ISqlDialect.SupportsStoredProcedures`; the core's model validator refuses a model mapped to them; a capability skip in the suites |
 | SQLite has no ALTER for constraints or columns | Engine DDL | SQLite's migrations generator: fold into a same-migration `CREATE TABLE`, otherwise rebuild from the target model |
 | DuckDB can't declare a foreign key after `CREATE TABLE` | Engine DDL | DuckDB's migrations generator refuses by name; a capability skip in the suites |
 | SQL Server refuses two cascade paths to a table | Engine DDL | SQL Server's convention set: the second path cascades in EF (`ClientCascade`) |

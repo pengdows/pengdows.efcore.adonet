@@ -223,9 +223,39 @@ internal class SqliteMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies d
         return create;
     }
 
-    // A single INTEGER primary key column is the rowid, which the database assigns.
+    private const string InlinePrimaryKey = "AdoNet:Sqlite:InlinePrimaryKey";
+
+    // SQLite takes AUTOINCREMENT only on an INTEGER PRIMARY KEY column constraint, so a generated key of one column is written
+    // there instead of as a table constraint. Without it the key is the plain rowid, and the next insert reuses the highest
+    // key after its row is deleted. Behaviour reference (not copied):
+    // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.Core/Migrations/SqliteMigrationsSqlGenerator.cs
+    protected override void Generate(CreateTableOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
+    {
+        if ((operation.PrimaryKey is { Columns: [var keyColumn] } key)
+            && (operation.Columns.FirstOrDefault(c => c.Name == keyColumn) is { } column)
+            && IsIdentity(column))
+        {
+            column.AddAnnotation(InlinePrimaryKey, key.Name ?? string.Empty);
+            operation.PrimaryKey = null;
+        }
+
+        base.Generate(operation, model, builder, terminate);
+    }
+
+    // A generated key of several columns has no AUTOINCREMENT in SQLite (ISqlDialect.GeneratesCompositeKeyValues).
     protected override void IdentityDefinition(string? schema, string table, string name, ColumnOperation operation, MigrationCommandListBuilder builder)
     {
+        if (operation[InlinePrimaryKey] is not string keyName)
+        {
+            return;
+        }
+
+        if (keyName.Length > 0)
+        {
+            builder.Append(" CONSTRAINT ").Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(keyName));
+        }
+
+        builder.Append(" PRIMARY KEY AUTOINCREMENT");
     }
 }
 

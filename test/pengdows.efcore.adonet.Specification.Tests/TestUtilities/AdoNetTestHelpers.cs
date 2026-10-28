@@ -13,10 +13,10 @@ public class AdoNetTestHelpers<THost> : RelationalTestHelpers
     public static AdoNetTestHelpers<THost> Instance { get; } = new();
 
     public override IServiceCollection AddProviderServices(IServiceCollection services)
-        => SpatialTypes.Add(Host, services.AddEntityFrameworkAdoNet(Host.Dialect));
+        => TestServices.Add(Host, services.AddEntityFrameworkAdoNet(Host.Dialect));
 
     public override DbContextOptionsBuilder UseProviderOptions(DbContextOptionsBuilder optionsBuilder)
-        => Host.UseProvider(optionsBuilder, Host.ConnectionStringFor("ef_helpers"), o => SpatialTypes.Use(Host, o));
+        => Host.UseProvider(optionsBuilder, Host.ConnectionStringFor("ef_helpers"), o => TestServices.Use(Host, o));
 
     public override LoggingDefinitions LoggingDefinitions { get; } = ProviderServices.LoggingDefinitions(Host.Dialect);
 }

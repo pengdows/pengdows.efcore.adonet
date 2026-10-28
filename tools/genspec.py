@@ -39,7 +39,7 @@ VIRTUALS = {
         '    protected override bool AssertConstraintNames => new THost().Dialect.SchemaReader?.KeepsConstraintNames ?? true;',
         '    protected override bool AssertIndexFilters => new THost().Dialect.SchemaReader?.ReadsIndexFilters ?? true;'],
     # The provider, over a database it never opens: the tests only deserialize.
-    'BadDataJsonDeserializationTestBase': ['    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)\n        => base.OnConfiguring(new THost().UseProvider(optionsBuilder, new THost().ConnectionStringFor("ef_bad_json"), o => SpatialTypes.Use(new THost(), o)));'],
+    'BadDataJsonDeserializationTestBase': ['    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)\n        => base.OnConfiguring(new THost().UseProvider(optionsBuilder, new THost().ConnectionStringFor("ef_bad_json"), o => TestServices.Use(new THost(), o)));'],
     'TransactionTestBase': ['    protected override bool AmbientTransactionsSupported => new THost().Dialect.Capabilities.SupportsAmbientTransactions;', '    protected override bool SavepointsSupported => new THost().Dialect.Sql.Savepoints != null;'],
     'SeedingTestBase': ['''    private sealed class AdoNetSeedingContext(string testId) : global::Microsoft.EntityFrameworkCore.SeedingTestBase.SeedingContext(testId)
     {

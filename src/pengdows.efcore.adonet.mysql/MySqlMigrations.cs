@@ -113,6 +113,16 @@ internal partial class MySqlMigrationsSqlGenerator(MigrationsSqlGeneratorDepende
         MigrationCommandListBuilder builder)
     {
         base.ColumnDefinition(schema, table, name, operation, model, builder);
+
+        // A row version is a TIMESTAMP(6) the server sets on every insert and update. Behaviour reference (not copied):
+        // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Migrations/MySqlMigrationsSqlGenerator.cs
+        if (operation.IsRowVersion
+            && (operation.DefaultValueSql == null)
+            && (operation.ColumnType ?? "").StartsWith("timestamp", StringComparison.OrdinalIgnoreCase))
+        {
+            builder.Append(" DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6)");
+        }
+
         if (operation.Comment != null)
         {
             builder.Append(" COMMENT ").Append(Dialect.Sql.StringLiteral(operation.Comment));

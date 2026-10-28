@@ -66,6 +66,10 @@ internal class SqliteSql : AnsiSqlDialect
             || string.Equals(Convert.ToString(b.TryGetValue("Mode", out var mode) ? mode : null, CultureInfo.InvariantCulture), "Memory", StringComparison.OrdinalIgnoreCase));
 
     public override bool SupportsSchemas => false;
+    public override bool SupportsStoredProcedures => false;
+
+    // Only a key of one INTEGER column is the rowid, which the database assigns (efcore#26708).
+    public override bool GeneratesCompositeKeyValues => false;
 
     // SQLite has no lateral join; a query needing one fails to translate, as with the official provider. Behaviour reference
     // (not copied): https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.Core/Query/Internal/SqliteQueryTranslationPostprocessor.cs
@@ -182,6 +186,22 @@ internal sealed class SqliteFunctions : FunctionSyntax
     public override string? OffsetDateTime => "SUBSTR({0}, 1, LENGTH({0}) - 6)";
     public override string? TrimStart => "LTRIM({0})";
     public override string? TrimEnd => "RTRIM({0})";
+
+    // trim(X, Y) removes any of Y's characters from X's ends; SQLite has no TRIM(BOTH ... FROM ...). Behaviour reference
+    // (not copied): https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.Core/Query/Internal/Translators/SqliteStringMethodTranslator.cs
+    public override string? TrimCharacter => "TRIM({0}, {1})";
+    public override string? TrimStartCharacter => "LTRIM({0}, {1})";
+    public override string? TrimEndCharacter => "RTRIM({0}, {1})";
+    public override string? TrimCharacters => "TRIM({0}, {1})";
+    public override string? TrimStartCharacters => "LTRIM({0}, {1})";
+    public override string? TrimEndCharacters => "RTRIM({0}, {1})";
+
+    // No LPAD/RPAD: a run of n pad characters (hex(zeroblob(n)) is n pairs of zeros) joined to the string, then cut to n.
+    public override string? PadLeft
+        => "CASE WHEN LENGTH({0}) >= {1} THEN {0} ELSE SUBSTR(REPLACE(HEX(ZEROBLOB({1})), '00', {2}) || {0}, -({1})) END";
+
+    public override string? PadRight
+        => "CASE WHEN LENGTH({0}) >= {1} THEN {0} ELSE SUBSTR({0} || REPLACE(HEX(ZEROBLOB({1})), '00', {2}), 1, {1}) END";
     public override string? Length => "LENGTH({0})";
     public override string? Substring => "SUBSTR({0}, {1}, {2})";
     public override string? SubstringFrom => "SUBSTR({0}, {1})";

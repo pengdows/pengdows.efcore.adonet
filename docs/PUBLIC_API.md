@@ -27,7 +27,13 @@ machinery, conventions, type mappings) are reached through EF's interfaces, neve
 | `JsonSyntax.ScalarValue`, `JsonSyntax.NullValue` | Plugins: how the JSON set function takes a scalar and JSON's null, so the core writes no database's JSON functions. |
 | `SpatialParameterBinding.UserDefinedType` | Plugins: a spatial value bound as the database's own geometry type (SQL Server's UDT); named for the mechanism, not the database. |
 | `Scaffolding.SchemaReader` (base of `InformationSchemaReader`) | Plugins: a database whose catalog isn't `INFORMATION_SCHEMA` (SQLite) reads its schema without inheriting ISO's queries. |
-| `AdoNetTimeSpanTypeMapping.TypeMappings` | Plugins: a subclass's `Clone` (PostgreSQL's interval mapping) passes the dialect on. |
+| `ISqlDialect.GeneratesCompositeKeyValues` | Plugins: whether the database generates a column of a key of several columns (an owned collection's own key); SQLite generates only its rowid (efcore#26708). Its suites configure such models as Microsoft's SQLite tests do. `AnsiSqlDialect` says true. |
+| `FunctionSyntax.TrimCharacters`, `TrimStartCharacters`, `TrimEndCharacters` | Plugins: `String.Trim(char[])` of several characters, a trim of a set; null where the database's trim takes one character (ISO) or one string (MySQL). |
+| `FunctionSyntax.PadLeft`, `PadRight` | Plugins: `String.PadLeft`/`PadRight`, keeping a longer string whole as .NET does (SQL's LPAD cuts it); null where the database has no padding (ISO). |
+| `ITypeMappingDialect.RowVersionStoreType` | Plugins: the store type of a row version (`[Timestamp]`) the database sets on every insert and update: SQL Server's `rowversion`, MySQL's `TIMESTAMP(6)` with `ON UPDATE`, PostgreSQL's `xid` (its `xmin` system column). Default implementation: none. |
+| `SqlServerDialect.ForCompatibilityLevel`, `CompatibilityLevel` | Applications: a database at an older compatibility level gets only the T-SQL it has (Microsoft's `UseCompatibilityLevel`); one dialect instance per level. |
+| `DmlSyntax.Iso` | Plugins: ISO SQL:2003 DML, which has no `UPDATE ... FROM`: an update through a join is written with correlated `EXISTS` and scalar subqueries. |
+| `ISqlDialect.SupportsStoredProcedures` | Plugins: a database without stored procedures (SQLite, DuckDB, FlatFile) has a model mapped to them refused when the context starts, as Microsoft's SQLite provider does. `AnsiSqlDialect` says true. |
 
 ### Raw ADO.NET objects handed out
 

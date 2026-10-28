@@ -219,6 +219,11 @@ noted so they can be removed once the fix ships.
 
 ## mysql/mysql-connector-net (MySql.Data 26.10.0)
 
+- Its reader casts its own value types: an integer computed in SQL (MySQL's `CAST` has no `TINYINT`, so a JSON value arrives
+  as `BIGINT UNSIGNED`) fails `GetByte` with "Unable to cast object of type 'MySqlUInt64' to type 'MySqlByte'", and it has no
+  `DateOnly`/`TimeOnly` (`GetFieldValue<DateOnly>` of a `DATE` throws). MySqlConnector converts. **Worked around** by the MySQL
+  dialect's reader interceptor; covered by `MySqlValueReadTests` on both drivers.
+
 Found by running the shared MySQL suites through Oracle's driver as well as MySqlConnector (the dialect is
 driver-neutral). Checked against the user's open pull requests there (#95-#115) and fork (pengdows/mysql-connector-net
 #1-#5): neither is covered.
@@ -359,6 +364,17 @@ Gaps that keep core paths out of reach of fakeDb tests (REVIEW_POLICY: a gap is 
   of its own (`ProbedFactory`, `UnknownFactory`); both hand out fakeDb connections.
 
 ## pengdows.flatfile (0.2.1-preview.10)
+
+Found by this provider's suites and fixed in pengdows.flatfile 0.2.1-preview.19 (each test-first in flatfile, ISO 9075 cited):
+
+- A correlated subquery evaluated its whole FROM clause again for every outer row; EF's `Delete_with_RightJoin` did not
+  finish over Northwind. An uncorrelated FROM clause is now read once per statement (preview.18).
+- `TRIM`'s trim character was discarded by the parser, and the default trimmed all whitespace (ISO 6.30: a space).
+- No identity columns (`GENERATED { ALWAYS | BY DEFAULT } AS IDENTITY`, T174) and no `INSERT ... DEFAULT VALUES`, so keys
+  could not be generated and read back through `FINAL TABLE`.
+- A batch gave a statement without rows an empty result set, so `NextResult` stopped on it (ADO.NET providers skip it);
+  EF's batches mixing `FINAL TABLE` reads and plain `INSERT`s read the wrong set.
+- No time zone clause (`AT LOCAL`, `AT TIME ZONE`, F411), so there was no ISO way to ask for the current time in UTC.
 
 Open, recorded as skips in `test/pengdows.efcore.adonet.flatfile.Tests/Fixtures.cs`, each probed against preview.10 with
 plain ADO.NET:

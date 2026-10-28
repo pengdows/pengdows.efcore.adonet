@@ -47,7 +47,9 @@ public sealed class PostgreSqlDialect : AdoNetDialect
             .TryAdd<IMigrationsSqlGenerator, PostgreSqlMigrationsSqlGenerator>();
         services.TryAddScoped<IAdoNetBulkLoader, PostgreSqlBulkLoader>();
         new EntityFrameworkRelationalServicesBuilder(services)
-            .TryAdd<Microsoft.EntityFrameworkCore.Storage.IRelationalTypeMappingSourcePlugin, PostgreSqlIntervalTypeMappingPlugin>();
+            .TryAdd<Microsoft.EntityFrameworkCore.Diagnostics.IInterceptor, PostgreSqlIntervalReaderInterceptor>()
+            .TryAdd<Microsoft.EntityFrameworkCore.Metadata.Conventions.Infrastructure.IProviderConventionSetBuilder, PostgreSqlConventionSetBuilder>()
+            .TryAdd<Microsoft.EntityFrameworkCore.Storage.IRelationalTypeMappingSourcePlugin, PostgreSqlXidTypeMappingPlugin>();
     }
 }
 
@@ -55,6 +57,41 @@ public sealed class PostgreSqlDialect : AdoNetDialect
 internal sealed class PostgreSqlMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dependencies, IAdoNetDialect dialect)
     : AdoNetMigrationsSqlGenerator(dependencies, dialect)
 {
+    // Every table has PostgreSQL's system columns (xmin, a row version); a model may map them, but no migration declares,
+    // alters or drops one. Behaviour reference (not copied):
+    // https://github.com/npgsql/efcore.pg/blob/v10.0.3/src/EFCore.PG/Migrations/NpgsqlMigrationsSqlGenerator.cs
+    private static readonly HashSet<string> SystemColumns = new(StringComparer.Ordinal) { "tableoid", "xmin", "cmin", "xmax", "cmax", "ctid" };
+
+    protected override void Generate(CreateTableOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
+    {
+        operation.Columns.RemoveAll(c => SystemColumns.Contains(c.Name));
+        base.Generate(operation, model, builder, terminate);
+    }
+
+    protected override void Generate(AddColumnOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
+    {
+        if (!SystemColumns.Contains(operation.Name))
+        {
+            base.Generate(operation, model, builder, terminate);
+        }
+    }
+
+    protected override void Generate(AlterColumnOperation operation, IModel? model, MigrationCommandListBuilder builder)
+    {
+        if (!SystemColumns.Contains(operation.Name))
+        {
+            base.Generate(operation, model, builder);
+        }
+    }
+
+    protected override void Generate(DropColumnOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
+    {
+        if (!SystemColumns.Contains(operation.Name))
+        {
+            base.Generate(operation, model, builder, terminate);
+        }
+    }
+
     protected override void ColumnDefinition(
         string? schema,
         string table,
@@ -117,6 +154,10 @@ internal sealed class PostgreSqlTypeMappings : AnsiTypeMappings
     // Npgsql writes timestamptz from offset-zero values only.
     public override bool WritesDateTimeOffsetAsUtc => true;
 
+    // A uint row version is the xid every row's xmin system column holds (PostgreSqlRowVersionConvention names it).
+    public override string? RowVersionStoreType(Type clrType)
+        => clrType == typeof(uint) ? "xid" : null;
+
     public override string? GetStoreType(Type clrType)
         => clrType == typeof(byte[]) ? "BYTEA" : base.GetStoreType(clrType);
 
@@ -147,6 +188,18 @@ internal sealed class PostgreSqlFunctions : FunctionSyntax
     public override string? BitwiseOr => "{0} | {1}";
     public override string? BitwiseNot => "~{0}";
     public override string? ExclusiveOr => "{0} # {1}";
+
+    // btrim/ltrim/rtrim(string, characters) remove any of the characters. Behaviour reference (not copied):
+    // https://github.com/npgsql/efcore.pg/blob/v10.0.3/src/EFCore.PG/Query/ExpressionTranslators/Internal/NpgsqlStringMethodTranslator.cs
+    // NOW() is an instant shown in the session's time zone; AT TIME ZONE 'UTC' gives its UTC timestamp. Behaviour reference
+    // (not copied): https://github.com/npgsql/efcore.pg/blob/v10.0.3/src/EFCore.PG/Query/ExpressionTranslators/Internal/NpgsqlDateTimeMemberTranslator.cs
+    public override string? UtcNow => "(NOW() AT TIME ZONE 'UTC')";
+
+    public override string? TrimCharacters => "BTRIM({0}, {1})";
+    public override string? PadLeft => "CASE WHEN CHAR_LENGTH({0}) >= {1} THEN {0} ELSE LPAD({0}, {1}, {2}) END";
+    public override string? PadRight => "CASE WHEN CHAR_LENGTH({0}) >= {1} THEN {0} ELSE RPAD({0}, {1}, {2}) END";
+    public override string? TrimStartCharacters => "LTRIM({0}, {1})";
+    public override string? TrimEndCharacters => "RTRIM({0}, {1})";
 
     // The % operator, as the database's EF Core provider writes it.
     public override string? Modulo => null;

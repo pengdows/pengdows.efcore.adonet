@@ -34,6 +34,49 @@ public abstract class ProviderConformanceTests<TFixture>(TFixture fixture) : ICl
         Assert.Same(Fixture.ExpectedDialect, context.GetService<IAdoNetDialect>());
     }
 
+    // A generated key is never handed out twice: deleting the row with the highest key doesn't give its key to the next
+    // insert (SQLite's rowid would without AUTOINCREMENT), which EF Core's fix-up would confuse with the deleted row.
+    [Fact]
+    public async Task A_deleted_rows_generated_key_is_not_reused()
+    {
+        int deletedId;
+        await using (var context = Fixture.CreateContext())
+        {
+            var first = NewBlog("first");
+            context.Add(first);
+            await context.SaveChangesAsync(Ct);
+            deletedId = first.Id;
+            context.Remove(first);
+            await context.SaveChangesAsync(Ct);
+        }
+
+        await using (var context = Fixture.CreateContext())
+        {
+            var second = NewBlog("second");
+            context.Add(second);
+            await context.SaveChangesAsync(Ct);
+            Assert.NotEqual(deletedId, second.Id);
+        }
+    }
+
+    // A database without stored procedures refuses a model mapped to them when the context starts, naming the entity type and
+    // the database, as Microsoft's SQLite provider does; one with them starts. Nothing is sent to the database.
+    [Fact]
+    public void A_model_mapped_to_stored_procedures_starts_only_where_the_database_has_them()
+    {
+        using var context = Fixture.CreateContext<ProcedureMappedContext>(o => new ProcedureMappedContext(o));
+
+        if (Fixture.ExpectedDialect.Sql.SupportsStoredProcedures)
+        {
+            Assert.NotNull(context.Model.FindEntityType(typeof(ProcedureWidget)));
+            return;
+        }
+
+        var error = Assert.ThrowsAny<InvalidOperationException>(() => context.Model);
+        Assert.Contains(nameof(ProcedureWidget), error.Message);
+        Assert.Contains(Fixture.ExpectedDialect.Name, error.Message);
+    }
+
     [Fact]
     public async Task Insert_reads_back_generated_keys()
     {

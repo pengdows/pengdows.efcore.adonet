@@ -11,6 +11,10 @@ public interface IDatabaseHost
     /// <summary>Drops the named database if it exists and creates it empty.</summary>
     Task CreateEmptyDatabaseAsync(string database);
 
+    /// <summary>Drops the named database if it exists; a file database's files are deleted, as for an empty one.</summary>
+    Task DropDatabaseAsync(string database)
+        => CreateEmptyDatabaseAsync(database);
+
     DbConnection CreateConnection(string connectionString);
 
     DbContextOptionsBuilder UseProvider(DbContextOptionsBuilder builder, string connectionString, Action<AdoNetDbContextOptionsBuilder> configure);

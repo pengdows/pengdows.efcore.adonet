@@ -164,6 +164,15 @@ internal class AdoNetTypeMappingSource : RelationalTypeMappingSource
             return mapping;
         }
 
+        // A row version the model leaves the store type of, and no plugin maps: the dialect's, which the database sets on
+        // every insert and update.
+        if (mappingInfo is { IsRowVersion: true, StoreTypeName: null, ClrType: { } rowVersionClr }
+            && _typeMappings.RowVersionStoreType(rowVersionClr) is { } rowVersionStoreType
+            && _clrTypeMappings.TryGetValue(rowVersionClr, out var rowVersionMapping))
+        {
+            return rowVersionMapping.WithTypeMappingInfo(mappingInfo).WithStoreTypeAndSize(rowVersionStoreType, null);
+        }
+
         // A JSON column (ToJson), in the dialect's JSON type unless the model names another.
         if (mappingInfo.ClrType == typeof(JsonTypePlaceholder))
         {

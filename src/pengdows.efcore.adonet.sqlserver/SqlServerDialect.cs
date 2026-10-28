@@ -17,14 +17,35 @@ namespace pengdows.efcore.adonet.sqlserver;
 /// </summary>
 public sealed class SqlServerDialect : AdoNetDialect
 {
-    public static readonly SqlServerDialect Instance = new();
+    /// <summary>Compatibility level 160 (SQL Server 2022), as Microsoft's provider assumes.</summary>
+    public static readonly SqlServerDialect Instance = new(160);
 
-    private SqlServerDialect()
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<int, SqlServerDialect> Levels = new() { [160] = Instance };
+
+    private SqlServerDialect(int compatibilityLevel)
     {
+        CompatibilityLevel = compatibilityLevel;
+        Sql = new SqlServerSql(compatibilityLevel);
     }
 
-    public override string Name => "SQL Server";
-    public override ISqlDialect Sql { get; } = new SqlServerSql();
+    /// <summary>
+    ///     The dialect for a database at <paramref name="compatibilityLevel" /> (100 for SQL Server 2008 to 170): T-SQL a lower
+    ///     level lacks is left untranslated, as Microsoft's provider does with UseCompatibilityLevel. One instance per level.
+    ///     Behaviour reference (not copied):
+    ///     https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.SqlServer/Query/Internal/Translators/SqlServerStringMethodTranslator.cs
+    /// </summary>
+    public static SqlServerDialect ForCompatibilityLevel(int compatibilityLevel)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(compatibilityLevel, 100);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(compatibilityLevel, 170);
+        return Levels.GetOrAdd(compatibilityLevel, level => new SqlServerDialect(level));
+    }
+
+    /// <summary>The database compatibility level whose T-SQL this dialect writes.</summary>
+    public int CompatibilityLevel { get; }
+
+    public override string Name => CompatibilityLevel == 160 ? "SQL Server" : $"SQL Server (compatibility level {CompatibilityLevel})";
+    public override ISqlDialect Sql { get; }
     public override ITypeMappingDialect TypeMappings { get; } = new SqlServerTypeMappings();
     public override IDatabaseCapabilities Capabilities { get; } = new SqlServerCapabilities
     {
@@ -48,7 +69,7 @@ public sealed class SqlServerDialect : AdoNetDialect
     }
 }
 
-internal sealed class SqlServerSql : AnsiSqlDialect
+internal sealed class SqlServerSql(int compatibilityLevel) : AnsiSqlDialect
 {
     // Through master; a database still in use is put in single-user mode, rolling back other sessions, before it's dropped.
     // Behaviour reference (not copied):
@@ -69,8 +90,12 @@ internal sealed class SqlServerSql : AnsiSqlDialect
     public override bool RequiresDerivedTableColumnAliases => true;
     public override KeyRetrieval Keys { get; } = KeyRetrieval.SelectAfter("SCOPE_IDENTITY()", "@@ROWCOUNT");
     public override DmlSyntax Dml => DmlSyntax.TargetAliasFrom;
-    public override FunctionSyntax Functions { get; } = new SqlServerFunctions();
-    public override JsonSyntax Json { get; } = new(
+    public override FunctionSyntax Functions { get; } = new SqlServerFunctions(compatibilityLevel);
+
+    // The JSON functions and OPENJSON need compatibility level 130 (SQL Server 2016).
+    public override JsonSyntax? Json => compatibilityLevel >= 130 ? JsonFunctions : null;
+
+    private static readonly JsonSyntax JsonFunctions = new(
         "nvarchar(max)",
         "JSON_VALUE({0}, {1})",
         "JSON_QUERY({0}, {1})",
@@ -170,8 +195,14 @@ internal sealed class SqlServerSql : AnsiSqlDialect
 ///     is bounded by DATALENGTH, which is never less than the length. LEN returns bigint for MAX types, hence the CAST.
 ///     CHARINDEX finds an empty string nowhere; .NET finds it at 0.
 /// </summary>
-internal sealed class SqlServerFunctions : FunctionSyntax
+internal sealed class SqlServerFunctions(int compatibilityLevel) : FunctionSyntax
 {
+    // TRIM needs compatibility level 140 (SQL Server 2017), TRIM(LEADING ...) and LTRIM/RTRIM(string, characters) 160 (2022).
+    public override string? Trim => compatibilityLevel >= 140 ? "TRIM({0})" : "LTRIM(RTRIM({0}))";
+    public override string? TrimCharacter => compatibilityLevel >= 160 ? base.TrimCharacter : compatibilityLevel >= 140 ? "TRIM({1} FROM {0})" : null;
+    public override string? TrimStartCharacter => compatibilityLevel >= 160 ? base.TrimStartCharacter : null;
+    public override string? TrimEndCharacter => compatibilityLevel >= 160 ? base.TrimEndCharacter : null;
+
     // T-SQL's bitwise operators.
     public override string? BitwiseAnd => "{0} & {1}";
     public override string? BitwiseOr => "{0} | {1}";
@@ -184,6 +215,21 @@ internal sealed class SqlServerFunctions : FunctionSyntax
     public override string Concat => "{0} + {1}";
     public override string? TrimStart => "LTRIM({0})";
     public override string? TrimEnd => "RTRIM({0})";
+
+    // TRIM(characters FROM string) (SQL Server 2017) and LTRIM/RTRIM(string, characters) (SQL Server 2022) remove any of
+    // the characters. Behaviour reference (not copied):
+    // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.SqlServer/Query/Internal/Translators/SqlServerStringMethodTranslator.cs
+    public override string? TrimCharacters => compatibilityLevel >= 140 ? "TRIM({1} FROM {0})" : null;
+
+    // No LPAD/RPAD: the pad characters joined to the string and cut to the width; LEN ignores trailing spaces, so the length
+    // is LEN of the string with a character after it, less one.
+    public override string? PadLeft
+        => "CASE WHEN LEN({0} + N'x') - 1 >= {1} THEN {0} ELSE RIGHT(REPLICATE({2}, {1}) + {0}, {1}) END";
+
+    public override string? PadRight
+        => "CASE WHEN LEN({0} + N'x') - 1 >= {1} THEN {0} ELSE LEFT({0} + REPLICATE({2}, {1}), {1}) END";
+    public override string? TrimStartCharacters => compatibilityLevel >= 160 ? "LTRIM({0}, {1})" : null;
+    public override string? TrimEndCharacters => compatibilityLevel >= 160 ? "RTRIM({0}, {1})" : null;
     public override string? Length => "CAST(LEN(REPLACE({0}, ' ', '_')) AS int)";
     public override string? Substring => "SUBSTRING({0}, {1}, {2})";
     public override string? SubstringFrom => "SUBSTRING({0}, {1}, DATALENGTH({0}))";
@@ -202,8 +248,9 @@ internal sealed class SqlServerFunctions : FunctionSyntax
     public override string? Nanosecond => "DATEPART(nanosecond, {0}) % 1000";
     public override string? DateOf => "CONVERT(date, {0})";
     public override string? TimeOfDay => "CONVERT(time, {0})";
-    public override string? Now => "GETDATE()";
-    public override string? UtcNow => "GETUTCDATE()";
+    public override string? Now => "SYSDATETIME()";
+    // SYSDATETIME/SYSUTCDATETIME are datetime2, keeping the precision a DateTime maps to; GETDATE/GETUTCDATE are datetime.
+    public override string? UtcNow => "SYSUTCDATETIME()";
     public override string? Today => "CONVERT(date, GETDATE())";
     public override string? AddYears => "DATEADD(year, {1}, {0})";
     public override string LikeSpecialCharacters => "%_[";
@@ -250,6 +297,11 @@ internal sealed class SqlServerTypeMappings : AnsiTypeMappings
         ["rowversion"] = [typeof(byte[])],
         ["timestamp"] = [typeof(byte[])]
     };
+
+    // rowversion: eight bytes the database sets on every insert and update. Behaviour reference (not copied):
+    // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.SqlServer/Storage/Internal/SqlServerTypeMappingSource.cs
+    public override string? RowVersionStoreType(Type clrType)
+        => clrType == typeof(byte[]) ? "rowversion" : null;
 
     public override string? GetStoreType(Type clrType)
         => StoreTypes.GetValueOrDefault(clrType) ?? base.GetStoreType(clrType);
