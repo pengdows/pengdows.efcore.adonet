@@ -74,7 +74,12 @@ internal static class SqliteSpatial
             ["ExteriorRing"] = "ExteriorRing({0})",
             ["NumInteriorRings"] = "NumInteriorRing({0})",
             ["GetInteriorRingN"] = "InteriorRingN({0}, {1} + 1)",
-            ["GeometryType"] = "CASE " + GeometryType + " WHEN 'POINT' THEN 'Point' WHEN 'LINESTRING' THEN 'LineString' "
+            // Aggregates over a group; SpatiaLite has no convex hull aggregate, so it is that of the collection.
+            ["GeometryCombiner.Combine"] = "Collect({0})",
+            ["ConvexHull.Create"] = "ConvexHull(Collect({0}))",
+            ["UnaryUnionOp.Union"] = "GUnion({0})",
+            ["EnvelopeCombiner.CombineAsGeometry"] = "Extent({0})",
+            ["GeometryType"] ="CASE " + GeometryType + " WHEN 'POINT' THEN 'Point' WHEN 'LINESTRING' THEN 'LineString' "
                 + "WHEN 'POLYGON' THEN 'Polygon' WHEN 'MULTIPOINT' THEN 'MultiPoint' WHEN 'MULTILINESTRING' THEN 'MultiLineString' "
                 + "WHEN 'MULTIPOLYGON' THEN 'MultiPolygon' WHEN 'GEOMETRYCOLLECTION' THEN 'GeometryCollection' END",
             ["OgcGeometryType"] = "CASE " + GeometryType + " WHEN 'POINT' THEN 1 WHEN 'LINESTRING' THEN 2 WHEN 'POLYGON' THEN 3 "

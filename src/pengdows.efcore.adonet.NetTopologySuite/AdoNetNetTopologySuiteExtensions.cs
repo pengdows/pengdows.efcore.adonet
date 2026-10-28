@@ -35,7 +35,8 @@ public static class AdoNetNetTopologySuiteExtensions
         new EntityFrameworkRelationalServicesBuilder(serviceCollection)
             .TryAdd<IRelationalTypeMappingSourcePlugin, AdoNetSpatialTypeMappingSourcePlugin>()
             .TryAdd<IMethodCallTranslatorPlugin, AdoNetSpatialMethodCallTranslatorPlugin>()
-            .TryAdd<IMemberTranslatorPlugin, AdoNetSpatialMemberTranslatorPlugin>();
+            .TryAdd<IMemberTranslatorPlugin, AdoNetSpatialMemberTranslatorPlugin>()
+            .TryAdd<IAggregateMethodCallTranslatorPlugin, AdoNetSpatialAggregateMethodCallTranslatorPlugin>();
         return serviceCollection;
     }
 }
