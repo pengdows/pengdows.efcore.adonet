@@ -47,6 +47,7 @@ machinery, conventions, type mappings) are reached through EF's interfaces, neve
 | `MySqlFullTextExtensions` (`IsFullText`, `Match`, `IsMatch`), `MySqlMatchSearchMode` | Applications: MySQL `FULLTEXT` indexes and `MATCH ... AGAINST` in its three search modes, as Pomelo's. |
 | `MySqlModelOptionsExtensions` (`HasCharSet`, `HasPrefixLength`, `IsSpatial`) | Applications: a column's, table's or database's character set, index prefix lengths and `SPATIAL` indexes in migrations, as Pomelo's. |
 | `MySqlJsonDbFunctionsExtensions` (`AsJson`, `JsonType`, `JsonQuote`, `JsonUnquote`, `JsonExtract`, `JsonOverlaps`, `JsonContains`, `JsonContainsPath`, `JsonContainsPathAny`, `JsonContainsPathAll`, `JsonSearchAny`) | Applications: MySQL's JSON functions in queries, as Pomelo's `MySqlJsonDbFunctionsExtensions`; the same on MariaDB, but for `AsJson`, which makes text JSON through the dialect (`JSON_COMPACT`: MariaDB has no JSON type to cast to). |
+| `MySqlDbFunctionsExtensions` (`ConvertTimeZone`, `Like<T>`, `Hex<T>`, `Unhex`, `Degrees`, `Radians`), `MySqlFullTextExtensions.Match`/`IsMatch` over `string[]` | Applications: the rest of Pomelo's `MySqlDbFunctionsExtensions` (CONVERT_TZ, LIKE over any value, HEX, UNHEX, DEGREES, RADIANS, MATCH over several columns), the same on MariaDB. |
 | `MySqlDialect.MariaDb` | Applications: MariaDB, which has no `LATERAL` (queries needing one are refused), writes table value constructor rows without `ROW`, and has no JSON type to `CAST` to. Chosen with `UseDialect`, as `SingleStore` is. |
 
 ### Raw ADO.NET objects handed out

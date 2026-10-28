@@ -204,12 +204,8 @@ internal sealed class MySqlJsonTranslator(
         return MaybeNull(template, [document, paths[0]], type, mapping);
     }
 
-    // A function that may be null even when no argument is: EF must not reduce its IS NULL to its arguments'.
     private SqlExpression MaybeNull(string template, IReadOnlyList<SqlExpression> arguments, Type type, RelationalTypeMapping mapping)
-    {
-        var call = (SqlFunctionExpression)sqlExpressionFactory.Call(template, arguments, type, mapping)!;
-        return sqlExpressionFactory.Function(call.Name, call.Arguments!, nullable: true, call.Arguments!.Select(_ => false), type, mapping);
-    }
+        => sqlExpressionFactory.CallMaybeNull(template, arguments, type, mapping);
 
     // ", {first}, {first + 1}, ..." for count arguments.
     private static string Placeholders(int first, int count)
@@ -245,7 +241,8 @@ internal sealed class JsonTextConverter<T>() : ValueConverter<T, string>(
 /// </summary>
 internal sealed class MySqlEvaluatableExpressionFilterPlugin : IEvaluatableExpressionFilterPlugin
 {
-    private static readonly Type[] FunctionTypes = [typeof(MySqlJsonDbFunctionsExtensions), typeof(MySqlFullTextExtensions)];
+    private static readonly Type[] FunctionTypes =
+        [typeof(MySqlJsonDbFunctionsExtensions), typeof(MySqlFullTextExtensions), typeof(MySqlDbFunctionsExtensions)];
 
     public bool IsEvaluatableExpression(Expression expression)
         => (expression is not MethodCallExpression call) || !FunctionTypes.Contains(call.Method.DeclaringType);

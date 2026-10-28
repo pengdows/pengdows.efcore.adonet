@@ -56,3 +56,24 @@ static pengdows.efcore.adonet.mysql.MySqlJsonDbFunctionsExtensions.JsonSearchAny
 static pengdows.efcore.adonet.mysql.MySqlJsonDbFunctionsExtensions.JsonSearchAny(this Microsoft.EntityFrameworkCore.DbFunctions! _, object! json, string! searchString, string! path, string? escapeChar) -> bool
 static pengdows.efcore.adonet.mysql.MySqlJsonDbFunctionsExtensions.JsonType(this Microsoft.EntityFrameworkCore.DbFunctions! _, object! json) -> string!
 static pengdows.efcore.adonet.mysql.MySqlJsonDbFunctionsExtensions.JsonUnquote(this Microsoft.EntityFrameworkCore.DbFunctions! _, object! json) -> string!
+static pengdows.efcore.adonet.mysql.MySqlFullTextExtensions.IsMatch(this Microsoft.EntityFrameworkCore.DbFunctions! _, string![]! properties, string! pattern, pengdows.efcore.adonet.mysql.MySqlMatchSearchMode searchMode) -> bool
+static pengdows.efcore.adonet.mysql.MySqlFullTextExtensions.Match(this Microsoft.EntityFrameworkCore.DbFunctions! _, string![]! properties, string! pattern, pengdows.efcore.adonet.mysql.MySqlMatchSearchMode searchMode) -> double
+pengdows.efcore.adonet.mysql.MySqlDbFunctionsExtensions
+static pengdows.efcore.adonet.mysql.MySqlDbFunctionsExtensions.ConvertTimeZone(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTime dateTime, string! fromTimeZone, string! toTimeZone) -> System.DateTime?
+static pengdows.efcore.adonet.mysql.MySqlDbFunctionsExtensions.ConvertTimeZone(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateOnly dateOnly, string! fromTimeZone, string! toTimeZone) -> System.DateOnly?
+static pengdows.efcore.adonet.mysql.MySqlDbFunctionsExtensions.ConvertTimeZone(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTime? dateTime, string! fromTimeZone, string! toTimeZone) -> System.DateTime?
+static pengdows.efcore.adonet.mysql.MySqlDbFunctionsExtensions.ConvertTimeZone(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateOnly? dateOnly, string! fromTimeZone, string! toTimeZone) -> System.DateOnly?
+static pengdows.efcore.adonet.mysql.MySqlDbFunctionsExtensions.ConvertTimeZone(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTime dateTime, string! toTimeZone) -> System.DateTime?
+static pengdows.efcore.adonet.mysql.MySqlDbFunctionsExtensions.ConvertTimeZone(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTimeOffset dateTimeOffset, string! toTimeZone) -> System.DateTime?
+static pengdows.efcore.adonet.mysql.MySqlDbFunctionsExtensions.ConvertTimeZone(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateOnly dateOnly, string! toTimeZone) -> System.DateOnly?
+static pengdows.efcore.adonet.mysql.MySqlDbFunctionsExtensions.ConvertTimeZone(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTime? dateTime, string! toTimeZone) -> System.DateTime?
+static pengdows.efcore.adonet.mysql.MySqlDbFunctionsExtensions.ConvertTimeZone(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTimeOffset? dateTimeOffset, string! toTimeZone) -> System.DateTime?
+static pengdows.efcore.adonet.mysql.MySqlDbFunctionsExtensions.ConvertTimeZone(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateOnly? dateOnly, string! toTimeZone) -> System.DateOnly?
+static pengdows.efcore.adonet.mysql.MySqlDbFunctionsExtensions.Like<T>(this Microsoft.EntityFrameworkCore.DbFunctions! _, T matchExpression, string! pattern) -> bool
+static pengdows.efcore.adonet.mysql.MySqlDbFunctionsExtensions.Like<T>(this Microsoft.EntityFrameworkCore.DbFunctions! _, T matchExpression, string! pattern, string! escapeCharacter) -> bool
+static pengdows.efcore.adonet.mysql.MySqlDbFunctionsExtensions.Hex<T>(this Microsoft.EntityFrameworkCore.DbFunctions! _, T value) -> string!
+static pengdows.efcore.adonet.mysql.MySqlDbFunctionsExtensions.Unhex(this Microsoft.EntityFrameworkCore.DbFunctions! _, string! value) -> string!
+static pengdows.efcore.adonet.mysql.MySqlDbFunctionsExtensions.Degrees(this Microsoft.EntityFrameworkCore.DbFunctions! _, double radians) -> double
+static pengdows.efcore.adonet.mysql.MySqlDbFunctionsExtensions.Degrees(this Microsoft.EntityFrameworkCore.DbFunctions! _, float radians) -> float
+static pengdows.efcore.adonet.mysql.MySqlDbFunctionsExtensions.Radians(this Microsoft.EntityFrameworkCore.DbFunctions! _, double degrees) -> double
+static pengdows.efcore.adonet.mysql.MySqlDbFunctionsExtensions.Radians(this Microsoft.EntityFrameworkCore.DbFunctions! _, float degrees) -> float
