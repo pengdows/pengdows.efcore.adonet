@@ -62,7 +62,9 @@ public sealed class MySqlDialect : AdoNetDialect
             .TryAdd<IHistoryRepository, MySqlHistoryRepository>()
             .TryAdd<Microsoft.EntityFrameworkCore.Diagnostics.IInterceptor, MySqlDataValueReaderInterceptor>()
             .TryAdd<Microsoft.EntityFrameworkCore.Metadata.IRelationalAnnotationProvider, MySqlAnnotationProvider>()
-            .TryAdd<Microsoft.EntityFrameworkCore.Query.IMethodCallTranslatorPlugin, MySqlFullTextTranslatorPlugin>();
+            .TryAdd<Microsoft.EntityFrameworkCore.Query.IMethodCallTranslatorPlugin, MySqlFullTextTranslatorPlugin>()
+            .TryAdd<Microsoft.EntityFrameworkCore.Query.IMethodCallTranslatorPlugin, MySqlJsonTranslatorPlugin>()
+            .TryAdd<Microsoft.EntityFrameworkCore.Query.IEvaluatableExpressionFilterPlugin, MySqlEvaluatableExpressionFilterPlugin>();
 }
 
 internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = true, bool mariaDb = false) : AnsiSqlDialect

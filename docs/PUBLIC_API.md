@@ -46,6 +46,7 @@ machinery, conventions, type mappings) are reached through EF's interfaces, neve
 | `DuckDbModelOptionsExtensions.UseAutoIncrement` | Applications: the DuckDB EF provider's name for a sequence-generated integer column; the core's `UseIdentityColumn`. |
 | `MySqlFullTextExtensions` (`IsFullText`, `Match`, `IsMatch`), `MySqlMatchSearchMode` | Applications: MySQL `FULLTEXT` indexes and `MATCH ... AGAINST` in its three search modes, as Pomelo's. |
 | `MySqlModelOptionsExtensions` (`HasCharSet`, `HasPrefixLength`, `IsSpatial`) | Applications: a column's, table's or database's character set, index prefix lengths and `SPATIAL` indexes in migrations, as Pomelo's. |
+| `MySqlJsonDbFunctionsExtensions` (`AsJson`, `JsonType`, `JsonQuote`, `JsonUnquote`, `JsonExtract`, `JsonOverlaps`, `JsonContains`, `JsonContainsPath`, `JsonContainsPathAny`, `JsonContainsPathAll`, `JsonSearchAny`) | Applications: MySQL's JSON functions in queries, as Pomelo's `MySqlJsonDbFunctionsExtensions`; the same on MariaDB, but for `AsJson`, which makes text JSON through the dialect (`JSON_COMPACT`: MariaDB has no JSON type to cast to). |
 | `MySqlDialect.MariaDb` | Applications: MariaDB, which has no `LATERAL` (queries needing one are refused), writes table value constructor rows without `ROW`, and has no JSON type to `CAST` to. Chosen with `UseDialect`, as `SingleStore` is. |
 
 ### Raw ADO.NET objects handed out

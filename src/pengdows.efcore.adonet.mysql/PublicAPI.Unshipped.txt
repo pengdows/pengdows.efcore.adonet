@@ -41,3 +41,18 @@ static pengdows.efcore.adonet.mysql.MySqlModelOptionsExtensions.HasPrefixLength<
 static pengdows.efcore.adonet.mysql.MySqlModelOptionsExtensions.IsSpatial(this Microsoft.EntityFrameworkCore.Metadata.Builders.IndexBuilder! indexBuilder, bool spatial = true) -> Microsoft.EntityFrameworkCore.Metadata.Builders.IndexBuilder!
 static pengdows.efcore.adonet.mysql.MySqlModelOptionsExtensions.IsSpatial<TEntity>(this Microsoft.EntityFrameworkCore.Metadata.Builders.IndexBuilder<TEntity>! indexBuilder, bool spatial = true) -> Microsoft.EntityFrameworkCore.Metadata.Builders.IndexBuilder<TEntity>!
 static readonly pengdows.efcore.adonet.mysql.MySqlDialect.MariaDb -> pengdows.efcore.adonet.mysql.MySqlDialect!
+pengdows.efcore.adonet.mysql.MySqlJsonDbFunctionsExtensions
+static pengdows.efcore.adonet.mysql.MySqlJsonDbFunctionsExtensions.AsJson(this Microsoft.EntityFrameworkCore.DbFunctions! _, string! value) -> string!
+static pengdows.efcore.adonet.mysql.MySqlJsonDbFunctionsExtensions.JsonContains(this Microsoft.EntityFrameworkCore.DbFunctions! _, object! json, object! candidate) -> bool
+static pengdows.efcore.adonet.mysql.MySqlJsonDbFunctionsExtensions.JsonContains(this Microsoft.EntityFrameworkCore.DbFunctions! _, object! json, object! candidate, string? path) -> bool
+static pengdows.efcore.adonet.mysql.MySqlJsonDbFunctionsExtensions.JsonContainsPath(this Microsoft.EntityFrameworkCore.DbFunctions! _, object! json, string! path) -> bool
+static pengdows.efcore.adonet.mysql.MySqlJsonDbFunctionsExtensions.JsonContainsPathAll(this Microsoft.EntityFrameworkCore.DbFunctions! _, object! json, params string![]! paths) -> bool
+static pengdows.efcore.adonet.mysql.MySqlJsonDbFunctionsExtensions.JsonContainsPathAny(this Microsoft.EntityFrameworkCore.DbFunctions! _, object! json, params string![]! paths) -> bool
+static pengdows.efcore.adonet.mysql.MySqlJsonDbFunctionsExtensions.JsonExtract<T>(this Microsoft.EntityFrameworkCore.DbFunctions! _, object! json, params string![]! paths) -> T
+static pengdows.efcore.adonet.mysql.MySqlJsonDbFunctionsExtensions.JsonOverlaps(this Microsoft.EntityFrameworkCore.DbFunctions! _, object! json1, object! json2) -> bool
+static pengdows.efcore.adonet.mysql.MySqlJsonDbFunctionsExtensions.JsonQuote(this Microsoft.EntityFrameworkCore.DbFunctions! _, string! value) -> string!
+static pengdows.efcore.adonet.mysql.MySqlJsonDbFunctionsExtensions.JsonSearchAny(this Microsoft.EntityFrameworkCore.DbFunctions! _, object! json, string! searchString) -> bool
+static pengdows.efcore.adonet.mysql.MySqlJsonDbFunctionsExtensions.JsonSearchAny(this Microsoft.EntityFrameworkCore.DbFunctions! _, object! json, string! searchString, string! path) -> bool
+static pengdows.efcore.adonet.mysql.MySqlJsonDbFunctionsExtensions.JsonSearchAny(this Microsoft.EntityFrameworkCore.DbFunctions! _, object! json, string! searchString, string! path, string? escapeChar) -> bool
+static pengdows.efcore.adonet.mysql.MySqlJsonDbFunctionsExtensions.JsonType(this Microsoft.EntityFrameworkCore.DbFunctions! _, object! json) -> string!
+static pengdows.efcore.adonet.mysql.MySqlJsonDbFunctionsExtensions.JsonUnquote(this Microsoft.EntityFrameworkCore.DbFunctions! _, object! json) -> string!
