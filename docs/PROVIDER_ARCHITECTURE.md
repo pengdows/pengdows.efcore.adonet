@@ -101,6 +101,7 @@ as plain text (SQL Server) compares as text and takes no conversion. DB impact: 
 | MariaDB speaks MySQL but has no `LATERAL`, no `ROW` in a table value constructor, no JSON type to `CAST` to, and other spatial and regex functions | SQL | `MySqlDialect.MariaDb`, chosen with `UseDialect`: lateral joins refused, `VALUES (...)`, `JSON_COMPACT`, `ST_NumInteriorRings`, PCRE `REGEXP` with `(?-i)`; its sessions take the database's collation |
 | MariaDB's derived tables can't read the outer row (MySQL's can since 8.0.14) | Engine SQL | `ISqlDialect.SupportsOuterReferencesInDerivedTables`; the core refuses such a query at translation, `VALUES` included; a capability skip in the suites |
 | MariaDB's JSON is `LONGTEXT`, so `=` compares spellings | SQL | `JsonSyntax.Equality`: `JSON_EQUALS` for a JSON column compared with JSON text |
+| MariaDB writes a geometry column's SRID as `REF_SYSTEM_ID=n` (MySQL: `SRID n`) and reports it in `GEOMETRY_COLUMNS` (MySQL: `COLUMNS.SRS_ID`), 0 for none | DDL and catalog | MySQL's migrations and schema reader, by the dialect's MariaDB variant |
 | MariaDB reports integer display widths (`BIGINT(20)`) | Catalog | MySQL's schema reader drops them but for `TINYINT(1)` and `ZEROFILL`, as MySQL 8.0.19 does |
 | Parallel migrators can deadlock inserting the lock row | Engine | The history repository waits out a refusal the dialect calls transient (`IDatabaseCapabilities.IsTransient`) like a held lock |
 | A catalog other than `INFORMATION_SCHEMA` | Engine catalog | `Scaffolding.SchemaReader`; `InformationSchemaReader` is ISO's |

@@ -54,7 +54,7 @@ public sealed class MySqlDialect : AdoNetDialect
     };
 
     public override pengdows.efcore.adonet.Scaffolding.SchemaReader SchemaReader
-        => MySqlSchemaReader.Instance;
+        => ((MySqlSql)Sql).IsMariaDb ? MySqlSchemaReader.MariaDb : MySqlSchemaReader.Instance;
 
     public override void ConfigureServices(IServiceCollection services)
         => new EntityFrameworkRelationalServicesBuilder(services)

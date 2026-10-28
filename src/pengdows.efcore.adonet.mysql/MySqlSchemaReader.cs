@@ -1,8 +1,12 @@
 // Behaviour reference (not copied): Pomelo's MySqlDatabaseModelFactory (MIT, Pomelo Foundation):
 // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Scaffolding/Internal/MySqlDatabaseModelFactory.cs
 
+using System.Data.Common;
+using System.Globalization;
 using System.Text.RegularExpressions;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Scaffolding;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
 using pengdows.efcore.adonet.Scaffolding;
@@ -15,9 +19,12 @@ namespace pengdows.efcore.adonet.mysql;
 ///     indexes are in <c>STATISTICS</c>, where unique constraints also appear (so only the primary key is read as a key); a
 ///     foreign key names its principal in <c>KEY_COLUMN_USAGE</c>; there are no sequences.
 /// </summary>
-internal sealed partial class MySqlSchemaReader : InformationSchemaReader
+internal sealed partial class MySqlSchemaReader(bool mariaDb = false) : InformationSchemaReader
 {
     public static readonly MySqlSchemaReader Instance = new();
+
+    /// <summary>MariaDB keeps a geometry column's SRID in GEOMETRY_COLUMNS, where MySQL has COLUMNS.SRS_ID.</summary>
+    public static readonly MySqlSchemaReader MariaDb = new(mariaDb: true);
 
     public override bool ScaffoldsSchemas
         => false;
@@ -38,9 +45,16 @@ internal sealed partial class MySqlSchemaReader : InformationSchemaReader
     public override string ColumnsSql
         => "SELECT c.TABLE_SCHEMA AS \"SCHEMA\", c.TABLE_NAME AS \"TABLE\", c.COLUMN_NAME AS \"NAME\", c.ORDINAL_POSITION AS \"POSITION\", "
             + "c.IS_NULLABLE AS \"NULLABLE\", c.COLUMN_DEFAULT AS \"DEFAULT\", c.DATA_TYPE, c.COLUMN_TYPE, c.EXTRA, c.COLUMN_COMMENT, "
-            + "c.GENERATION_EXPRESSION, c.COLLATION_NAME, t.TABLE_COLLATION "
+            + "c.GENERATION_EXPRESSION, c.COLLATION_NAME, t.TABLE_COLLATION, c.CHARACTER_SET_NAME, "
+            + "SUBSTRING_INDEX(t.TABLE_COLLATION, '_', 1) AS \"TABLE_CHARSET\", "
+            + (mariaDb ? "g.SRID AS \"SRS_ID\" " : "c.SRS_ID AS \"SRS_ID\" ")
             + "FROM INFORMATION_SCHEMA.COLUMNS AS c JOIN INFORMATION_SCHEMA.TABLES AS t "
-            + "ON t.TABLE_SCHEMA = c.TABLE_SCHEMA AND t.TABLE_NAME = c.TABLE_NAME WHERE c.TABLE_SCHEMA = {schema}";
+            + "ON t.TABLE_SCHEMA = c.TABLE_SCHEMA AND t.TABLE_NAME = c.TABLE_NAME "
+            + (mariaDb
+                ? "LEFT JOIN INFORMATION_SCHEMA.GEOMETRY_COLUMNS AS g ON g.F_TABLE_SCHEMA = c.TABLE_SCHEMA "
+                + "AND g.F_TABLE_NAME = c.TABLE_NAME AND g.F_GEOMETRY_COLUMN = c.COLUMN_NAME "
+                : "")
+            + "WHERE c.TABLE_SCHEMA = {schema}";
 
     public override string KeysSql
         => "SELECT TABLE_SCHEMA AS \"SCHEMA\", TABLE_NAME AS \"TABLE\", CONSTRAINT_NAME AS \"NAME\", 'PRIMARY KEY' AS \"TYPE\", "
@@ -83,8 +97,175 @@ internal sealed partial class MySqlSchemaReader : InformationSchemaReader
 
         // A collation is the column's own only where it differs from its table's.
         column.Collation = Text(row, "COLLATION_NAME") is { } collation && (collation != Text(row, "TABLE_COLLATION")) ? collation : null;
+
+        // So is a character set. A geometry column's SRID: MariaDB reports 0 for a column without one.
+        if ((Text(row, "CHARACTER_SET_NAME") is { } charSet) && (charSet != Text(row, "TABLE_CHARSET")))
+        {
+            column[MySqlModelOptionsExtensions.CharSetAnnotation] = charSet;
+        }
+
+        var srid = row.TryGetValue("SRS_ID", out var value) && (value != null) ? Convert.ToInt32(value, CultureInfo.InvariantCulture) : (int?)null;
+        if ((srid != null) && (!mariaDb || (srid != 0)))
+        {
+            column[MySqlModelOptionsExtensions.SpatialReferenceSystemAnnotation] = srid.Value;
+        }
+
         return column;
     }
+
+    // What INFORMATION_SCHEMA's ISO queries don't read: the database's defaults, each table's character set, collation and
+    // options, each index's kind and prefix lengths and a FULLTEXT index's parser, as the annotations the migrations write.
+    public override DatabaseModel Read(DbConnection connection, DatabaseModelFactoryOptions options, ISqlDialect sql)
+    {
+        var model = base.Read(connection, options, sql);
+        var tables = model.Tables.Where(t => t is not DatabaseView).ToDictionary(t => t.Name, StringComparer.Ordinal);
+        var defaults = Query(connection, DefaultsSql).FirstOrDefault() ?? new Dictionary<string, object?>();
+        model[MySqlModelOptionsExtensions.CharSetAnnotation] = Text(defaults, "CHARSET");
+        model.Collation = Text(defaults, "COLLATION");
+
+        foreach (var row in Query(connection, TableSettingsSql))
+        {
+            if (tables.TryGetValue(Text(row, "NAME")!, out var table))
+            {
+                TableSettings(table, row, defaults);
+            }
+        }
+
+        foreach (var index in Query(connection, IndexSettingsSql).GroupBy(r => (Table: Text(r, "TABLE")!, Name: Text(r, "NAME")!)))
+        {
+            if (tables.TryGetValue(index.Key.Table, out var table))
+            {
+                IndexSettings(table, index.Key.Name, index.OrderBy(r => Convert.ToInt64(r["POSITION"], CultureInfo.InvariantCulture)).ToList());
+            }
+        }
+
+        foreach (var table in tables.Values.Where(t => t.Indexes.Any(i => i[MySqlFullTextExtensions.FullTextAnnotation] is true)))
+        {
+            FullTextParsers(connection, table);
+        }
+
+        return model;
+    }
+
+    private const string DefaultsSql
+        = "SELECT DEFAULT_CHARACTER_SET_NAME AS \"CHARSET\", DEFAULT_COLLATION_NAME AS \"COLLATION\", @@default_storage_engine AS \"ENGINE\" "
+            + "FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = DATABASE()";
+
+    private const string TableSettingsSql
+        = "SELECT TABLE_NAME AS \"NAME\", TABLE_COLLATION, ENGINE, CREATE_OPTIONS FROM INFORMATION_SCHEMA.TABLES "
+            + "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_TYPE = 'BASE TABLE'";
+
+    // A functional index part has no column name, as in IndexesSql.
+    private const string IndexSettingsSql
+        = "SELECT TABLE_NAME AS \"TABLE\", INDEX_NAME AS \"NAME\", COLUMN_NAME AS \"COLUMN\", SEQ_IN_INDEX AS \"POSITION\", SUB_PART, INDEX_TYPE "
+            + "FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND COLUMN_NAME IS NOT NULL";
+
+    // A character set or collation is the table's own where it differs from the database's; an ENGINE where it differs from
+    // the server's default; the options it was created with (row_format=DYNAMIC ...) as they are, but for flags without a
+    // value (partitioned).
+    private static void TableSettings(DatabaseTable table, IReadOnlyDictionary<string, object?> row, IReadOnlyDictionary<string, object?> defaults)
+    {
+        if (Text(row, "TABLE_COLLATION") is { } collation)
+        {
+            var charSet = collation.Split('_')[0];
+            if (charSet != Text(defaults, "CHARSET"))
+            {
+                table[MySqlModelOptionsExtensions.CharSetAnnotation] = charSet;
+            }
+
+            if (collation != Text(defaults, "COLLATION"))
+            {
+                table[MySqlModelOptionsExtensions.CollationAnnotation] = collation;
+            }
+        }
+
+        var options = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        if ((Text(row, "ENGINE") is { Length: > 0 } engine) && !string.Equals(engine, Text(defaults, "ENGINE"), StringComparison.OrdinalIgnoreCase))
+        {
+            MySqlTableOptions.Update(options, "ENGINE", engine);
+        }
+
+        foreach (Match option in CreateOption().Matches(Text(row, "CREATE_OPTIONS") ?? ""))
+        {
+            MySqlTableOptions.Update(options, option.Groups["name"].Value, option.Groups["value"].Value);
+        }
+
+        table[MySqlModelOptionsExtensions.StoreOptionsAnnotation] = MySqlTableOptions.Serialize(options);
+    }
+
+    // A FULLTEXT or SPATIAL index is marked so; a prefix length is the index's or the primary key's, but a SPATIAL index's
+    // SUB_PART is the server's own (32 bytes), not one the model gave.
+    private static void IndexSettings(DatabaseTable table, string name, List<IReadOnlyDictionary<string, object?>> rows)
+    {
+        Annotatable? target = name == "PRIMARY" ? table.PrimaryKey : table.Indexes.FirstOrDefault(i => i.Name == name);
+        if (target == null)
+        {
+            return;
+        }
+
+        var type = Text(rows[0], "INDEX_TYPE");
+        if (string.Equals(type, "FULLTEXT", StringComparison.OrdinalIgnoreCase))
+        {
+            target[MySqlFullTextExtensions.FullTextAnnotation] = true;
+        }
+
+        if (string.Equals(type, "SPATIAL", StringComparison.OrdinalIgnoreCase))
+        {
+            target[MySqlModelOptionsExtensions.SpatialAnnotation] = true;
+            return;
+        }
+
+        var prefixLengths = rows.Select(r => r["SUB_PART"] is { } part ? Convert.ToInt32(part, CultureInfo.InvariantCulture) : 0).ToArray();
+        if (prefixLengths.Any(p => p > 0))
+        {
+            target[MySqlModelOptionsExtensions.PrefixLengthAnnotation] = prefixLengths;
+        }
+    }
+
+    // The catalog doesn't hold a FULLTEXT index's parser; SHOW CREATE TABLE writes it, in a version comment, after the
+    // index's columns. Behaviour reference (not copied): Pomelo's GetFullTextParsers, at the reference above.
+    private static void FullTextParsers(DbConnection connection, DatabaseTable table)
+    {
+        var create = Query(connection, "SHOW CREATE TABLE \"" + table.Name.Replace("\"", "\"\"", StringComparison.Ordinal) + "\"")
+            .Select(r => Text(r, "Create Table")).FirstOrDefault() ?? "";
+        foreach (Match parser in FullTextParser().Matches(create))
+        {
+            var indexName = parser.Groups["index"].Value.Replace("\"\"", "\"", StringComparison.Ordinal).Replace("``", "`", StringComparison.Ordinal);
+            if (table.Indexes.FirstOrDefault(i => i.Name == indexName) is { } index)
+            {
+                index[MySqlFullTextExtensions.FullTextParserAnnotation] = parser.Groups["parser"].Value;
+            }
+        }
+    }
+
+    private static List<IReadOnlyDictionary<string, object?>> Query(DbConnection connection, string sql)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        using var reader = command.ExecuteReader();
+        var rows = new List<IReadOnlyDictionary<string, object?>>();
+        while (reader.Read())
+        {
+            var row = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+            for (var i = 0; i < reader.FieldCount; i++)
+            {
+                row[reader.GetName(i)] = reader.IsDBNull(i) ? null : reader.GetValue(i);
+            }
+
+            rows.Add(row);
+        }
+
+        return rows;
+    }
+
+    // name=value in CREATE_OPTIONS (MariaDB quotes some names); a value is a word or a quoted string with nothing that could
+    // end a statement.
+    [GeneratedRegex(@"[`""]?(?<name>[A-Za-z_][A-Za-z0-9_]*)[`""]?=(?<value>'[^';#\r\n]*'|[A-Za-z0-9_.]+)")]
+    private static partial Regex CreateOption();
+
+    // FULLTEXT KEY "name" (...) /*!50100 WITH PARSER "ngram" */, under ANSI_QUOTES or not.
+    [GeneratedRegex(@"FULLTEXT KEY [`""](?<index>(?:[^`""]|``|"""")+)[`""][^\n]*?WITH PARSER [`""]?(?<parser>[A-Za-z0-9_]+)")]
+    private static partial Regex FullTextParser();
 
     private static ValueGenerated? GeneratedValue(string extra)
     {
