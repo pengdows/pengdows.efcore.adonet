@@ -41,6 +41,18 @@ public static class SqliteModelOptionsExtensions
         => (OwnedNavigationTableBuilder<TOwnerEntity, TDependentEntity>)UseSqlReturningClause(
             (OwnedNavigationTableBuilder)tableBuilder, useSqlReturningClause);
 
+    /// <summary>Whether one table of an entity type split across tables uses RETURNING; false for a table with triggers.</summary>
+    public static SplitTableBuilder UseSqlReturningClause(this SplitTableBuilder tableBuilder, bool useSqlReturningClause = true)
+    {
+        tableBuilder.MappingFragment.SetAnnotation(AdoNetAnnotationNames.UseReturningClause, useSqlReturningClause);
+        return tableBuilder;
+    }
+
+    /// <inheritdoc cref="UseSqlReturningClause(SplitTableBuilder, bool)" />
+    public static SplitTableBuilder<TEntity> UseSqlReturningClause<TEntity>(this SplitTableBuilder<TEntity> tableBuilder, bool useSqlReturningClause = true)
+        where TEntity : class
+        => (SplitTableBuilder<TEntity>)UseSqlReturningClause((SplitTableBuilder)tableBuilder, useSqlReturningClause);
+
     /// <summary>Whether the entity type's table uses RETURNING (true unless <see cref="UseSqlReturningClause(TableBuilder, bool)" /> said not).</summary>
     public static bool IsSqlReturningClauseUsed(this IReadOnlyEntityType entityType)
         => entityType.GetRootType().FindAnnotation(AdoNetAnnotationNames.UseReturningClause)?.Value as bool?

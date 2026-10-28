@@ -85,6 +85,36 @@ public class SqliteModelOptionsTests
         Assert.False(other.Database.IsSqlite());
     }
 
+    // An entity split across two tables, one of them with triggers: only that table's statements leave out RETURNING.
+    [Fact]
+    public async Task One_split_table_without_the_returning_clause_checks_its_rows_with_changes()
+    {
+        await using var context = new SplitContext(new DbContextOptionsBuilder<SplitContext>()
+            .UseAdoNetSqlite(_connection)
+            .LogTo(m => _commands.Add(m.ReplaceLineEndings("\n")), [RelationalEventId.CommandExecuted])
+            .Options);
+        context.Remove(new Plain { Id = 2 });
+
+        await Assert.ThrowsAsync<DbUpdateConcurrencyException>(() => context.SaveChangesAsync(Ct));
+
+        var command = Assert.Single(_commands);
+        var details = command[command.IndexOf("DELETE FROM \"PlainDetails\"", StringComparison.Ordinal)..].Split("DELETE FROM \"Plain\"\n")[0];
+        Assert.Contains("SELECT changes();", details);
+        Assert.DoesNotContain("RETURNING", details);
+        Assert.Contains("RETURNING 1", command[command.IndexOf("DELETE FROM \"Plain\"\n", StringComparison.Ordinal)..].Split("DELETE FROM \"PlainDetails\"")[0]);
+        Assert.False(context.Model.FindEntityType(typeof(Plain))!.FindMappingFragment(StoreObjectIdentifier.Table("PlainDetails"))![AdoNetAnnotationNames.UseReturningClause] as bool?);
+    }
+
+    public sealed class SplitContext(DbContextOptions<SplitContext> options) : DbContext(options)
+    {
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+            => modelBuilder.Entity<Plain>().SplitToTable("PlainDetails", t =>
+            {
+                t.Property(p => p.Name);
+                t.UseSqlReturningClause(false);
+            });
+    }
+
     public class Audited
     {
         public int Id { get; set; }
@@ -95,6 +125,7 @@ public class SqliteModelOptionsTests
     {
         public int Id { get; set; }
         public string? Name { get; set; }
+        public string? Code { get; set; }
     }
 
     public class Reenabled
