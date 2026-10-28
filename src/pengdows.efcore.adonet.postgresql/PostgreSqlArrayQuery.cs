@@ -151,7 +151,8 @@ internal static class PostgreSqlArraySql
 
     private static string Operand(SqlExpression expression, int index)
         => expression is ColumnExpression or SqlConstantExpression or SqlParameterExpression
-            || ((expression is SqlFunctionExpression function) && !SqlTemplate.TryGetTemplate(function, out _))
+                or SqlUnaryExpression { OperatorType: ExpressionType.Convert }
+            ||((expression is SqlFunctionExpression function) && !SqlTemplate.TryGetTemplate(function, out _))
             ? "{" + index + "}"
             : "({" + index + "})";
 }

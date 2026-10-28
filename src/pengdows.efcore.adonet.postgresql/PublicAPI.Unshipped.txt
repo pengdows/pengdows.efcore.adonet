@@ -23,4 +23,11 @@ static pengdows.efcore.adonet.postgresql.PostgreSqlDbFunctionsExtensions.ArrayCo
 static pengdows.efcore.adonet.postgresql.PostgreSqlDbFunctionsExtensions.ArrayContains<T>(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.Collections.Generic.IEnumerable<T>! array, System.Collections.Generic.IEnumerable<T>! other) -> bool
 static pengdows.efcore.adonet.postgresql.PostgreSqlDbFunctionsExtensions.ArrayOverlaps<T>(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.Collections.Generic.IEnumerable<T>! array, System.Collections.Generic.IEnumerable<T>! other) -> bool
 pengdows.efcore.adonet.postgresql.PostgreSqlArrayExtensions
+pengdows.efcore.adonet.postgresql.PostgreSqlJsonDbFunctionsExtensions
+static pengdows.efcore.adonet.postgresql.PostgreSqlJsonDbFunctionsExtensions.JsonContained(this Microsoft.EntityFrameworkCore.DbFunctions! _, object! contained, object! json) -> bool
+static pengdows.efcore.adonet.postgresql.PostgreSqlJsonDbFunctionsExtensions.JsonContains(this Microsoft.EntityFrameworkCore.DbFunctions! _, object! json, object! contained) -> bool
+static pengdows.efcore.adonet.postgresql.PostgreSqlJsonDbFunctionsExtensions.JsonExistAll(this Microsoft.EntityFrameworkCore.DbFunctions! _, object! json, params string![]! keys) -> bool
+static pengdows.efcore.adonet.postgresql.PostgreSqlJsonDbFunctionsExtensions.JsonExistAny(this Microsoft.EntityFrameworkCore.DbFunctions! _, object! json, params string![]! keys) -> bool
+static pengdows.efcore.adonet.postgresql.PostgreSqlJsonDbFunctionsExtensions.JsonExists(this Microsoft.EntityFrameworkCore.DbFunctions! _, object! json, string! key) -> bool
+static pengdows.efcore.adonet.postgresql.PostgreSqlJsonDbFunctionsExtensions.JsonTypeof(this Microsoft.EntityFrameworkCore.DbFunctions! _, object! json) -> string!
 static pengdows.efcore.adonet.postgresql.PostgreSqlArrayExtensions.UsePostgreSqlArrays(this Microsoft.EntityFrameworkCore.ModelBuilder! modelBuilder) -> Microsoft.EntityFrameworkCore.ModelBuilder!

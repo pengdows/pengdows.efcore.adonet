@@ -40,7 +40,11 @@ public static class PostgreSqlDbFunctionsExtensions
 internal sealed class PostgreSqlDbFunctionsTranslatorPlugin(ISqlExpressionFactory sqlExpressionFactory, IRelationalTypeMappingSource typeMappingSource)
     : IMethodCallTranslatorPlugin
 {
-    public IEnumerable<IMethodCallTranslator> Translators { get; } = [new PostgreSqlDbFunctionsTranslator(sqlExpressionFactory, typeMappingSource)];
+    public IEnumerable<IMethodCallTranslator> Translators { get; } =
+    [
+        new PostgreSqlDbFunctionsTranslator(sqlExpressionFactory, typeMappingSource),
+        new PostgreSqlJsonDbFunctionsTranslator(sqlExpressionFactory, typeMappingSource)
+    ];
 }
 
 internal sealed class PostgreSqlDbFunctionsTranslator(ISqlExpressionFactory sqlExpressionFactory, IRelationalTypeMappingSource typeMappingSource)
