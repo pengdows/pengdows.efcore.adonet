@@ -25,13 +25,12 @@ public class LifecycleTests
     }
 
     // EF warns when a TransactionScope is active and the provider's connections don't enlist in it; where the database's
-    // driver enlists (System.Transactions), EF asks it to. fakeDb has no enlistment (DbConnection.EnlistTransaction throws
-    // NotSupportedException: UPSTREAM_ISSUES), so its refusal is the evidence EF asked; the enlistment itself is covered by
-    // EF's Transaction specification suite on the server databases.
+    // When the driver supports ambient transactions, EF asks it to enlist. fakeDb rc4 accepts that enlistment; when the
+    // dialect does not support it, EF refuses the operation before opening the connection.
     [Theory]
     [InlineData(false, typeof(InvalidOperationException))]
-    [InlineData(true, typeof(NotSupportedException))]
-    public async Task An_ambient_transaction_is_enlisted_in_only_where_the_driver_can(bool enlists, Type outcome)
+    [InlineData(true, null)]
+    public async Task An_ambient_transaction_is_enlisted_in_only_where_the_driver_can(bool enlists, Type? outcome)
     {
         var dialect = new PartsDialect($"Ambient {enlists}", capabilities: new DatabaseCapabilities { SupportsAmbientTransactions = enlists });
         var factory = new fakeDbFactory(SupportedDatabase.PostgreSql);
@@ -44,8 +43,15 @@ public class LifecycleTests
 
         var error = await Record.ExceptionAsync(() => context.Database.OpenConnectionAsync(Ct));
 
-        Assert.IsType(outcome, error);
-        Assert.Equal(enlists, error.StackTrace!.Contains("EnlistTransaction", StringComparison.Ordinal));
+        if (outcome is null)
+        {
+            Assert.Null(error);
+        }
+        else
+        {
+            Assert.IsType(outcome, error);
+            Assert.Equal(enlists, error.StackTrace!.Contains("EnlistTransaction", StringComparison.Ordinal));
+        }
     }
 
     [Fact]
