@@ -222,3 +222,4 @@ virtual pengdows.efcore.adonet.mysql.MySqlDropPrimaryKeyAndRecreateForeignKeysOp
 virtual pengdows.efcore.adonet.mysql.MySqlDropPrimaryKeyAndRecreateForeignKeysOperation.RecreateForeignKeys.set -> void
 virtual pengdows.efcore.adonet.mysql.MySqlDropUniqueConstraintAndRecreateForeignKeysOperation.RecreateForeignKeys.get -> bool
 virtual pengdows.efcore.adonet.mysql.MySqlDropUniqueConstraintAndRecreateForeignKeysOperation.RecreateForeignKeys.set -> void
+override pengdows.efcore.adonet.mysql.MySqlDesignTimeServices.CreateDatabaseModelFactory() -> Microsoft.EntityFrameworkCore.Scaffolding.IDatabaseModelFactory?

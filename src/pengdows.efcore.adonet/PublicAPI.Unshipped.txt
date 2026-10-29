@@ -785,3 +785,7 @@ pengdows.efcore.adonet.Storage.IArrayTypeMapping.ElementAt.get -> string?
 pengdows.efcore.adonet.Storage.IArrayTypeMapping.Elements.get -> string!
 pengdows.efcore.adonet.JsonSyntax.DateTimeOffsetFromText.get -> string?
 pengdows.efcore.adonet.JsonSyntax.DateTimeOffsetFromText.init -> void
+pengdows.efcore.adonet.Design.AdoNetDesignTimeServices.AdoNetDesignTimeServices(pengdows.efcore.adonet.IAdoNetDialect! dialect, System.Data.Common.DbProviderFactory? driverFactory) -> void
+pengdows.efcore.adonet.Scaffolding.AdoNetDatabaseModelFactory.AdoNetDatabaseModelFactory(pengdows.efcore.adonet.IAdoNetDialect! dialect, System.Data.Common.DbProviderFactory? driverFactory) -> void
+virtual pengdows.efcore.adonet.Scaffolding.AdoNetDatabaseModelFactory.DialectFor(System.Data.Common.DbConnection! connection) -> pengdows.efcore.adonet.IAdoNetDialect!
+virtual pengdows.efcore.adonet.Design.AdoNetDesignTimeServices.CreateDatabaseModelFactory() -> Microsoft.EntityFrameworkCore.Scaffolding.IDatabaseModelFactory?

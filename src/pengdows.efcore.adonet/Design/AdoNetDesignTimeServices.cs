@@ -22,12 +22,38 @@ public class AdoNetDesignTimeServices : IDesignTimeServices
     }
 
     protected AdoNetDesignTimeServices(IAdoNetDialect dialect)
-        => Dialect = dialect;
+        : this(dialect, null)
+    {
+    }
+
+    /// <summary>
+    ///     For a plugin that names its driver: EF's tools scaffold from a connection string (dotnet ef dbcontext scaffold),
+    ///     which is opened through <paramref name="driverFactory" />. Without one, a schema is read only from a connection.
+    /// </summary>
+    protected AdoNetDesignTimeServices(IAdoNetDialect dialect, System.Data.Common.DbProviderFactory? driverFactory)
+    {
+        Dialect = dialect;
+        _driverFactory = driverFactory;
+    }
+
+    private readonly System.Data.Common.DbProviderFactory? _driverFactory;
 
     protected virtual IAdoNetDialect Dialect { get; }
 
+    /// <summary>
+    ///     The reverse engineering of a plugin that names its driver, or one that tells servers apart from the connection;
+    ///     null for the core's own, which reads a schema only from a connection.
+    /// </summary>
+    protected virtual IDatabaseModelFactory? CreateDatabaseModelFactory()
+        => _driverFactory is { } driverFactory ? new AdoNetDatabaseModelFactory(Dialect, driverFactory) : null;
+
     public virtual void ConfigureDesignTimeServices(IServiceCollection serviceCollection)
     {
+        if (CreateDatabaseModelFactory() is { } modelFactory)
+        {
+            serviceCollection.AddSingleton(modelFactory);
+        }
+
         serviceCollection.AddEntityFrameworkAdoNet(Dialect);
         new EntityFrameworkRelationalDesignServicesBuilder(serviceCollection)
             .TryAdd<IDatabaseModelFactory, AdoNetDatabaseModelFactory>()

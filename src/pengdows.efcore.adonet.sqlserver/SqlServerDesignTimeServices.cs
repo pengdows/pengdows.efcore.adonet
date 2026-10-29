@@ -8,4 +8,4 @@ using pengdows.efcore.adonet.Design;
 namespace pengdows.efcore.adonet.sqlserver;
 
 /// <summary>The SQL Server provider's design-time services.</summary>
-public sealed class SqlServerDesignTimeServices() : AdoNetDesignTimeServices(SqlServerDialect.Instance);
+public sealed class SqlServerDesignTimeServices() : AdoNetDesignTimeServices(SqlServerDialect.Instance, Microsoft.Data.SqlClient.SqlClientFactory.Instance);
