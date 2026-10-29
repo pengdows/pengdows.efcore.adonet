@@ -10,6 +10,8 @@
     <Project Path="src/pengdows.efcore.adonet.flatfile/pengdows.efcore.adonet.flatfile.csproj" />
     <Project Path="src/pengdows.efcore.adonet.NetTopologySuite/pengdows.efcore.adonet.NetTopologySuite.csproj" />
     <Project Path="src/pengdows.efcore.adonet.mysql.NetTopologySuite/pengdows.efcore.adonet.mysql.NetTopologySuite.csproj" />
+    <Project Path="src/pengdows.efcore.adonet.mysql.Json.Microsoft/pengdows.efcore.adonet.mysql.Json.Microsoft.csproj" />
+    <Project Path="src/pengdows.efcore.adonet.mysql.Json.Newtonsoft/pengdows.efcore.adonet.mysql.Json.Newtonsoft.csproj" />
   </Folder>
   <Folder Name="/test/">
     <Project Path="test/pengdows.efcore.adonet.Tests/pengdows.efcore.adonet.Tests.csproj" />

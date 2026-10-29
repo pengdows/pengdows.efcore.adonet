@@ -30,6 +30,7 @@ public class MySqlSpatialDistanceTests
     private static PlaceContext Context(bool mariaDb)
         => new(new DbContextOptionsBuilder<PlaceContext>()
             .UseAdoNetMySql("Server=localhost", o => o.UseDialect(mariaDb ? MySqlDialect.MariaDb : MySqlDialect.Instance).UseMySqlNetTopologySuite())
+            .Isolated("mysql-nts " + mariaDb)
             .Options);
 
     private static readonly Point Oslo = new(10.75, 59.91) { SRID = 4326 };

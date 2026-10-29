@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>System.Text.Json for pengdows.efcore.adonet's MySQL plugin: POCOs, JsonDocument and JsonElement on json columns, read inside in queries, as Pomelo's Json.Microsoft package.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\pengdows.efcore.adonet.mysql\pengdows.efcore.adonet.mysql.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="pengdows.efcore.adonet.mysql.Tests" />
+  </ItemGroup>
+</Project>

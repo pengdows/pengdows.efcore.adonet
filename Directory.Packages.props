@@ -19,6 +19,8 @@
     <PackageVersion Include="Testcontainers.MsSql" Version="4.16.0" />
     <PackageVersion Include="MySqlConnector" Version="2.6.2" />
     <PackageVersion Include="NetTopologySuite" Version="2.6.0" />
+    <!-- The MySQL plugin's Newtonsoft.Json package (MIT), as Pomelo's Json.Newtonsoft. -->
+    <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageVersion Include="NetTopologySuite.IO.SqlServerBytes" Version="2.1.0" />
     <PackageVersion Include="NetTopologySuite.IO.SpatiaLite" Version="2.0.0" />
     <PackageVersion Include="Microsoft.SqlServer.Types" Version="170.1000.7" />

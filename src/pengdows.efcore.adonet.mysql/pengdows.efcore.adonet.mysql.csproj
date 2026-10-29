@@ -10,5 +10,7 @@
     <InternalsVisibleTo Include="pengdows.efcore.adonet.mysql.Tests" />
     <!-- The MySQL packages beside this one read the dialect's variant and share its SQL helpers. -->
     <InternalsVisibleTo Include="pengdows.efcore.adonet.mysql.NetTopologySuite" />
+    <InternalsVisibleTo Include="pengdows.efcore.adonet.mysql.Json.Microsoft" />
+    <InternalsVisibleTo Include="pengdows.efcore.adonet.mysql.Json.Newtonsoft" />
   </ItemGroup>
 </Project>

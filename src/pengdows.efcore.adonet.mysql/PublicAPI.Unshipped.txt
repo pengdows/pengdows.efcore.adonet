@@ -10,6 +10,11 @@ pengdows.efcore.adonet.mysql.MySQLCharsetAttribute.MySQLCharsetAttribute(string!
 pengdows.efcore.adonet.mysql.MySQLCollationAttribute
 pengdows.efcore.adonet.mysql.MySQLCollationAttribute.Collation.get -> string!
 pengdows.efcore.adonet.mysql.MySQLCollationAttribute.MySQLCollationAttribute(string! collation) -> void
+pengdows.efcore.adonet.mysql.MySqlCommonJsonChangeTrackingOptions
+pengdows.efcore.adonet.mysql.MySqlCommonJsonChangeTrackingOptions.FullHierarchyOptimizedFast = 1 -> pengdows.efcore.adonet.mysql.MySqlCommonJsonChangeTrackingOptions
+pengdows.efcore.adonet.mysql.MySqlCommonJsonChangeTrackingOptions.FullHierarchyOptimizedSemantically = 2 -> pengdows.efcore.adonet.mysql.MySqlCommonJsonChangeTrackingOptions
+pengdows.efcore.adonet.mysql.MySqlCommonJsonChangeTrackingOptions.FullHierarchySemantically = 3 -> pengdows.efcore.adonet.mysql.MySqlCommonJsonChangeTrackingOptions
+pengdows.efcore.adonet.mysql.MySqlCommonJsonChangeTrackingOptions.RootPropertyOnly = 0 -> pengdows.efcore.adonet.mysql.MySqlCommonJsonChangeTrackingOptions
 pengdows.efcore.adonet.mysql.MySqlDbContextOptionsBuilderExtensions
 pengdows.efcore.adonet.mysql.MySqlDialect
 pengdows.efcore.adonet.mysql.MySqlDialect.ServerVersion.get -> System.Version?

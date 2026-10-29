@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Newtonsoft.Json for pengdows.efcore.adonet's MySQL plugin: POCOs, JToken, JObject and JArray on json columns, read inside in queries, as Pomelo's Json.Newtonsoft package.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\pengdows.efcore.adonet.mysql\pengdows.efcore.adonet.mysql.csproj" />
+    <PackageReference Include="Newtonsoft.Json" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="pengdows.efcore.adonet.mysql.Tests" />
+  </ItemGroup>
+</Project>
