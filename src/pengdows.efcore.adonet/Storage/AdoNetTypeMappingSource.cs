@@ -112,6 +112,10 @@ internal class AdoNetTypeMappingSource : RelationalTypeMappingSource
     }
 #pragma warning restore EF1001
 
+    // "timestamp(6)" -> "timestamp", as GetClrTypes keys store types.
+    private static string StoreTypeBase(string storeType)
+        => storeType.IndexOf('(') is var open and >= 0 ? storeType[..open].TrimEnd() : storeType;
+
     protected override RelationalTypeMapping? FindMapping(in RelationalTypeMappingInfo mappingInfo)
     {
         // byte[] is both a scalar CLR type and EF's primitive collection of bytes. The element mapping marks the latter;
@@ -167,10 +171,24 @@ internal class AdoNetTypeMappingSource : RelationalTypeMappingSource
         // A row version the model leaves the store type of, and no plugin maps: the dialect's, which the database sets on
         // every insert and update.
         if (mappingInfo is { IsRowVersion: true, StoreTypeName: null, ClrType: { } rowVersionClr }
-            && _typeMappings.RowVersionStoreType(rowVersionClr) is { } rowVersionStoreType
-            && _clrTypeMappings.TryGetValue(rowVersionClr, out var rowVersionMapping))
+            && _typeMappings.RowVersionStoreType(rowVersionClr) is { } rowVersionStoreType)
         {
-            return rowVersionMapping.WithTypeMappingInfo(mappingInfo).WithStoreTypeAndSize(rowVersionStoreType, null);
+            // A byte[] one the database keeps as a time is that time's mapping, read as eight bytes.
+            var rowVersionHeld = _typeMappings.GetClrTypes(StoreTypeBase(rowVersionStoreType));
+            if (rowVersionClr == typeof(byte[])
+                && !rowVersionHeld.Contains(typeof(byte[]))
+                && rowVersionHeld.Contains(typeof(DateTime))
+                && _clrTypeMappings.TryGetValue(typeof(DateTime), out var timeMapping))
+            {
+                return (RelationalTypeMapping)timeMapping
+                    .WithStoreTypeAndSize(rowVersionStoreType, null)
+                    .WithComposedConverter(RowVersionBytesConverter.Instance, RowVersionBytesConverter.Comparer, RowVersionBytesConverter.Comparer);
+            }
+
+            if (_clrTypeMappings.TryGetValue(rowVersionClr, out var rowVersionMapping))
+            {
+                return rowVersionMapping.WithTypeMappingInfo(mappingInfo).WithStoreTypeAndSize(rowVersionStoreType, null);
+            }
         }
 
         // A JSON column (ToJson), in the dialect's JSON type unless the model names another.

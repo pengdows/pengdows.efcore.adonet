@@ -633,9 +633,12 @@ internal sealed class MySqlTypeMappings : AnsiTypeMappings
             : base.Cast(storeType);
     }
 
-    // A DateTime row version is a TIMESTAMP(6), which the migrations give DEFAULT and ON UPDATE CURRENT_TIMESTAMP(6).
+    // A DateTime or byte[] row version is a TIMESTAMP(6), which the migrations give DEFAULT and ON UPDATE
+    // CURRENT_TIMESTAMP(6); MySQL has no rowversion type, so a byte[] one reads the time as eight bytes. As Pomelo maps
+    // both. Behaviour reference (not copied):
+    // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Storage/Internal/BytesToDateTimeConverter.cs
     public override string? RowVersionStoreType(Type clrType)
-        => clrType == typeof(DateTime) ? "timestamp(6)" : null;
+        => clrType == typeof(DateTime) || clrType == typeof(byte[]) ? "timestamp(6)" : null;
 
     public override string? GetStoreType(Type clrType)
         => StoreTypes.GetValueOrDefault(clrType) ?? base.GetStoreType(clrType);

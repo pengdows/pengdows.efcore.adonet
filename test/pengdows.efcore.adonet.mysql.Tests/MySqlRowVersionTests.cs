@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 namespace pengdows.efcore.adonet.mysql.Tests;
 
 /// <summary>
-///     A DateTime row version ([Timestamp] or IsRowVersion) is MySQL's TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE
+///     A DateTime or byte[] row version ([Timestamp] or IsRowVersion) is MySQL's TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE
 ///     CURRENT_TIMESTAMP(6), as Pomelo maps it: the server sets it on every insert and update, EF reads it back, and an update
 ///     or delete carrying a stale one is a concurrency conflict. Behaviour reference (not copied):
 ///     https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Storage/Internal/MySqlTypeMappingSource.cs
@@ -73,6 +73,53 @@ public abstract class MySqlRowVersionTests<TFixture>(TFixture fixture) : IClassF
         }
     }
 
+    // MySQL has no rowversion type: a byte[] one is the same TIMESTAMP(6), read as eight bytes. Found running EF's
+    // OptimisticConcurrency tests through Pomelo's suite, where it was a VARBINARY no one changed.
+    [Fact]
+    public async Task A_byte_array_row_version_is_set_by_the_server_and_a_stale_one_is_a_conflict()
+    {
+        var note = new BinaryNote { Text = "a" };
+        await using (var context = Context())
+        {
+            context.Add(note);
+            await context.SaveChangesAsync(Ct);
+        }
+
+        var inserted = note.Version;
+        Assert.Equal(8, inserted.Length);
+
+        await Task.Delay(5, Ct);
+        await using (var context = Context())
+        {
+            context.Attach(note);
+            note.Text = "b";
+            await context.SaveChangesAsync(Ct);
+        }
+
+        Assert.NotEqual(inserted, note.Version);
+
+        await using (var stale = Context())
+        {
+            stale.Attach(new BinaryNote { Id = note.Id, Text = "b", Version = inserted }).Property(n => n.Text).IsModified = true;
+            await Assert.ThrowsAsync<DbUpdateConcurrencyException>(() => stale.SaveChangesAsync(Ct));
+        }
+
+        await using (var stale = Context())
+        {
+            stale.Remove(new BinaryNote { Id = note.Id, Version = inserted });
+            await Assert.ThrowsAsync<DbUpdateConcurrencyException>(() => stale.SaveChangesAsync(Ct));
+        }
+    }
+
+    public sealed class BinaryNote
+    {
+        public int Id { get; set; }
+        public string? Text { get; set; }
+
+        [Timestamp]
+        public byte[] Version { get; set; } = [];
+    }
+
     public sealed class Note
     {
         public int Id { get; set; }
@@ -85,6 +132,7 @@ public abstract class MySqlRowVersionTests<TFixture>(TFixture fixture) : IClassF
     public sealed class NoteContext(DbContextOptions<NoteContext> options) : DbContext(options)
     {
         public DbSet<Note> Notes => Set<Note>();
+        public DbSet<BinaryNote> BinaryNotes => Set<BinaryNote>();
     }
 }
 

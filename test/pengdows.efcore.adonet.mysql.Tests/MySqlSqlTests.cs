@@ -310,3 +310,48 @@ public class MariaDbSqlTests
                 .ToQueryString());
     }
 }
+
+public class MySqlBinaryRowVersionTests
+{
+    public class Note
+    {
+        public int Id { get; set; }
+
+        [System.ComponentModel.DataAnnotations.Timestamp]
+        public byte[] Version { get; set; } = [];
+    }
+
+    private sealed class NoteContext(DbContextOptions<NoteContext> options) : DbContext(options)
+    {
+        public DbSet<Note> Notes => Set<Note>();
+    }
+
+    private static NoteContext Context()
+        => new(new DbContextOptionsBuilder<NoteContext>().AllowManyDialects().UseAdoNetMySql("Server=localhost").Options);
+
+    // MySQL has no rowversion type: a byte[] row version is a TIMESTAMP(6) the server sets on every insert and update, as
+    // a DateTime one is, read as eight bytes. Found running EF's OptimisticConcurrency tests through Pomelo's suite, whose
+    // F1 model's byte[] [Timestamp] was a plain VARBINARY no one changed, so no conflict was ever seen.
+    [Fact]
+    public void A_byte_array_row_version_is_a_timestamp_the_server_sets()
+    {
+        using var context = Context();
+
+        Assert.Contains(
+            "`Version` timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6)",
+            context.Database.GenerateCreateScript());
+    }
+
+    [Fact]
+    public void A_byte_array_row_version_reads_the_timestamp_as_bytes_and_back()
+    {
+        using var context = Context();
+        var converter = context.Model.FindEntityType(typeof(Note))!.FindProperty(nameof(Note.Version))!.GetTypeMapping().Converter!;
+        var stamp = new DateTime(2026, 10, 29, 12, 34, 56, 789).AddTicks(1230);
+
+        var bytes = (byte[])converter.ConvertFromProvider(stamp)!;
+
+        Assert.Equal(8, bytes.Length);
+        Assert.Equal(stamp, converter.ConvertToProvider(bytes));
+    }
+}
