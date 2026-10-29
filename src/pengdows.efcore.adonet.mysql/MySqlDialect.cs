@@ -229,7 +229,12 @@ internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = t
             ["PointOnSurface"] = mariaDb ? "ST_PointOnSurface({0})" : null,
             ["InteriorPoint"] = mariaDb ? "ST_PointOnSurface({0})" : null,
             ["Relate"] = mariaDb ? "ST_Relate({0}, {1}, {2})" : null,
-            ["IsRing"] = "(ST_IsClosed({0}) AND ST_IsSimple({0}))",
+            // MariaDB answers these for a NULL geometry with -1, its error value, which reads as true: NULL is the answer.
+            ["IsClosed"] = mariaDb ? "CASE WHEN {0} IS NULL THEN NULL ELSE ST_IsClosed({0}) END" : "ST_IsClosed({0})",
+            ["IsSimple"] = mariaDb ? "CASE WHEN {0} IS NULL THEN NULL ELSE ST_IsSimple({0}) END" : "ST_IsSimple({0})",
+            ["IsRing"] = mariaDb
+                ? "CASE WHEN {0} IS NULL THEN NULL ELSE (ST_IsClosed({0}) AND ST_IsSimple({0})) END"
+                : "(ST_IsClosed({0}) AND ST_IsSimple({0}))",
             ["Z"] = null,
             ["M"] = null,
             ["GeometryType"] = "CASE ST_GeometryType({0}) WHEN 'POINT' THEN 'Point' WHEN 'LINESTRING' THEN 'LineString' "

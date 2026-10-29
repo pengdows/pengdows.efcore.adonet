@@ -235,6 +235,20 @@ public class MariaDbSqlTests
         Assert.Contains("REGEXP_LIKE", MySqlDialect.Instance.Sql.Functions.RegexIsMatch);
     }
 
+    // MariaDB answers ST_IsClosed, ST_IsSimple and ST_IsRing of a NULL geometry with -1 (its error value), which reads as
+    // true; a NULL geometry is neither closed nor simple, so the answer is NULL, as MySQL gives.
+    [Theory]
+    [InlineData("IsClosed")]
+    [InlineData("IsSimple")]
+    [InlineData("IsRing")]
+    public void MariaDb_answers_a_null_geometrys_predicates_with_null(string member)
+    {
+        var template = MySqlDialect.MariaDb.Sql.Spatial!.Functions[member]!;
+
+        Assert.StartsWith("CASE WHEN {0} IS NULL THEN NULL ELSE ", template);
+        Assert.DoesNotContain("IS NULL THEN NULL", MySqlDialect.Instance.Sql.Spatial!.Functions.GetValueOrDefault(member) ?? "");
+    }
+
     [Fact]
     public void A_query_with_a_lateral_join_is_refused_on_MariaDb()
     {
