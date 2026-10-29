@@ -289,7 +289,7 @@ internal class SqliteMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies d
             .Append(", ")
             .Append(text.GenerateSqlLiteral(operation.Name))
             .Append(", ")
-            .Append(number.GenerateSqlLiteral((long)(operation[SqliteModelOptionsExtensions.SridAnnotation] as int? ?? 0)))
+            .Append(number.GenerateSqlLiteral((long)((operation[SqliteModelOptionsExtensions.SridAnnotation] ?? operation[SqliteModelOptionsExtensions.LegacySridAnnotation]) as int? ?? 0)))
             .Append(", ")
             .Append(text.GenerateSqlLiteral(type.ToUpperInvariant()))
             .Append(", -1, ")
@@ -303,13 +303,30 @@ internal class SqliteMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies d
     {
         if ((operation.PrimaryKey is { Columns: [var keyColumn] } key)
             && (operation.Columns.FirstOrDefault(c => c.Name == keyColumn) is { } column)
-            && IsIdentity(column))
+            && IsAutoincrementKey(operation, column, model))
         {
             column.AddAnnotation(InlinePrimaryKey, key.Name ?? string.Empty);
             operation.PrimaryKey = null;
         }
 
         base.Generate(operation, model, builder, terminate);
+    }
+
+    // AUTOINCREMENT is the strategy's, not the identity's: a key the database numbers is the plain rowid unless the model
+    // says UseAutoincrement (Microsoft's default). Without a model (raw operations), the identity decides, as before.
+    private static bool IsAutoincrementKey(CreateTableOperation operation, ColumnOperation column, IModel? model)
+    {
+        if (model is null)
+        {
+            return IsIdentity(column);
+        }
+
+        var property = model.GetEntityTypes()
+            .Where(e => e.GetTableName() == operation.Name && e.GetSchema() == operation.Schema)
+            .SelectMany(e => e.GetProperties())
+            .FirstOrDefault(p => p.GetColumnName() == column.Name);
+
+        return property is not null && property.GetValueGenerationStrategy() == SqliteValueGenerationStrategy.Autoincrement;
     }
 
     // A generated key of several columns has no AUTOINCREMENT in SQLite (ISqlDialect.GeneratesCompositeKeyValues).

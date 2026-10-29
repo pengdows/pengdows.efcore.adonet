@@ -19,6 +19,16 @@ public class SqliteUpstreamSpatialiteTests
     }
 
     [Fact]
+    public void TryLoad_leaves_a_connection_the_caller_opened_open()
+    {
+        using var connection = new SqliteConnection("Data Source=:memory:");
+        connection.Open();
+
+        Assert.False(SpatialiteLoader.TryLoad(connection));
+        Assert.Equal(System.Data.ConnectionState.Open, connection.State);
+    }
+
+    [Fact]
     public void Load_throws_when_the_module_is_not_installed()
     {
         using var connection = new SqliteConnection("Data Source=:memory:");

@@ -71,7 +71,10 @@ public static class SqliteModelOptionsExtensions
     public static PropertyBuilder<TProperty> UseAutoincrement<TProperty>(this PropertyBuilder<TProperty> propertyBuilder)
         => propertyBuilder.UseIdentityColumn();
 
-    internal const string SridAnnotation = "AdoNet:Sqlite:Srid";
+    internal const string SridAnnotation = "Sqlite:Srid";
+
+    // The name this provider wrote before it adopted Microsoft's: still read, so existing models keep their SRID.
+    internal const string LegacySridAnnotation = "AdoNet:Sqlite:Srid";
 
     /// <summary>
     ///     The spatial reference system of a SpatiaLite geometry column, which AddGeometryColumn declares it with and its values
@@ -87,7 +90,7 @@ public static class SqliteModelOptionsExtensions
 
     /// <summary>The column's SRID from <see cref="HasSrid(PropertyBuilder, int)" />, or null.</summary>
     public static int? GetSrid(this IReadOnlyProperty property)
-        => property.FindAnnotation(SridAnnotation)?.Value as int?;
+        => (property.FindAnnotation(SridAnnotation) ?? property.FindAnnotation(LegacySridAnnotation))?.Value as int?;
 
     /// <summary>Whether the context's database is SQLite: its dialect is <see cref="SqliteDialect" /> or a variant of it.</summary>
     public static bool IsSqlite(this DatabaseFacade database)

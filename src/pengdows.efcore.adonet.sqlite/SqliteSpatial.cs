@@ -130,7 +130,7 @@ internal sealed class SqliteAnnotationProvider(RelationalAnnotationProviderDepen
             yield return annotation;
         }
 
-        if (column.PropertyMappings.Select(m => m.Property.FindAnnotation(SqliteModelOptionsExtensions.SridAnnotation)?.Value).OfType<int>().FirstOrDefault() is var srid
+        if (column.PropertyMappings.Select(m => m.Property.GetSrid()).OfType<int>().FirstOrDefault() is var srid
             && (srid != 0))
         {
             yield return new Annotation(SqliteModelOptionsExtensions.SridAnnotation, srid);

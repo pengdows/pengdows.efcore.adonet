@@ -48,17 +48,15 @@ public class SqliteUpstreamValueGenerationTests
         Assert.Contains("AUTOINCREMENT", context.Database.GenerateCreateScript());
     }
 
-    // A documented divergence, not parity: this provider's integer identity key is AUTOINCREMENT by default, so a deleted
-    // row's key is never reused (SqliteMigrations). Microsoft's EF writes the plain rowid unless UseAutoincrement is set. The
-    // strategy itself still reads None for such a key.
+    // EF's default for an integer key is the plain rowid, as Microsoft's provider writes it; AUTOINCREMENT is opt-in.
     [Fact]
-    public void A_key_without_UseAutoincrement_has_no_strategy_and_is_AUTOINCREMENT_by_this_providers_default()
+    public void A_key_without_UseAutoincrement_is_the_plain_rowid()
     {
         using var context = new PlainContext(Options<PlainContext>());
 
         var property = context.Model.FindEntityType(typeof(Counter))!.FindProperty(nameof(Counter.Id))!;
 
         Assert.Equal(SqliteValueGenerationStrategy.None, property.GetValueGenerationStrategy());
-        Assert.Contains("AUTOINCREMENT", context.Database.GenerateCreateScript());
+        Assert.DoesNotContain("AUTOINCREMENT", context.Database.GenerateCreateScript());
     }
 }

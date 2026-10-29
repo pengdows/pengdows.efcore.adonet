@@ -48,12 +48,28 @@ public class SqliteSpatialTests
             new AddColumnOperation
             {
                 Table = "we'ird", Name = "Shape", ClrType = typeof(Geometry), ColumnType = "GEOMETRY", IsNullable = true,
-                ["AdoNet:Sqlite:Srid"] = 3857
+                ["Sqlite:Srid"] = 3857
             }
         ]).Select(c => c.CommandText));
 
         Assert.Contains("SELECT AddGeometryColumn('we''ird', 'Shape', 3857, 'GEOMETRY', -1, 0);", sql);
         Assert.DoesNotContain("ALTER TABLE", sql);
+    }
+
+    [Fact]
+    public void A_geometry_column_with_the_legacy_srid_annotation_is_added_with_that_srid()
+    {
+        using var context = Context();
+        var sql = string.Join("", context.GetService<IMigrationsSqlGenerator>().Generate(
+        [
+            new AddColumnOperation
+            {
+                Table = "places", Name = "Shape", ClrType = typeof(Geometry), ColumnType = "GEOMETRY", IsNullable = true,
+                ["AdoNet:Sqlite:Srid"] = 3857
+            }
+        ]).Select(c => c.CommandText));
+
+        Assert.Contains("SELECT AddGeometryColumn('places', 'Shape', 3857, 'GEOMETRY', -1, 0);", sql);
     }
 
     // A geometry mapping converts through its SpatialConverter, which EF keeps protected; values are bound through it.
