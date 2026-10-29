@@ -7,4 +7,8 @@ using pengdows.efcore.adonet.flatfile;
 namespace pengdows.efcore.adonet.flatfile;
 
 /// <summary>The provider's design-time services for pengdows.flatfile.</summary>
-public class FlatFileDesignTimeServices() : AdoNetDesignTimeServices(FlatFileDialect.Instance, pengdows.flatfile.FlatFileProviderFactory.Instance);
+public class FlatFileDesignTimeServices() : AdoNetDesignTimeServices(FlatFileDialect.Instance, pengdows.flatfile.FlatFileProviderFactory.Instance)
+{
+    protected override System.Reflection.MethodInfo UseProvider
+        => AdoNetProviderCodeGenerator.UseMethod(typeof(FlatFileDbContextOptionsBuilderExtensions), nameof(FlatFileDbContextOptionsBuilderExtensions.UseAdoNetFlatFile));
+}

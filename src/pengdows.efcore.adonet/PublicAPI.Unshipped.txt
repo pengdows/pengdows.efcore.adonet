@@ -789,3 +789,8 @@ pengdows.efcore.adonet.Design.AdoNetDesignTimeServices.AdoNetDesignTimeServices(
 pengdows.efcore.adonet.Scaffolding.AdoNetDatabaseModelFactory.AdoNetDatabaseModelFactory(pengdows.efcore.adonet.IAdoNetDialect! dialect, System.Data.Common.DbProviderFactory? driverFactory) -> void
 virtual pengdows.efcore.adonet.Scaffolding.AdoNetDatabaseModelFactory.DialectFor(System.Data.Common.DbConnection! connection) -> pengdows.efcore.adonet.IAdoNetDialect!
 virtual pengdows.efcore.adonet.Design.AdoNetDesignTimeServices.CreateDatabaseModelFactory() -> Microsoft.EntityFrameworkCore.Scaffolding.IDatabaseModelFactory?
+pengdows.efcore.adonet.Design.AdoNetProviderCodeGenerator
+pengdows.efcore.adonet.Design.AdoNetProviderCodeGenerator.AdoNetProviderCodeGenerator(Microsoft.EntityFrameworkCore.Scaffolding.ProviderCodeGeneratorDependencies! dependencies, System.Reflection.MethodInfo! useProvider) -> void
+override pengdows.efcore.adonet.Design.AdoNetProviderCodeGenerator.GenerateUseProvider(string! connectionString, Microsoft.EntityFrameworkCore.Design.MethodCallCodeFragment? providerOptions) -> Microsoft.EntityFrameworkCore.Design.MethodCallCodeFragment!
+static pengdows.efcore.adonet.Design.AdoNetProviderCodeGenerator.UseMethod(System.Type! extensions, string! name) -> System.Reflection.MethodInfo!
+virtual pengdows.efcore.adonet.Design.AdoNetDesignTimeServices.UseProvider.get -> System.Reflection.MethodInfo?

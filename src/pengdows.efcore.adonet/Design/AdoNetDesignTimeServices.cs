@@ -47,11 +47,25 @@ public class AdoNetDesignTimeServices : IDesignTimeServices
     protected virtual IDatabaseModelFactory? CreateDatabaseModelFactory()
         => _driverFactory is { } driverFactory ? new AdoNetDatabaseModelFactory(Dialect, driverFactory) : null;
 
+    /// <summary>
+    ///     The plugin's <c>UseAdoNet...</c> entry point, which scaffolding writes into <c>OnConfiguring</c> (see
+    ///     <see cref="AdoNetProviderCodeGenerator.UseMethod" />); null for the core's own, which names no driver, so a model
+    ///     is scaffolded but no <c>OnConfiguring</c> configuration can be.
+    /// </summary>
+    protected virtual System.Reflection.MethodInfo? UseProvider
+        => null;
+
     public virtual void ConfigureDesignTimeServices(IServiceCollection serviceCollection)
     {
         if (CreateDatabaseModelFactory() is { } modelFactory)
         {
             serviceCollection.AddSingleton(modelFactory);
+        }
+
+        if (UseProvider is { } useProvider)
+        {
+            serviceCollection.AddSingleton<IProviderConfigurationCodeGenerator>(
+                p => new AdoNetProviderCodeGenerator(p.GetRequiredService<ProviderCodeGeneratorDependencies>(), useProvider));
         }
 
         serviceCollection.AddEntityFrameworkAdoNet(Dialect);

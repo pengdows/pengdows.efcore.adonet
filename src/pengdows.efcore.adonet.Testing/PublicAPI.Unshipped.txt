@@ -158,6 +158,7 @@ pengdows.efcore.adonet.Testing.EntryPointConformanceTests<TEntryPoints>.A_connec
 pengdows.efcore.adonet.Testing.EntryPointConformanceTests<TEntryPoints>.A_data_source() -> void
 pengdows.efcore.adonet.Testing.EntryPointConformanceTests<TEntryPoints>.EntryPointConformanceTests() -> void
 pengdows.efcore.adonet.Testing.EntryPointConformanceTests<TEntryPoints>.The_non_generic_builder_works_too() -> void
+pengdows.efcore.adonet.Testing.EntryPointConformanceTests<TEntryPoints>.Scaffolded_code_configures_the_plugin() -> void
 pengdows.efcore.adonet.Testing.ExecutionStrategyConformanceTests<TFixture>
 pengdows.efcore.adonet.Testing.ExecutionStrategyConformanceTests<TFixture>.A_failed_commit_is_retried_only_if_it_did_not_commit(bool failsBeforeCommitting, bool async) -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.ExecutionStrategyConformanceTests<TFixture>.A_failure_that_is_not_transient_is_not_retried() -> System.Threading.Tasks.Task!

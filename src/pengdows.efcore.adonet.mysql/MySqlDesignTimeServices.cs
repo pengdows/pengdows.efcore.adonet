@@ -19,6 +19,9 @@ public class MySqlDesignTimeServices() : AdoNetDesignTimeServices(MySqlDialect.I
         base.ConfigureDesignTimeServices(serviceCollection);
     }
 
+    protected override System.Reflection.MethodInfo UseProvider
+        => AdoNetProviderCodeGenerator.UseMethod(typeof(MySqlDbContextOptionsBuilderExtensions), nameof(MySqlDbContextOptionsBuilderExtensions.UseAdoNetMySql));
+
     // The server is told from the connection, as a design-time context has no options to name it: MySQL, MariaDB, and
     // either's version, each read through its own catalog.
     protected override Microsoft.EntityFrameworkCore.Scaffolding.IDatabaseModelFactory? CreateDatabaseModelFactory()

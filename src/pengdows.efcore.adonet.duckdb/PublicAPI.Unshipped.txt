@@ -20,3 +20,5 @@ pengdows.efcore.adonet.duckdb.DuckDbModelOptionsExtensions
 static pengdows.efcore.adonet.duckdb.DuckDbModelOptionsExtensions.UseAutoIncrement(this Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder! propertyBuilder) -> Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder!
 static pengdows.efcore.adonet.duckdb.DuckDbModelOptionsExtensions.UseAutoIncrement<TProperty>(this Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder<TProperty>! propertyBuilder) -> Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder<TProperty>!
 static pengdows.efcore.adonet.duckdb.DuckDbModelOptionsExtensions.UseList<TElement>(this Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder<System.Collections.Generic.List<TElement>!>! propertyBuilder) -> Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder<System.Collections.Generic.List<TElement>!>!
+pengdows.efcore.adonet.duckdb.DuckDbDesignTimeServices
+pengdows.efcore.adonet.duckdb.DuckDbDesignTimeServices.DuckDbDesignTimeServices() -> void

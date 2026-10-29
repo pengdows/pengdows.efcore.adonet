@@ -1,6 +1,10 @@
 using System.Data.Common;
+using System.Reflection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Scaffolding;
+using Microsoft.Extensions.DependencyInjection;
 using pengdows.efcore.adonet.Infrastructure;
 
 namespace pengdows.efcore.adonet.Testing;
@@ -92,6 +96,29 @@ public abstract class EntryPointConformanceTests<TEntryPoints>
         var builder = new DbContextOptionsBuilder<BlogContext>().AllowManyServiceProviders();
         _entryPoints.UseConnectionString((DbContextOptionsBuilder)builder, _entryPoints.ConnectionString);
 
+        UsesTheDialect(builder.Options);
+    }
+
+    // What dotnet ef dbcontext scaffold writes into OnConfiguring: the design-time services EF's tools find through the
+    // plugin assembly's DesignTimeProviderServices attribute generate a Use call that, run as written, configures the plugin.
+    [Fact]
+    public void Scaffolded_code_configures_the_plugin()
+    {
+        var assembly = _entryPoints.Dialect.GetType().Assembly;
+        var attribute = assembly.GetCustomAttribute<DesignTimeProviderServicesAttribute>();
+        Assert.NotNull(attribute);
+        var designTimeServices = (IDesignTimeServices)Activator.CreateInstance(assembly.GetType(attribute.TypeName, throwOnError: true)!)!;
+        var services = new ServiceCollection();
+        designTimeServices.ConfigureDesignTimeServices(services);
+        using var serviceProvider = services.BuildServiceProvider();
+
+        var call = serviceProvider.GetRequiredService<IProviderConfigurationCodeGenerator>().GenerateUseProvider(_entryPoints.ConnectionString);
+
+        Assert.Equal([_entryPoints.ConnectionString], call.Arguments);
+        Assert.Null(call.ChainedCall);
+        var builder = new DbContextOptionsBuilder<BlogContext>().AllowManyServiceProviders();
+        Assert.NotNull(call.MethodInfo);
+        call.MethodInfo.Invoke(null, [builder, .. call.Arguments, .. call.MethodInfo.GetParameters().Skip(1 + call.Arguments.Count).Select(p => p.DefaultValue)]);
         UsesTheDialect(builder.Options);
     }
 }

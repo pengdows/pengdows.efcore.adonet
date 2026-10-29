@@ -19,3 +19,5 @@ static readonly pengdows.efcore.adonet.postgresql.PostgreSqlDialect.Instance -> 
 pengdows.efcore.adonet.postgresql.PostgreSqlDbFunctionsExtensions
 static pengdows.efcore.adonet.postgresql.PostgreSqlDbFunctionsExtensions.ILike(this Microsoft.EntityFrameworkCore.DbFunctions! _, string! matchExpression, string! pattern) -> bool
 static pengdows.efcore.adonet.postgresql.PostgreSqlDbFunctionsExtensions.ILike(this Microsoft.EntityFrameworkCore.DbFunctions! _, string! matchExpression, string! pattern, string! escapeCharacter) -> bool
+pengdows.efcore.adonet.postgresql.PostgreSqlDesignTimeServices
+pengdows.efcore.adonet.postgresql.PostgreSqlDesignTimeServices.PostgreSqlDesignTimeServices() -> void
