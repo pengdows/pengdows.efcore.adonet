@@ -1,0 +1,10 @@
+#nullable enable
+pengdows.efcore.adonet.mysql.NetTopologySuite.MySqlNetTopologySuiteExtensions
+pengdows.efcore.adonet.mysql.NetTopologySuite.MySqlSpatialDbFunctionsExtensions
+pengdows.efcore.adonet.mysql.NetTopologySuite.SpatialDistanceAlgorithm
+pengdows.efcore.adonet.mysql.NetTopologySuite.SpatialDistanceAlgorithm.Andoyer = 1 -> pengdows.efcore.adonet.mysql.NetTopologySuite.SpatialDistanceAlgorithm
+pengdows.efcore.adonet.mysql.NetTopologySuite.SpatialDistanceAlgorithm.Haversine = 2 -> pengdows.efcore.adonet.mysql.NetTopologySuite.SpatialDistanceAlgorithm
+pengdows.efcore.adonet.mysql.NetTopologySuite.SpatialDistanceAlgorithm.Native = 0 -> pengdows.efcore.adonet.mysql.NetTopologySuite.SpatialDistanceAlgorithm
+static pengdows.efcore.adonet.mysql.NetTopologySuite.MySqlNetTopologySuiteExtensions.UseMySqlNetTopologySuite(this pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder! optionsBuilder) -> pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!
+static pengdows.efcore.adonet.mysql.NetTopologySuite.MySqlSpatialDbFunctionsExtensions.SpatialDistancePlanar(this Microsoft.EntityFrameworkCore.DbFunctions! _, NetTopologySuite.Geometries.Geometry! g1, NetTopologySuite.Geometries.Geometry! g2) -> double
+static pengdows.efcore.adonet.mysql.NetTopologySuite.MySqlSpatialDbFunctionsExtensions.SpatialDistanceSphere(this Microsoft.EntityFrameworkCore.DbFunctions! _, NetTopologySuite.Geometries.Geometry! g1, NetTopologySuite.Geometries.Geometry! g2, pengdows.efcore.adonet.mysql.NetTopologySuite.SpatialDistanceAlgorithm algorithm) -> double

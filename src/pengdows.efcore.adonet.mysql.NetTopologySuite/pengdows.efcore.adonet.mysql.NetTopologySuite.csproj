@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>MySQL's spatial functions for pengdows.efcore.adonet with NetTopologySuite (SpatialDistancePlanar, SpatialDistanceSphere), as Pomelo's MySQL NetTopologySuite package has them.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\pengdows.efcore.adonet.mysql\pengdows.efcore.adonet.mysql.csproj" />
+    <ProjectReference Include="..\pengdows.efcore.adonet.NetTopologySuite\pengdows.efcore.adonet.NetTopologySuite.csproj" />
+    <PackageReference Include="NetTopologySuite" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="pengdows.efcore.adonet.mysql.Tests" />
+  </ItemGroup>
+</Project>

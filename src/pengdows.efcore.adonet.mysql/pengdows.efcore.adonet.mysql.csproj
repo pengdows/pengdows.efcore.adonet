@@ -8,5 +8,7 @@
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="pengdows.efcore.adonet.mysql.Tests" />
+    <!-- The MySQL packages beside this one read the dialect's variant and share its SQL helpers. -->
+    <InternalsVisibleTo Include="pengdows.efcore.adonet.mysql.NetTopologySuite" />
   </ItemGroup>
 </Project>
