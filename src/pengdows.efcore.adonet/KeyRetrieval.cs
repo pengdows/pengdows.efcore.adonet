@@ -16,11 +16,15 @@ public abstract class KeyRetrieval
     public static ReturningKeyRetrieval Returning { get; } = new();
 
     /// <summary>
-    ///     SQL:2023 feature T495, combined data change and retrieval: the statement is a data change delta table, and what it
-    ///     returns is read by an ordinary <c>SELECT col FROM FINAL TABLE (INSERT ...)</c>, <c>... NEW TABLE (UPDATE ...)</c> or
-    ///     <c>... OLD TABLE (DELETE ...)</c>. The standard form of what <see cref="Returning" /> does with an extension.
+    ///     Pengdows data-change delta retrieval: the statement is wrapped by an ordinary
+    ///     <c>SELECT col FROM FINAL TABLE (INSERT ...)</c>, <c>... NEW TABLE (UPDATE ...)</c> or
+    ///     <c>... OLD TABLE (DELETE ...)</c>. This is the row-image foundation used by the
+    ///     Pengdows SQL specification's INCLUDE-column extension for correlating changed rows.
     /// </summary>
     public static DeltaTableKeyRetrieval DeltaTable { get; } = new();
+
+    /// <summary>Pengdows delta-table retrieval with operation-local INCLUDE correlation columns.</summary>
+    public static DeltaTableKeyRetrieval DeltaTableWithInclude { get; } = new(useIncludeColumns: true);
 
     /// <summary>
     ///     <c>INSERT ...; SELECT col FROM t WHERE {rowsAffectedFunction} = 1 AND key = {identityFunction};</c>, e.g.
@@ -43,7 +47,11 @@ public abstract class KeyRetrieval
 
 public sealed class ReturningKeyRetrieval : KeyRetrieval;
 
-public sealed class DeltaTableKeyRetrieval : KeyRetrieval;
+public sealed class DeltaTableKeyRetrieval(bool useIncludeColumns = false) : KeyRetrieval
+{
+    /// <summary>Whether INSERT and UPDATE delta tables carry the Pengdows INCLUDE correlation column.</summary>
+    public bool UseIncludeColumns { get; } = useIncludeColumns;
+}
 
 public sealed class SelectAfterKeyRetrieval(string identityFunction, string rowsAffectedFunction) : KeyRetrieval
 {
