@@ -7,6 +7,7 @@
     <ProjectReference Include="..\..\src\pengdows.efcore.adonet.postgresql\pengdows.efcore.adonet.postgresql.csproj" />
     <ProjectReference Include="..\..\src\pengdows.efcore.adonet.Testing\pengdows.efcore.adonet.Testing.csproj" />
     <PackageReference Include="Testcontainers.PostgreSql" />
+    <PackageReference Include="pengdows.crud.fakeDb" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit.runner.visualstudio" />
