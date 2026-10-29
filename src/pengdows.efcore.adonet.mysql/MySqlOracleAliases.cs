@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -213,6 +214,15 @@ internal sealed class MySqlAttributeConvention : IEntityTypeAddedConvention, IPr
         if (Attribute.GetCustomAttribute(member, typeof(MySQLCollationAttribute)) is MySQLCollationAttribute collation)
         {
             propertyBuilder.UseCollation(collation.Collation, fromDataAnnotation: true);
+        }
+
+        // [DatabaseGenerated(Identity)] on a date and time is the server's value on insert (DEFAULT CURRENT_TIMESTAMP), as
+        // UseMySqlIdentityColumn makes it; an integer identity is EF's own AUTO_INCREMENT. Behaviour reference (not copied):
+        // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Metadata/Conventions/MySqlValueGenerationStrategyConvention.cs
+        if (Attribute.GetCustomAttribute(member, typeof(DatabaseGeneratedAttribute)) is DatabaseGeneratedAttribute { DatabaseGeneratedOption: DatabaseGeneratedOption.Identity }
+            && MySqlModelOptionsExtensions.IsDateTime(propertyBuilder.Metadata.ClrType))
+        {
+            propertyBuilder.HasAnnotation(MySqlModelOptionsExtensions.ValueGenerationStrategyAnnotation, MySqlModelOptionsExtensions.IdentityColumnStrategy, fromDataAnnotation: true);
         }
     }
 }
