@@ -21,6 +21,21 @@ public static class SqlServerDbContextOptionsBuilderExtensions
             SqlServerDialect.Instance,
             AdoNetProviderOptions.Configure(SqlServerDialect.Instance, adoNetOptionsAction));
 
+    /// <summary>
+    ///     The same SqlServerDialect dialect over any driver: <paramref name="providerFactory" /> supplies the connections, so a
+    ///     driver is swapped at this entry point (the default driver is the one the other overloads use).
+    /// </summary>
+    public static DbContextOptionsBuilder UseAdoNetSqlServer(
+        this DbContextOptionsBuilder optionsBuilder,
+        DbProviderFactory providerFactory,
+        string connectionString,
+        Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
+        => optionsBuilder.UseAdoNet(
+            providerFactory,
+            connectionString,
+            SqlServerDialect.Instance,
+            AdoNetProviderOptions.Configure(SqlServerDialect.Instance, adoNetOptionsAction));
+
     /// <summary>Over <paramref name="connection" />, which the caller owns unless <paramref name="contextOwnsConnection" />.</summary>
     public static DbContextOptionsBuilder UseAdoNetSqlServer(
         this DbContextOptionsBuilder optionsBuilder,
@@ -78,4 +93,12 @@ public static class SqlServerDbContextOptionsBuilderExtensions
     public static void RegisterDialect()
         => AdoNetDialects.Register<SqlClientFactory>(SqlServerDialect.Instance);
 
+    public static DbContextOptionsBuilder<TContext> UseAdoNetSqlServer<TContext>(
+        this DbContextOptionsBuilder<TContext> optionsBuilder,
+        DbProviderFactory providerFactory,
+        string connectionString,
+        Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
+        where TContext : DbContext
+        => (DbContextOptionsBuilder<TContext>)((DbContextOptionsBuilder)optionsBuilder).UseAdoNetSqlServer(
+            providerFactory, connectionString, adoNetOptionsAction);
 }

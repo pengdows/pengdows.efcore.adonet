@@ -21,6 +21,21 @@ public static class SqliteDbContextOptionsBuilderExtensions
             SqliteDialect.Instance,
             AdoNetProviderOptions.Configure(SqliteDialect.Instance, adoNetOptionsAction));
 
+    /// <summary>
+    ///     The same SqliteDialect dialect over any driver: <paramref name="providerFactory" /> supplies the connections, so a
+    ///     driver is swapped at this entry point (the default driver is the one the other overloads use).
+    /// </summary>
+    public static DbContextOptionsBuilder UseAdoNetSqlite(
+        this DbContextOptionsBuilder optionsBuilder,
+        DbProviderFactory providerFactory,
+        string connectionString,
+        Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
+        => optionsBuilder.UseAdoNet(
+            providerFactory,
+            connectionString,
+            SqliteDialect.Instance,
+            AdoNetProviderOptions.Configure(SqliteDialect.Instance, adoNetOptionsAction));
+
     /// <summary>Over <paramref name="connection" />, which the caller owns unless <paramref name="contextOwnsConnection" />.</summary>
     public static DbContextOptionsBuilder UseAdoNetSqlite(
         this DbContextOptionsBuilder optionsBuilder,
@@ -78,4 +93,12 @@ public static class SqliteDbContextOptionsBuilderExtensions
     public static void RegisterDialect()
         => AdoNetDialects.Register<SqliteFactory>(SqliteDialect.Instance);
 
+    public static DbContextOptionsBuilder<TContext> UseAdoNetSqlite<TContext>(
+        this DbContextOptionsBuilder<TContext> optionsBuilder,
+        DbProviderFactory providerFactory,
+        string connectionString,
+        Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
+        where TContext : DbContext
+        => (DbContextOptionsBuilder<TContext>)((DbContextOptionsBuilder)optionsBuilder).UseAdoNetSqlite(
+            providerFactory, connectionString, adoNetOptionsAction);
 }

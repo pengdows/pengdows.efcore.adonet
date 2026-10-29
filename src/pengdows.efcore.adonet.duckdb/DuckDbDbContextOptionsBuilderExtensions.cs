@@ -21,6 +21,21 @@ public static class DuckDbDbContextOptionsBuilderExtensions
             DuckDbDialect.Instance,
             AdoNetProviderOptions.Configure(DuckDbDialect.Instance, adoNetOptionsAction));
 
+    /// <summary>
+    ///     The same DuckDbDialect dialect over any driver: <paramref name="providerFactory" /> supplies the connections, so a
+    ///     driver is swapped at this entry point (the default driver is the one the other overloads use).
+    /// </summary>
+    public static DbContextOptionsBuilder UseAdoNetDuckDb(
+        this DbContextOptionsBuilder optionsBuilder,
+        DbProviderFactory providerFactory,
+        string connectionString,
+        Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
+        => optionsBuilder.UseAdoNet(
+            providerFactory,
+            connectionString,
+            DuckDbDialect.Instance,
+            AdoNetProviderOptions.Configure(DuckDbDialect.Instance, adoNetOptionsAction));
+
     /// <summary>Over <paramref name="connection" />, which the caller owns unless <paramref name="contextOwnsConnection" />.</summary>
     public static DbContextOptionsBuilder UseAdoNetDuckDb(
         this DbContextOptionsBuilder optionsBuilder,
@@ -78,4 +93,12 @@ public static class DuckDbDbContextOptionsBuilderExtensions
     public static void RegisterDialect()
         => AdoNetDialects.Register<DuckDBClientFactory>(DuckDbDialect.Instance);
 
+    public static DbContextOptionsBuilder<TContext> UseAdoNetDuckDb<TContext>(
+        this DbContextOptionsBuilder<TContext> optionsBuilder,
+        DbProviderFactory providerFactory,
+        string connectionString,
+        Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
+        where TContext : DbContext
+        => (DbContextOptionsBuilder<TContext>)((DbContextOptionsBuilder)optionsBuilder).UseAdoNetDuckDb(
+            providerFactory, connectionString, adoNetOptionsAction);
 }

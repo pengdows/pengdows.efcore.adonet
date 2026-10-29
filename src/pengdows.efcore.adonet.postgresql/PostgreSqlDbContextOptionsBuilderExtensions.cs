@@ -21,6 +21,21 @@ public static class PostgreSqlDbContextOptionsBuilderExtensions
             PostgreSqlDialect.Instance,
             AdoNetProviderOptions.Configure(PostgreSqlDialect.Instance, adoNetOptionsAction, ParameterTranslationMode.Parameter));
 
+    /// <summary>
+    ///     The same PostgreSQL dialect over any driver: <paramref name="providerFactory" /> supplies the connections (Npgsql is the
+    ///     default). This is how a provider's driver is swapped, as MySqlConnector and MySql.Data are for MySQL.
+    /// </summary>
+    public static DbContextOptionsBuilder UseAdoNetPostgreSql(
+        this DbContextOptionsBuilder optionsBuilder,
+        DbProviderFactory providerFactory,
+        string connectionString,
+        Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
+        => optionsBuilder.UseAdoNet(
+            providerFactory,
+            connectionString,
+            PostgreSqlDialect.Instance,
+            AdoNetProviderOptions.Configure(PostgreSqlDialect.Instance, adoNetOptionsAction, ParameterTranslationMode.Parameter));
+
     /// <summary>Over <paramref name="connection" />, which the caller owns unless <paramref name="contextOwnsConnection" />.</summary>
     public static DbContextOptionsBuilder UseAdoNetPostgreSql(
         this DbContextOptionsBuilder optionsBuilder,
@@ -78,4 +93,12 @@ public static class PostgreSqlDbContextOptionsBuilderExtensions
     public static void RegisterDialect()
         => AdoNetDialects.Register<NpgsqlFactory>(PostgreSqlDialect.Instance);
 
+    public static DbContextOptionsBuilder<TContext> UseAdoNetPostgreSql<TContext>(
+        this DbContextOptionsBuilder<TContext> optionsBuilder,
+        DbProviderFactory providerFactory,
+        string connectionString,
+        Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
+        where TContext : DbContext
+        => (DbContextOptionsBuilder<TContext>)((DbContextOptionsBuilder)optionsBuilder).UseAdoNetPostgreSql(
+            providerFactory, connectionString, adoNetOptionsAction);
 }

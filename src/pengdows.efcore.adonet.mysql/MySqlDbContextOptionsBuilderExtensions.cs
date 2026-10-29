@@ -21,6 +21,21 @@ public static class MySqlDbContextOptionsBuilderExtensions
             MySqlDialect.Instance,
             AdoNetProviderOptions.Configure(MySqlDialect.Instance, adoNetOptionsAction));
 
+    /// <summary>
+    ///     The same MySqlDialect dialect over any driver: <paramref name="providerFactory" /> supplies the connections, so a
+    ///     driver is swapped at this entry point (the default driver is the one the other overloads use).
+    /// </summary>
+    public static DbContextOptionsBuilder UseAdoNetMySql(
+        this DbContextOptionsBuilder optionsBuilder,
+        DbProviderFactory providerFactory,
+        string connectionString,
+        Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
+        => optionsBuilder.UseAdoNet(
+            providerFactory,
+            connectionString,
+            MySqlDialect.Instance,
+            AdoNetProviderOptions.Configure(MySqlDialect.Instance, adoNetOptionsAction));
+
     /// <summary>Over <paramref name="connection" />, which the caller owns unless <paramref name="contextOwnsConnection" />.</summary>
     public static DbContextOptionsBuilder UseAdoNetMySql(
         this DbContextOptionsBuilder optionsBuilder,
@@ -78,4 +93,12 @@ public static class MySqlDbContextOptionsBuilderExtensions
     public static void RegisterDialect()
         => AdoNetDialects.Register<MySqlConnectorFactory>(MySqlDialect.Instance);
 
+    public static DbContextOptionsBuilder<TContext> UseAdoNetMySql<TContext>(
+        this DbContextOptionsBuilder<TContext> optionsBuilder,
+        DbProviderFactory providerFactory,
+        string connectionString,
+        Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
+        where TContext : DbContext
+        => (DbContextOptionsBuilder<TContext>)((DbContextOptionsBuilder)optionsBuilder).UseAdoNetMySql(
+            providerFactory, connectionString, adoNetOptionsAction);
 }

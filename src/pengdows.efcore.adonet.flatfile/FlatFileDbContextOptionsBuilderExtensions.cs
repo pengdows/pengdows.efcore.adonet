@@ -21,6 +21,21 @@ public static class FlatFileDbContextOptionsBuilderExtensions
             FlatFileDialect.Instance,
             AdoNetProviderOptions.Configure(FlatFileDialect.Instance, adoNetOptionsAction));
 
+    /// <summary>
+    ///     The same FlatFileDialect dialect over any driver: <paramref name="providerFactory" /> supplies the connections, so a
+    ///     driver is swapped at this entry point (the default driver is the one the other overloads use).
+    /// </summary>
+    public static DbContextOptionsBuilder UseAdoNetFlatFile(
+        this DbContextOptionsBuilder optionsBuilder,
+        DbProviderFactory providerFactory,
+        string connectionString,
+        Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
+        => optionsBuilder.UseAdoNet(
+            providerFactory,
+            connectionString,
+            FlatFileDialect.Instance,
+            AdoNetProviderOptions.Configure(FlatFileDialect.Instance, adoNetOptionsAction));
+
     /// <summary>Over <paramref name="connection" />, which the caller owns unless <paramref name="contextOwnsConnection" />.</summary>
     public static DbContextOptionsBuilder UseAdoNetFlatFile(
         this DbContextOptionsBuilder optionsBuilder,
@@ -78,4 +93,12 @@ public static class FlatFileDbContextOptionsBuilderExtensions
     public static void RegisterDialect()
         => AdoNetDialects.Register<FlatFileProviderFactory>(FlatFileDialect.Instance);
 
+    public static DbContextOptionsBuilder<TContext> UseAdoNetFlatFile<TContext>(
+        this DbContextOptionsBuilder<TContext> optionsBuilder,
+        DbProviderFactory providerFactory,
+        string connectionString,
+        Action<AdoNetDbContextOptionsBuilder>? adoNetOptionsAction = null)
+        where TContext : DbContext
+        => (DbContextOptionsBuilder<TContext>)((DbContextOptionsBuilder)optionsBuilder).UseAdoNetFlatFile(
+            providerFactory, connectionString, adoNetOptionsAction);
 }
