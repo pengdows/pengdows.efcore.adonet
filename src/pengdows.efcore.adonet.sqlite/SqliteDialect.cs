@@ -101,6 +101,7 @@ internal sealed class SqliteTypeMappings : AnsiTypeMappings
 {
     public override string? GetStoreType(Type clrType)
         => clrType == typeof(string) ? "TEXT"
+            : clrType == typeof(decimal) ? "TEXT"
             : clrType == typeof(byte[]) || clrType == typeof(Guid) ? "BLOB"
 
             // Every integer is INTEGER, which also makes any integer key the rowid.
@@ -198,6 +199,11 @@ internal sealed class SqliteFunctions : FunctionSyntax
     // Hours, minutes, seconds and milliseconds come as microseconds; STRFTIME keeps milliseconds.
     public override string? AddMicroseconds
         => "RTRIM(RTRIM(STRFTIME('%Y-%m-%d %H:%M:%f', {0}, CAST(({1}) / 1000000.0 AS TEXT) || ' seconds'), '0'), '.')";
+
+    // JULIANDAY preserves the fractional-day result that EF exposes through
+    // TimeSpan.TotalDays; unlike SQLite's date subtraction, it accepts the
+    // ISO/EF timestamp text emitted by this provider.
+    public override string? DateDifferenceTotalDays => "(JULIANDAY({0}) - JULIANDAY({1}))";
 
     public override string? TimeOfDay => "RTRIM(RTRIM(STRFTIME('%H:%M:%f', {0}), '0'), '.')";
 
