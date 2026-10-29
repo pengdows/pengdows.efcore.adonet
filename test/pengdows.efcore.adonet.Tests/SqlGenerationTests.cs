@@ -1,7 +1,8 @@
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Query;
+using pengdows.crud.enums;
+using pengdows.crud.fakeDb;
 using pengdows.efcore.adonet.Testing;
 
 namespace pengdows.efcore.adonet.Tests;
@@ -9,6 +10,8 @@ namespace pengdows.efcore.adonet.Tests;
 /// <summary>Core SQL and configuration behavior, with the ANSI dialect, checked without touching a database.</summary>
 public class SqlGenerationTests
 {
+    private static readonly fakeDbFactory Factory = new(SupportedDatabase.Unknown);
+
     private static BlogContext Context(Action<DbContextOptionsBuilder> configure)
     {
         var builder = new DbContextOptionsBuilder<BlogContext>().AllowManyDialects();
@@ -19,7 +22,7 @@ public class SqlGenerationTests
     [Fact]
     public void Ansi_uses_offset_fetch_and_at_parameters()
     {
-        using var context = Context(b => b.UseAdoNet(SqliteFactory.Instance, "Data Source=:memory:", o => o.UseDialect(AdoNetDialect.Ansi)));
+        using var context = Context(b => b.UseAdoNet(Factory, "Data Source=fake", o => o.UseDialect(AdoNetDialect.Ansi)));
         var name = "x";
 
         var sql = context.Blogs.Where(b => b.Name == name).OrderBy(b => b.Id).Skip(5).Take(10).ToQueryString();
@@ -31,7 +34,7 @@ public class SqlGenerationTests
     [Fact]
     public void A_dialect_quotes_only_identifiers_its_database_needs_quoted()
     {
-        using var context = Context(b => b.UseAdoNet(SqliteFactory.Instance, "Data Source=:memory:", o => o.UseDialect(TestDialects.LowerCaseUnquoted)));
+        using var context = Context(b => b.UseAdoNet(Factory, "Data Source=fake", o => o.UseDialect(TestDialects.LowerCaseUnquoted)));
         var helper = context.GetService<Microsoft.EntityFrameworkCore.Storage.ISqlGenerationHelper>();
 
         Assert.Equal("b", helper.DelimitIdentifier("b"));
@@ -44,8 +47,8 @@ public class SqlGenerationTests
     public void Same_dialect_instance_reuses_the_internal_service_provider()
     {
         // Singleton services are shared exactly when the internal service provider is.
-        using var first = Context(b => b.UseAdoNet(SqliteFactory.Instance, "Data Source=one;Mode=Memory", AdoNetDialect.Ansi));
-        using var second = Context(b => b.UseAdoNet(SqliteFactory.Instance, "Data Source=two;Mode=Memory", AdoNetDialect.Ansi));
+        using var first = Context(b => b.UseAdoNet(Factory, "Data Source=one", AdoNetDialect.Ansi));
+        using var second = Context(b => b.UseAdoNet(Factory, "Data Source=two", AdoNetDialect.Ansi));
 
         Assert.Same(first.GetService<IQuerySqlGeneratorFactory>(), second.GetService<IQuerySqlGeneratorFactory>());
     }

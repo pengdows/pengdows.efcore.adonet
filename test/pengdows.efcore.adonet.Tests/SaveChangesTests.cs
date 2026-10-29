@@ -94,7 +94,7 @@ public class SaveChangesTests
         Assert.Contains("DELETE FROM \"Items\"", _db.Commands[1]);
     }
 
-    // SQL:2023 T495: the statement is a data change delta table, and the key comes back as an ordinary SELECT over it.
+    // Pengdows data-change delta retrieval: the key comes back as an ordinary SELECT over the delta table.
     [Fact]
     public async Task A_delta_table_insert_reads_the_key_from_the_final_table()
     {

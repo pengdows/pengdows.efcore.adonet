@@ -1,7 +1,8 @@
 using System.Data;
 using System.Data.Common;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using pengdows.crud.enums;
+using pengdows.crud.fakeDb;
 using pengdows.efcore.adonet.Testing;
 
 namespace pengdows.efcore.adonet.Tests;
@@ -102,24 +103,24 @@ public class ProcedureCallTests
         context.Database.GetDbConnection();
 
         Assert.Equal("Data Source=a", context.Database.GetConnectionString());
-        Assert.Equal(["Data Source=a;Mode=Memory"], factory.DataSourcesCreated);
+        Assert.Equal(["Data Source=a;Mode=Memory"], factory.DataSourcesCreated, StringComparer.OrdinalIgnoreCase);
     }
 
     [Fact]
     public void Connection_options_are_added_to_a_closed_connection()
     {
-        using var connection = new SqliteConnection("Data Source=a");
+        using var connection = new fakeDbConnection { ConnectionString = "Data Source=a" };
         using var context = OptionsContext(b => b.UseAdoNet(connection, contextOwnsConnection: false, o => o.UseDialect(WithOptions)));
 
         context.Database.GetDbConnection();
 
-        Assert.Equal("Data Source=a;Mode=Memory", connection.ConnectionString);
+        Assert.Equal("Data Source=a;Mode=Memory", connection.ConnectionString, StringComparer.OrdinalIgnoreCase);
     }
 
     [Fact]
     public void A_connection_that_has_the_options_is_left_as_it_is()
     {
-        using var connection = new SqliteConnection("Data Source=a;mode=memory");
+        using var connection = new fakeDbConnection { ConnectionString = "Data Source=a;mode=memory" };
         using var context = OptionsContext(b => b.UseAdoNet(connection, contextOwnsConnection: false, o => o.UseDialect(WithOptions)));
 
         context.Database.GetDbConnection();
@@ -130,7 +131,7 @@ public class ProcedureCallTests
     [Fact]
     public void An_open_connection_without_the_options_is_refused()
     {
-        using var connection = new SqliteConnection("Data Source=:memory:");
+        using var connection = new fakeDbConnection { ConnectionString = "Data Source=:memory:" };
         connection.Open();
         using var context = OptionsContext(b => b.UseAdoNet(connection, contextOwnsConnection: false, o => o.UseDialect(WithOptions)));
 
@@ -142,7 +143,7 @@ public class ProcedureCallTests
     [Fact]
     public void A_data_source_without_the_options_is_refused()
     {
-        using var dataSource = SqliteFactory.Instance.CreateDataSource("Data Source=a");
+        using var dataSource = new RecordingFactory().CreateDataSource("Data Source=a");
         using var context = OptionsContext(b => b.UseAdoNet(dataSource, WithOptions));
 
         var refused = Assert.Throws<InvalidOperationException>(() => context.Database.GetDbConnection());
@@ -156,15 +157,14 @@ public class ProcedureCallTests
     private static BlogContext OptionsContext(Func<DbContextOptionsBuilder<BlogContext>, DbContextOptionsBuilder> configure)
         => new((DbContextOptions<BlogContext>)configure(new DbContextOptionsBuilder<BlogContext>()).AllowManyDialects().Options);
 
-    private sealed class RecordingFactory : DbProviderFactory
+    private sealed class RecordingFactory : fakeDbFactory
     {
+        public RecordingFactory()
+            : base(SupportedDatabase.Unknown)
+        {
+        }
+
         public List<string> DataSourcesCreated { get; } = [];
-
-        public override DbConnection CreateConnection()
-            => SqliteFactory.Instance.CreateConnection();
-
-        public override DbConnectionStringBuilder CreateConnectionStringBuilder()
-            => SqliteFactory.Instance.CreateConnectionStringBuilder();
 
         public override DbDataSource CreateDataSource(string connectionString)
         {

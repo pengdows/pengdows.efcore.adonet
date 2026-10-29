@@ -1,5 +1,4 @@
 using System.Data.Common;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -8,6 +7,8 @@ using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 
+using pengdows.crud.enums;
+using pengdows.crud.fakeDb;
 using pengdows.efcore.adonet.Testing;
 
 namespace pengdows.efcore.adonet.Tests;
@@ -17,10 +18,12 @@ namespace pengdows.efcore.adonet.Tests;
 /// </summary>
 public class DialectContractTests
 {
+    private static readonly fakeDbFactory Factory = new(SupportedDatabase.Unknown);
+
     private static BlogContext Context(IAdoNetDialect dialect, Action<DbContextOptionsBuilder>? configure = null)
     {
         var builder = new DbContextOptionsBuilder<BlogContext>()
-            .UseAdoNet(SqliteFactory.Instance, "Data Source=:memory:", o => o.UseDialect(dialect))
+            .UseAdoNet(Factory, "Data Source=fake", o => o.UseDialect(dialect))
             .AllowManyDialects();
         configure?.Invoke(builder);
         return new BlogContext(builder.Options);
@@ -80,10 +83,10 @@ public class DialectContractTests
     public void Switching_databases_changes_only_the_factory_and_the_dialect()
     {
         using var generic = new BlogContext(
-            new DbContextOptionsBuilder<BlogContext>().UseAdoNet(SqliteFactory.Instance, "Data Source=:memory:", ComposedDialect.Instance)
+            new DbContextOptionsBuilder<BlogContext>().UseAdoNet(Factory, "Data Source=fake", ComposedDialect.Instance)
                 .AllowManyDialects().Options);
         var builder = new DbContextOptionsBuilder<BlogContext>().AllowManyDialects();
-        ((DbContextOptionsBuilder)builder).UseAdoNet(SqliteFactory.Instance, "Data Source=:memory:", ComposedDialect.Instance, o => o.MaxBatchSize(7));
+        ((DbContextOptionsBuilder)builder).UseAdoNet(Factory, "Data Source=fake", ComposedDialect.Instance, o => o.MaxBatchSize(7));
         using var nonGeneric = new BlogContext(builder.Options);
 
         Assert.Same(ComposedDialect.Instance, generic.GetService<IAdoNetDialect>());

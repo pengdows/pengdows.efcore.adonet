@@ -8,6 +8,7 @@
     <ProjectReference Include="..\..\src\pengdows.efcore.adonet.Testing\pengdows.efcore.adonet.Testing.csproj" />
     <!-- A real ADO.NET implementation to run the ANSI dialect against; no dialect package. -->
     <PackageReference Include="Microsoft.Data.Sqlite" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" />
     <PackageReference Include="pengdows.crud.fakeDb" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
