@@ -58,6 +58,27 @@ public class ConfigurationRulesTests
         }
     }
 
+    // The factory-only form names the driver for a connection supplied later, as EF's UseSqlServer() and Pomelo's
+    // UseMySql(serverVersion) with no connection string do, so a connection or data source configured earlier stays.
+    // Found running Pomelo's KeysWithConvertersMySqlTest, whose fixture adds options that way after its test store's.
+    [Fact]
+    public void Configuring_a_factory_alone_keeps_a_connection_or_data_source_configured_earlier()
+    {
+        using var connection = new fakeDbConnection { ConnectionString = ConnectionString };
+        var factory = new fakeDbFactory(SupportedDatabase.PostgreSql) { SupportsNativeDataSource = true };
+
+        using (var context = Context(b => b.UseAdoNet(connection, adoNetOptionsAction: o => o.UseDialect(AdoNetDialect.Ansi)).UseAdoNet(factory)))
+        {
+            Assert.Same(connection, context.Database.GetDbConnection());
+        }
+
+        using var dataSource = factory.CreateDataSource(ConnectionString);
+        using (var context = Context(b => b.UseAdoNet(dataSource, AdoNetDialect.Ansi).UseAdoNet(factory)))
+        {
+            Assert.Equal(ConnectionString, context.Database.GetDbConnection().ConnectionString);
+        }
+    }
+
     [Fact]
     public void A_connection_string_alone_cannot_replace_a_configured_connection()
     {

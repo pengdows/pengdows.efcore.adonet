@@ -28,7 +28,8 @@ public static class AdoNetDbContextOptionsBuilderExtensions
 
     /// <summary>
     ///     A factory whose connection string, or connection, is supplied later through
-    ///     <c>Database.SetConnectionString</c> or <c>Database.SetDbConnection</c>.
+    ///     <c>Database.SetConnectionString</c> or <c>Database.SetDbConnection</c>. A connection or data source configured
+    ///     before stays.
     /// </summary>
     public static DbContextOptionsBuilder UseAdoNet(
         this DbContextOptionsBuilder optionsBuilder,
@@ -37,7 +38,13 @@ public static class AdoNetDbContextOptionsBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(providerFactory);
 
-        return Apply(optionsBuilder, GetOrCreateExtension(optionsBuilder).WithProviderFactory(providerFactory), adoNetOptionsAction);
+        // Names the driver for a connection supplied later, so a connection or data source configured earlier stays, as
+        // EF's own providers keep one when configured again with no connection string.
+        var extension = GetOrCreateExtension(optionsBuilder);
+        return Apply(
+            optionsBuilder,
+            extension.Connection != null || extension.DataSource != null ? extension : extension.WithProviderFactory(providerFactory),
+            adoNetOptionsAction);
     }
 
     /// <summary>
