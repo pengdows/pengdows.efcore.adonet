@@ -52,6 +52,7 @@ public class MySqlMigrationExecutionTests
     public async Task A_migration_with_pomelos_annotations_runs_its_ddl(bool mariaDb, string srid)
     {
         var db = new FakeMySql();
+        db.Connection.EnqueueScalarResult(1L);
         await using var context = db.Context<ShelfMigrationContext>(o => new ShelfMigrationContext(o), mariaDb);
 
         await context.Database.MigrateAsync(Ct);
@@ -66,6 +67,38 @@ public class MySqlMigrationExecutionTests
         Assert.Contains($"CREATE FULLTEXT INDEX {Q}IX_Shelves_Code{Q} ON {Q}Shelves{Q} ({Q}Code{Q}) WITH PARSER {Q}ngram{Q};", ddl);
         Assert.Contains($"ALTER TABLE {Q}Shelves{Q} ENGINE=MyISAM ROW_FORMAT=COMPACT;", ddl);
         Assert.Contains("20240101000000_Shelves", string.Join("\n", db.Parameters.Concat(db.Commands)));
+    }
+
+    // Pomelo's migrations test expects the database to hold exactly the migrations' tables, so the migrations lock leaves none
+    // behind: MySQL's GET_LOCK is a session lock and creates nothing. Behaviour reference (not copied):
+    // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/test/EFCore.MySql.IntegrationTests/Commands/TestMigrateCommand.cs
+    [Fact]
+    public async Task A_migration_takes_a_session_lock_and_creates_no_lock_table()
+    {
+        var db = new FakeMySql();
+        await using var context = db.Context<ShelfMigrationContext>(o => new ShelfMigrationContext(o));
+        db.Connection.EnqueueScalarResult(1L);
+        db.Connection.EnqueueScalarResult(0L);
+
+        await context.Database.MigrateAsync(Ct);
+
+        Assert.Contains(db.Commands, c => c == "SELECT GET_LOCK('__EFMigrationsLock', 120)");
+        Assert.Contains(db.Commands, c => c == "SELECT RELEASE_LOCK('__EFMigrationsLock')");
+        Assert.DoesNotContain(db.Commands, c => c.Contains("CREATE TABLE", StringComparison.Ordinal) && c.Contains("__EFMigrationsLock", StringComparison.Ordinal));
+    }
+
+    // GET_LOCK returns 0 when the wait ends without the lock: the migrator must stop before changing anything.
+    [Fact]
+    public async Task A_migration_refused_the_session_lock_changes_nothing()
+    {
+        var db = new FakeMySql();
+        await using var context = db.Context<ShelfMigrationContext>(o => new ShelfMigrationContext(o));
+        db.Connection.EnqueueScalarResult(0L);
+
+        await Assert.ThrowsAsync<TimeoutException>(() => context.Database.MigrateAsync(Ct));
+
+        Assert.DoesNotContain(db.Commands, c => c.StartsWith("CREATE", StringComparison.Ordinal));
+        Assert.DoesNotContain(db.Commands, c => c.StartsWith("SELECT RELEASE_LOCK", StringComparison.Ordinal));
     }
 
     public sealed class Place

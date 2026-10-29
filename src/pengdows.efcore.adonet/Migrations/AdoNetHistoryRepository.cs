@@ -25,6 +25,17 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
     protected virtual TimeSpan LockTimeout
         => TimeSpan.FromMinutes(2);
 
+    /// <summary>
+    ///     A dialect with a server-side session lock returns the statement that takes it, which yields 1 when taken; it creates
+    ///     no table, and the lock is held by the connection rather than a transaction. Null for the lock table.
+    /// </summary>
+    protected virtual string? SessionLockSql(TimeSpan timeout)
+        => null;
+
+    /// <summary>The statement releasing the session lock, paired with <see cref="SessionLockSql" />.</summary>
+    protected virtual string? SessionUnlockSql
+        => null;
+
     public override LockReleaseBehavior LockReleaseBehavior
         => LockReleaseBehavior.Explicit;
 
@@ -91,6 +102,11 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
     // holding it, and is taken over.
     public override IMigrationsDatabaseLock AcquireDatabaseLock()
     {
+        if (SessionLockSql(LockTimeout) is { } sessionLock)
+        {
+            return AcquireSessionLock(sessionLock);
+        }
+
         if (!TableExists(LockTableName))
         {
             CreateLockTable();
@@ -126,6 +142,11 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
 
     public override async Task<IMigrationsDatabaseLock> AcquireDatabaseLockAsync(CancellationToken cancellationToken = default)
     {
+        if (SessionLockSql(LockTimeout) is { } sessionLock)
+        {
+            return await AcquireSessionLockAsync(sessionLock, cancellationToken).ConfigureAwait(false);
+        }
+
         if (!await TableExistsAsync(LockTableName, cancellationToken).ConfigureAwait(false))
         {
             await CreateLockTableAsync(cancellationToken).ConfigureAwait(false);
@@ -161,6 +182,35 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
             delay = NextDelay(delay);
         }
     }
+
+    // The session lock waits up to LockTimeout itself; it is refused only when the wait ends without it (0), or on an error
+    // (NULL). Either way the migrator has not got it.
+    private IMigrationsDatabaseLock AcquireSessionLock(string sql)
+    {
+        if (!SessionLockTaken(Command(sql).ExecuteScalar(Parameters())))
+        {
+            throw new TimeoutException($"Timed out after {LockTimeout} waiting for the migrations session lock.");
+        }
+
+        return new Lock(this);
+    }
+
+    private async Task<IMigrationsDatabaseLock> AcquireSessionLockAsync(string sql, CancellationToken cancellationToken)
+    {
+        var value = await Command(sql).ExecuteScalarAsync(Parameters(), cancellationToken).ConfigureAwait(false);
+        if (!SessionLockTaken(value))
+        {
+            throw new TimeoutException($"Timed out after {LockTimeout} waiting for the migrations session lock.");
+        }
+
+        return new Lock(this);
+    }
+
+    private static bool SessionLockTaken(object? value)
+        => value is not null and not DBNull && Convert.ToInt64(value, CultureInfo.InvariantCulture) == 1;
+
+    private string ReleaseSql()
+        => SessionUnlockSql ?? ReleaseLockSql();
 
     private enum Retry
     {
@@ -264,7 +314,7 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
         {
             Dependencies.MigrationCommandExecutor.ExecuteNonQuery(GetCreateLockTableCommands(), Dependencies.Connection);
         }
-        catch (DbException) when (TableExists(LockTableName))
+        catch (Exception error) when (error is not OperationCanceledException && TableExists(LockTableName))
         {
             // Another migrator created it first.
         }
@@ -278,7 +328,7 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
                     GetCreateLockTableCommands(), Dependencies.Connection, cancellationToken)
                 .ConfigureAwait(false);
         }
-        catch (DbException)
+        catch (Exception error) when (error is not OperationCanceledException)
         {
             // Another migrator may have created it first.
             if (!await TableExistsAsync(LockTableName, cancellationToken).ConfigureAwait(false))
@@ -324,7 +374,7 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
         public void Dispose()
         {
             repository.Dependencies.Connection.CurrentTransaction?.Rollback();
-            repository.Command(repository.ReleaseLockSql()).ExecuteNonQuery(repository.Parameters());
+            repository.Command(repository.ReleaseSql()).ExecuteNonQuery(repository.Parameters());
         }
 
         public async ValueTask DisposeAsync()
@@ -334,7 +384,7 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
                 await transaction.RollbackAsync().ConfigureAwait(false);
             }
 
-            await repository.Command(repository.ReleaseLockSql()).ExecuteNonQueryAsync(repository.Parameters()).ConfigureAwait(false);
+            await repository.Command(repository.ReleaseSql()).ExecuteNonQueryAsync(repository.Parameters()).ConfigureAwait(false);
         }
     }
 }

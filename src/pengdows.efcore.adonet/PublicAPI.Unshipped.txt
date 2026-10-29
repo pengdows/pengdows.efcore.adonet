@@ -496,6 +496,8 @@ virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.HolderSql() ->
 virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.LockTableName.get -> string!
 virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.LockTimeout.get -> System.TimeSpan
 virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.ReleaseLockSql() -> string!
+virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.SessionLockSql(System.TimeSpan timeout) -> string?
+virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.SessionUnlockSql.get -> string?
 virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.TableExistsSql(string! table, string? schema) -> string!
 virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.TakeOverSql(string! holder) -> string!
 virtual pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.IdentityDefinition(string? schema, string! table, string! name, Microsoft.EntityFrameworkCore.Migrations.Operations.ColumnOperation! operation, Microsoft.EntityFrameworkCore.Migrations.MigrationCommandListBuilder! builder) -> void

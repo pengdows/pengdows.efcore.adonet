@@ -661,4 +661,15 @@ internal class MySqlHistoryRepository(HistoryRepositoryDependencies dependencies
     protected override string TableExistsSql(string table, string? schema)
         => "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '"
             + table.Replace("'", "''") + "'";
+
+    // GET_LOCK waits for the lock up to the timeout (in whole seconds) and holds it for the connection, so a second migrator
+    // on another connection waits rather than fails. Behaviour reference (not copied):
+    // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Migrations/Internal/MySqlHistoryRepository.cs
+    protected override string? SessionLockSql(TimeSpan timeout)
+        => "SELECT GET_LOCK('" + LockName + "', " + (long)timeout.TotalSeconds + ")";
+
+    protected override string? SessionUnlockSql
+        => "SELECT RELEASE_LOCK('" + LockName + "')";
+
+    private const string LockName = "__EFMigrationsLock";
 }
