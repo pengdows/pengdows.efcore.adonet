@@ -399,6 +399,10 @@ Gaps that keep core paths out of reach of fakeDb tests (REVIEW_POLICY: a gap is 
 - The `Npgsql()` driver preset reports no savepoints and refuses them, where Npgsql implements them and says so
   (`SupportsSavepoints` true). No preset reports them; the core's driver-savepoint path is tested through an overridden
   `fakeDbTransaction` (`LifecycleTests.SavepointConnection`).
+- No driver exception carrying a server error number: MySqlConnector's and MySql.Data's `MySqlException` have no public
+  constructor, and fakeDb raises none of its own with a `Number`. So the retry of Oracle-style `EnableRetryOnFailure(count,
+  delay, errorNumbersToAdd)` is tested only for its configuration and for rejecting exceptions that aren't a driver's
+  (`MySqlOracleAliasTests`); retrying a numbered MySQL error is left to the server suites.
 - `EmulatedProduct=Sqlite` doesn't read values as Microsoft.Data.Sqlite does: `GetFieldValue<DateOnly>`,
   `GetFieldValue<TimeOnly>` and `GetFieldValue<TimeSpan>` of SQLite's text, and `GetDecimal` of a REAL (a `double`), throw
   `InvalidCastException`, where the driver parses the text and converts the number (`GetDateTime` of text does work). The

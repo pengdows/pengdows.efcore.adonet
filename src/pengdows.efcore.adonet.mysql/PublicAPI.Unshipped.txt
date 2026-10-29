@@ -4,8 +4,24 @@ override pengdows.efcore.adonet.mysql.MySqlDialect.ConfigureServices(Microsoft.E
 override pengdows.efcore.adonet.mysql.MySqlDialect.Name.get -> string!
 override pengdows.efcore.adonet.mysql.MySqlDialect.Sql.get -> pengdows.efcore.adonet.ISqlDialect!
 override pengdows.efcore.adonet.mysql.MySqlDialect.TypeMappings.get -> pengdows.efcore.adonet.ITypeMappingDialect!
+pengdows.efcore.adonet.mysql.MySQLCharsetAttribute
+pengdows.efcore.adonet.mysql.MySQLCharsetAttribute.Charset.get -> string!
+pengdows.efcore.adonet.mysql.MySQLCharsetAttribute.MySQLCharsetAttribute(string! charset) -> void
+pengdows.efcore.adonet.mysql.MySQLCollationAttribute
+pengdows.efcore.adonet.mysql.MySQLCollationAttribute.Collation.get -> string!
+pengdows.efcore.adonet.mysql.MySQLCollationAttribute.MySQLCollationAttribute(string! collation) -> void
 pengdows.efcore.adonet.mysql.MySqlDbContextOptionsBuilderExtensions
 pengdows.efcore.adonet.mysql.MySqlDialect
+pengdows.efcore.adonet.mysql.MySQLMatchSearchMode
+pengdows.efcore.adonet.mysql.MySQLMatchSearchMode.Boolean = 2 -> pengdows.efcore.adonet.mysql.MySQLMatchSearchMode
+pengdows.efcore.adonet.mysql.MySQLMatchSearchMode.NaturalLanguage = 0 -> pengdows.efcore.adonet.mysql.MySQLMatchSearchMode
+pengdows.efcore.adonet.mysql.MySQLMatchSearchMode.NaturalLanguageWithQueryExpansion = 1 -> pengdows.efcore.adonet.mysql.MySQLMatchSearchMode
+pengdows.efcore.adonet.mysql.MySqlMetadataExtensions
+pengdows.efcore.adonet.mysql.MySqlOracleAliases
+pengdows.efcore.adonet.mysql.MySQLValueGenerationStrategy
+pengdows.efcore.adonet.mysql.MySQLValueGenerationStrategy.ComputedColumn = 2 -> pengdows.efcore.adonet.mysql.MySQLValueGenerationStrategy
+pengdows.efcore.adonet.mysql.MySQLValueGenerationStrategy.IdentityColumn = 1 -> pengdows.efcore.adonet.mysql.MySQLValueGenerationStrategy
+pengdows.efcore.adonet.mysql.MySQLValueGenerationStrategy.None = 0 -> pengdows.efcore.adonet.mysql.MySQLValueGenerationStrategy
 static pengdows.efcore.adonet.mysql.MySqlDbContextOptionsBuilderExtensions.RegisterDialect() -> void
 static pengdows.efcore.adonet.mysql.MySqlDbContextOptionsBuilderExtensions.UseAdoNetMySql(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder! optionsBuilder, string! connectionString, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder!
 static pengdows.efcore.adonet.mysql.MySqlDbContextOptionsBuilderExtensions.UseAdoNetMySql(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder! optionsBuilder, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder!
@@ -19,6 +35,69 @@ static pengdows.efcore.adonet.mysql.MySqlDialect.AutoDetect(System.Data.Common.D
 static pengdows.efcore.adonet.mysql.MySqlDialect.AutoDetectAsync(System.Data.Common.DbProviderFactory! factory, string! connectionString, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<pengdows.efcore.adonet.mysql.MySqlDialect!>!
 static pengdows.efcore.adonet.mysql.MySqlDialect.FromServerVersion(System.Data.Common.DbConnection! connection) -> pengdows.efcore.adonet.mysql.MySqlDialect!
 static pengdows.efcore.adonet.mysql.MySqlDialect.FromServerVersion(System.Data.Common.DbConnection! connection, string! versionComment) -> pengdows.efcore.adonet.mysql.MySqlDialect!
+static pengdows.efcore.adonet.mysql.MySqlFullTextExtensions.Match(this Microsoft.EntityFrameworkCore.DbFunctions! _, string![]! properties, string! pattern, pengdows.efcore.adonet.mysql.MySQLMatchSearchMode searchMode) -> double
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.CanSetCharSet(this Microsoft.EntityFrameworkCore.Metadata.Builders.IConventionModelBuilder! modelBuilder, string? charSet, bool fromDataAnnotation = false) -> bool
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.FullTextParser(this Microsoft.EntityFrameworkCore.Metadata.IReadOnlyIndex! index) -> string?
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.GetCharSet(this Microsoft.EntityFrameworkCore.Metadata.IReadOnlyEntityType! entityType) -> string?
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.GetCharSet(this Microsoft.EntityFrameworkCore.Metadata.IReadOnlyProperty! property) -> string?
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.GetCharSet(this Microsoft.EntityFrameworkCore.Metadata.IReadOnlyTypeBase! typeBase) -> string?
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.GetCharSetConfigurationSource(this Microsoft.EntityFrameworkCore.Metadata.IConventionEntityType! entityType) -> Microsoft.EntityFrameworkCore.Metadata.ConfigurationSource?
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.GetCollation(this Microsoft.EntityFrameworkCore.Metadata.IReadOnlyEntityType! entityType) -> string?
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.GetCollation(this Microsoft.EntityFrameworkCore.Metadata.IReadOnlyTypeBase! typeBase) -> string?
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.GetCollationConfigurationSource(this Microsoft.EntityFrameworkCore.Metadata.IConventionEntityType! entityType) -> Microsoft.EntityFrameworkCore.Metadata.ConfigurationSource?
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.GetFullTextParserConfigurationSource(this Microsoft.EntityFrameworkCore.Metadata.IConventionIndex! index) -> Microsoft.EntityFrameworkCore.Metadata.ConfigurationSource?
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.GetIsFullTextConfigurationSource(this Microsoft.EntityFrameworkCore.Metadata.IConventionIndex! index) -> Microsoft.EntityFrameworkCore.Metadata.ConfigurationSource?
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.GetIsSpatialConfigurationSource(this Microsoft.EntityFrameworkCore.Metadata.IConventionIndex! index) -> Microsoft.EntityFrameworkCore.Metadata.ConfigurationSource?
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.GetPrefixLengthConfigurationSource(this Microsoft.EntityFrameworkCore.Metadata.IConventionIndex! index) -> Microsoft.EntityFrameworkCore.Metadata.ConfigurationSource?
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.GetPrefixLengthConfigurationSource(this Microsoft.EntityFrameworkCore.Metadata.IConventionKey! key) -> Microsoft.EntityFrameworkCore.Metadata.ConfigurationSource?
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.GetTableOptions(this Microsoft.EntityFrameworkCore.Metadata.IReadOnlyEntityType! entityType) -> System.Collections.Generic.Dictionary<string!, string!>!
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.GetTableOptionsConfigurationSource(this Microsoft.EntityFrameworkCore.Metadata.IConventionEntityType! entityType) -> Microsoft.EntityFrameworkCore.Metadata.ConfigurationSource?
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.GetValueGenerationStrategy(this Microsoft.EntityFrameworkCore.Metadata.IReadOnlyProperty! property, Microsoft.EntityFrameworkCore.Metadata.StoreObjectIdentifier storeObject = default(Microsoft.EntityFrameworkCore.Metadata.StoreObjectIdentifier)) -> pengdows.efcore.adonet.mysql.MySQLValueGenerationStrategy?
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.GetValueGenerationStrategyConfigurationSource(this Microsoft.EntityFrameworkCore.Metadata.IConventionProperty! property) -> Microsoft.EntityFrameworkCore.Metadata.ConfigurationSource?
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.HasCharSet(this Microsoft.EntityFrameworkCore.Metadata.Builders.IConventionModelBuilder! modelBuilder, string? charSet, bool fromDataAnnotation = false) -> Microsoft.EntityFrameworkCore.Metadata.Builders.IConventionModelBuilder?
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.IsCompatibleAutoIncrementColumn(this Microsoft.EntityFrameworkCore.Metadata.IReadOnlyProperty! property) -> bool
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.IsCompatibleComputedColumn(this Microsoft.EntityFrameworkCore.Metadata.IReadOnlyProperty! property) -> bool
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.IsCompatibleCurrentTimestampColumn(this Microsoft.EntityFrameworkCore.Metadata.IReadOnlyProperty! property) -> bool
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.IsCompatibleIdentityColumn(this Microsoft.EntityFrameworkCore.Metadata.IReadOnlyProperty! property) -> bool
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.IsFullText(this Microsoft.EntityFrameworkCore.Metadata.IReadOnlyIndex! index) -> bool?
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.IsSpatial(this Microsoft.EntityFrameworkCore.Metadata.IReadOnlyIndex! index) -> bool?
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.PrefixLength(this Microsoft.EntityFrameworkCore.Metadata.IReadOnlyIndex! index) -> int[]?
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.PrefixLength(this Microsoft.EntityFrameworkCore.Metadata.IReadOnlyKey! key) -> int[]?
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.SetCharSet(this Microsoft.EntityFrameworkCore.Metadata.IConventionEntityType! entityType, string? charSet, bool fromDataAnnotation = false) -> string?
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.SetCharSet(this Microsoft.EntityFrameworkCore.Metadata.IMutableEntityType! entityType, string? charSet) -> void
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.SetCharSet(this Microsoft.EntityFrameworkCore.Metadata.IMutableProperty! property, string? charSet) -> string?
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.SetCollation(this Microsoft.EntityFrameworkCore.Metadata.IConventionEntityType! entityType, string? collation, bool fromDataAnnotation = false) -> string?
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.SetCollation(this Microsoft.EntityFrameworkCore.Metadata.IMutableEntityType! entityType, string? collation) -> void
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.SetFullTextParser(this Microsoft.EntityFrameworkCore.Metadata.IConventionIndex! index, string? value, bool fromDataAnnotation = false) -> string?
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.SetFullTextParser(this Microsoft.EntityFrameworkCore.Metadata.IMutableIndex! index, string? value) -> void
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.SetIsFullText(this Microsoft.EntityFrameworkCore.Metadata.IConventionIndex! index, bool? value, bool fromDataAnnotation = false) -> void
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.SetIsFullText(this Microsoft.EntityFrameworkCore.Metadata.IMutableIndex! index, bool? value) -> void
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.SetIsSpatial(this Microsoft.EntityFrameworkCore.Metadata.IConventionIndex! index, bool? value, bool fromDataAnnotation = false) -> void
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.SetIsSpatial(this Microsoft.EntityFrameworkCore.Metadata.IMutableIndex! index, bool? value) -> void
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.SetPrefixLength(this Microsoft.EntityFrameworkCore.Metadata.IConventionIndex! index, int[]? values, bool fromDataAnnotation = false) -> int[]?
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.SetPrefixLength(this Microsoft.EntityFrameworkCore.Metadata.IConventionKey! key, int[]? values, bool fromDataAnnotation = false) -> void
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.SetPrefixLength(this Microsoft.EntityFrameworkCore.Metadata.IMutableIndex! index, int[]? values) -> void
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.SetPrefixLength(this Microsoft.EntityFrameworkCore.Metadata.IMutableKey! key, int[]? values) -> void
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.SetTableOptions(this Microsoft.EntityFrameworkCore.Metadata.IConventionEntityType! entityType, System.Collections.Generic.Dictionary<string!, string!>? options, bool fromDataAnnotation = false) -> System.Collections.Generic.Dictionary<string!, string!>?
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.SetTableOptions(this Microsoft.EntityFrameworkCore.Metadata.IMutableEntityType! entityType, System.Collections.Generic.Dictionary<string!, string!>? options) -> void
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.SetValueGenerationStrategy(this Microsoft.EntityFrameworkCore.Metadata.IConventionProperty! property, pengdows.efcore.adonet.mysql.MySQLValueGenerationStrategy? value, bool fromDataAnnotation = false) -> pengdows.efcore.adonet.mysql.MySQLValueGenerationStrategy?
+static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.SetValueGenerationStrategy(this Microsoft.EntityFrameworkCore.Metadata.IMutableProperty! property, pengdows.efcore.adonet.mysql.MySQLValueGenerationStrategy? value) -> void
+static pengdows.efcore.adonet.mysql.MySqlOracleAliases.AddEntityFrameworkMySQL(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static pengdows.efcore.adonet.mysql.MySqlOracleAliases.AddMySQLServer<TContext>(this Microsoft.Extensions.DependencyInjection.IServiceCollection! serviceCollection, string! connectionString, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? sqlServerOptionsAction = null, System.Action<Microsoft.EntityFrameworkCore.DbContextOptionsBuilder!>? optionsAction = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static pengdows.efcore.adonet.mysql.MySqlOracleAliases.EnableRetryOnFailure(this pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder! optionsBuilder, int maxRetryCount, System.TimeSpan maxRetryDelay, System.Collections.Generic.ICollection<int>? errorNumbersToAdd) -> pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!
+static pengdows.efcore.adonet.mysql.MySqlOracleAliases.ForMySQLHasCharset(this Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder! entityTypeBuilder, string! charset) -> Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder!
+static pengdows.efcore.adonet.mysql.MySqlOracleAliases.ForMySQLHasCharset(this Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder! propertyBuilder, string! charset) -> Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder!
+static pengdows.efcore.adonet.mysql.MySqlOracleAliases.ForMySQLHasCollation(this Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder! entityTypeBuilder, string! collation) -> Microsoft.EntityFrameworkCore.Metadata.Builders.EntityTypeBuilder!
+static pengdows.efcore.adonet.mysql.MySqlOracleAliases.ForMySQLHasCollation(this Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder! propertyBuilder, string! collation) -> Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder!
+static pengdows.efcore.adonet.mysql.MySqlOracleAliases.ForMySQLHasDefaultValue(this Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder! propertyBuilder, object? value = null) -> Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder!
+static pengdows.efcore.adonet.mysql.MySqlOracleAliases.ForMySQLHasDefaultValueSql(this Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder! propertyBuilder, string! sql) -> Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder!
+static pengdows.efcore.adonet.mysql.MySqlOracleAliases.UseMySQL(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder! optionsBuilder, string! connectionString, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? mySqlOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder!
+static pengdows.efcore.adonet.mysql.MySqlOracleAliases.UseMySQL(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder! optionsBuilder, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? mySqlOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder!
+static pengdows.efcore.adonet.mysql.MySqlOracleAliases.UseMySQL(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder! optionsBuilder, System.Data.Common.DbConnection! connection, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? mySqlOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder!
+static pengdows.efcore.adonet.mysql.MySqlOracleAliases.UseMySQL<TContext>(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>! optionsBuilder, string! connectionString, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? mySqlOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>!
+static pengdows.efcore.adonet.mysql.MySqlOracleAliases.UseMySQL<TContext>(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>! optionsBuilder, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? mySqlOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>!
+static pengdows.efcore.adonet.mysql.MySqlOracleAliases.UseMySQL<TContext>(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>! optionsBuilder, System.Data.Common.DbConnection! connection, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? mySqlOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>!
+static pengdows.efcore.adonet.mysql.MySqlOracleAliases.UseMySQLAutoIncrementColumn(this Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder! propertyBuilder, string! typeName) -> Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder!
 static pengdows.efcore.adonet.mysql.MySqlUpsertExtensions.UpsertAsync<TEntity>(this Microsoft.EntityFrameworkCore.DbContext! context, TEntity! entity, string![]! keyProperties, string![]? updateProperties = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<int>!
 static readonly pengdows.efcore.adonet.mysql.MySqlDialect.Instance -> pengdows.efcore.adonet.mysql.MySqlDialect!
 static readonly pengdows.efcore.adonet.mysql.MySqlDialect.NoBackslashEscapes -> pengdows.efcore.adonet.mysql.MySqlDialect!

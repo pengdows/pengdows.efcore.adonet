@@ -75,6 +75,13 @@ public static class MySqlFullTextExtensions
     public static bool IsMatch(this DbFunctions _, string[] properties, string pattern, MySqlMatchSearchMode searchMode)
         => throw new InvalidOperationException(CoreStrings.FunctionOnClient(nameof(IsMatch)));
 
+    /// <summary>
+    ///     Oracle's MySql.EntityFrameworkCore form of <see cref="Match(DbFunctions, string[], string, MySqlMatchSearchMode)" />,
+    ///     with its own search mode enum: the relevance of <paramref name="properties" />, together, to <paramref name="pattern" />.
+    /// </summary>
+    public static double Match(this DbFunctions _, string[] properties, string pattern, MySQLMatchSearchMode searchMode)
+        => throw new InvalidOperationException(CoreStrings.FunctionOnClient(nameof(Match)));
+
     // Two columns of a MATCH over several, "a, b": a query's array of them is rewritten to these before it is translated.
     internal static string Columns(string first, string rest)
         => throw new InvalidOperationException(CoreStrings.FunctionOnClient(nameof(Columns)));
@@ -106,7 +113,20 @@ internal sealed class MySqlFullTextColumnsRewriter : ExpressionVisitor
             visited.Method.Name,
             [typeof(DbFunctions), typeof(string), typeof(string), typeof(MySqlMatchSearchMode)])!;
         var list = columns.Expressions.Reverse().Aggregate((rest, first) => Expression.Call(ColumnsMethod, first, rest));
-        return Expression.Call(single, visited.Arguments[0], list, visited.Arguments[2], visited.Arguments[3]);
+        return Expression.Call(single, visited.Arguments[0], list, visited.Arguments[2], SearchMode(visited.Arguments[3]));
+    }
+
+    // Oracle's search mode, the same three modes in the same order, as this provider's.
+    private static Expression SearchMode(Expression mode)
+    {
+        if (mode.Type == typeof(MySqlMatchSearchMode))
+        {
+            return mode;
+        }
+
+        return mode is ConstantExpression { Value: MySQLMatchSearchMode oracle }
+            ? Expression.Constant((MySqlMatchSearchMode)(int)oracle)
+            : Expression.Convert(Expression.Convert(mode, typeof(int)), typeof(MySqlMatchSearchMode));
     }
 }
 

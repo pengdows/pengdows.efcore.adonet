@@ -44,6 +44,11 @@ public sealed class FakeMySql
         return create(builder.Options);
     }
 
+    /// <summary>Records the commands of a context configured some other way (an alias of UseAdoNetMySql) over <see cref="Connection" />.</summary>
+    public DbContextOptionsBuilder<TContext> Logged<TContext>(DbContextOptionsBuilder<TContext> builder)
+        where TContext : DbContext
+        => builder.EnableSensitiveDataLogging().LogTo(Record, [RelationalEventId.CommandExecuted]);
+
     /// <summary>The next reader returns these rows, each a column name and value in the order the query selects them.</summary>
     public void Returns(params (string Column, object? Value)[][] rows)
         => Connection.EnqueueReaderResult(rows.Select(r => r.ToDictionary(c => c.Column, c => c.Value)).ToList());
