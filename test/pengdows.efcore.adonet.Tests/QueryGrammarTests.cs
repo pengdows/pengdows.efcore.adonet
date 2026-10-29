@@ -78,6 +78,23 @@ public class QueryGrammarTests
     public void A_derived_table_reads_the_outer_row_where_the_database_allows_it()
         => Assert.Contains(@"WHERE ""i"".""Id"" = ""p"".""ItemId""", Sql(TestDialects.OuterReferencesInDerivedTables, FirstDistinctPartLabelPerItem));
 
+    // The first of each group is EF's ROW_NUMBER() OVER (PARTITION BY ...): an ISO window function, which an older server
+    // lacks; the query is refused by its own type, as a capability.
+    private static IQueryable FirstPartOfEachGroup(ItemContext c)
+        => c.Parts.GroupBy(p => p.ItemId).Select(g => g.OrderBy(p => p.Id).First());
+
+    [Fact]
+    public void A_window_function_is_written_where_the_database_has_them_and_refused_where_not()
+    {
+        Assert.Contains("ROW_NUMBER() OVER(PARTITION BY", Sql(TestDialects.OuterReferencesInDerivedTables, FirstPartOfEachGroup));
+
+        var error = Assert.Throws<pengdows.efcore.adonet.Query.WindowFunctionNotSupportedException>(
+            () => Sql(TestDialects.NoWindowFunctions, FirstPartOfEachGroup));
+
+        Assert.Contains("No window functions", error.Message);
+        Assert.DoesNotContain("ROW_NUMBER", Sql(TestDialects.NoWindowFunctions, c => c.Parts.Where(p => p.ItemId > 1)));
+    }
+
     [Fact]
     public void A_derived_table_reading_the_outer_row_is_refused_where_the_database_has_none()
     {

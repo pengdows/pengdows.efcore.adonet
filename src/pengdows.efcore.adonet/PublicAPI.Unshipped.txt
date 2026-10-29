@@ -262,6 +262,7 @@ pengdows.efcore.adonet.ISqlDialect.SupportsSchemas.get -> bool
 pengdows.efcore.adonet.ISqlDialect.SupportsStoredProcedures.get -> bool
 pengdows.efcore.adonet.ISqlDialect.GeneratesCompositeKeyValues.get -> bool
 pengdows.efcore.adonet.ISqlDialect.SupportsOuterReferencesInDerivedTables.get -> bool
+pengdows.efcore.adonet.ISqlDialect.SupportsWindowFunctions.get -> bool
 pengdows.efcore.adonet.ISqlDialect.TrueLiteral.get -> string!
 pengdows.efcore.adonet.ITypeMappingDialect
 pengdows.efcore.adonet.ITypeMappingDialect.CastTarget(string! storeType) -> string!
@@ -422,6 +423,7 @@ virtual pengdows.efcore.adonet.AnsiSqlDialect.SupportsSchemas.get -> bool
 virtual pengdows.efcore.adonet.AnsiSqlDialect.SupportsStoredProcedures.get -> bool
 virtual pengdows.efcore.adonet.AnsiSqlDialect.GeneratesCompositeKeyValues.get -> bool
 virtual pengdows.efcore.adonet.AnsiSqlDialect.SupportsOuterReferencesInDerivedTables.get -> bool
+virtual pengdows.efcore.adonet.AnsiSqlDialect.SupportsWindowFunctions.get -> bool
 virtual pengdows.efcore.adonet.AnsiSqlDialect.TrueLiteral.get -> string!
 virtual pengdows.efcore.adonet.AnsiTypeMappings.CastTarget(string! storeType) -> string!
 virtual pengdows.efcore.adonet.AnsiTypeMappings.DateTimeDbType.get -> System.Data.DbType

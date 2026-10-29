@@ -27,6 +27,12 @@ internal sealed class AdoNetQueryTranslationPostprocessor(
                 $"This query reads the outer row from inside a derived table (a subquery in FROM), which {dialect.Name} doesn't allow.");
         }
 
+        if (!dialect.Sql.SupportsWindowFunctions && WindowFunctionFinder.Finds(processed))
+        {
+            throw new WindowFunctionNotSupportedException(
+                $"This query needs a window function (ROW_NUMBER() OVER, for the first rows of each group), which {dialect.Name} doesn't have.");
+        }
+
         return processed;
     }
 
@@ -173,6 +179,40 @@ internal sealed class LateralJoinFinder : ExpressionVisitor
 
 /// <summary>A query that needs a lateral join, on a database that has none: the dialect's capability, not a translation bug.</summary>
 internal sealed class LateralJoinNotSupportedException(string message) : InvalidOperationException(message);
+
+/// <summary>A query that needs a window function, on a database that has none: the dialect's capability, not a translation bug.</summary>
+internal sealed class WindowFunctionNotSupportedException(string message) : InvalidOperationException(message);
+
+/// <summary>Whether a translated query has a window function (EF's ROW_NUMBER() OVER) anywhere in it.</summary>
+internal sealed class WindowFunctionFinder : ExpressionVisitor
+{
+    private bool _found;
+
+    public static bool Finds(Expression expression)
+    {
+        var finder = new WindowFunctionFinder();
+        finder.Visit(expression);
+        return finder._found;
+    }
+
+    public override Expression? Visit(Expression? node)
+    {
+        if (_found)
+        {
+            return node;
+        }
+
+        if (node is RowNumberExpression)
+        {
+            _found = true;
+            return node;
+        }
+
+        return node is ShapedQueryExpression shaped
+            ? shaped.Update(Visit(shaped.QueryExpression)!, Visit(shaped.ShaperExpression)!)
+            : base.Visit(node);
+    }
+}
 
 /// <summary>
 ///     Whether a translated query has a derived table (a subquery, set operation or VALUES in FROM, joined other than laterally) in

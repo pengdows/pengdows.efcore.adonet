@@ -91,6 +91,13 @@ public interface ISqlDialect
     /// </summary>
     bool SupportsOuterReferencesInDerivedTables { get; }
 
+    /// <summary>
+    ///     Whether the database has ISO SQL:2003 window functions (<c>ROW_NUMBER() OVER (...)</c>), which EF writes for the
+    ///     first rows of each group; where it hasn't (an older server), a query EF translates to one is refused. True by
+    ///     default.
+    /// </summary>
+    bool SupportsWindowFunctions => true;
+
     /// <summary>The marker that precedes a named parameter in SQL text (<c>@</c>, <c>:</c>, <c>$</c>).</summary>
     string ParameterMarker { get; }
 
