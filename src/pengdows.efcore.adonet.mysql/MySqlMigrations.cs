@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -202,15 +203,23 @@ internal partial class MySqlMigrationsSqlGenerator(MigrationsSqlGeneratorDepende
         // is a DATETIME or TIMESTAMP it sets so, at the column's precision. Behaviour reference (not copied):
         // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Migrations/MySqlMigrationsSqlGenerator.cs
         var columnType = operation.ColumnType ?? GetColumnType(schema, table, name, operation, model) ?? "";
-        var computed = operation[MySqlModelOptionsExtensions.ValueGenerationStrategyAnnotation] is MySqlModelOptionsExtensions.ComputedColumnStrategy;
+        var strategy = operation[MySqlModelOptionsExtensions.ValueGenerationStrategyAnnotation] as string;
+        var computed = strategy is MySqlModelOptionsExtensions.ComputedColumnStrategy;
         if ((operation.DefaultValueSql == null)
             && (operation.DefaultValue == null)
             && (operation.ComputedColumnSql == null)
-            && (DateTimeType().Match(columnType) is { Success: true } dateTime)
-            && ((operation.IsRowVersion && dateTime.Groups["type"].Value.Equals("timestamp", StringComparison.OrdinalIgnoreCase)) || computed))
+            && (DateTimeType().Match(columnType) is { Success: true } dateTime))
         {
+            // An identity date and time (UseMySqlIdentityColumn) is set on insert only.
             var now = "CURRENT_TIMESTAMP" + dateTime.Groups["precision"].Value;
-            builder.Append(" DEFAULT ").Append(now).Append(" ON UPDATE ").Append(now);
+            if ((operation.IsRowVersion && dateTime.Groups["type"].Value.Equals("timestamp", StringComparison.OrdinalIgnoreCase)) || computed)
+            {
+                builder.Append(" DEFAULT ").Append(now).Append(" ON UPDATE ").Append(now);
+            }
+            else if (strategy is MySqlModelOptionsExtensions.IdentityColumnStrategy)
+            {
+                builder.Append(" DEFAULT ").Append(now);
+            }
         }
 
         if (operation.Comment != null)
@@ -408,6 +417,91 @@ internal partial class MySqlMigrationsSqlGenerator(MigrationsSqlGeneratorDepende
         ColumnDefinition(operation.Schema, operation.Table, operation.Name, operation, model, builder);
         builder.AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
         EndStatement(builder);
+    }
+
+    // EF finds a generator by an operation's exact type: Pomelo's drop-and-recreate operations go to their base types' here.
+    protected override void Generate(MigrationOperation operation, IModel? model, MigrationCommandListBuilder builder)
+    {
+        switch (operation)
+        {
+            case MySqlDropPrimaryKeyAndRecreateForeignKeysOperation dropPrimaryKey:
+                Recreating(dropPrimaryKey.RecreateForeignKeys, dropPrimaryKey.Table, dropPrimaryKey.Schema, model, builder,
+                    () => Generate(dropPrimaryKey, model, builder));
+                return;
+            case MySqlDropUniqueConstraintAndRecreateForeignKeysOperation dropUniqueConstraint:
+                Recreating(dropUniqueConstraint.RecreateForeignKeys, dropUniqueConstraint.Table, dropUniqueConstraint.Schema, model, builder,
+                    () => Generate(dropUniqueConstraint, model, builder));
+                return;
+            default:
+                base.Generate(operation, model, builder);
+                return;
+        }
+    }
+
+    // With recreateForeignKeys, the table's foreign keys in the target model are dropped before and added again after, since
+    // MySQL may be using the key's index for one whose columns lead it, and then refuses to drop it. Behaviour reference (not
+    // copied): Pomelo's TemporarilyDropForeignKeys:
+    // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Migrations/MySqlMigrationsSqlGenerator.cs
+    private void Recreating(bool recreate, string table, string? schema, IModel? model, MigrationCommandListBuilder builder, Action drop)
+    {
+        if (!recreate)
+        {
+            drop();
+            return;
+        }
+
+        var foreignKeys = (model ?? throw new InvalidOperationException(
+                    $"Recreating the foreign keys of '{table}' needs the migration's target model, to know which they are."))
+            .GetRelationalModel().FindTable(table, schema)?.ForeignKeyConstraints.ToArray() ?? [];
+        foreach (var foreignKey in foreignKeys)
+        {
+            Generate(new DropForeignKeyOperation { Schema = foreignKey.Table.Schema, Table = foreignKey.Table.Name, Name = foreignKey.Name }, model, builder);
+        }
+
+        drop();
+        foreach (var foreignKey in foreignKeys)
+        {
+            Generate(
+                new AddForeignKeyOperation
+                {
+                    Schema = foreignKey.Table.Schema,
+                    Table = foreignKey.Table.Name,
+                    Name = foreignKey.Name,
+                    Columns = foreignKey.Columns.Select(c => c.Name).ToArray(),
+                    PrincipalSchema = foreignKey.PrincipalTable.Schema,
+                    PrincipalTable = foreignKey.PrincipalTable.Name,
+                    PrincipalColumns = foreignKey.PrincipalColumns.Select(c => c.Name).ToArray(),
+                    OnDelete = foreignKey.OnDeleteAction
+                },
+                model,
+                builder);
+        }
+    }
+
+    // DROP FOREIGN KEY and DROP INDEX, which every MySQL and MariaDB version takes; ISO's DROP CONSTRAINT came to MySQL only
+    // in 8.0.19. Behaviour reference (not copied):
+    // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Migrations/MySqlMigrationsSqlGenerator.cs
+    protected override void Generate(DropForeignKeyOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
+        => DropFromTable(operation.Table, operation.Schema, "FOREIGN KEY", operation.Name, builder, terminate);
+
+    protected override void Generate(DropUniqueConstraintOperation operation, IModel? model, MigrationCommandListBuilder builder)
+        => DropFromTable(operation.Table, operation.Schema, "INDEX", operation.Name, builder, terminate: true);
+
+    private void DropFromTable(string table, string? schema, string kind, string name, MigrationCommandListBuilder builder, bool terminate)
+    {
+        builder
+            .Append("ALTER TABLE ")
+            .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(table, schema))
+            .Append(" DROP ")
+            .Append(kind)
+            .Append(" ")
+            .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(name));
+
+        if (terminate)
+        {
+            builder.AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
+            EndStatement(builder);
+        }
     }
 
     // A primary key is dropped as such: MySQL names every one PRIMARY.

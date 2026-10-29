@@ -26,6 +26,7 @@ public static partial class MySqlModelOptionsExtensions
     internal const string CollationDelegationAnnotation = "MySql:CollationDelegation";
     internal const string ValueGenerationStrategyAnnotation = "MySql:ValueGenerationStrategy";
     internal const string ComputedColumnStrategy = "ComputedColumn";
+    internal const string IdentityColumnStrategy = "IdentityColumn";
 
     /// <summary>The column's CHARACTER SET.</summary>
     public static PropertyBuilder HasCharSet(this PropertyBuilder propertyBuilder, string charSet)
@@ -162,13 +163,66 @@ public static partial class MySqlModelOptionsExtensions
     public static PropertyBuilder<TProperty> HasSpatialReferenceSystem<TProperty>(this PropertyBuilder<TProperty> propertyBuilder, int? srid)
         => propertyBuilder.HasAnnotation(SpatialReferenceSystemAnnotation, srid);
 
-    /// <summary>The key is AUTO_INCREMENT: the core's <c>UseIdentityColumn</c> under Pomelo's name.</summary>
+    /// <summary>
+    ///     The server generates the column on insert: an integer is AUTO_INCREMENT (the core's <c>UseIdentityColumn</c>), a
+    ///     DateTime or DateTimeOffset <c>DEFAULT CURRENT_TIMESTAMP(n)</c>, read back after the insert, as Pomelo's.
+    /// </summary>
     public static PropertyBuilder UseMySqlIdentityColumn(this PropertyBuilder propertyBuilder)
-        => propertyBuilder.UseIdentityColumn();
+    {
+        if (!IsDateTime(propertyBuilder.Metadata.ClrType))
+        {
+            return propertyBuilder.UseIdentityColumn();
+        }
 
-    /// <summary>The key is AUTO_INCREMENT: the core's <c>UseIdentityColumn</c> under Pomelo's name.</summary>
+        return propertyBuilder.ValueGeneratedOnAdd().HasAnnotation(ValueGenerationStrategyAnnotation, IdentityColumnStrategy);
+    }
+
+    /// <summary>
+    ///     The server generates the column on insert: an integer is AUTO_INCREMENT (the core's <c>UseIdentityColumn</c>), a
+    ///     DateTime or DateTimeOffset <c>DEFAULT CURRENT_TIMESTAMP(n)</c>, read back after the insert, as Pomelo's.
+    /// </summary>
     public static PropertyBuilder<TProperty> UseMySqlIdentityColumn<TProperty>(this PropertyBuilder<TProperty> propertyBuilder)
-        => propertyBuilder.UseIdentityColumn();
+        => (PropertyBuilder<TProperty>)UseMySqlIdentityColumn((PropertyBuilder)propertyBuilder);
+
+    /// <summary>
+    ///     Every integer key the server can number is AUTO_INCREMENT, as Pomelo's <c>AutoIncrementColumns</c>: this provider's
+    ///     convention already, said explicitly on the model.
+    /// </summary>
+    public static ModelBuilder AutoIncrementColumns(this ModelBuilder modelBuilder)
+        => modelBuilder.HasAnnotation(ValueGenerationStrategyAnnotation, IdentityColumnStrategy);
+
+    /// <summary>The column's collation: EF's <c>UseCollation</c>, under Pomelo's earlier name.</summary>
+    [Obsolete("Call 'UseCollation()' instead.")]
+    public static PropertyBuilder HasCollation(this PropertyBuilder propertyBuilder, string collation)
+        => propertyBuilder.UseCollation(collation);
+
+    /// <summary>The column's collation: EF's <c>UseCollation</c>, under Pomelo's earlier name.</summary>
+    [Obsolete("Call 'UseCollation()' instead.")]
+    public static PropertyBuilder<TProperty> HasCollation<TProperty>(this PropertyBuilder<TProperty> propertyBuilder, string collation)
+        => propertyBuilder.UseCollation(collation);
+
+    /// <summary><see cref="IsSpatial(IndexBuilder, bool)" /> under Pomelo's earlier name.</summary>
+    [Obsolete("This extension method is obsolete. Use IsSpatial instead.")]
+    public static IndexBuilder ForMySqlIsSpatial(this IndexBuilder indexBuilder, bool spatial = true)
+        => indexBuilder.IsSpatial(spatial);
+
+    /// <summary><see cref="IsSpatial(IndexBuilder, bool)" /> under Pomelo's earlier name.</summary>
+    [Obsolete("This extension method is obsolete. Use IsSpatial instead.")]
+    public static IndexBuilder<TEntity> ForMySqlIsSpatial<TEntity>(this IndexBuilder<TEntity> indexBuilder, bool spatial = true)
+        => indexBuilder.IsSpatial(spatial);
+
+    /// <summary><c>IsFullText</c> under Pomelo's earlier name.</summary>
+    [Obsolete("This extension method is obsolete. Use IsFullText instead.")]
+    public static IndexBuilder ForMySqlIsFullText(this IndexBuilder indexBuilder, bool fullText = true)
+        => indexBuilder.IsFullText(fullText);
+
+    /// <summary><c>IsFullText</c> under Pomelo's earlier name.</summary>
+    [Obsolete("This extension method is obsolete. Use IsFullText instead.")]
+    public static IndexBuilder<TEntity> ForMySqlIsFullText<TEntity>(this IndexBuilder<TEntity> indexBuilder, bool fullText = true)
+        => indexBuilder.IsFullText(fullText);
+
+    internal static bool IsDateTime(Type type)
+        => (Nullable.GetUnderlyingType(type) ?? type) is var t && ((t == typeof(DateTime)) || (t == typeof(DateTimeOffset)));
 
     /// <summary>
     ///     The entity type's COLLATE: its table's default and, explicitly, its text columns', or only those

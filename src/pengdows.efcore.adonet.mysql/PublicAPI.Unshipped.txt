@@ -12,11 +12,16 @@ pengdows.efcore.adonet.mysql.MySQLCollationAttribute.Collation.get -> string!
 pengdows.efcore.adonet.mysql.MySQLCollationAttribute.MySQLCollationAttribute(string! collation) -> void
 pengdows.efcore.adonet.mysql.MySqlDbContextOptionsBuilderExtensions
 pengdows.efcore.adonet.mysql.MySqlDialect
+pengdows.efcore.adonet.mysql.MySqlDropPrimaryKeyAndRecreateForeignKeysOperation
+pengdows.efcore.adonet.mysql.MySqlDropPrimaryKeyAndRecreateForeignKeysOperation.MySqlDropPrimaryKeyAndRecreateForeignKeysOperation() -> void
+pengdows.efcore.adonet.mysql.MySqlDropUniqueConstraintAndRecreateForeignKeysOperation
+pengdows.efcore.adonet.mysql.MySqlDropUniqueConstraintAndRecreateForeignKeysOperation.MySqlDropUniqueConstraintAndRecreateForeignKeysOperation() -> void
 pengdows.efcore.adonet.mysql.MySQLMatchSearchMode
 pengdows.efcore.adonet.mysql.MySQLMatchSearchMode.Boolean = 2 -> pengdows.efcore.adonet.mysql.MySQLMatchSearchMode
 pengdows.efcore.adonet.mysql.MySQLMatchSearchMode.NaturalLanguage = 0 -> pengdows.efcore.adonet.mysql.MySQLMatchSearchMode
 pengdows.efcore.adonet.mysql.MySQLMatchSearchMode.NaturalLanguageWithQueryExpansion = 1 -> pengdows.efcore.adonet.mysql.MySQLMatchSearchMode
 pengdows.efcore.adonet.mysql.MySqlMetadataExtensions
+pengdows.efcore.adonet.mysql.MySqlMigrationBuilderExtensions
 pengdows.efcore.adonet.mysql.MySqlOracleAliases
 pengdows.efcore.adonet.mysql.MySQLValueGenerationStrategy
 pengdows.efcore.adonet.mysql.MySQLValueGenerationStrategy.ComputedColumn = 2 -> pengdows.efcore.adonet.mysql.MySQLValueGenerationStrategy
@@ -82,6 +87,16 @@ static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.SetTableOptions(this
 static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.SetTableOptions(this Microsoft.EntityFrameworkCore.Metadata.IMutableEntityType! entityType, System.Collections.Generic.Dictionary<string!, string!>? options) -> void
 static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.SetValueGenerationStrategy(this Microsoft.EntityFrameworkCore.Metadata.IConventionProperty! property, pengdows.efcore.adonet.mysql.MySQLValueGenerationStrategy? value, bool fromDataAnnotation = false) -> pengdows.efcore.adonet.mysql.MySQLValueGenerationStrategy?
 static pengdows.efcore.adonet.mysql.MySqlMetadataExtensions.SetValueGenerationStrategy(this Microsoft.EntityFrameworkCore.Metadata.IMutableProperty! property, pengdows.efcore.adonet.mysql.MySQLValueGenerationStrategy? value) -> void
+static pengdows.efcore.adonet.mysql.MySqlMigrationBuilderExtensions.DropPrimaryKey(this Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder! migrationBuilder, string! name, string! table, string? schema = null, bool recreateForeignKeys = false) -> Microsoft.EntityFrameworkCore.Migrations.Operations.Builders.OperationBuilder<pengdows.efcore.adonet.mysql.MySqlDropPrimaryKeyAndRecreateForeignKeysOperation!>!
+static pengdows.efcore.adonet.mysql.MySqlMigrationBuilderExtensions.DropUniqueConstraint(this Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder! migrationBuilder, string! name, string! table, string? schema = null, bool recreateForeignKeys = false) -> Microsoft.EntityFrameworkCore.Migrations.Operations.Builders.OperationBuilder<pengdows.efcore.adonet.mysql.MySqlDropUniqueConstraintAndRecreateForeignKeysOperation!>!
+static pengdows.efcore.adonet.mysql.MySqlMigrationBuilderExtensions.IsMySql(this Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder! migrationBuilder) -> bool
+static pengdows.efcore.adonet.mysql.MySqlModelOptionsExtensions.AutoIncrementColumns(this Microsoft.EntityFrameworkCore.ModelBuilder! modelBuilder) -> Microsoft.EntityFrameworkCore.ModelBuilder!
+static pengdows.efcore.adonet.mysql.MySqlModelOptionsExtensions.ForMySqlIsFullText(this Microsoft.EntityFrameworkCore.Metadata.Builders.IndexBuilder! indexBuilder, bool fullText = true) -> Microsoft.EntityFrameworkCore.Metadata.Builders.IndexBuilder!
+static pengdows.efcore.adonet.mysql.MySqlModelOptionsExtensions.ForMySqlIsFullText<TEntity>(this Microsoft.EntityFrameworkCore.Metadata.Builders.IndexBuilder<TEntity>! indexBuilder, bool fullText = true) -> Microsoft.EntityFrameworkCore.Metadata.Builders.IndexBuilder<TEntity>!
+static pengdows.efcore.adonet.mysql.MySqlModelOptionsExtensions.ForMySqlIsSpatial(this Microsoft.EntityFrameworkCore.Metadata.Builders.IndexBuilder! indexBuilder, bool spatial = true) -> Microsoft.EntityFrameworkCore.Metadata.Builders.IndexBuilder!
+static pengdows.efcore.adonet.mysql.MySqlModelOptionsExtensions.ForMySqlIsSpatial<TEntity>(this Microsoft.EntityFrameworkCore.Metadata.Builders.IndexBuilder<TEntity>! indexBuilder, bool spatial = true) -> Microsoft.EntityFrameworkCore.Metadata.Builders.IndexBuilder<TEntity>!
+static pengdows.efcore.adonet.mysql.MySqlModelOptionsExtensions.HasCollation(this Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder! propertyBuilder, string! collation) -> Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder!
+static pengdows.efcore.adonet.mysql.MySqlModelOptionsExtensions.HasCollation<TProperty>(this Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder<TProperty>! propertyBuilder, string! collation) -> Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder<TProperty>!
 static pengdows.efcore.adonet.mysql.MySqlOracleAliases.AddEntityFrameworkMySQL(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
 static pengdows.efcore.adonet.mysql.MySqlOracleAliases.AddMySQLServer<TContext>(this Microsoft.Extensions.DependencyInjection.IServiceCollection! serviceCollection, string! connectionString, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? sqlServerOptionsAction = null, System.Action<Microsoft.EntityFrameworkCore.DbContextOptionsBuilder!>? optionsAction = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
 static pengdows.efcore.adonet.mysql.MySqlOracleAliases.EnableRetryOnFailure(this pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder! optionsBuilder, int maxRetryCount, System.TimeSpan maxRetryDelay, System.Collections.Generic.ICollection<int>? errorNumbersToAdd) -> pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!
@@ -196,3 +211,7 @@ static pengdows.efcore.adonet.mysql.MySqlModelOptionsExtensions.UseCollation<TEn
 static pengdows.efcore.adonet.mysql.MySqlModelOptionsExtensions.UseMySqlComputedColumn(this Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder! propertyBuilder) -> Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder!
 static pengdows.efcore.adonet.mysql.MySqlModelOptionsExtensions.UseMySqlComputedColumn<TProperty>(this Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder<TProperty>! propertyBuilder) -> Microsoft.EntityFrameworkCore.Metadata.Builders.PropertyBuilder<TProperty>!
 override pengdows.efcore.adonet.mysql.MySqlDesignTimeServices.ConfigureDesignTimeServices(Microsoft.Extensions.DependencyInjection.IServiceCollection! serviceCollection) -> void
+virtual pengdows.efcore.adonet.mysql.MySqlDropPrimaryKeyAndRecreateForeignKeysOperation.RecreateForeignKeys.get -> bool
+virtual pengdows.efcore.adonet.mysql.MySqlDropPrimaryKeyAndRecreateForeignKeysOperation.RecreateForeignKeys.set -> void
+virtual pengdows.efcore.adonet.mysql.MySqlDropUniqueConstraintAndRecreateForeignKeysOperation.RecreateForeignKeys.get -> bool
+virtual pengdows.efcore.adonet.mysql.MySqlDropUniqueConstraintAndRecreateForeignKeysOperation.RecreateForeignKeys.set -> void

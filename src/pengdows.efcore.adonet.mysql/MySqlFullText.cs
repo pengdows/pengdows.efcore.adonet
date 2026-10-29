@@ -219,9 +219,10 @@ internal sealed partial class MySqlAnnotationProvider(RelationalAnnotationProvid
             yield return new Annotation(InheritedCollationAnnotation, inheritedCollation);
         }
 
-        if (column.PropertyMappings.Any(m => m.Property.FindAnnotation(MySqlModelOptionsExtensions.ValueGenerationStrategyAnnotation)?.Value is MySqlModelOptionsExtensions.ComputedColumnStrategy))
+        if (column.PropertyMappings.Select(m => m.Property.FindAnnotation(MySqlModelOptionsExtensions.ValueGenerationStrategyAnnotation)?.Value)
+                .OfType<string>().FirstOrDefault() is { } strategy)
         {
-            yield return new Annotation(MySqlModelOptionsExtensions.ValueGenerationStrategyAnnotation, MySqlModelOptionsExtensions.ComputedColumnStrategy);
+            yield return new Annotation(MySqlModelOptionsExtensions.ValueGenerationStrategyAnnotation, strategy);
         }
 
         if (column.PropertyMappings.Select(m => m.Property.FindAnnotation(MySqlModelOptionsExtensions.SpatialReferenceSystemAnnotation)?.Value)

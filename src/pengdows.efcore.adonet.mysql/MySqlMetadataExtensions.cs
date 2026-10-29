@@ -166,21 +166,20 @@ public static class MySqlMetadataExtensions
     /// <summary>How the server generates the column's value: <c>UseMySqlIdentityColumn</c> or <c>UseMySqlComputedColumn</c>; null where it doesn't.</summary>
     public static MySQLValueGenerationStrategy? GetValueGenerationStrategy(this IReadOnlyProperty property, StoreObjectIdentifier storeObject = default)
     {
-        if (property[MySqlModelOptionsExtensions.ValueGenerationStrategyAnnotation] is MySqlModelOptionsExtensions.ComputedColumnStrategy)
+        return property[MySqlModelOptionsExtensions.ValueGenerationStrategyAnnotation] switch
         {
-            return MySQLValueGenerationStrategy.ComputedColumn;
-        }
-
-        return property[AdoNetAnnotationNames.Identity] is true ? MySQLValueGenerationStrategy.IdentityColumn : null;
+            MySqlModelOptionsExtensions.ComputedColumnStrategy => MySQLValueGenerationStrategy.ComputedColumn,
+            MySqlModelOptionsExtensions.IdentityColumnStrategy => MySQLValueGenerationStrategy.IdentityColumn,
+            _ => property[AdoNetAnnotationNames.Identity] is true ? MySQLValueGenerationStrategy.IdentityColumn : null
+        };
     }
 
     /// <summary>Sets how the server generates the column's value, as <c>UseMySqlIdentityColumn</c> or <c>UseMySqlComputedColumn</c> do; None or null removes it.</summary>
     public static void SetValueGenerationStrategy(this IMutableProperty property, MySQLValueGenerationStrategy? value)
     {
-        property.SetOrRemoveAnnotation(AdoNetAnnotationNames.Identity, value == MySQLValueGenerationStrategy.IdentityColumn ? true : null);
-        property.SetOrRemoveAnnotation(
-            MySqlModelOptionsExtensions.ValueGenerationStrategyAnnotation,
-            value == MySQLValueGenerationStrategy.ComputedColumn ? MySqlModelOptionsExtensions.ComputedColumnStrategy : null);
+        var (identity, strategy) = Annotations(property, value);
+        property.SetOrRemoveAnnotation(AdoNetAnnotationNames.Identity, identity);
+        property.SetOrRemoveAnnotation(MySqlModelOptionsExtensions.ValueGenerationStrategyAnnotation, strategy);
         property.ValueGenerated = value switch
         {
             MySQLValueGenerationStrategy.IdentityColumn => ValueGenerated.OnAdd,
@@ -195,11 +194,9 @@ public static class MySqlMetadataExtensions
         MySQLValueGenerationStrategy? value,
         bool fromDataAnnotation = false)
     {
-        property.SetOrRemoveAnnotation(AdoNetAnnotationNames.Identity, value == MySQLValueGenerationStrategy.IdentityColumn ? true : null, fromDataAnnotation);
-        property.SetOrRemoveAnnotation(
-            MySqlModelOptionsExtensions.ValueGenerationStrategyAnnotation,
-            value == MySQLValueGenerationStrategy.ComputedColumn ? MySqlModelOptionsExtensions.ComputedColumnStrategy : null,
-            fromDataAnnotation);
+        var (identity, strategy) = Annotations(property, value);
+        property.SetOrRemoveAnnotation(AdoNetAnnotationNames.Identity, identity, fromDataAnnotation);
+        property.SetOrRemoveAnnotation(MySqlModelOptionsExtensions.ValueGenerationStrategyAnnotation, strategy, fromDataAnnotation);
         property.SetValueGenerated(
             value switch
             {
@@ -250,6 +247,17 @@ public static class MySqlMetadataExtensions
     /// <summary>Whether a convention or data annotation may set the model's character set.</summary>
     public static bool CanSetCharSet(this IConventionModelBuilder modelBuilder, string? charSet, bool fromDataAnnotation = false)
         => modelBuilder.CanSetAnnotation(MySqlModelOptionsExtensions.CharSetAnnotation, charSet, fromDataAnnotation);
+
+    // An integer identity is the core's (AUTO_INCREMENT); a date and time's is CURRENT_TIMESTAMP, MySQL's own strategy.
+    private static (bool? Identity, string? Strategy) Annotations(IReadOnlyProperty property, MySQLValueGenerationStrategy? value)
+        => value switch
+        {
+            MySQLValueGenerationStrategy.IdentityColumn when MySqlModelOptionsExtensions.IsDateTime(property.ClrType)
+                => (null, MySqlModelOptionsExtensions.IdentityColumnStrategy),
+            MySQLValueGenerationStrategy.IdentityColumn => (true, null),
+            MySQLValueGenerationStrategy.ComputedColumn => (null, MySqlModelOptionsExtensions.ComputedColumnStrategy),
+            _ => (null, null)
+        };
 
     private static Type? ClrType(IReadOnlyProperty property)
     {

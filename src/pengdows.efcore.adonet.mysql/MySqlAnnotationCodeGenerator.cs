@@ -24,6 +24,8 @@ internal sealed class MySqlAnnotationCodeGenerator(AnnotationCodeGeneratorDepend
     private static readonly MethodInfo PropertyHasCharSet = Method(nameof(MySqlModelOptionsExtensions.HasCharSet), typeof(PropertyBuilder), typeof(string));
     private static readonly MethodInfo PropertyHasSrid = Method(nameof(MySqlModelOptionsExtensions.HasSpatialReferenceSystem), typeof(PropertyBuilder), typeof(int?));
     private static readonly MethodInfo PropertyUseComputedColumn = Method(nameof(MySqlModelOptionsExtensions.UseMySqlComputedColumn), typeof(PropertyBuilder));
+    private static readonly MethodInfo PropertyUseIdentityColumn = Method(nameof(MySqlModelOptionsExtensions.UseMySqlIdentityColumn), typeof(PropertyBuilder));
+    private static readonly MethodInfo ModelAutoIncrementColumns = Method(nameof(MySqlModelOptionsExtensions.AutoIncrementColumns), typeof(ModelBuilder));
     private static readonly MethodInfo IndexHasPrefixLength = Method(nameof(MySqlModelOptionsExtensions.HasPrefixLength), typeof(IndexBuilder), typeof(int[]));
     private static readonly MethodInfo IndexIsSpatial = Method(nameof(MySqlModelOptionsExtensions.IsSpatial), typeof(IndexBuilder), typeof(bool));
     private static readonly MethodInfo KeyHasPrefixLength = Method(nameof(MySqlModelOptionsExtensions.HasPrefixLength), typeof(KeyBuilder), typeof(int[]));
@@ -42,6 +44,11 @@ internal sealed class MySqlAnnotationCodeGenerator(AnnotationCodeGeneratorDepend
 
         calls.AddRange(base.GenerateFluentApiCalls(model, annotations));
         Delegated(annotations, MySqlModelOptionsExtensions.CharSetAnnotation, MySqlModelOptionsExtensions.CharSetDelegationAnnotation, ModelHasCharSet, calls);
+        if (annotations.Remove(MySqlModelOptionsExtensions.ValueGenerationStrategyAnnotation, out _))
+        {
+            calls.Add(new MethodCallCodeFragment(ModelAutoIncrementColumns));
+        }
+
         if (annotations.Remove(MySqlModelOptionsExtensions.GuidCollationAnnotation, out var guidCollation))
         {
             calls.Add(new MethodCallCodeFragment(ModelUseGuidCollation, guidCollation.Value));
@@ -77,10 +84,10 @@ internal sealed class MySqlAnnotationCodeGenerator(AnnotationCodeGeneratorDepend
             calls.Add(new MethodCallCodeFragment(PropertyHasSrid, srid.Value));
         }
 
-        if (annotations.Remove(MySqlModelOptionsExtensions.ValueGenerationStrategyAnnotation, out var strategy)
-            && (strategy.Value is MySqlModelOptionsExtensions.ComputedColumnStrategy))
+        if (annotations.Remove(MySqlModelOptionsExtensions.ValueGenerationStrategyAnnotation, out var strategy))
         {
-            calls.Add(new MethodCallCodeFragment(PropertyUseComputedColumn));
+            calls.Add(new MethodCallCodeFragment(
+                strategy.Value is MySqlModelOptionsExtensions.ComputedColumnStrategy ? PropertyUseComputedColumn : PropertyUseIdentityColumn));
         }
 
         return calls;
