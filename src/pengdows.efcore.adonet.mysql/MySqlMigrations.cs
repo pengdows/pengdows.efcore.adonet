@@ -22,7 +22,11 @@ internal partial class MySqlMigrationsSqlGenerator(MigrationsSqlGeneratorDepende
         IReadOnlyList<MigrationOperation> operations,
         IModel? model = null,
         MigrationsSqlGenerationOptions options = MigrationsSqlGenerationOptions.Default)
-        => base.Generate(Reorder(operations), model, options);
+    {
+        // Migrations written with Pomelo or Oracle's provider carry their annotations: read as this provider's.
+        MySqlForeignAnnotations.Normalize(operations);
+        return base.Generate(Reorder(operations), model, options);
+    }
 
     private static List<MigrationOperation> Reorder(IReadOnlyList<MigrationOperation> operations)
     {
