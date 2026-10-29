@@ -220,6 +220,15 @@ public class FunctionSyntax
     /// <summary><c>{0}</c> with every character in the string <c>{1}</c> removed from its end; null where there is none.</summary>
     public virtual string? TrimEndCharacters => null;
 
+    /// <summary>
+    ///     How <paramref name="characters" /> becomes <c>{1}</c> in <see cref="TrimCharacters" />, <see cref="TrimStartCharacters" />
+    ///     and <see cref="TrimEndCharacters" />: the characters themselves, concatenated, for a database whose trim function
+    ///     takes a character set that way. A database with no such form overrides this to build whatever its own template
+    ///     needs instead (a regex character class, for one built from a regex-replace function).
+    /// </summary>
+    public virtual string TrimCharacterSet(char[] characters)
+        => new(characters);
+
     /// <summary>Whether <c>{0}</c> matches the regular expression <c>{1}</c>, case-sensitively as .NET's.</summary>
     public virtual string? RegexIsMatch => null;
 

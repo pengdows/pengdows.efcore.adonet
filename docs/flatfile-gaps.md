@@ -3,14 +3,13 @@
 The EF Core specification suite is evaluated against `pengdows.flatfile` as an ISO SQL provider. Vendor syntax is not added
 to make a test pass. The original 14,016-test run below is historical and must not be presented as current parity evidence.
 The current engine source passes 2,373 provider tests per target framework (12 authorization skips) and 2,018/2,027 SQL
-conformance cases per target framework. The adapter consumes the locally built `pengdows.flatfile` `0.2.1-preview.16`
-package while that release is being published.
+conformance cases per target framework. The repository references `pengdows.flatfile` `0.2.1-preview.20`, built from the
+current engine work including commit `e7ed940`.
 
 ## 0. Engine backlog status
 
-The engine-side items listed in the earlier audit are fixed and covered by regression tests. The adapter pin is now
-`0.2.1-preview.16`, and the obsolete `KnownEngineGaps` entries were removed. Keep the remaining entries below as explicit
-ISO/provider boundaries, not as requests to add vendor SQL.
+The engine-side items listed in the earlier audit are fixed and covered by regression tests. Keep the remaining entries below
+as explicit ISO/provider boundaries, not as requests to add vendor SQL.
 
 ## 1. Engine work still needed
 
@@ -35,13 +34,24 @@ reproduction and a regression test.
 - **JSON (625).** `FlatFileDialect` sets no `Json`; the core has `JsonSyntax.Iso`. The engine has `JSON_VALUE`,
   `JSON_QUERY`, `JSON_EXISTS` and `JSON_TABLE`. Find out whether it has a `JSON` column type, then wire up the dialect. ISO
   has no `JSON_SET`, so partial JSON updates need a decision.
-- **Generated-value readback (224).** ISO has no `RETURNING`, but it has feature T495, data change delta tables:
+- **Generated-value readback (224).** Flatfile uses Pengdows data-change delta tables:
   `SELECT ... FROM FINAL TABLE (INSERT INTO ...)`. The engine already parses and executes them (`DataChangeDeltaTable` in
   `pengdows.sql/SqlAst.cs`, `ExecuteDataChangeDeltaTable` in `DefaultFlatFileQueryExecutor.cs`). Use that to read generated
-  values back, not a second select. Matching returned rows to the entities of a batched insert is the correlation problem
-  that the [pengdows/sql-spec INCLUDE proposal](https://github.com/pengdows/sql-spec/blob/main/proposal.md) addresses;
-  treat that proposal as an explicit Pengdows extension until the standards-alignment research is complete. Until then, key
-  the match on the primary key or insert one row per statement.
+  values back, not a second select. Matching returned rows to entities from a batched source is the correlation problem
+  addressed by the [Pengdows SQL specification's INCLUDE proposal](https://github.com/pengdows/sql-spec/blob/main/proposal.md).
+  The adapter uses `DeltaTableWithInclude`; one delta-table statement per EF modification is covered, while INCLUDE-column
+  correlation for multi-row source operations remains the next design step.
+- **Temporal arithmetic.** The adapter's parameterized date and `TimeOnly` interval arithmetic now passes against engine
+  commit `24db35d`. Date subtraction to `TimeSpan.TotalDays` remains an engine gap because interval values are not yet
+  accepted by `EXTRACT`.
+- **Current schema.** Engine commit `e7ed940` implements ISO `CURRENT_SCHEMA`, but the adapter does not yet advertise it
+  through the shared dialect: flatfile selects the first declared catalog schema as current, while EF's migration suite
+  assumes an implicit root/default schema distinct from the tenant schema it creates. Enabling it currently causes migration
+  lock/history collisions after that test. Re-verified against `0.2.1-preview.20` (2026-10-28): a `LogTo` trace of the real
+  `Another_schemas_history_table_is_not_this_ones` flow shows EF issuing `CREATE SCHEMA IF NOT EXISTS "tenant"` before the
+  history table, after which `SELECT CURRENT_SCHEMA` returns `tenant` instead of empty/root on a fresh connection, so the
+  unqualified history-table existence check still matches the tenant-schema row. Not fixed in this build; do not advertise
+  `CurrentSchema` until the engine keeps a schema distinct from any declared tenant schema.
 - **`@name` parameters (about 34).** The engine rejects `@` as non-ISO, correctly. The failing SqlExecutor and SqlQuery
   tests hardcode SQL Server syntax; override them in `Overrides/FlatFile/` with `:name`.
 - **Stored procedures (62).** The engine has ISO SQL procedures with `CALL`, but no `OUT`/`INOUT` parameters, which the

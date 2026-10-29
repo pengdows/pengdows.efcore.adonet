@@ -49,8 +49,8 @@ public class MySqlDbFunctionsTests
             .Select(a => EF.Functions.Match(new[] { a.Title, a.Body }, "cast", MySqlMatchSearchMode.NaturalLanguage))
             .ToQueryString();
 
-        Assert.Contains("MATCH (\"a\".\"Title\", \"a\".\"Body\", \"a\".\"Summary\") AGAINST ('+cast' IN BOOLEAN MODE) > 0", isMatch);
-        Assert.Contains("MATCH (\"a\".\"Title\", \"a\".\"Body\") AGAINST ('cast')", match);
+        Assert.Contains($"MATCH ({Q}a{Q}.{Q}Title{Q}, {Q}a{Q}.{Q}Body{Q}, {Q}a{Q}.{Q}Summary{Q}) AGAINST ('+cast' IN BOOLEAN MODE) > 0", isMatch);
+        Assert.Contains($"MATCH ({Q}a{Q}.{Q}Title{Q}, {Q}a{Q}.{Q}Body{Q}) AGAINST ('cast')", match);
     }
 
     // A search mode known only when the query runs: each mode's MATCH, chosen by OR, since MariaDB has no MATCH inside CASE
@@ -65,9 +65,9 @@ public class MySqlDbFunctionsTests
 
         var sql = context.Articles.Where(a => EF.Functions.IsMatch(a.Title, "cast", mode)).ToQueryString();
 
-        Assert.Contains("MATCH (\"a\".\"Title\") AGAINST ('cast') > 0", sql);
-        Assert.Contains("MATCH (\"a\".\"Title\") AGAINST ('cast' WITH QUERY EXPANSION) > 0", sql);
-        Assert.Contains("MATCH (\"a\".\"Title\") AGAINST ('cast' IN BOOLEAN MODE) > 0", sql);
+        Assert.Contains($"MATCH ({Q}a{Q}.{Q}Title{Q}) AGAINST ('cast') > 0", sql);
+        Assert.Contains($"MATCH ({Q}a{Q}.{Q}Title{Q}) AGAINST ('cast' WITH QUERY EXPANSION) > 0", sql);
+        Assert.Contains($"MATCH ({Q}a{Q}.{Q}Title{Q}) AGAINST ('cast' IN BOOLEAN MODE) > 0", sql);
         Assert.Contains("@mode = 2", sql);
         Assert.Contains(" OR ", sql);
     }
@@ -90,10 +90,10 @@ public class MySqlDbFunctionsTests
             })
             .ToQueryString();
 
-        Assert.Contains("HEX(\"a\".\"Title\")", sql);
-        Assert.Contains("HEX(\"a\".\"Views\")", sql);
-        Assert.Contains("HEX(\"a\".\"Data\")", sql);
-        Assert.Contains("CONVERT(UNHEX(\"a\".\"Summary\") USING utf8mb4)", sql);
+        Assert.Contains($"HEX({Q}a{Q}.{Q}Title{Q})", sql);
+        Assert.Contains($"HEX({Q}a{Q}.{Q}Views{Q})", sql);
+        Assert.Contains($"HEX({Q}a{Q}.{Q}Data{Q})", sql);
+        Assert.Contains($"CONVERT(UNHEX({Q}a{Q}.{Q}Summary{Q}) USING utf8mb4)", sql);
     }
 
     // UNHEX is null for text that isn't hexadecimal, so a null test isn't reduced to its argument's.
@@ -104,7 +104,7 @@ public class MySqlDbFunctionsTests
 
         var sql = context.Articles.Where(a => EF.Functions.Unhex(a.Summary) == null).ToQueryString();
 
-        Assert.Contains("CONVERT(UNHEX(\"a\".\"Summary\") USING utf8mb4) IS NULL", sql);
+        Assert.Contains($"CONVERT(UNHEX({Q}a{Q}.{Q}Summary{Q}) USING utf8mb4) IS NULL", sql);
     }
 
     [Theory]
@@ -124,10 +124,10 @@ public class MySqlDbFunctionsTests
             })
             .ToQueryString();
 
-        Assert.Contains("DEGREES(\"a\".\"Angle\")", sql);
-        Assert.Contains("RADIANS(\"a\".\"Angle\")", sql);
-        Assert.Contains("DEGREES(\"a\".\"SmallAngle\")", sql);
-        Assert.Contains("RADIANS(\"a\".\"SmallAngle\")", sql);
+        Assert.Contains($"DEGREES({Q}a{Q}.{Q}Angle{Q})", sql);
+        Assert.Contains($"RADIANS({Q}a{Q}.{Q}Angle{Q})", sql);
+        Assert.Contains($"DEGREES({Q}a{Q}.{Q}SmallAngle{Q})", sql);
+        Assert.Contains($"RADIANS({Q}a{Q}.{Q}SmallAngle{Q})", sql);
     }
 
     // Without a zone to convert from, a DateTimeOffset is UTC (it is stored as its UTC instant) and anything else is in the
@@ -149,10 +149,10 @@ public class MySqlDbFunctionsTests
             })
             .ToQueryString();
 
-        Assert.Contains("CONVERT_TZ(\"a\".\"PublishedAt\", '+00:00', 'Europe/Oslo')", sql);
-        Assert.Contains("CONVERT_TZ(\"a\".\"PublishedAt\", @@session.time_zone, 'Europe/Oslo')", sql);
-        Assert.Contains("CONVERT_TZ(\"a\".\"EditedAt\", '+00:00', 'Europe/Oslo')", sql);
-        Assert.Contains("CONVERT_TZ(\"a\".\"Day\", '+01:00', '+02:00')", sql);
+        Assert.Contains($"CONVERT_TZ({Q}a{Q}.{Q}PublishedAt{Q}, '+00:00', 'Europe/Oslo')", sql);
+        Assert.Contains($"CONVERT_TZ({Q}a{Q}.{Q}PublishedAt{Q}, @@session.time_zone, 'Europe/Oslo')", sql);
+        Assert.Contains($"CONVERT_TZ({Q}a{Q}.{Q}EditedAt{Q}, '+00:00', 'Europe/Oslo')", sql);
+        Assert.Contains($"CONVERT_TZ({Q}a{Q}.{Q}Day{Q}, '+01:00', '+02:00')", sql);
     }
 
     // CONVERT_TZ is null for a zone the server doesn't know, so a null test isn't reduced to its arguments'.
@@ -163,7 +163,7 @@ public class MySqlDbFunctionsTests
 
         var sql = context.Articles.Where(a => EF.Functions.ConvertTimeZone(a.PublishedAt, "Nowhere", "Europe/Oslo") == null).ToQueryString();
 
-        Assert.Contains("CONVERT_TZ(\"a\".\"PublishedAt\", 'Nowhere', 'Europe/Oslo') IS NULL", sql);
+        Assert.Contains($"CONVERT_TZ({Q}a{Q}.{Q}PublishedAt{Q}, 'Nowhere', 'Europe/Oslo') IS NULL", sql);
     }
 
     [Theory]
@@ -176,8 +176,8 @@ public class MySqlDbFunctionsTests
         var plain = context.Articles.Where(a => EF.Functions.Like(a.Views, "1%")).ToQueryString();
         var escaped = context.Articles.Where(a => EF.Functions.Like(a.PublishedAt, "2024!_%", "!")).ToQueryString();
 
-        Assert.Contains("\"a\".\"Views\" LIKE '1%'", plain);
-        Assert.Contains("\"a\".\"PublishedAt\" LIKE '2024!_%' ESCAPE '!'", escaped);
+        Assert.Contains($"{Q}a{Q}.{Q}Views{Q} LIKE '1%'", plain);
+        Assert.Contains($"{Q}a{Q}.{Q}PublishedAt{Q} LIKE '2024!_%' ESCAPE '!'", escaped);
     }
 
     // TIMESTAMPDIFF counts quarters and weeks; it has no tick or nanosecond, so microseconds are multiplied.
@@ -198,10 +198,10 @@ public class MySqlDbFunctionsTests
             })
             .ToQueryString();
 
-        Assert.Contains("TIMESTAMPDIFF(QUARTER, \"a\".\"PublishedAt\", \"a\".\"PublishedAt\")", sql);
-        Assert.Contains("TIMESTAMPDIFF(WEEK, \"a\".\"Day\", \"a\".\"Day\")", sql);
-        Assert.Contains("(TIMESTAMPDIFF(MICROSECOND, \"a\".\"PublishedAt\", \"a\".\"PublishedAt\") * 10)", sql);
-        Assert.Contains("(TIMESTAMPDIFF(MICROSECOND, \"a\".\"EditedAt\", \"a\".\"EditedAt\") * 1000)", sql);
+        Assert.Contains($"TIMESTAMPDIFF(QUARTER, {Q}a{Q}.{Q}PublishedAt{Q}, {Q}a{Q}.{Q}PublishedAt{Q})", sql);
+        Assert.Contains($"TIMESTAMPDIFF(WEEK, {Q}a{Q}.{Q}Day{Q}, {Q}a{Q}.{Q}Day{Q})", sql);
+        Assert.Contains($"(TIMESTAMPDIFF(MICROSECOND, {Q}a{Q}.{Q}PublishedAt{Q}, {Q}a{Q}.{Q}PublishedAt{Q}) * 10)", sql);
+        Assert.Contains($"(TIMESTAMPDIFF(MICROSECOND, {Q}a{Q}.{Q}EditedAt{Q}, {Q}a{Q}.{Q}EditedAt{Q}) * 1000)", sql);
     }
 
     [Fact]

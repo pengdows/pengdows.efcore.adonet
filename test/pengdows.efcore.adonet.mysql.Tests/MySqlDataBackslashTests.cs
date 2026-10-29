@@ -15,7 +15,26 @@ public class MySqlDataBackslashTests(MySqlDataFixture fixture) : IClassFixture<M
         => TestContext.Current.CancellationToken;
 
     public async ValueTask InitializeAsync()
-        => await fixture.ResetAsync();
+    {
+        // The dialect no longer forces this onto each session: match the server to MySqlDialect.NoBackslashEscapes's
+        // assumption at the server level instead, since MySql.Data inlines parameters into the statement text itself and
+        // every connection in the pool must agree with what the dialect writes. Testcontainers' root has the password.
+        var root = new MySqlConnector.MySqlConnectionStringBuilder(fixture.ConnectionString) { UserID = "root" };
+        await using (var connection = new MySqlConnector.MySqlConnection(root.ConnectionString))
+        {
+            await connection.OpenAsync(Ct);
+            await using var command = new MySqlConnector.MySqlCommand(
+                "SET GLOBAL sql_mode = CONCAT_WS(',', NULLIF(@@GLOBAL.sql_mode, ''), 'NO_BACKSLASH_ESCAPES')", connection);
+            await command.ExecuteNonQueryAsync(Ct);
+        }
+
+        // MySql.Data pools connections without resetting their session on checkout, so any connection already in the pool
+        // (opened while setting up the container's schema, before the GLOBAL change above) would keep the server's old
+        // default mode forever. Clear the pool so the next connection this test opens is a genuinely new one.
+        MySql.Data.MySqlClient.MySqlConnection.ClearAllPools();
+
+        await fixture.ResetAsync();
+    }
 
     public ValueTask DisposeAsync()
         => ValueTask.CompletedTask;

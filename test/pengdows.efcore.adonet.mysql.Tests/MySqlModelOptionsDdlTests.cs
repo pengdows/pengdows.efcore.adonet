@@ -85,14 +85,14 @@ public class MySqlModelOptionsDdlTests
 
     [Fact]
     public void A_spatial_reference_system_is_the_columns_SRID_on_MySql()
-        => Assert.Matches("\"Location\" \\w+ NOT NULL SRID 4326", Script(mariaDb: false));
+        => Assert.Matches($"{Q}Location{Q} \\w+ NOT NULL SRID 4326", Script(mariaDb: false));
 
     [Fact]
     public void A_spatial_reference_system_is_the_columns_REF_SYSTEM_ID_on_MariaDb()
     {
         var script = Script(mariaDb: true);
 
-        Assert.Matches("\"Location\" \\w+ NOT NULL REF_SYSTEM_ID=4326", script);
+        Assert.Matches($"{Q}Location{Q} \\w+ NOT NULL REF_SYSTEM_ID=4326", script);
         Assert.DoesNotContain("SRID", script);
     }
 
@@ -100,7 +100,7 @@ public class MySqlModelOptionsDdlTests
     [InlineData(false)]
     [InlineData(true)]
     public void A_fulltext_index_names_its_parser(bool mariaDb)
-        => Assert.Contains("CREATE FULLTEXT INDEX \"IX_Shelf_Name\" ON \"Shelf\" (\"Name\") WITH PARSER \"ngram\";", Script(mariaDb));
+        => Assert.Contains($"CREATE FULLTEXT INDEX {Q}IX_Shelf_Name{Q} ON {Q}Shelf{Q} ({Q}Name{Q}) WITH PARSER {Q}ngram{Q};", Script(mariaDb));
 
     [Theory]
     [InlineData(false)]
@@ -109,8 +109,8 @@ public class MySqlModelOptionsDdlTests
     {
         var script = Script(mariaDb);
 
-        Assert.Contains("PRIMARY KEY (\"Code\"(20))", script);
-        Assert.Contains("UNIQUE (\"Label\"(30))", script);
+        Assert.Contains($"PRIMARY KEY ({Q}Code{Q}(20))", script);
+        Assert.Contains($"UNIQUE ({Q}Label{Q}(30))", script);
     }
 
     [Theory]
@@ -120,10 +120,10 @@ public class MySqlModelOptionsDdlTests
     {
         var script = Script(mariaDb);
 
-        Assert.Contains("\"Address_City\" VARCHAR(50) CHARACTER SET latin1 NOT NULL", script);
-        Assert.Contains("\"Token\" CHAR(36) NOT NULL COLLATE \"ascii_bin\"", script);
+        Assert.Contains($"{Q}Address_City{Q} VARCHAR(50) CHARACTER SET latin1 NOT NULL", script);
+        Assert.Contains($"{Q}Token{Q} CHAR(36) NOT NULL COLLATE {Q}ascii_bin{Q}", script);
         // The entity type's character set and collation reach its text columns (Pomelo's delegation); not the GUID collation.
-        Assert.Contains("\"Name\" VARCHAR(200) CHARACTER SET utf8mb4 NOT NULL COLLATE \"utf8mb4_bin\",", script);
+        Assert.Contains($"{Q}Name{Q} VARCHAR(200) CHARACTER SET utf8mb4 NOT NULL COLLATE {Q}utf8mb4_bin{Q},", script);
     }
 
     // Changed options, character set and collation of an existing table: ALTER TABLE with what changed.
@@ -140,8 +140,8 @@ public class MySqlModelOptionsDdlTests
 
         var sql = string.Join("", context.GetService<IMigrationsSqlGenerator>().Generate([operation]).Select(c => c.CommandText));
 
-        Assert.Contains("ALTER TABLE \"Shelves\" CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;", sql);
-        Assert.Contains("ALTER TABLE \"Shelves\" ENGINE=MyISAM ROW_FORMAT=COMPACT;", sql);
+        Assert.Contains($"ALTER TABLE {Q}Shelves{Q} CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;", sql);
+        Assert.Contains($"ALTER TABLE {Q}Shelves{Q} ENGINE=MyISAM ROW_FORMAT=COMPACT;", sql);
     }
 
     [Theory]

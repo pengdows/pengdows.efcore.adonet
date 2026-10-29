@@ -96,7 +96,7 @@ internal class AdoNetStringMethodTranslator(
                 nameof(string.TrimStart) => functions.TrimStartCharacters,
                 _ => functions.TrimEndCharacters
             };
-            return String(template, instance, sqlExpressionFactory.Constant(new string(characters), mapping));
+            return String(template, instance, sqlExpressionFactory.Constant(functions.TrimCharacterSet(characters), mapping));
         }
 
         return (method.Name, parameters.Length, stringArguments) switch

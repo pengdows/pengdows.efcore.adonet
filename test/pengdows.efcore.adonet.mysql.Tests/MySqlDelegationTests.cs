@@ -86,9 +86,9 @@ public class MySqlDelegationTests
 
         Assert.Contains("ALTER DATABASE CHARACTER SET utf8mb4;", script);
         Assert.Contains(") DEFAULT CHARACTER SET utf8mb4;", script);
-        Assert.Contains("\"Title\" VARCHAR(50) CHARACTER SET utf8mb4 NOT NULL", script);
-        Assert.Contains("\"Count\" INT NOT NULL", script);
-        Assert.Contains("\"Token\" CHAR(36) NOT NULL", script);
+        Assert.Contains($"{Q}Title{Q} VARCHAR(50) CHARACTER SET utf8mb4 NOT NULL", script);
+        Assert.Contains($"{Q}Count{Q} INT NOT NULL", script);
+        Assert.Contains($"{Q}Token{Q} CHAR(36) NOT NULL", script);
     }
 
     [Theory]
@@ -100,7 +100,7 @@ public class MySqlDelegationTests
 
         Assert.Contains("ALTER DATABASE CHARACTER SET latin1;", script);
         Assert.DoesNotContain("DEFAULT CHARACTER SET", script);
-        Assert.Contains("\"Title\" VARCHAR(50) NOT NULL", script);
+        Assert.Contains($"{Q}Title{Q} VARCHAR(50) NOT NULL", script);
     }
 
     // The entity type's character set reaches its columns only; its table takes the model's.
@@ -110,7 +110,7 @@ public class MySqlDelegationTests
         var script = Script("entity to columns");
 
         Assert.Contains(") DEFAULT CHARACTER SET utf8mb4;", script);
-        Assert.Contains("\"Title\" VARCHAR(50) CHARACTER SET ascii NOT NULL", script);
+        Assert.Contains($"{Q}Title{Q} VARCHAR(50) CHARACTER SET ascii NOT NULL", script);
     }
 
     [Fact]
@@ -120,9 +120,9 @@ public class MySqlDelegationTests
         var all = Script("entity collation to all by bool");
 
         Assert.Contains(") COLLATE latin1_bin;", table);
-        Assert.Contains("\"Title\" VARCHAR(50) NOT NULL", table);
+        Assert.Contains($"{Q}Title{Q} VARCHAR(50) NOT NULL", table);
         Assert.Contains(") COLLATE latin1_bin;", all);
-        Assert.Contains("\"Title\" VARCHAR(50) NOT NULL COLLATE \"latin1_bin\"", all);
+        Assert.Contains($"{Q}Title{Q} VARCHAR(50) NOT NULL COLLATE {Q}latin1_bin{Q}", all);
     }
 
     [Fact]
@@ -133,10 +133,10 @@ public class MySqlDelegationTests
 
         Assert.Contains("ALTER DATABASE COLLATE utf8mb4_bin;", all);
         Assert.Contains(") COLLATE utf8mb4_bin;", all);
-        Assert.Contains("\"Title\" VARCHAR(50) NOT NULL COLLATE \"utf8mb4_bin\"", all);
+        Assert.Contains($"{Q}Title{Q} VARCHAR(50) NOT NULL COLLATE {Q}utf8mb4_bin{Q}", all);
         Assert.Contains("ALTER DATABASE COLLATE utf8mb4_bin;", efs);
         Assert.DoesNotContain(") COLLATE", efs);
-        Assert.Contains("\"Title\" VARCHAR(50) NOT NULL,", efs);
+        Assert.Contains($"{Q}Title{Q} VARCHAR(50) NOT NULL,", efs);
     }
 
     [Fact]
@@ -145,7 +145,7 @@ public class MySqlDelegationTests
         using var context = Context("computed");
 
         Assert.Equal(ValueGenerated.OnAddOrUpdate, context.Model.FindEntityType(typeof(Note))!.FindProperty(nameof(Note.UpdatedAt))!.ValueGenerated);
-        Assert.Contains("\"UpdatedAt\" DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6)", context.Database.GenerateCreateScript());
+        Assert.Contains($"{Q}UpdatedAt{Q} DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6)", context.Database.GenerateCreateScript());
     }
 
     [Fact]
@@ -159,7 +159,7 @@ public class MySqlDelegationTests
 
         var ddl = string.Join("\n", db.Commands);
         Assert.Contains("ALTER DATABASE CHARACTER SET utf8mb4;", ddl);
-        Assert.Contains("\"Title\" VARCHAR(50) CHARACTER SET utf8mb4 NOT NULL", ddl);
+        Assert.Contains($"{Q}Title{Q} VARCHAR(50) CHARACTER SET utf8mb4 NOT NULL", ddl);
     }
 
     // The server's value is read back after the insert, as a row version's is.
@@ -175,7 +175,7 @@ public class MySqlDelegationTests
         await context.SaveChangesAsync(Ct);
 
         Assert.Equal(at, context.Notes.Local.Single().UpdatedAt);
-        Assert.DoesNotContain("\"UpdatedAt\"", db.Commands.Single().Split("SELECT")[0]);
-        Assert.Contains("\"UpdatedAt\"", db.Commands.Single());
+        Assert.DoesNotContain($"{Q}UpdatedAt{Q}", db.Commands.Single().Split("SELECT")[0]);
+        Assert.Contains($"{Q}UpdatedAt{Q}", db.Commands.Single());
     }
 }

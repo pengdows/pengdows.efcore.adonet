@@ -62,16 +62,21 @@ public class MySqlBackslashTests(MySqlFixture fixture) : IClassFixture<MySqlFixt
             await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
         }
 
+        // The dialect no longer scrubs NO_BACKSLASH_ESCAPES off every session it touches, so this GLOBAL change now reaches
+        // every connection made after it, including ones meant for MySqlDialect.Instance. That is the real-world version of
+        // the correctness risk of no longer forcing the server's mode: a dialect instance is only correct for a server
+        // actually in the mode it assumes.
         await fixture.ResetAsync();
-        Assert.DoesNotContain(
-            "NO_BACKSLASH_ESCAPES",
-            Convert.ToString(await fixture.ExecuteScalarAsync("SELECT @@SESSION.sql_mode"), System.Globalization.CultureInfo.InvariantCulture));
         await using (var insertConnection = new MySqlConnector.MySqlConnection(fixture.ConnectionString))
         {
             await insertConnection.OpenAsync(TestContext.Current.CancellationToken);
-            await using var setup = insertConnection.CreateCommand();
-            setup.CommandText = MySqlDialect.NoBackslashEscapes.Sql.SessionSetup;
-            await setup.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+            await using (var setup = insertConnection.CreateCommand())
+            {
+                // The dialect no longer forces this: match the server to MySqlDialect.NoBackslashEscapes's assumption directly.
+                setup.CommandText = "SET SESSION sql_mode = CONCAT_WS(',', NULLIF(@@SESSION.sql_mode, ''), 'NO_BACKSLASH_ESCAPES')";
+                await setup.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+            }
+
             await using var insert = insertConnection.CreateCommand();
             insert.CommandText =
                 "INSERT INTO `Blogs` (`Name`, `IsActive`, `Rating`, `CreatedAt`, `ExternalId`) "
@@ -86,68 +91,6 @@ public class MySqlBackslashTests(MySqlFixture fixture) : IClassFixture<MySqlFixt
 
         Assert.Equal(1, await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.CountAsync(
             context.Blogs, b => b.Name == Microsoft.EntityFrameworkCore.EF.Constant(@"a\b"), TestContext.Current.CancellationToken));
-    }
-}
-
-/// <summary>
-///     Each session adds ANSI_QUOTES, and sets NO_BACKSLASH_ESCAPES to match the string literals the dialect writes, leaving
-///     every other mode the server had.
-/// </summary>
-public class MySqlSessionSetupTests(MySqlFixture fixture) : IClassFixture<MySqlFixture>
-{
-    private static CancellationToken Ct
-        => TestContext.Current.CancellationToken;
-
-    private async Task<string[]> ModesAfter(string serverMode, IAdoNetDialect dialect)
-    {
-        await using var connection = new MySqlConnector.MySqlConnection(fixture.ConnectionString);
-        await connection.OpenAsync(Ct);
-        await using (var set = connection.CreateCommand())
-        {
-            set.CommandText = $"SET SESSION sql_mode = '{serverMode}'";
-            await set.ExecuteNonQueryAsync(Ct);
-        }
-
-        await using (var setup = connection.CreateCommand())
-        {
-            setup.CommandText = dialect.Sql.SessionSetup;
-            await setup.ExecuteNonQueryAsync(Ct);
-        }
-
-        await using var read = connection.CreateCommand();
-        read.CommandText = "SELECT @@SESSION.sql_mode";
-        var modes = (string)(await read.ExecuteScalarAsync(Ct))!;
-        return modes.Split(',', StringSplitOptions.None);
-    }
-
-    [Theory]
-    [InlineData("")]
-    [InlineData("STRICT_TRANS_TABLES")]
-    [InlineData("NO_BACKSLASH_ESCAPES")]
-    [InlineData("NO_BACKSLASH_ESCAPES,STRICT_TRANS_TABLES")]
-    [InlineData("STRICT_TRANS_TABLES,NO_BACKSLASH_ESCAPES")]
-    [InlineData("STRICT_TRANS_TABLES,NO_BACKSLASH_ESCAPES,ONLY_FULL_GROUP_BY")]
-    public async Task A_dialect_that_escapes_backslashes_removes_the_mode_wherever_it_stands(string serverMode)
-    {
-        var modes = await ModesAfter(serverMode, MySqlDialect.Instance);
-
-        var expected = serverMode.Split(',', StringSplitOptions.RemoveEmptyEntries)
-            .Where(m => m != "NO_BACKSLASH_ESCAPES").Append("ANSI_QUOTES").Order();
-        Assert.Equal(expected, modes.Order());
-        Assert.DoesNotContain(string.Empty, modes);
-    }
-
-    [Theory]
-    [InlineData("")]
-    [InlineData("STRICT_TRANS_TABLES,ONLY_FULL_GROUP_BY")]
-    [InlineData("STRICT_TRANS_TABLES,NO_BACKSLASH_ESCAPES")]
-    public async Task A_dialect_that_does_not_adds_the_mode(string serverMode)
-    {
-        var modes = await ModesAfter(serverMode, MySqlDialect.NoBackslashEscapes);
-
-        var expected = serverMode.Split(',', StringSplitOptions.RemoveEmptyEntries)
-            .Where(m => m != "NO_BACKSLASH_ESCAPES").Append("ANSI_QUOTES").Append("NO_BACKSLASH_ESCAPES").Order();
-        Assert.Equal(expected, modes.Order());
     }
 }
 
@@ -220,8 +163,8 @@ public class MySqlSizedStoreTypeTests
 
         var script = context.Database.GenerateCreateScript();
 
-        Assert.Contains("\"Code\" CHAR(10) NOT NULL", script);
-        Assert.Contains("\"Hash\" BINARY(16) NOT NULL", script);
-        Assert.Contains("\"Name\" VARCHAR(40) NOT NULL", script);
+        Assert.Contains("`Code` CHAR(10) NOT NULL", script);
+        Assert.Contains("`Hash` BINARY(16) NOT NULL", script);
+        Assert.Contains("`Name` VARCHAR(40) NOT NULL", script);
     }
 }

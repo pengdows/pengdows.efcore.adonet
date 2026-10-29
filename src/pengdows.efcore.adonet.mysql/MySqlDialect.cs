@@ -1,4 +1,5 @@
 using System.Data;
+using System.Data.Common;
 using System.Globalization;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -7,14 +8,19 @@ using Microsoft.Extensions.DependencyInjection;
 namespace pengdows.efcore.adonet.mysql;
 
 /// <summary>
-///     MySQL. ISO quoted identifiers (under ANSI_QUOTES, set for each session), a database is the schema, OFFSET needs a LIMIT, and keys come back through
+///     MySQL. Identifiers are quoted MySQL's own way, backticks, so no session-level mode is needed to make them mean what
+///     this dialect's SQL assumes. A database is the schema, OFFSET needs a LIMIT, and keys come back through
 ///     <c>LAST_INSERT_ID()</c>. GUIDs are stored as <c>CHAR(36)</c> text.
 /// </summary>
 public sealed class MySqlDialect : AdoNetDialect
 {
+    /// <summary>For the common case: the server's sql_mode does not have NO_BACKSLASH_ESCAPES.</summary>
     public static readonly MySqlDialect Instance = new(backslashEscapes: true);
 
-    /// <summary>For servers whose sql_mode has NO_BACKSLASH_ESCAPES, where a backslash in a string is just a backslash.</summary>
+    /// <summary>
+    ///     For a server whose sql_mode has NO_BACKSLASH_ESCAPES, where a backslash in a string is just a backslash: nothing
+    ///     reads the server's mode, so use this where it does, <see cref="Instance" /> where it doesn't.
+    /// </summary>
     public static readonly MySqlDialect NoBackslashEscapes = new(backslashEscapes: false);
 
     /// <summary>
@@ -56,6 +62,79 @@ public sealed class MySqlDialect : AdoNetDialect
     public override pengdows.efcore.adonet.Scaffolding.SchemaReader SchemaReader
         => ((MySqlSql)Sql).IsMariaDb ? MySqlSchemaReader.MariaDb : MySqlSchemaReader.Instance;
 
+    /// <summary>
+    ///     <see cref="Instance" /> or <see cref="MariaDb" />, from <paramref name="connection" />'s own
+    ///     <see cref="System.Data.Common.DbConnection.ServerVersion" />: every driver already reads this from the connection
+    ///     handshake, with no query of its own, so there is nothing to open or close here. As Pomelo's <c>ServerVersion.Parse</c>
+    ///     tells them apart (not copied): MariaDB's version string names itself; MySQL's never does.
+    ///     https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/1217f926be3771c016eb26b8192119569902d215/src/EFCore.MySql/Infrastructure/ServerVersion.cs
+    ///     This alone cannot tell <see cref="SingleStore" /> apart: its handshake deliberately reports a MySQL-compatible
+    ///     version to stay compatible with version-gated clients (confirmed against a real server: <c>VERSION()</c> reads
+    ///     <c>5.7.32</c>). <see cref="AutoDetect(DbProviderFactory, string)" /> tells it apart with one extra query; this
+    ///     overload alone cannot, and returns <see cref="Instance" /> for it.
+    /// </summary>
+    public static MySqlDialect FromServerVersion(DbConnection connection)
+        => connection.ServerVersion.Contains("mariadb", StringComparison.OrdinalIgnoreCase) ? MariaDb : Instance;
+
+    /// <summary>
+    ///     <see cref="Instance" />, <see cref="MariaDb" /> or <see cref="SingleStore" />: <paramref name="versionComment" />
+    ///     is <c>@@version_comment</c>, the one signal that tells SingleStore apart from a real MySQL or MariaDB server, since
+    ///     its handshake version does not. Confirmed against a real server: <c>@@version_comment</c> there reads
+    ///     <c>SingleStoreDB source distribution (compatible; MySQL Enterprise &amp; MySQL Commercial)</c>.
+    /// </summary>
+    public static MySqlDialect FromServerVersion(DbConnection connection, string versionComment)
+        => versionComment.Contains("singlestore", StringComparison.OrdinalIgnoreCase) ? SingleStore : FromServerVersion(connection);
+
+    /// <summary>
+    ///     <see cref="FromServerVersion(DbConnection, string)" />, opening <paramref name="connectionString" /> with
+    ///     <paramref name="factory" /> and running <c>SELECT @@version_comment</c> once, as Pomelo's
+    ///     <c>ServerVersion.AutoDetect</c> opens a connection for its own handshake-only detection (not copied). Whichever
+    ///     driver the application goes on to use, including a different one than <paramref name="factory" />, this reads the
+    ///     same values.
+    /// </summary>
+    public static MySqlDialect AutoDetect(DbProviderFactory factory, string connectionString)
+    {
+        using var connection = CreateConnection(factory, connectionString);
+        connection.Open();
+        return FromServerVersion(connection, VersionComment(connection));
+    }
+
+    /// <summary><see cref="AutoDetect(DbProviderFactory, string)" />, without blocking on the connection.</summary>
+    public static async Task<MySqlDialect> AutoDetectAsync(DbProviderFactory factory, string connectionString, CancellationToken cancellationToken = default)
+    {
+        var connection = CreateConnection(factory, connectionString);
+        await using (connection.ConfigureAwait(false))
+        {
+            await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+            return FromServerVersion(connection, await VersionCommentAsync(connection, cancellationToken).ConfigureAwait(false));
+        }
+    }
+
+    private static string VersionComment(DbConnection connection)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT @@version_comment";
+        return command.ExecuteScalar() as string ?? "";
+    }
+
+    private static async Task<string> VersionCommentAsync(DbConnection connection, CancellationToken cancellationToken)
+    {
+        var command = connection.CreateCommand();
+        await using (command.ConfigureAwait(false))
+        {
+            command.CommandText = "SELECT @@version_comment";
+            return await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false) as string ?? "";
+        }
+    }
+
+    private static DbConnection CreateConnection(DbProviderFactory factory, string connectionString)
+    {
+        var connection = factory.CreateConnection()
+            ?? throw new InvalidOperationException($"{factory.GetType()} did not create a connection.");
+        connection.ConnectionString = connectionString;
+        return connection;
+    }
+
     public override void ConfigureServices(IServiceCollection services)
         => new EntityFrameworkRelationalServicesBuilder(services)
             .TryAdd<IMigrationsSqlGenerator, MySqlMigrationsSqlGenerator>()
@@ -66,7 +145,8 @@ public sealed class MySqlDialect : AdoNetDialect
             .TryAdd<Microsoft.EntityFrameworkCore.Query.IMethodCallTranslatorPlugin, MySqlJsonTranslatorPlugin>()
             .TryAdd<Microsoft.EntityFrameworkCore.Query.IMethodCallTranslatorPlugin, MySqlDbFunctionsTranslatorPlugin>()
             .TryAdd<Microsoft.EntityFrameworkCore.Query.IEvaluatableExpressionFilterPlugin, MySqlEvaluatableExpressionFilterPlugin>()
-            .TryAdd<Microsoft.EntityFrameworkCore.Query.IQueryTranslationPreprocessorFactory, MySqlQueryTranslationPreprocessorFactory>();
+            .TryAdd<Microsoft.EntityFrameworkCore.Query.IQueryTranslationPreprocessorFactory, MySqlQueryTranslationPreprocessorFactory>()
+            .TryAdd<Microsoft.EntityFrameworkCore.Query.IQuerySqlGeneratorFactory, MySqlQuerySqlGeneratorFactory>();
 }
 
 internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = true, bool mariaDb = false) : AnsiSqlDialect
@@ -124,16 +204,9 @@ internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = t
         Equality = mariaDb ? "JSON_EQUALS({0}, {1})" : null
     };
 
-    // ISO quoted identifiers ("name"), which MySQL reads only under ANSI_QUOTES: each session adds it to its sql_mode, and sets
-    // NO_BACKSLASH_ESCAPES to match the string literals this dialect writes. Every other mode the server had is kept.
-    private const string SessionModeWithBackslashEscapes =
-        "SET SESSION sql_mode = CONCAT_WS(',', NULLIF(TRIM(BOTH ',' FROM REPLACE(@@SESSION.sql_mode, 'NO_BACKSLASH_ESCAPES', '')), ''), 'ANSI_QUOTES')";
-
-    private const string SessionModeWithoutBackslashEscapes =
-        "SET SESSION sql_mode = CONCAT_WS(',', NULLIF(TRIM(BOTH ',' FROM REPLACE(@@SESSION.sql_mode, 'NO_BACKSLASH_ESCAPES', '')), ''), 'ANSI_QUOTES', 'NO_BACKSLASH_ESCAPES')";
-
-    public override string? SessionSetup
-        => backslashEscapes ? SessionModeWithBackslashEscapes : SessionModeWithoutBackslashEscapes;
+    // MySQL's own quoting, so no session-level mode is needed before this dialect's SQL means what it says.
+    public override string IdentifierQuotePrefix => "`";
+    public override string IdentifierQuoteSuffix => "`";
     public override bool SupportsSchemas => false;
 
     // Geometry columns hold MySQL's own format, a four-byte SRID before the WKB, which the drivers pass as bytes. Constants are
@@ -194,7 +267,8 @@ internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = t
     // "This version of MySQL doesn't yet support 'LIMIT & IN/ALL/ANY/SOME subquery'"; a derived table may be paged.
     public override bool LimitInPredicateSubqueries => false;
 
-    // Backslash is an escape character in MySQL string literals, unless the server's sql_mode has NO_BACKSLASH_ESCAPES.
+    // Backslash is an escape character in MySQL string literals, unless the server's sql_mode has NO_BACKSLASH_ESCAPES: pick
+    // the dialect instance that matches the server's actual mode, since nothing here changes it.
     public override string StringLiteral(string value)
         => base.StringLiteral(backslashEscapes ? value.Replace(@"\", @"\\") : value);
 
@@ -223,6 +297,22 @@ internal sealed class MySqlFunctions(bool mariaDb = false) : FunctionSyntax
 
     public override string? PadLeft => "CASE WHEN CHAR_LENGTH({0}) >= {1} THEN {0} ELSE LPAD({0}, {1}, {2}) END";
     public override string? PadRight => "CASE WHEN CHAR_LENGTH({0}) >= {1} THEN {0} ELSE RPAD({0}, {1}, {2}) END";
+
+    // MySQL's TRIM(BOTH remstr FROM str) strips the literal substring remstr as one unit, not a set of characters in any
+    // order: it has no character-set trim the way PostgreSQL's BTRIM or SQLite's and DuckDB's two-argument TRIM do.
+    // REGEXP_REPLACE strips a maximal leading/trailing run of any character in a class instead, which is what
+    // String.Trim(char[]) actually means. {1} (the escaped class content from TrimCharacterSet) is written twice in
+    // TrimCharacters: once for each end, joined by CONCAT since MySQL has no string-literal concatenation operator.
+    // Neither Pomelo nor Oracle's own provider gets this right: Pomelo declines to translate a set of more than one
+    // character; Oracle's silently drops the characters and trims whitespace only.
+    public override string? TrimCharacters => "REGEXP_REPLACE({0}, CONCAT('^[', {1}, ']+|[', {1}, ']+$'), '')";
+    public override string? TrimStartCharacters => "REGEXP_REPLACE({0}, CONCAT('^[', {1}, ']+'), '')";
+    public override string? TrimEndCharacters => "REGEXP_REPLACE({0}, CONCAT('[', {1}, ']+$'), '')";
+
+    // Escaped for a regex character class: a literal ']' must not close the class early, '^' must not negate it, '-' must
+    // not be read as a range, and '\' must not escape the following character.
+    public override string TrimCharacterSet(char[] characters)
+        => string.Concat(characters.Select(c => c is ']' or '^' or '\\' or '-' ? @"\" + c : c.ToString()));
 
     // Bitwise operators return a 64-bit unsigned integer (~12 is 18446744073709551603), so each result is read back as signed.
     // Behaviour reference (not copied):

@@ -102,8 +102,7 @@ public class AdoNetTestStore<THost> : RelationalTestStore
         return this;
     }
 
-    // EF's raw-SQL tests write [name]; each database quotes it its own way. EF's default, ", is a string, not a name, in
-    // MySQL unless the server runs with ANSI_QUOTES.
+    // EF's raw-SQL tests write [name]; each database quotes it its own way.
     protected override string OpenDelimiter
         => Host.Dialect.Sql.IdentifierQuotePrefix;
 

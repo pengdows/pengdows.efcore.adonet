@@ -91,7 +91,7 @@ internal class AdoNetRelationalConnection : RelationalConnection
                 "A DbProviderFactory requires a connection string: configure one, or call Database.SetConnectionString or Database.SetDbConnection first.");
         }
 
-        return _dataSources.GetOrCreate(factory, DataSourceConnectionString(factory, ConnectionString)).CreateConnection();
+        return _dataSources.GetOrCreate(factory, ConnectionString, cs => DataSourceConnectionString(factory, cs)).CreateConnection();
     }
 
     /// <summary>The connection string the data source for <paramref name="connectionString" /> is made from: with the dialect's options.</summary>

@@ -7,10 +7,12 @@ namespace pengdows.efcore.adonet.mysql.Tests;
 public class MySqlSqlTests
 {
     [Fact]
-    public void Session_setup_matches_the_string_literal_escape_mode()
+    public void Identifiers_are_quoted_with_backticks_and_no_session_setup_is_needed()
     {
-        Assert.EndsWith("'ANSI_QUOTES')", MySqlDialect.Instance.Sql.SessionSetup);
-        Assert.EndsWith("'ANSI_QUOTES', 'NO_BACKSLASH_ESCAPES')", MySqlDialect.NoBackslashEscapes.Sql.SessionSetup);
+        Assert.Equal("`", MySqlDialect.Instance.Sql.IdentifierQuotePrefix);
+        Assert.Equal("`", MySqlDialect.Instance.Sql.IdentifierQuoteSuffix);
+        Assert.Null(MySqlDialect.Instance.Sql.SessionSetup);
+        Assert.Null(MySqlDialect.NoBackslashEscapes.Sql.SessionSetup);
     }
 
     [Fact]
@@ -68,7 +70,7 @@ public class MySqlSqlTests
 
         var sql = context.Blogs.OrderBy(b => b.Id).Skip(5).ToQueryString();
 
-        Assert.Contains("FROM \"Blogs\" AS \"b\"", sql);
+        Assert.Contains($"FROM {Q}Blogs{Q} AS {Q}b{Q}", sql);
         Assert.Matches(@"LIMIT 18446744073709551615\s+OFFSET @p", sql);
     }
 }
@@ -155,7 +157,7 @@ public class MySqlAutoIncrementKeyTests
 
     [Fact]
     public void An_auto_increment_column_after_the_first_key_column_leads_a_unique_constraint()
-        => Assert.Contains("UNIQUE (\"Id\")", Sql("OwnerId", "Id"));
+        => Assert.Contains($"UNIQUE ({Q}Id{Q})", Sql("OwnerId", "Id"));
 
     [Fact]
     public void An_auto_increment_column_that_leads_the_key_needs_nothing_more()
@@ -192,8 +194,8 @@ public class MySqlNamedColumnTypeTests
         using var context = new FlaggedContext(new DbContextOptionsBuilder<FlaggedContext>().UseAdoNetMySql("Server=localhost").Options);
         var script = context.Database.GenerateCreateScript();
 
-        Assert.Contains("\"Flag\" boolean NOT NULL", script);
-        Assert.Contains("\"Other\" bool NOT NULL", script);
+        Assert.Contains($"{Q}Flag{Q} boolean NOT NULL", script);
+        Assert.Contains($"{Q}Other{Q} bool NOT NULL", script);
     }
 }
 

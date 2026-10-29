@@ -109,9 +109,10 @@ Gaps are only what a database lacks, recorded per fixture in `KnownEngineGaps` a
 attributed `[SKIP:<dialect>]`. Defects found in EF Core, drivers and engines while building this are listed in
 [UPSTREAM_ISSUES.md](UPSTREAM_ISSUES.md) for issues and pull requests.
 
-MySQL identifiers are quoted the ISO way, `"name"`: each session the provider uses gets `ANSI_QUOTES` added to its
-`sql_mode` as it opens (`ISqlDialect.SessionSetup`), including a connection the application opened itself. Raw SQL sent
-through the context must then quote strings with single quotes only; backtick identifiers still work.
+MySQL identifiers are quoted its own way, `` `name` ``: no session-level mode is needed before this dialect's SQL means
+what it says, so `ISqlDialect.SessionSetup` is unused for it. Backslash-escaping of string literals still depends on the
+server's `sql_mode`; nothing here changes that, so pick `MySqlDialect.Instance` for the common case (no
+`NO_BACKSLASH_ESCAPES`) or `MySqlDialect.NoBackslashEscapes` to match a server configured with it.
 
 `BulkInsert` doesn't read back keys the database generates (sequence keys are drawn first and set on the entities),
 writes every mapped column (database defaults don't apply), and doesn't support owned or complex types.

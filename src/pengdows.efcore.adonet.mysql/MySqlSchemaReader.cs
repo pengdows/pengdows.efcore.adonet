@@ -226,7 +226,7 @@ internal sealed partial class MySqlSchemaReader(bool mariaDb = false) : Informat
     // index's columns. Behaviour reference (not copied): Pomelo's GetFullTextParsers, at the reference above.
     private static void FullTextParsers(DbConnection connection, DatabaseTable table)
     {
-        var create = Query(connection, "SHOW CREATE TABLE \"" + table.Name.Replace("\"", "\"\"", StringComparison.Ordinal) + "\"")
+        var create = Query(connection, "SHOW CREATE TABLE `" + table.Name.Replace("`", "``", StringComparison.Ordinal) + "`")
             .Select(r => Text(r, "Create Table")).FirstOrDefault() ?? "";
         foreach (Match parser in FullTextParser().Matches(create))
         {

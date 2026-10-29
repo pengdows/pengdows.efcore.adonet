@@ -14,10 +14,10 @@ public abstract class MySqlSchemaReaderTests<TFixture>(TFixture fixture) : IClas
     [Fact]
     public async Task Integer_columns_read_back_without_a_display_width()
     {
-        await fixture.ExecuteAsync("DROP TABLE IF EXISTS \"Widths\"");
+        await fixture.ExecuteAsync($"DROP TABLE IF EXISTS {Q}Widths{Q}");
         await fixture.ExecuteAsync(
-            "CREATE TABLE \"Widths\" (\"Id\" BIGINT NOT NULL PRIMARY KEY, \"Small\" SMALLINT, \"Medium\" MEDIUMINT, \"Plain\" INT, "
-            + "\"Unsigned\" INT UNSIGNED, \"Flag\" TINYINT(1), \"Tiny\" TINYINT, \"Padded\" INT(5) ZEROFILL)");
+            $"CREATE TABLE {Q}Widths{Q} ({Q}Id{Q} BIGINT NOT NULL PRIMARY KEY, {Q}Small{Q} SMALLINT, {Q}Medium{Q} MEDIUMINT, {Q}Plain{Q} INT, "
+            + $"{Q}Unsigned{Q} INT UNSIGNED, {Q}Flag{Q} TINYINT(1), {Q}Tiny{Q} TINYINT, {Q}Padded{Q} INT(5) ZEROFILL)");
 
         await using var connection = fixture.Factory.CreateConnection()!;
         connection.ConnectionString = fixture.ConnectionString;

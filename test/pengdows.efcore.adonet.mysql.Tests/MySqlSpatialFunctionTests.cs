@@ -47,7 +47,7 @@ public class MySqlSpatialFunctionTests
         var ids = await context.Shapes.Where(s => s.Line.IsRing).Select(s => s.Id).ToListAsync(Ct);
 
         Assert.Equal([4], ids);
-        Assert.Contains("(ST_IsClosed(\"s\".\"Line\") AND ST_IsSimple(\"s\".\"Line\"))", db.Commands.Single());
+        Assert.Contains($"(ST_IsClosed({Q}s{Q}.{Q}Line{Q}) AND ST_IsSimple({Q}s{Q}.{Q}Line{Q}))", db.Commands.Single());
     }
 
     [Fact]
@@ -64,9 +64,9 @@ public class MySqlSpatialFunctionTests
 
         var sql = db.Commands.Single();
         Assert.Equal([2], ids);
-        Assert.Contains("ST_Relate(\"s\".\"Area\", \"s\".\"Line\", 'T********')", sql);
-        Assert.Contains("ST_Boundary(\"s\".\"Area\")", sql);
-        Assert.Contains("ST_PointOnSurface(\"s\".\"Area\")", sql);
+        Assert.Contains($"ST_Relate({Q}s{Q}.{Q}Area{Q}, {Q}s{Q}.{Q}Line{Q}, 'T********')", sql);
+        Assert.Contains($"ST_Boundary({Q}s{Q}.{Q}Area{Q})", sql);
+        Assert.Contains($"ST_PointOnSurface({Q}s{Q}.{Q}Area{Q})", sql);
     }
 
     // MySQL 8 has no ST_Relate, ST_Boundary or ST_PointOnSurface: a query needing one is refused, not sent.

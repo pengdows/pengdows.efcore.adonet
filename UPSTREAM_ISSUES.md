@@ -266,10 +266,41 @@ Reported at bugs.mysql.com, ADO.NET contract gaps in the driver (no workaround h
   connection never raises `Disposed`.
 - **Status:** not reported; a pull request candidate.
 
+## Oracle/MySql.EntityFrameworkCore (10.0.12)
+
+### `Trim`/`TrimStart`/`TrimEnd` of more than one character silently drop the characters
+
+- **Where:** `MySQLStringMethodTranslator.ProcessTrimMethod` (decompiled with `ilspycmd`, since the package ships no
+  source): branches for a single `char` and for a `char[]` of length exactly 1, each adding the character as the
+  `TRIM`/`LTRIM`/`RTRIM` argument; there is no `else` branch for a longer array.
+- **Defect:** for `char[].Length > 1` neither branch fires, so the trim-character argument is dropped entirely and
+  execution falls through to plain `TRIM(x)` (`LEADING`/`TRAILING FROM x` for the start/end forms), which in MySQL means
+  "whitespace only." `b.Name.Trim('A', 'b', ']')` silently becomes `TRIM(b.Name)`: no exception, no warning, wrong data.
+  `" AbA]xyz]Ab ".Trim(' ', 'A', 'b', ']')` is `"xyz"` in .NET; the generated SQL returns `"AbA]xyz]Ab"`.
+- **Confirmed:** directly, running Oracle's `MySql.EntityFrameworkCore` 10.0.12 against MySQL 8.4 —
+  `MySqlOracleTrimBugTests.Oracles_provider_silently_ignores_the_trim_characters_and_strips_whitespace_only`.
+- **Status:** not reported; a pull request candidate, though the fix is nontrivial (MySQL's `TRIM` has no character-set
+  form at all; a correct fix needs `REGEXP_REPLACE` or equivalent, not a one-line change).
+- **Our fix:** `FunctionSyntax.TrimCharacterSet` builds an escaped regex character class; `MySqlDialect`'s
+  `TrimCharacters`/`TrimStartCharacters`/`TrimEndCharacters` use it with `REGEXP_REPLACE`.
+
 ## PomeloFoundation/Pomelo.EntityFrameworkCore.MySql (9.0.1; source at 14c2cd55)
 
 Found while writing the MySQL dialect's translations against Pomelo's as the behaviour reference, and confirmed by running
-Pomelo 9.0.1 against MySQL 8.4. Searched Pomelo's issues: neither is reported.
+Pomelo 9.0.1 against MySQL 8.4. Searched Pomelo's issues: none of these three is reported.
+
+### `Trim`/`TrimStart`/`TrimEnd` of more than one character refuse to translate
+
+- **Where:** `MySqlStringMethodTranslator.ProcessTrimMethod` (source at the pin above): for a `char[]` of length greater
+  than 1 it returns `null` rather than attempting a translation.
+- **Defect:** a query using `b.Name.Trim('A', 'b', ']')` throws at translation time (`InvalidOperationException: could not
+  be translated`) rather than running; MySQL's `TRIM` genuinely has no character-set form, so there is no simple correct
+  template, but failing loudly is at least safe — contrast Oracle's own provider, which translates it to the wrong
+  answer silently (above).
+- **Confirmed:** by reading the source; not re-run against a live Pomelo context in this repository (Pomelo 8.0.2 is the
+  newest version pinned for this solution's target framework and predates EF 10 support).
+- **Status:** not reported.
+- **Our fix:** same as Oracle's entry above — `REGEXP_REPLACE` over an escaped character class, which MySQL does support.
 
 ### `AddHours`, `AddMinutes`, `AddSeconds`, `AddMilliseconds` and `AddDays` drop the fraction
 

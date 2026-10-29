@@ -62,7 +62,7 @@ public class MySqlFunctionExecutionTests
         var ids = await context.Articles.Where(a => EF.Functions.JsonContains(a.Doc, EF.Functions.AsJson(json))).Select(a => a.Id).ToListAsync(Ct);
 
         Assert.Equal([3, 7], ids);
-        Assert.Contains("JSON_CONTAINS(\"a\".\"Doc\", " + asJson + ")", db.Commands.Single());
+        Assert.Contains($"JSON_CONTAINS({Q}a{Q}.{Q}Doc{Q}, " + asJson + ")", db.Commands.Single());
         Assert.Contains("@json='[1, 2]'", db.Parameters.Single());
     }
 
@@ -78,9 +78,9 @@ public class MySqlFunctionExecutionTests
             .SingleAsync(Ct);
 
         Assert.Equal(("OBJECT", "\"Bob\"", "Bob"), (row.Type, row.Quoted, row.Unquoted));
-        Assert.Contains("JSON_TYPE(\"a\".\"Doc\")", db.Commands.Single());
-        Assert.Contains("JSON_QUOTE(\"a\".\"Title\")", db.Commands.Single());
-        Assert.Contains("JSON_UNQUOTE(\"a\".\"Doc\")", db.Commands.Single());
+        Assert.Contains($"JSON_TYPE({Q}a{Q}.{Q}Doc{Q})", db.Commands.Single());
+        Assert.Contains($"JSON_QUOTE({Q}a{Q}.{Q}Title{Q})", db.Commands.Single());
+        Assert.Contains($"JSON_UNQUOTE({Q}a{Q}.{Q}Doc{Q})", db.Commands.Single());
     }
 
     // The server returns JSON text for a string, an object or an array, and the scalar's own value through its CAST. The
@@ -107,7 +107,7 @@ public class MySqlFunctionExecutionTests
         Assert.Equal(42, row.Number);
         Assert.Equal("Oslo", row.Address.City);
         Assert.Equal([1, 2], row.Numbers);
-        Assert.Contains("JSON_EXTRACT(\"a\".\"Doc\", '$.a', '$.b')", db.Commands.Single());
+        Assert.Contains($"JSON_EXTRACT({Q}a{Q}.{Q}Doc{Q}, '$.a', '$.b')", db.Commands.Single());
         Assert.Contains("AS SIGNED)", db.Commands.Single());
     }
 
@@ -134,11 +134,11 @@ public class MySqlFunctionExecutionTests
 
         var sql = db.Commands.Single();
         Assert.Equal([5], ids);
-        Assert.Contains("JSON_OVERLAPS(\"a\".\"Doc\", '[1]')", sql);
-        Assert.Contains("JSON_CONTAINS_PATH(\"a\".\"Doc\", 'one', '$.a')", sql);
-        Assert.Contains("JSON_CONTAINS_PATH(\"a\".\"Doc\", 'all', '$.a', '$.b')", sql);
-        Assert.Contains("JSON_SEARCH(\"a\".\"Doc\", 'one', @pattern) IS NOT NULL", sql);
-        Assert.Contains("JSON_SEARCH(\"a\".\"Doc\", 'one', @pattern, '|', '$.names') IS NOT NULL", sql);
+        Assert.Contains($"JSON_OVERLAPS({Q}a{Q}.{Q}Doc{Q}, '[1]')", sql);
+        Assert.Contains($"JSON_CONTAINS_PATH({Q}a{Q}.{Q}Doc{Q}, 'one', '$.a')", sql);
+        Assert.Contains($"JSON_CONTAINS_PATH({Q}a{Q}.{Q}Doc{Q}, 'all', '$.a', '$.b')", sql);
+        Assert.Contains($"JSON_SEARCH({Q}a{Q}.{Q}Doc{Q}, 'one', @pattern) IS NOT NULL", sql);
+        Assert.Contains($"JSON_SEARCH({Q}a{Q}.{Q}Doc{Q}, 'one', @pattern, '|', '$.names') IS NOT NULL", sql);
         Assert.Contains("@pattern='Bob%'", db.Parameters.Single());
     }
 
@@ -163,8 +163,8 @@ public class MySqlFunctionExecutionTests
         Assert.Equal(0.75, row.Relevance);
         Assert.True(row.Matches);
         Assert.Equal([9], ids);
-        Assert.Contains("MATCH (\"a\".\"Title\", \"a\".\"Body\") AGAINST ('cast')", db.Commands[0]);
-        Assert.Contains("MATCH (\"a\".\"Title\", \"a\".\"Body\") AGAINST ('+cast' IN BOOLEAN MODE) > 0", db.Commands[1]);
+        Assert.Contains($"MATCH ({Q}a{Q}.{Q}Title{Q}, {Q}a{Q}.{Q}Body{Q}) AGAINST ('cast')", db.Commands[0]);
+        Assert.Contains($"MATCH ({Q}a{Q}.{Q}Title{Q}, {Q}a{Q}.{Q}Body{Q}) AGAINST ('+cast' IN BOOLEAN MODE) > 0", db.Commands[1]);
         Assert.Contains("@mode='2'", db.Parameters[1]);
     }
 
@@ -186,7 +186,7 @@ public class MySqlFunctionExecutionTests
             .SingleAsync(Ct);
 
         Assert.Equal(("414243", "2A", "0102", "ABC"), (row.Text, row.Number, row.Bytes, row.Back));
-        Assert.Contains("CONVERT(UNHEX(\"a\".\"Summary\") USING utf8mb4)", db.Commands.Single());
+        Assert.Contains($"CONVERT(UNHEX({Q}a{Q}.{Q}Summary{Q}) USING utf8mb4)", db.Commands.Single());
     }
 
     [Fact]
@@ -207,7 +207,7 @@ public class MySqlFunctionExecutionTests
             .SingleAsync(Ct);
 
         Assert.Equal((180.0, 3.5, 90.0f, 1.5f), (row.D, row.R, row.SmallD, row.SmallR));
-        Assert.Contains("DEGREES(\"a\".\"SmallAngle\")", db.Commands.Single());
+        Assert.Contains($"DEGREES({Q}a{Q}.{Q}SmallAngle{Q})", db.Commands.Single());
     }
 
     // A zone known at run time is a parameter; the result is a DateTime (or DateOnly), null for a zone the server lacks.
@@ -231,7 +231,7 @@ public class MySqlFunctionExecutionTests
         Assert.Equal(new DateTime(2024, 3, 5, 7, 0, 0), row.Between);
         Assert.Equal(new DateTime(2024, 3, 5, 8, 0, 0), row.FromUtc);
         Assert.Null(row.Date);
-        Assert.Contains("CONVERT_TZ(\"a\".\"EditedAt\", '+00:00', @zone)", db.Commands.Single());
+        Assert.Contains($"CONVERT_TZ({Q}a{Q}.{Q}EditedAt{Q}, '+00:00', @zone)", db.Commands.Single());
         Assert.Contains("@zone='Europe/Oslo'", db.Parameters.Single());
     }
 
@@ -246,7 +246,7 @@ public class MySqlFunctionExecutionTests
         var ids = await context.Articles.Where(a => EF.Functions.Like(a.Views, pattern)).Select(a => a.Id).ToListAsync(Ct);
 
         Assert.Equal([1, 2], ids);
-        Assert.Contains("\"a\".\"Views\" LIKE @pattern", db.Commands.Single());
+        Assert.Contains($"{Q}a{Q}.{Q}Views{Q} LIKE @pattern", db.Commands.Single());
         Assert.Contains("@pattern='1%'", db.Parameters.Single());
     }
 
@@ -268,6 +268,6 @@ public class MySqlFunctionExecutionTests
             .SingleAsync(Ct);
 
         Assert.Equal((4, 52, 10_000_000, 1_000_000_000), (row.Q, row.W, row.T, row.N));
-        Assert.Contains("(TIMESTAMPDIFF(MICROSECOND, \"a\".\"PublishedAt\", \"a\".\"PublishedAt\") * 10)", db.Commands.Single());
+        Assert.Contains($"(TIMESTAMPDIFF(MICROSECOND, {Q}a{Q}.{Q}PublishedAt{Q}, {Q}a{Q}.{Q}PublishedAt{Q}) * 10)", db.Commands.Single());
     }
 }

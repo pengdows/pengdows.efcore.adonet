@@ -57,14 +57,14 @@ public class MySqlMigrationExecutionTests
         await context.Database.MigrateAsync(Ct);
 
         var ddl = string.Join("\n", db.Commands);
-        Assert.Contains("CREATE TABLE \"Shelves\" (", ddl);
-        Assert.Contains("\"Code\" VARCHAR(300) CHARACTER SET latin1 NOT NULL", ddl);
-        Assert.Contains("\"Token\" CHAR(36) NOT NULL COLLATE \"ascii_bin\"", ddl);
-        Assert.Contains("\"Location\" POINT NOT NULL " + srid, ddl);
-        Assert.Contains("PRIMARY KEY (\"Code\"(20))", ddl);
+        Assert.Contains($"CREATE TABLE {Q}Shelves{Q} (", ddl);
+        Assert.Contains($"{Q}Code{Q} VARCHAR(300) CHARACTER SET latin1 NOT NULL", ddl);
+        Assert.Contains($"{Q}Token{Q} CHAR(36) NOT NULL COLLATE {Q}ascii_bin{Q}", ddl);
+        Assert.Contains($"{Q}Location{Q} POINT NOT NULL " + srid, ddl);
+        Assert.Contains($"PRIMARY KEY ({Q}Code{Q}(20))", ddl);
         Assert.Contains(") DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin ENGINE=InnoDB;", ddl);
-        Assert.Contains("CREATE FULLTEXT INDEX \"IX_Shelves_Code\" ON \"Shelves\" (\"Code\") WITH PARSER \"ngram\";", ddl);
-        Assert.Contains("ALTER TABLE \"Shelves\" ENGINE=MyISAM ROW_FORMAT=COMPACT;", ddl);
+        Assert.Contains($"CREATE FULLTEXT INDEX {Q}IX_Shelves_Code{Q} ON {Q}Shelves{Q} ({Q}Code{Q}) WITH PARSER {Q}ngram{Q};", ddl);
+        Assert.Contains($"ALTER TABLE {Q}Shelves{Q} ENGINE=MyISAM ROW_FORMAT=COMPACT;", ddl);
         Assert.Contains("20240101000000_Shelves", string.Join("\n", db.Parameters.Concat(db.Commands)));
     }
 
@@ -118,10 +118,10 @@ public class MySqlMigrationExecutionTests
 
         var ddl = string.Join("\n", db.Commands);
         Assert.Contains(") DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin ENGINE=InnoDB;", ddl);
-        Assert.Contains("\"Token\" CHAR(36) NOT NULL COLLATE \"ascii_bin\"", ddl);
-        Assert.Contains("\"Location\" POINT NOT NULL " + srid, ddl);
-        Assert.Contains("PRIMARY KEY (\"Code\"(20))", ddl);
-        Assert.Contains("CREATE FULLTEXT INDEX \"IX_Place_Name\" ON \"Place\" (\"Name\") WITH PARSER \"ngram\";", ddl);
-        Assert.Contains("CREATE SPATIAL INDEX \"IX_Place_Location\" ON \"Place\" (\"Location\");", ddl);
+        Assert.Contains($"{Q}Token{Q} CHAR(36) NOT NULL COLLATE {Q}ascii_bin{Q}", ddl);
+        Assert.Contains($"{Q}Location{Q} POINT NOT NULL " + srid, ddl);
+        Assert.Contains($"PRIMARY KEY ({Q}Code{Q}(20))", ddl);
+        Assert.Contains($"CREATE FULLTEXT INDEX {Q}IX_Place_Name{Q} ON {Q}Place{Q} ({Q}Name{Q}) WITH PARSER {Q}ngram{Q};", ddl);
+        Assert.Contains($"CREATE SPATIAL INDEX {Q}IX_Place_Location{Q} ON {Q}Place{Q} ({Q}Location{Q});", ddl);
     }
 }

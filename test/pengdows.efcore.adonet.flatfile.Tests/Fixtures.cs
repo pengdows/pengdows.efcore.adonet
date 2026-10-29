@@ -21,11 +21,19 @@ public sealed class FlatFileFixture : ProviderFixture
 
     public override IReadOnlyDictionary<string, string> KnownEngineGaps { get; } = new Dictionary<string, string>
     {
-        // Directory mode has no current-schema setting for unqualified history-table lookup.
-        ["Another_schemas_history_table_is_not_this_ones"] = "flatfile has no current schema for unqualified history-table lookup",
+        // CURRENT_SCHEMA resolves to the only/most-recently declared catalog schema, not a root schema distinct
+        // from it: once "tenant" is declared (CREATE SCHEMA IF NOT EXISTS, which EF's history table creation
+        // issues), CURRENT_SCHEMA returns "tenant" instead of "no schema." Verified against 0.2.1-preview.20 with
+        // a LogTo trace of the real CreateIfNotExistsAsync/ExistsAsync flow: EF's INFORMATION_SCHEMA.TABLES
+        // check for the unqualified table then matches the tenant-schema row. Not yet fixed upstream.
+        ["Another_schemas_history_table_is_not_this_ones"] = "flatfile CURRENT_SCHEMA still resolves to the declared tenant schema",
 
         // The engine intentionally holds its writer lock for the connection lifetime.
-        ["An_open_borrowed_connection_can_be_replaced"] = "flatfile writer lock is held for the connection lifetime"
+        ["An_open_borrowed_connection_can_be_replaced"] = "flatfile writer lock is held for the connection lifetime",
+
+        // An inline INTERVAL expression is returned by the engine as IntervalValue, which
+        // cannot currently be compared to a CLR TimeSpan by its predicate evaluator.
+        ["Time_span_constants"] = "flatfile interval expressions are not comparable to CLR TimeSpan values"
     };
 
     // Keys are ISO identity columns, read back through FINAL TABLE (the dialect's delta-table key retrieval).

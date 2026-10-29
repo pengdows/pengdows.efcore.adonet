@@ -43,7 +43,7 @@ public class MySqlJsonFunctionsTests
 
         var sql = context.Customers.Where(c => EF.Functions.JsonContains(c.Doc, EF.Functions.AsJson("{\"a\": 1}"))).ToQueryString();
 
-        Assert.Contains("JSON_CONTAINS(\"c\".\"Doc\", CAST('{\"a\": 1}' AS JSON))", sql);
+        Assert.Contains("JSON_CONTAINS(`c`.`Doc`, CAST('{\"a\": 1}' AS JSON))", sql);
     }
 
     // MariaDB's JSON is LONGTEXT, with no JSON type to CAST to; a JSON function's result is taken as JSON.
@@ -54,7 +54,7 @@ public class MySqlJsonFunctionsTests
 
         var sql = context.Customers.Where(c => EF.Functions.JsonContains(c.Doc, EF.Functions.AsJson("{\"a\": 1}"))).ToQueryString();
 
-        Assert.Contains("JSON_CONTAINS(\"c\".\"Doc\", JSON_COMPACT('{\"a\": 1}'))", sql);
+        Assert.Contains("JSON_CONTAINS(`c`.`Doc`, JSON_COMPACT('{\"a\": 1}'))", sql);
     }
 
     [Theory]
@@ -68,9 +68,9 @@ public class MySqlJsonFunctionsTests
             .Select(c => new { Type = EF.Functions.JsonType(c.Doc), Quoted = EF.Functions.JsonQuote(c.Name), Unquoted = EF.Functions.JsonUnquote(c.Doc) })
             .ToQueryString();
 
-        Assert.Contains("JSON_TYPE(\"c\".\"Doc\")", sql);
-        Assert.Contains("JSON_QUOTE(\"c\".\"Name\")", sql);
-        Assert.Contains("JSON_UNQUOTE(\"c\".\"Doc\")", sql);
+        Assert.Contains("JSON_TYPE(`c`.`Doc`)", sql);
+        Assert.Contains("JSON_QUOTE(`c`.`Name`)", sql);
+        Assert.Contains("JSON_UNQUOTE(`c`.`Doc`)", sql);
     }
 
     [Theory]
@@ -83,8 +83,8 @@ public class MySqlJsonFunctionsTests
         var whole = context.Customers.Where(c => EF.Functions.JsonContains(c.Doc, "1")).ToQueryString();
         var atPath = context.Customers.Where(c => EF.Functions.JsonContains(c.Doc, "1", "$.a")).ToQueryString();
 
-        Assert.Contains("JSON_CONTAINS(\"c\".\"Doc\", '1')", whole);
-        Assert.Contains("JSON_CONTAINS(\"c\".\"Doc\", '1', '$.a')", atPath);
+        Assert.Contains("JSON_CONTAINS(`c`.`Doc`, '1')", whole);
+        Assert.Contains("JSON_CONTAINS(`c`.`Doc`, '1', '$.a')", atPath);
     }
 
     [Theory]
@@ -96,7 +96,7 @@ public class MySqlJsonFunctionsTests
 
         var sql = context.Customers.Where(c => EF.Functions.JsonOverlaps(c.Doc, "[1, 2]")).ToQueryString();
 
-        Assert.Contains("JSON_OVERLAPS(\"c\".\"Doc\", '[1, 2]')", sql);
+        Assert.Contains("JSON_OVERLAPS(`c`.`Doc`, '[1, 2]')", sql);
     }
 
     [Theory]
@@ -110,9 +110,9 @@ public class MySqlJsonFunctionsTests
         var any = context.Customers.Where(c => EF.Functions.JsonContainsPathAny(c.Doc, "$.a", "$.b")).ToQueryString();
         var all = context.Customers.Where(c => EF.Functions.JsonContainsPathAll(c.Doc, "$.a", "$.b")).ToQueryString();
 
-        Assert.Contains("JSON_CONTAINS_PATH(\"c\".\"Doc\", 'one', '$.a')", one);
-        Assert.Contains("JSON_CONTAINS_PATH(\"c\".\"Doc\", 'one', '$.a', '$.b')", any);
-        Assert.Contains("JSON_CONTAINS_PATH(\"c\".\"Doc\", 'all', '$.a', '$.b')", all);
+        Assert.Contains("JSON_CONTAINS_PATH(`c`.`Doc`, 'one', '$.a')", one);
+        Assert.Contains("JSON_CONTAINS_PATH(`c`.`Doc`, 'one', '$.a', '$.b')", any);
+        Assert.Contains("JSON_CONTAINS_PATH(`c`.`Doc`, 'all', '$.a', '$.b')", all);
     }
 
     // JSON_SEARCH is null where nothing matches, whatever its arguments; a NULL escape is the default, a backslash.
@@ -127,9 +127,9 @@ public class MySqlJsonFunctionsTests
         var atPath = context.Customers.Where(c => EF.Functions.JsonSearchAny(c.Doc, "Bob%", "$.names")).ToQueryString();
         var escaped = context.Customers.Where(c => EF.Functions.JsonSearchAny(c.Doc, "Bob|%", "$.names", "|")).ToQueryString();
 
-        Assert.Contains("JSON_SEARCH(\"c\".\"Doc\", 'one', 'Bob%') IS NOT NULL", anywhere);
-        Assert.Contains("JSON_SEARCH(\"c\".\"Doc\", 'one', 'Bob%', NULL, '$.names') IS NOT NULL", atPath);
-        Assert.Contains("JSON_SEARCH(\"c\".\"Doc\", 'one', 'Bob|%', '|', '$.names') IS NOT NULL", escaped);
+        Assert.Contains("JSON_SEARCH(`c`.`Doc`, 'one', 'Bob%') IS NOT NULL", anywhere);
+        Assert.Contains("JSON_SEARCH(`c`.`Doc`, 'one', 'Bob%', NULL, '$.names') IS NOT NULL", atPath);
+        Assert.Contains("JSON_SEARCH(`c`.`Doc`, 'one', 'Bob|%', '|', '$.names') IS NOT NULL", escaped);
     }
 
     // A string is the JSON text JSON_EXTRACT returns, as in Pomelo; several paths return an array of their values.
@@ -143,8 +143,8 @@ public class MySqlJsonFunctionsTests
         var one = context.Customers.Select(c => EF.Functions.JsonExtract<string>(c.Doc, "$.a")).ToQueryString();
         var several = context.Customers.Select(c => EF.Functions.JsonExtract<string>(c.Doc, "$.a", "$.b")).ToQueryString();
 
-        Assert.Contains("JSON_EXTRACT(\"c\".\"Doc\", '$.a')", one);
-        Assert.Contains("JSON_EXTRACT(\"c\".\"Doc\", '$.a', '$.b')", several);
+        Assert.Contains("JSON_EXTRACT(`c`.`Doc`, '$.a')", one);
+        Assert.Contains("JSON_EXTRACT(`c`.`Doc`, '$.a', '$.b')", several);
     }
 
     // A scalar is read as its own type, as JSON_VALUE would: a comparison with it compares values, not a JSON document
@@ -158,7 +158,7 @@ public class MySqlJsonFunctionsTests
 
         var sql = context.Customers.Where(c => EF.Functions.JsonExtract<int>(c.Doc, "$.a") > 3).ToQueryString();
 
-        Assert.Contains("CAST(JSON_UNQUOTE(JSON_EXTRACT(\"c\".\"Doc\", '$.a')) AS SIGNED)", sql);
+        Assert.Contains("CAST(JSON_UNQUOTE(JSON_EXTRACT(`c`.`Doc`, '$.a')) AS SIGNED)", sql);
         Assert.Contains("> 3", sql);
     }
 
@@ -181,8 +181,8 @@ public class MySqlJsonFunctionsTests
         var address = context.Customers.Select(c => EF.Functions.JsonExtract<Address>(c.Doc, "$.address")).ToQueryString();
         var numbers = context.Customers.Select(c => EF.Functions.JsonExtract<int[]>(c.Doc, "$.a", "$.b")).ToQueryString();
 
-        Assert.Contains("JSON_EXTRACT(\"c\".\"Doc\", '$.address')", address);
-        Assert.Contains("JSON_EXTRACT(\"c\".\"Doc\", '$.a', '$.b')", numbers);
+        Assert.Contains("JSON_EXTRACT(`c`.`Doc`, '$.address')", address);
+        Assert.Contains("JSON_EXTRACT(`c`.`Doc`, '$.a', '$.b')", numbers);
     }
 
     // Read through fakeDb, which returns what a server would: the JSON text of the object, and the text of the scalar.

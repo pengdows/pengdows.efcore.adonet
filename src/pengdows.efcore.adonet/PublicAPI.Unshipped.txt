@@ -131,7 +131,8 @@ pengdows.efcore.adonet.DatabaseStorage.Directory = 2 -> pengdows.efcore.adonet.D
 pengdows.efcore.adonet.DatabaseStorage.File = 1 -> pengdows.efcore.adonet.DatabaseStorage
 pengdows.efcore.adonet.DatabaseStorage.Server = 0 -> pengdows.efcore.adonet.DatabaseStorage
 pengdows.efcore.adonet.DeltaTableKeyRetrieval
-pengdows.efcore.adonet.DeltaTableKeyRetrieval.DeltaTableKeyRetrieval() -> void
+pengdows.efcore.adonet.DeltaTableKeyRetrieval.DeltaTableKeyRetrieval(bool useIncludeColumns = false) -> void
+pengdows.efcore.adonet.DeltaTableKeyRetrieval.UseIncludeColumns.get -> bool
 pengdows.efcore.adonet.DmlSyntax
 pengdows.efcore.adonet.DmlSyntax.DmlSyntax() -> void
 pengdows.efcore.adonet.FunctionSyntax
@@ -185,6 +186,7 @@ pengdows.efcore.adonet.Storage.AdoNetTimeSpanTypeMapping.AdoNetTimeSpanTypeMappi
 pengdows.efcore.adonet.Storage.AdoNetTimeSpanTypeMapping.AdoNetTimeSpanTypeMapping(string! storeType, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
 static pengdows.efcore.adonet.FunctionSyntax.FormatLikePattern(Microsoft.EntityFrameworkCore.Query.QueryContext! queryContext, string! parameterName, string! match, char escape, string! specialCharacters) -> string?
 static pengdows.efcore.adonet.KeyRetrieval.DeltaTable.get -> pengdows.efcore.adonet.DeltaTableKeyRetrieval!
+static pengdows.efcore.adonet.KeyRetrieval.DeltaTableWithInclude.get -> pengdows.efcore.adonet.DeltaTableKeyRetrieval!
 static pengdows.efcore.adonet.Storage.AdoNetBoolTypeMapping.Default.get -> pengdows.efcore.adonet.Storage.AdoNetBoolTypeMapping!
 static pengdows.efcore.adonet.Storage.AdoNetByteArrayTypeMapping.Default.get -> pengdows.efcore.adonet.Storage.AdoNetByteArrayTypeMapping!
 static pengdows.efcore.adonet.Storage.AdoNetByteTypeMapping.Default.get -> pengdows.efcore.adonet.Storage.AdoNetByteTypeMapping!
@@ -558,6 +560,7 @@ virtual pengdows.efcore.adonet.FunctionSyntax.PadLeft.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.PadRight.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.TrimStartCharacters.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.TrimEndCharacters.get -> string?
+virtual pengdows.efcore.adonet.FunctionSyntax.TrimCharacterSet(char[]! characters) -> string!
 virtual pengdows.efcore.adonet.FunctionSyntax.TrimStartCharacter.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.Truncate.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.UtcNow.get -> string?

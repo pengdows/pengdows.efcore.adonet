@@ -3,6 +3,7 @@ using pengdows.crud.enums;
 using pengdows.crud.fakeDb;
 using Microsoft.EntityFrameworkCore;
 
+using pengdows.efcore.adonet.Storage;
 using pengdows.efcore.adonet.Testing;
 
 namespace pengdows.efcore.adonet.Tests;
@@ -40,6 +41,30 @@ public class ConnectionSourceTests
 
         Assert.Equal("Data Source=c;Mode=Memory", context.Database.GetDbConnection().ConnectionString);
         Assert.Equal(["Data Source=c;Mode=Memory"], DataSourcesCreated(factory));
+    }
+
+    [Fact]
+    public void A_dialects_connection_string_options_are_computed_once_per_raw_connection_string()
+    {
+        using var dataSources = new AdoNetDataSources();
+        var factory = PoolingFactory();
+        var computations = 0;
+
+        string Augment(string raw)
+        {
+            computations++;
+            return raw + ";extra=1";
+        }
+
+        var first = dataSources.GetOrCreate(factory, "Data Source=a;Mode=Memory", Augment);
+        var second = dataSources.GetOrCreate(factory, "Data Source=a;Mode=Memory", Augment);
+        dataSources.GetOrCreate(factory, "Data Source=b;Mode=Memory", Augment);
+
+        Assert.Same(first, second);
+        Assert.Equal(2, computations);
+        Assert.Equal(
+            ["Data Source=a;Mode=Memory;extra=1", "Data Source=b;Mode=Memory;extra=1"],
+            DataSourcesCreated(factory));
     }
 
     /// <summary>A provider that, like Npgsql and MySqlConnector, pools per data source.</summary>
