@@ -18,6 +18,8 @@ namespace pengdows.efcore.adonet.Update;
 internal class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependencies, IAdoNetDialect dialect)
     : UpdateAndSelectSqlGenerator(dependencies)
 {
+    private const string IncludeCorrelationColumn = "__pengdows_correlation";
+
     // A property inside a JSON column is patched in place with the dialect's set function. A sub-document, or a bool sent as
     // its text (AdoNetModificationCommand), is made a JSON value first, so it isn't stored as a string. Behaviour reference
     // (not copied): https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.Sqlite.Core/Update/Internal/SqliteUpdateSqlGenerator.cs
@@ -340,7 +342,7 @@ internal class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependenc
 
         AppendDeltaTable(
             commandStringBuilder, readOperations.Select(o => o.ColumnName), "FINAL",
-            inner => AppendInsertCommand(inner, command.TableName, command.Schema, writeOperations, []));
+            inner => AppendDeltaTableInsert(inner, command, writeOperations));
         return ResultSetMapping.LastInResultSet;
     }
 
@@ -359,9 +361,93 @@ internal class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependenc
             commandStringBuilder,
             readOperations.Count == 0 ? null : readOperations.Select(o => o.ColumnName),
             readOperations.Count == 0 ? "NEW" : "FINAL",
-            inner => AppendUpdateCommand(
-                inner, command.TableName, command.Schema, writeOperations, [], conditionOperations, appendReturningOneClause: false));
+            inner => AppendDeltaTableUpdate(inner, command, writeOperations, conditionOperations));
         return ResultSetMapping.LastInResultSet;
+    }
+
+    private void AppendDeltaTableInsert(
+        StringBuilder builder,
+        IReadOnlyModificationCommand command,
+        IReadOnlyList<IColumnModification> writeOperations)
+    {
+        var statement = new StringBuilder();
+        AppendInsertCommand(statement, command.TableName, command.Schema, writeOperations, []);
+        if (UseIncludeColumns())
+        {
+            AddInsertInclude(statement);
+        }
+
+        builder.Append(statement);
+    }
+
+    private void AppendDeltaTableUpdate(
+        StringBuilder builder,
+        IReadOnlyModificationCommand command,
+        IReadOnlyList<IColumnModification> writeOperations,
+        IReadOnlyList<IColumnModification> conditionOperations)
+    {
+        var statement = new StringBuilder();
+        AppendUpdateCommand(
+            statement, command.TableName, command.Schema, writeOperations, [], conditionOperations, appendReturningOneClause: false);
+        if (UseIncludeColumns())
+        {
+            AddUpdateInclude(statement);
+        }
+
+        builder.Append(statement);
+    }
+
+    private bool UseIncludeColumns()
+        => dialect.Sql.Keys is DeltaTableKeyRetrieval { UseIncludeColumns: true };
+
+    private string DelimitedIncludeColumn
+        => SqlGenerationHelper.DelimitIdentifier(IncludeCorrelationColumn);
+
+    private void AddInsertInclude(StringBuilder statement)
+    {
+        var text = statement.ToString();
+        var values = text.IndexOf("VALUES (", StringComparison.Ordinal);
+        if (values < 0)
+        {
+            // The Pengdows specification defines an omitted INCLUDE value for DEFAULT VALUES as NULL.
+            // EF's generated-key path does not project an INSERT source row, though, and the flatfile
+            // binder consequently cannot bind an INCLUDE-bearing DEFAULT VALUES statement. The include
+            // column is not part of EF's result projection in this path, so retain the ordinary delta
+            // table shape; explicit-value inserts use INCLUDE below.
+            return;
+        }
+
+        var lineStart = text.LastIndexOf('\n', values);
+        var withInclude = text.Insert(lineStart < 0 ? values : lineStart, $" INCLUDE ({DelimitedIncludeColumn} INTEGER)");
+        var valuesKeyword = withInclude.IndexOf("VALUES", StringComparison.Ordinal);
+        var openParen = withInclude.IndexOf('(', valuesKeyword);
+        if (openParen < 0)
+        {
+            throw new InvalidOperationException("The INSERT delta-table statement has no VALUES row for INCLUDE columns.");
+        }
+
+        var closeParen = withInclude.IndexOf(')', openParen);
+        if (closeParen < 0)
+        {
+            throw new InvalidOperationException("The INSERT delta-table statement has no complete VALUES row for INCLUDE columns.");
+        }
+
+        statement.Clear().Append(withInclude.Insert(closeParen, ", 1"));
+    }
+
+    private void AddUpdateInclude(StringBuilder statement)
+    {
+        var text = statement.ToString();
+        var set = text.IndexOf("SET", StringComparison.Ordinal);
+        if (set < 0)
+        {
+            throw new InvalidOperationException("The UPDATE delta-table statement has no SET clause for INCLUDE columns.");
+        }
+
+        var lineStart = text.LastIndexOf('\n', set);
+        var withInclude = text.Insert(lineStart < 0 ? set : lineStart, $" INCLUDE ({DelimitedIncludeColumn} INTEGER)");
+        var setKeyword = withInclude.IndexOf("SET", set + $" INCLUDE ({DelimitedIncludeColumn} INTEGER)".Length, StringComparison.Ordinal);
+        statement.Clear().Append(withInclude.Insert(setKeyword + 3, $" {DelimitedIncludeColumn} = 1,"));
     }
 
     private ResultSetMapping AppendDeleteDeltaTableOperation(

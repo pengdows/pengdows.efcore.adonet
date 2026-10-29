@@ -16,6 +16,17 @@ internal class AdoNetQuerySqlGenerator(
     private int _selectDepth;
     private int _derivedProjectionAlias;
 
+    protected override Expression VisitSqlParameter(SqlParameterExpression sqlParameterExpression)
+    {
+        base.VisitSqlParameter(sqlParameterExpression);
+        if (string.Equals(sqlParameterExpression.TypeMapping?.StoreType, "inet", StringComparison.OrdinalIgnoreCase))
+        {
+            Sql.Append("::inet");
+        }
+
+        return sqlParameterExpression;
+    }
+
     protected override Expression VisitSelect(SelectExpression selectExpression)
     {
         _selectDepth++;
