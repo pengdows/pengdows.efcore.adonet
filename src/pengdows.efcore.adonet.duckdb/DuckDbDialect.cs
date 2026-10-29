@@ -29,7 +29,8 @@ public sealed class DuckDbDialect : AdoNetDialect
     public override void ConfigureServices(IServiceCollection services)
         => new EntityFrameworkRelationalServicesBuilder(services)
             .TryAdd<IMigrationsSqlGenerator, DuckDbMigrationsSqlGenerator>()
-            .TryAdd<Microsoft.EntityFrameworkCore.Storage.IRelationalTypeMappingSourcePlugin, DuckDbListTypeMappingSourcePlugin>();
+            .TryAdd<Microsoft.EntityFrameworkCore.Storage.IRelationalTypeMappingSourcePlugin, DuckDbListTypeMappingSourcePlugin>()
+            .TryAdd<Microsoft.EntityFrameworkCore.Storage.IRelationalTypeMappingSourcePlugin, DuckDbStructTypeMappingSourcePlugin>();
 }
 
 internal sealed class DuckDbSql : AnsiSqlDialect
