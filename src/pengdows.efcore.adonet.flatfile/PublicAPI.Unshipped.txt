@@ -2,6 +2,7 @@
 override pengdows.efcore.adonet.flatfile.FlatFileDialect.Capabilities.get -> pengdows.efcore.adonet.IDatabaseCapabilities!
 override pengdows.efcore.adonet.flatfile.FlatFileDialect.Name.get -> string!
 override pengdows.efcore.adonet.flatfile.FlatFileDialect.Sql.get -> pengdows.efcore.adonet.ISqlDialect!
+override pengdows.efcore.adonet.flatfile.FlatFileDialect.TypeMappings.get -> pengdows.efcore.adonet.ITypeMappingDialect!
 pengdows.efcore.adonet.flatfile.FlatFileDbContextOptionsBuilderExtensions
 pengdows.efcore.adonet.flatfile.FlatFileDesignTimeServices
 pengdows.efcore.adonet.flatfile.FlatFileDesignTimeServices.FlatFileDesignTimeServices() -> void
@@ -19,4 +20,3 @@ static readonly pengdows.efcore.adonet.flatfile.FlatFileDialect.Instance -> peng
 override pengdows.efcore.adonet.flatfile.FlatFileDesignTimeServices.UseProvider.get -> System.Reflection.MethodInfo!
 static pengdows.efcore.adonet.flatfile.FlatFileDbContextOptionsBuilderExtensions.UseAdoNetFlatFile(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder! optionsBuilder, System.Data.Common.DbProviderFactory! providerFactory, string! connectionString, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder!
 static pengdows.efcore.adonet.flatfile.FlatFileDbContextOptionsBuilderExtensions.UseAdoNetFlatFile<TContext>(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>! optionsBuilder, System.Data.Common.DbProviderFactory! providerFactory, string! connectionString, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>!
-override pengdows.efcore.adonet.flatfile.FlatFileDialect.TypeMappings.get -> pengdows.efcore.adonet.ITypeMappingDialect!
