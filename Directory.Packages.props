@@ -29,7 +29,7 @@
     <PackageVersion Include="MySql.EntityFrameworkCore" Version="10.0.12" />
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
     <PackageVersion Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.2" Condition="'$(TargetFramework)' == 'net8.0'" />
-    <PackageVersion Include="pengdows.crud.fakeDb" Version="2.0.6-rc3" />
+    <PackageVersion Include="pengdows.crud.fakeDb" Version="2.0.6-rc6" />
     <!-- Test-only: caps the connections a run opens against a server with a fixed connection limit. -->
     <PackageVersion Include="pengdows.stormgate" Version="2.0.6" />
     <PackageVersion Include="pengdows.stormgate.EntityFrameworkCore" Version="2.0.6" />
