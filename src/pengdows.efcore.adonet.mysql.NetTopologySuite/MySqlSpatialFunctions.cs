@@ -119,7 +119,10 @@ internal sealed class MySqlSpatialTranslatorPlugin(
     ISqlDialect dialect) : IMethodCallTranslatorPlugin
 {
     public IEnumerable<IMethodCallTranslator> Translators { get; } =
-        [new MySqlSpatialTranslator(sqlExpressionFactory, typeMappingSource, dialect is MySqlSql { IsMariaDb: true })];
+        [new MySqlSpatialTranslator(
+            sqlExpressionFactory,
+            typeMappingSource,
+            dialect is MySqlSql sql ? sql.Features : MySqlServerFeatures.For(mariaDb: false, version: null))];
 }
 
 /// <summary>
@@ -127,7 +130,10 @@ internal sealed class MySqlSpatialTranslatorPlugin(
 ///     when their arguments aren't. Behaviour reference (not copied):
 ///     https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql.NTS/Query/ExpressionTranslators/Internal/MySqlDbFunctionsExtensionsMethodTranslator.cs
 /// </summary>
-internal sealed class MySqlSpatialTranslator(ISqlExpressionFactory sqlExpressionFactory, IRelationalTypeMappingSource typeMappingSource, bool mariaDb)
+internal sealed class MySqlSpatialTranslator(
+    ISqlExpressionFactory sqlExpressionFactory,
+    IRelationalTypeMappingSource typeMappingSource,
+    MySqlServerFeatures features)
     : IMethodCallTranslator
 {
     // Pomelo's sphere for the haversine (PostGIS's mean radius); WGS 84 for Andoyer's formula.
@@ -156,26 +162,30 @@ internal sealed class MySqlSpatialTranslator(ISqlExpressionFactory sqlExpression
             : sqlExpressionFactory.CallMaybeNull(template, geometries, typeof(double), typeMappingSource.FindMapping(typeof(double)));
     }
 
-    // MySQL 8 measures a geographic SRID on the ellipsoid: planar is with the SRID set to 0. MariaDB is always planar.
+    // MySQL 8 measures a geographic SRID on the ellipsoid: planar is with the SRID set to 0. MariaDB, and MySQL before 8.0,
+    // are always planar.
     private string Planar()
-        => mariaDb
-            ? "ST_Distance({0}, {1})"
-            : "CASE WHEN ST_SRID({0}) = 0 THEN ST_Distance({0}, {1}) ELSE ST_Distance(ST_SRID({0}, 0), ST_SRID({1}, 0)) END";
+        => features.GeographicDistance
+            ? "CASE WHEN ST_SRID({0}) = 0 THEN ST_Distance({0}, {1}) ELSE ST_Distance(ST_SRID({0}, 0), ST_SRID({1}, 0)) END"
+            : "ST_Distance({0}, {1})";
 
     private string Sphere(SpatialDistanceAlgorithm algorithm)
         => algorithm switch
         {
-            SpatialDistanceAlgorithm.Native => "ST_Distance_Sphere({0}, {1})",
+            // Where the server has no ST_Distance_Sphere (MySQL before 8.0 by Pomelo's flags, MariaDB before 10.5.10 and its
+            // backports), Andoyer's formula, as Pomelo falls back to.
+            SpatialDistanceAlgorithm.Native => features.DistanceSphere ? "ST_Distance_Sphere({0}, {1})" : Sphere(SpatialDistanceAlgorithm.Andoyer),
 
-            // MySQL's ST_Distance is Andoyer's on SRID 4326; MariaDB has none, so the formula is written out.
-            SpatialDistanceAlgorithm.Andoyer => mariaDb
-                ? Andoyer("{0}", "{1}")
-                : "CASE WHEN ST_SRID({0}) = 4326 THEN ST_Distance({0}, {1}) ELSE ST_Distance(ST_SRID({0}, 4326), ST_SRID({1}, 4326)) END",
+            // MySQL 8's ST_Distance is Andoyer's on SRID 4326; MariaDB, and MySQL before 8.0, have none, so the formula is
+            // written out.
+            SpatialDistanceAlgorithm.Andoyer => features.GeographicDistance
+                ? "CASE WHEN ST_SRID({0}) = 4326 THEN ST_Distance({0}, {1}) ELSE ST_Distance(ST_SRID({0}, 4326), ST_SRID({1}, 4326)) END"
+                : Andoyer("{0}", "{1}"),
 
             // The coordinates as written, which MySQL 8 reads as latitude first on a geographic SRID: set it to 0 first.
-            _ => mariaDb
-                ? Haversine("{0}", "{1}")
-                : "CASE WHEN ST_SRID({0}) = 0 THEN " + Haversine("{0}", "{1}") + " ELSE " + Haversine("ST_SRID({0}, 0)", "ST_SRID({1}, 0)") + " END"
+            _ => features.GeographicDistance
+                ? "CASE WHEN ST_SRID({0}) = 0 THEN " + Haversine("{0}", "{1}") + " ELSE " + Haversine("ST_SRID({0}, 0)", "ST_SRID({1}, 0)") + " END"
+                : Haversine("{0}", "{1}")
         };
 
     private static string Radians(string coordinate)

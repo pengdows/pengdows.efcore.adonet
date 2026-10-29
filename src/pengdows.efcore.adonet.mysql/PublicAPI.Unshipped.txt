@@ -12,6 +12,7 @@ pengdows.efcore.adonet.mysql.MySQLCollationAttribute.Collation.get -> string!
 pengdows.efcore.adonet.mysql.MySQLCollationAttribute.MySQLCollationAttribute(string! collation) -> void
 pengdows.efcore.adonet.mysql.MySqlDbContextOptionsBuilderExtensions
 pengdows.efcore.adonet.mysql.MySqlDialect
+pengdows.efcore.adonet.mysql.MySqlDialect.ServerVersion.get -> System.Version?
 pengdows.efcore.adonet.mysql.MySqlDropPrimaryKeyAndRecreateForeignKeysOperation
 pengdows.efcore.adonet.mysql.MySqlDropPrimaryKeyAndRecreateForeignKeysOperation.MySqlDropPrimaryKeyAndRecreateForeignKeysOperation() -> void
 pengdows.efcore.adonet.mysql.MySqlDropUniqueConstraintAndRecreateForeignKeysOperation
@@ -38,6 +39,7 @@ static pengdows.efcore.adonet.mysql.MySqlDbContextOptionsBuilderExtensions.UseAd
 static pengdows.efcore.adonet.mysql.MySqlDbContextOptionsBuilderExtensions.UseAdoNetMySql<TContext>(this Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>! optionsBuilder, System.Data.Common.DbDataSource! dataSource, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? adoNetOptionsAction = null) -> Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<TContext!>!
 static pengdows.efcore.adonet.mysql.MySqlDialect.AutoDetect(System.Data.Common.DbProviderFactory! factory, string! connectionString) -> pengdows.efcore.adonet.mysql.MySqlDialect!
 static pengdows.efcore.adonet.mysql.MySqlDialect.AutoDetectAsync(System.Data.Common.DbProviderFactory! factory, string! connectionString, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<pengdows.efcore.adonet.mysql.MySqlDialect!>!
+static pengdows.efcore.adonet.mysql.MySqlDialect.ForServerVersion(System.Version! version, bool mariaDb = false) -> pengdows.efcore.adonet.mysql.MySqlDialect!
 static pengdows.efcore.adonet.mysql.MySqlDialect.FromServerVersion(System.Data.Common.DbConnection! connection) -> pengdows.efcore.adonet.mysql.MySqlDialect!
 static pengdows.efcore.adonet.mysql.MySqlDialect.FromServerVersion(System.Data.Common.DbConnection! connection, string! versionComment) -> pengdows.efcore.adonet.mysql.MySqlDialect!
 static pengdows.efcore.adonet.mysql.MySqlFullTextExtensions.Match(this Microsoft.EntityFrameworkCore.DbFunctions! _, string![]! properties, string! pattern, pengdows.efcore.adonet.mysql.MySQLMatchSearchMode searchMode) -> double

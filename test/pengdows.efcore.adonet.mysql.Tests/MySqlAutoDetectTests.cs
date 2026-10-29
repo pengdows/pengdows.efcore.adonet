@@ -37,7 +37,12 @@ public class MySqlAutoDetectTests
         connection.SetServerVersion("5.7.32");
         connection.Open();
 
-        Assert.Same(MySqlDialect.Instance, MySqlDialect.FromServerVersion(connection));
+        // Read as the MySQL version it reports, whose dialect turns off what MySQL 5.7 lacks (MySqlServerVersionTests).
+        var dialect = MySqlDialect.FromServerVersion(connection);
+
+        Assert.NotSame(MySqlDialect.SingleStore, dialect);
+        Assert.Equal("MySQL", dialect.Name);
+        Assert.Equal(new Version(5, 7, 32), dialect.ServerVersion);
     }
 
     [Theory]

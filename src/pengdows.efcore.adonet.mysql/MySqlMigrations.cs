@@ -70,6 +70,54 @@ internal partial class MySqlMigrationsSqlGenerator(MigrationsSqlGeneratorDepende
     protected override void IdentityDefinition(string? schema, string table, string name, ColumnOperation operation, MigrationCommandListBuilder builder)
         => builder.Append(" AUTO_INCREMENT");
 
+    // What the dialect's server has (all of it for a current server), and how to name it in an error.
+    private MySqlServerFeatures Features
+        => Dialect.Sql is MySqlSql sql ? sql.Features : MySqlServerFeatures.For(mariaDb: false, version: null);
+
+    private string Server
+        => Dialect is MySqlDialect { ServerVersion: { } version } ? Dialect.Name + " " + version : Dialect.Name;
+
+    // Before RENAME COLUMN (MySQL 8.0, MariaDB 10.5.2), CHANGE COLUMN restates the column under its new name, from the
+    // migration's target model. Behaviour reference (not copied):
+    // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Migrations/MySqlMigrationsSqlGenerator.cs
+    protected override void Generate(RenameColumnOperation operation, IModel? model, MigrationCommandListBuilder builder)
+    {
+        if (Features.RenameColumn)
+        {
+            base.Generate(operation, model, builder);
+            return;
+        }
+
+        var column = model?.GetRelationalModel().FindTable(operation.Table, operation.Schema)?.FindColumn(operation.NewName)
+            ?? throw new InvalidOperationException(
+                $"Renaming '{operation.Table}.{operation.Name}' on {Server}, which has no RENAME COLUMN, restates the column, which needs the migration's target model.");
+        var definition = new AddColumnOperation
+        {
+            Schema = operation.Schema,
+            Table = operation.Table,
+            Name = operation.NewName,
+            ClrType = column.ProviderClrType,
+            ColumnType = column.StoreType,
+            IsNullable = column.IsNullable,
+            DefaultValue = column.DefaultValue,
+            DefaultValueSql = column.DefaultValueSql,
+            ComputedColumnSql = column.ComputedColumnSql,
+            IsStored = column.IsStored,
+            Comment = column.Comment,
+            Collation = column.Collation
+        };
+        definition.AddAnnotations(column.GetAnnotations());
+        builder
+            .Append("ALTER TABLE ")
+            .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Table, operation.Schema))
+            .Append(" CHANGE COLUMN ")
+            .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Name))
+            .Append(" ");
+        ColumnDefinition(operation.Schema, operation.Table, operation.NewName, definition, model, builder);
+        builder.AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
+        EndStatement(builder);
+    }
+
     // InnoDB wants an AUTO_INCREMENT column to lead an index. In a composite key led by another column (an owned
     // collection's owner key, then its own number) it doesn't, so it gets a unique constraint of its own. Behaviour reference
     // (not copied): Pomelo's MySqlMigrationsSqlGenerator (MIT, Pomelo Foundation):
@@ -233,6 +281,12 @@ internal partial class MySqlMigrationsSqlGenerator(MigrationsSqlGeneratorDepende
         // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Migrations/MySqlMigrationsSqlGenerator.cs
         if (operation[MySqlModelOptionsExtensions.SpatialReferenceSystemAnnotation] is int srid)
         {
+            // MySQL before 8.0.3 has no SRID column attribute: refused rather than leaving the column unrestricted.
+            if (!Features.ColumnSrid)
+            {
+                throw new NotSupportedException($"Column '{table}.{name}' has a spatial reference system, which {Server} can't restrict a column to (MySQL 8.0.3).");
+            }
+
             builder
                 .Append(Dialect.Sql is MySqlSql { IsMariaDb: true } ? " REF_SYSTEM_ID=" : " SRID ")
                 .Append(srid.ToString(System.Globalization.CultureInfo.InvariantCulture));
@@ -288,7 +342,8 @@ internal partial class MySqlMigrationsSqlGenerator(MigrationsSqlGeneratorDepende
                 builder.Append("(").Append(prefixLengths[i].ToString(System.Globalization.CultureInfo.InvariantCulture)).Append(")");
             }
 
-            if ((isDescending is not null) && ((isDescending.Length == 0) || isDescending[i]))
+            // MySQL before 8.0.1 parses DESC and ignores it: written only where it orders the index.
+            if (Features.DescendingIndexes && (isDescending is not null) && ((isDescending.Length == 0) || isDescending[i]))
             {
                 builder.Append(" DESC");
             }
@@ -355,8 +410,21 @@ internal partial class MySqlMigrationsSqlGenerator(MigrationsSqlGeneratorDepende
                 return;
             }
 
+            // Before expression defaults (MySQL 8.0.13, MariaDB 10.2.7) a default is a literal or CURRENT_TIMESTAMP, written bare.
+            if ((defaultValueSql != null) && !Features.ExpressionDefaults)
+            {
+                builder.Append(" DEFAULT ").Append(defaultValueSql.Trim());
+                return;
+            }
+
             base.DefaultValue(defaultValue, defaultValueSql, columnType, builder);
             return;
+        }
+
+        if (((defaultValueSql != null) || (defaultValue != null)) && !Features.ExpressionDefaults)
+        {
+            throw new NotSupportedException(
+                $"A {baseType} column takes a default only as an expression, which {Server} doesn't have (MySQL 8.0.13, MariaDB 10.2.7).");
         }
 
         if (defaultValueSql != null)

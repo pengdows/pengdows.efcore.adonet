@@ -12,7 +12,7 @@ namespace pengdows.efcore.adonet.mysql;
 ///     this dialect's SQL assumes. A database is the schema, OFFSET needs a LIMIT, and keys come back through
 ///     <c>LAST_INSERT_ID()</c>. GUIDs are stored as <c>CHAR(36)</c> text.
 /// </summary>
-public sealed class MySqlDialect : AdoNetDialect
+public sealed partial class MySqlDialect : AdoNetDialect
 {
     /// <summary>For the common case: the server's sql_mode does not have NO_BACKSLASH_ESCAPES.</summary>
     public static readonly MySqlDialect Instance = new(backslashEscapes: true);
@@ -38,13 +38,45 @@ public sealed class MySqlDialect : AdoNetDialect
     /// </summary>
     public static readonly MySqlDialect MariaDb = new(backslashEscapes: true, name: "MariaDB", mariaDb: true);
 
-    private MySqlDialect(bool backslashEscapes, bool savepoints = true, string? name = null, bool mariaDb = false)
+    private MySqlDialect(bool backslashEscapes, bool savepoints = true, string? name = null, bool mariaDb = false, Version? serverVersion = null)
     {
         Name = name ?? (backslashEscapes ? "MySQL" : "MySQL (NO_BACKSLASH_ESCAPES)");
-        Sql = new MySqlSql(backslashEscapes, savepoints, mariaDb);
+        ServerVersion = serverVersion;
+        Sql = new MySqlSql(backslashEscapes, savepoints, mariaDb, MySqlServerFeatures.For(mariaDb, serverVersion));
     }
 
     public override string Name { get; }
+
+    /// <summary>The server version this dialect was made for (<see cref="ForServerVersion" />); null for a current server.</summary>
+    public Version? ServerVersion { get; }
+
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<(Version, bool), MySqlDialect> Versions = new();
+
+    /// <summary>
+    ///     A dialect for a MySQL or MariaDB server of <paramref name="version" />, which turns off what that server lacks
+    ///     (LATERAL, window functions, JSON_TABLE, the VALUES table constructor, REGEXP_LIKE, expression defaults, a column's
+    ///     SRID, DESC indexes, RENAME COLUMN ...), as Pomelo's <c>MySqlServerVersion</c> and <c>MariaDbServerVersion</c> do.
+    ///     A server that has them all gets <see cref="Instance" /> or <see cref="MariaDb" />; the same version gets the same
+    ///     instance.
+    /// </summary>
+    /// <exception cref="NotSupportedException">The server is older than MySQL 5.7.8 or MariaDB 10.2.4, whose JSON functions this dialect writes.</exception>
+    public static MySqlDialect ForServerVersion(Version version, bool mariaDb = false)
+    {
+        var oldest = mariaDb ? MySqlServerFeatures.OldestMariaDb : MySqlServerFeatures.OldestMySql;
+        if (version < oldest)
+        {
+            throw new NotSupportedException($"{(mariaDb ? "MariaDB" : "MySQL")} {version} is older than {oldest}, the oldest this dialect writes SQL for.");
+        }
+
+        if (MySqlServerFeatures.For(mariaDb, version) == MySqlServerFeatures.For(mariaDb, null))
+        {
+            return mariaDb ? MariaDb : Instance;
+        }
+
+        return Versions.GetOrAdd(
+            (version, mariaDb),
+            key => new MySqlDialect(backslashEscapes: true, name: key.Item2 ? "MariaDB" : "MySQL", mariaDb: key.Item2, serverVersion: key.Item1));
+    }
     public override ISqlDialect Sql { get; }
     public override ITypeMappingDialect TypeMappings { get; } = new MySqlTypeMappings();
     public override IDatabaseCapabilities Capabilities { get; } = new DatabaseCapabilities
@@ -71,10 +103,30 @@ public sealed class MySqlDialect : AdoNetDialect
     ///     This alone cannot tell <see cref="SingleStore" /> apart: its handshake deliberately reports a MySQL-compatible
     ///     version to stay compatible with version-gated clients (confirmed against a real server: <c>VERSION()</c> reads
     ///     <c>5.7.32</c>). <see cref="AutoDetect(DbProviderFactory, string)" /> tells it apart with one extra query; this
-    ///     overload alone cannot, and returns <see cref="Instance" /> for it.
+    ///     overload alone cannot, and returns a MySQL dialect for it. The version in the handshake goes to
+    ///     <see cref="ForServerVersion" />, so an older server gets a dialect that turns off what it lacks.
     /// </summary>
     public static MySqlDialect FromServerVersion(DbConnection connection)
-        => connection.ServerVersion.Contains("mariadb", StringComparison.OrdinalIgnoreCase) ? MariaDb : Instance;
+    {
+        var handshake = connection.ServerVersion;
+        var mariaDb = handshake.Contains("mariadb", StringComparison.OrdinalIgnoreCase);
+        return HandshakeVersion(handshake, mariaDb) is { } version ? ForServerVersion(version, mariaDb) : mariaDb ? MariaDb : Instance;
+    }
+
+    // MySQL's handshake leads with its version ("8.0.36-log"); MariaDB's names itself after its own, which may follow the
+    // 5.5.5- that old clients need ("5.5.5-10.11.6-MariaDB"). Behaviour reference (not copied):
+    // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Infrastructure/ServerVersion.cs
+    private static Version? HandshakeVersion(string handshake, bool mariaDb)
+    {
+        var match = mariaDb ? MariaDbVersion().Match(handshake) : MySqlVersion().Match(handshake);
+        return match.Success ? Version.Parse(match.Groups[1].Value) : null;
+    }
+
+    [System.Text.RegularExpressions.GeneratedRegex(@"(\d+\.\d+\.\d+)-MariaDB", System.Text.RegularExpressions.RegexOptions.IgnoreCase)]
+    private static partial System.Text.RegularExpressions.Regex MariaDbVersion();
+
+    [System.Text.RegularExpressions.GeneratedRegex(@"^(\d+\.\d+\.\d+)")]
+    private static partial System.Text.RegularExpressions.Regex MySqlVersion();
 
     /// <summary>
     ///     <see cref="Instance" />, <see cref="MariaDb" /> or <see cref="SingleStore" />: <paramref name="versionComment" />
@@ -150,10 +202,13 @@ public sealed class MySqlDialect : AdoNetDialect
             .TryAdd<Microsoft.EntityFrameworkCore.Metadata.Conventions.Infrastructure.IConventionSetPlugin, MySqlAttributeConventionPlugin>();
 }
 
-internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = true, bool mariaDb = false) : AnsiSqlDialect
+internal sealed class MySqlSql(bool backslashEscapes, bool savepoints, bool mariaDb, MySqlServerFeatures features) : AnsiSqlDialect
 {
     // MariaDB's DDL differs from MySQL's where its migrations write it (a column's REF_SYSTEM_ID for MySQL's SRID).
     internal bool IsMariaDb => mariaDb;
+
+    // What the server of the dialect's version has (all of it for a current server).
+    internal MySqlServerFeatures Features => features;
 
     public override IsolationLevel DefaultTransactionIsolationLevel => IsolationLevel.ReadCommitted;
     public override bool KeepConnectionOpenAfterSuppressedTransaction => true;
@@ -188,7 +243,8 @@ internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = t
         mariaDb ? "JSON_COMPACT({0})" : "CAST({0} AS JSON)")
     {
         // FOR ORDINALITY numbers the elements in array order.
-        ArrayElements = "JSON_TABLE({0}, '$[*]' COLUMNS ({1} FOR ORDINALITY, {2} {3} PATH '$'))",
+        // Before JSON_TABLE (MySQL 8.0.4, MariaDB 10.6) a primitive collection is queried only as a whole.
+        ArrayElements = features.JsonTable ? "JSON_TABLE({0}, '$[*]' COLUMNS ({1} FOR ORDINALITY, {2} {3} PATH '$'))" : null,
 
         // A JSON_TABLE text column takes the connection's collation as strongly as a table column takes its own, so comparing the
         // two fails when they differ ("Illegal mix of collations"); a _bin collation yields to neither and compares ordinally,
@@ -202,7 +258,8 @@ internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = t
         ArrayElementsHint = "/*+ NO_SEMIJOIN() NO_MERGE() */",
 
         // MariaDB's JSON is LONGTEXT, so = compares spellings (its JSON functions write "[1, 2]", EF writes "[1,2]").
-        Equality = mariaDb ? "JSON_EQUALS({0}, {1})" : null
+        // Before JSON_EQUALS (MariaDB 10.7) the documents are compared compacted: the same whitespace, not the same key order.
+        Equality = !mariaDb ? null : features.JsonEquals ? "JSON_EQUALS({0}, {1})" : "JSON_COMPACT({0}) = JSON_COMPACT({1})"
     };
 
     // MySQL's own quoting, so no session-level mode is needed before this dialect's SQL means what it says.
@@ -220,7 +277,8 @@ internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = t
         Binary = SpatialBinary.SridPrefixedWkb,
         StoresZAndM = false,
         // MariaDB has no axis-order option: its x is always the longitude.
-        FromText = mariaDb ? "ST_GeomFromText({0}, {1})" : "ST_GeomFromText({0}, {1}, 'axis-order=long-lat')",
+        // MySQL before 8.0.1 takes no options, and has no geographic axis order to set.
+        FromText = features.GeometryAxisOrder ? "ST_GeomFromText({0}, {1}, 'axis-order=long-lat')" : "ST_GeomFromText({0}, {1})",
         Functions = new Dictionary<string, string?>
         {
             // MariaDB has only the plural name, and no validity test.
@@ -248,15 +306,18 @@ internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = t
     public override PagingSyntax Paging { get; } = PagingSyntax.LimitOffset(noLimitValue: "18446744073709551615").WithValueLimitsOnly();
     public override KeyRetrieval Keys { get; } = KeyRetrieval.SelectAfter("LAST_INSERT_ID()", "ROW_COUNT()");
     public override DmlSyntax Dml => DmlSyntax.MultiTable;
-    public override FunctionSyntax Functions { get; } = new MySqlFunctions(mariaDb);
+    public override FunctionSyntax Functions { get; } = new MySqlFunctions(mariaDb, features);
     public override string DefaultValues => "() VALUES ()";
-    public override string ValuesRowPrefix => mariaDb ? "" : "ROW";
-    public override LateralJoinSyntax? LateralJoins => mariaDb ? null : LateralJoinSyntax.Iso;
+    public override string ValuesRowPrefix => (mariaDb || !features.TableValueConstructor) ? "" : "ROW";
+    public override LateralJoinSyntax? LateralJoins => features.LateralJoins ? LateralJoinSyntax.Iso : null;
+
+    // MySQL before 8.0, MariaDB before 10.2.
+    public override bool SupportsWindowFunctions => features.WindowFunctions;
 
     // MySQL reads an outer column in a derived table since 8.0.14; MariaDB doesn't (its "Unknown column" in WHERE), as
     // Pomelo's OuterReferenceInMultiLevelSubquery says. Behaviour reference (not copied):
     // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Infrastructure/MariaDbServerVersion.cs
-    public override bool SupportsOuterReferencesInDerivedTables => !mariaDb;
+    public override bool SupportsOuterReferencesInDerivedTables => features.OuterReferencesInDerivedTables;
 
     // Neither driver returns output parameters from a text CALL: each output goes through a user variable, which both
     // drivers take for a missing parameter unless the connection allows user variables. As Pomelo does. Behaviour reference
@@ -287,7 +348,7 @@ internal sealed class MySqlSql(bool backslashEscapes = true, bool savepoints = t
 ///     <c>||</c> means OR. FLOOR and CEILING of a DECIMAL return BIGINT; adding 0.0 keeps the result a decimal. The SECOND
 ///     part is already whole, and CAST has no INTEGER target.
 /// </summary>
-internal sealed class MySqlFunctions(bool mariaDb = false) : FunctionSyntax
+internal sealed class MySqlFunctions(bool mariaDb, MySqlServerFeatures features) : FunctionSyntax
 {
     // TIMESTAMPDIFF counts whole units; it has no MILLISECOND, TICK or NANOSECOND, so microseconds are divided or multiplied.
     // Behaviour reference (not copied):
@@ -311,9 +372,10 @@ internal sealed class MySqlFunctions(bool mariaDb = false) : FunctionSyntax
     // TrimCharacters: once for each end, joined by CONCAT since MySQL has no string-literal concatenation operator.
     // Neither Pomelo nor Oracle's own provider gets this right: Pomelo declines to translate a set of more than one
     // character; Oracle's silently drops the characters and trims whitespace only.
-    public override string? TrimCharacters => "REGEXP_REPLACE({0}, CONCAT('^[', {1}, ']+|[', {1}, ']+$'), '')";
-    public override string? TrimStartCharacters => "REGEXP_REPLACE({0}, CONCAT('^[', {1}, ']+'), '')";
-    public override string? TrimEndCharacters => "REGEXP_REPLACE({0}, CONCAT('[', {1}, ']+$'), '')";
+    // MySQL before 8.0.4 has no REGEXP_REPLACE: a trim of a set is left untranslated there.
+    public override string? TrimCharacters => features.RegexpFunctions ? "REGEXP_REPLACE({0}, CONCAT('^[', {1}, ']+|[', {1}, ']+$'), '')" : null;
+    public override string? TrimStartCharacters => features.RegexpFunctions ? "REGEXP_REPLACE({0}, CONCAT('^[', {1}, ']+'), '')" : null;
+    public override string? TrimEndCharacters => features.RegexpFunctions ? "REGEXP_REPLACE({0}, CONCAT('[', {1}, ']+$'), '')" : null;
 
     // Escaped for a regex character class: a literal ']' must not close the class early, '^' must not negate it, '-' must
     // not be read as a range, and '\' must not escape the following character.
@@ -366,9 +428,10 @@ internal sealed class MySqlFunctions(bool mariaDb = false) : FunctionSyntax
     // 'c': case-sensitive whatever the collation, as .NET's Regex. An empty pattern matches everything in .NET and is an error
     // in MySQL, so it is matched before REGEXP_LIKE sees it. MariaDB has no REGEXP_LIKE; its REGEXP is PCRE, where (?-i)
     // makes the match case-sensitive.
-    public override string? RegexIsMatch => mariaDb
-        ? "CASE WHEN {1} = '' THEN TRUE ELSE {0} REGEXP CONCAT('(?-i)', {1}) END"
-        : "CASE WHEN {1} = '' THEN TRUE ELSE REGEXP_LIKE({0}, {1}, 'c') END";
+    // MySQL before 8.0.4 has no REGEXP_LIKE: its REGEXP is case-sensitive against a binary string.
+    public override string? RegexIsMatch => mariaDb ? "CASE WHEN {1} = '' THEN TRUE ELSE {0} REGEXP CONCAT('(?-i)', {1}) END"
+        : features.RegexpFunctions ? "CASE WHEN {1} = '' THEN TRUE ELSE REGEXP_LIKE({0}, {1}, 'c') END"
+        : "CASE WHEN {1} = '' THEN TRUE ELSE {0} REGEXP BINARY {1} END";
     public override string? NewGuid => "UUID()";
 
     public override string? DayOfYear => "DAYOFYEAR({0})";

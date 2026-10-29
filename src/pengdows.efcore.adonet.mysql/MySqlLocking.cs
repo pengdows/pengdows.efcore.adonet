@@ -41,6 +41,8 @@ internal sealed class MySqlQuerySqlGenerator(
     QuerySqlGeneratorDependencies dependencies, ISqlDialect dialect, ITypeMappingDialect typeMappings, bool reverseNullOrdering)
     : pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator(dependencies, dialect, typeMappings, reverseNullOrdering)
 {
+    private readonly bool _tableValueConstructor = dialect is not MySqlSql { Features.TableValueConstructor: false };
+
     protected override Expression VisitSelect(SelectExpression selectExpression)
     {
         // Read only: never remove a tag, so the same immutable expression tree can be visited (and cached) again.
@@ -58,6 +60,37 @@ internal sealed class MySqlQuerySqlGenerator(
         }
 
         return result;
+    }
+
+    // A server without a table value constructor (MySQL before 8.0.19, MariaDB before 10.3.3) takes each row as its own
+    // SELECT, joined by UNION ALL; the first names the columns. Behaviour reference (not copied): Pomelo's ValuesWithRows and
+    // Values support flags:
+    // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Infrastructure/MySqlServerVersion.cs
+    protected override void GenerateValues(ValuesExpression valuesExpression)
+    {
+        if (_tableValueConstructor || (valuesExpression.RowValues is not { Count: > 0 } rows))
+        {
+            base.GenerateValues(valuesExpression);
+            return;
+        }
+
+        for (var row = 0; row < rows.Count; row++)
+        {
+            Sql.Append(row == 0 ? "SELECT " : " UNION ALL SELECT ");
+            for (var column = 0; column < rows[row].Values.Count; column++)
+            {
+                if (column > 0)
+                {
+                    Sql.Append(", ");
+                }
+
+                Visit(rows[row].Values[column]);
+                if (row == 0)
+                {
+                    Sql.Append(AliasSeparator).Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(valuesExpression.ColumnNames[column]));
+                }
+            }
+        }
     }
 }
 
