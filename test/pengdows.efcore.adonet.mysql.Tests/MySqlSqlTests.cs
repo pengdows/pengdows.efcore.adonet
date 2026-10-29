@@ -24,7 +24,7 @@ public class MySqlSqlTests
 
     private static BlogContext Context(Action<DbContextOptionsBuilder> configure)
     {
-        var builder = new DbContextOptionsBuilder<BlogContext>();
+        var builder = new DbContextOptionsBuilder<BlogContext>().AllowManyDialects();
         configure(builder);
         return new BlogContext(builder.Options);
     }
@@ -54,7 +54,7 @@ public class MySqlSqlTests
     [InlineData(true)]
     public void A_sized_text_cast_yields_to_the_columns_collation(bool mariaDb)
     {
-        using var context = new ServerContext(new DbContextOptionsBuilder<ServerContext>()
+        using var context = new ServerContext(new DbContextOptionsBuilder<ServerContext>().AllowManyDialects()
             .UseAdoNetMySql("Server=localhost", o => o.UseDialect(mariaDb ? MySqlDialect.MariaDb : MySqlDialect.Instance))
             .Options);
 
@@ -85,7 +85,7 @@ public class SingleStoreSavepointTests
     [Fact]
     public async Task SingleStore_has_no_savepoints_whatever_the_driver_reports()
     {
-        await using var context = new BlogContext(new DbContextOptionsBuilder<BlogContext>()
+        await using var context = new BlogContext(new DbContextOptionsBuilder<BlogContext>().AllowManyDialects()
             .UseAdoNetMySql("Server=localhost", o => o.UseDialect(MySqlDialect.SingleStore))
             .Options);
 
@@ -105,7 +105,7 @@ public class MySqlDefaultValueTests
 {
     private static string Sql(string columnType, object? defaultValue = null, string? defaultValueSql = null)
     {
-        using var context = new BlogContext(new DbContextOptionsBuilder<BlogContext>().UseAdoNetMySql("Server=localhost").Options);
+        using var context = new BlogContext(new DbContextOptionsBuilder<BlogContext>().AllowManyDialects().UseAdoNetMySql("Server=localhost").Options);
         var operation = new Microsoft.EntityFrameworkCore.Migrations.Operations.AddColumnOperation
         {
             Table = "T", Name = "C", ClrType = typeof(string), ColumnType = columnType, DefaultValue = defaultValue, DefaultValueSql = defaultValueSql
@@ -142,7 +142,7 @@ public class MySqlAutoIncrementKeyTests
 {
     private static string Sql(params string[] primaryKey)
     {
-        using var context = new BlogContext(new DbContextOptionsBuilder<BlogContext>().UseAdoNetMySql("Server=localhost").Options);
+        using var context = new BlogContext(new DbContextOptionsBuilder<BlogContext>().AllowManyDialects().UseAdoNetMySql("Server=localhost").Options);
         var owner = new Microsoft.EntityFrameworkCore.Migrations.Operations.AddColumnOperation { Table = "Lines", Name = "OwnerId", ClrType = typeof(int) };
         var id = new Microsoft.EntityFrameworkCore.Migrations.Operations.AddColumnOperation { Table = "Lines", Name = "Id", ClrType = typeof(int) };
         id.AddAnnotation(AdoNetAnnotationNames.Identity, true);
@@ -191,7 +191,7 @@ public class MySqlNamedColumnTypeTests
     [Fact]
     public void A_boolean_column_type_is_written_as_named()
     {
-        using var context = new FlaggedContext(new DbContextOptionsBuilder<FlaggedContext>().UseAdoNetMySql("Server=localhost").Options);
+        using var context = new FlaggedContext(new DbContextOptionsBuilder<FlaggedContext>().AllowManyDialects().UseAdoNetMySql("Server=localhost").Options);
         var script = context.Database.GenerateCreateScript();
 
         Assert.Contains($"{Q}Flag{Q} boolean NOT NULL", script);
@@ -252,7 +252,7 @@ public class MariaDbSqlTests
     [Fact]
     public void A_query_with_a_lateral_join_is_refused_on_MariaDb()
     {
-        using var context = new BlogContext(new DbContextOptionsBuilder<BlogContext>()
+        using var context = new BlogContext(new DbContextOptionsBuilder<BlogContext>().AllowManyDialects()
             .UseAdoNetMySql("Server=localhost", o => o.UseDialect(MySqlDialect.MariaDb))
             .Options);
 

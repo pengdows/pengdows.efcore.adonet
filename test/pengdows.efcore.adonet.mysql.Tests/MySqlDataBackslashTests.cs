@@ -40,7 +40,7 @@ public class MySqlDataBackslashTests(MySqlDataFixture fixture) : IClassFixture<M
         => ValueTask.CompletedTask;
 
     private BlogContext Context()
-        => new(new DbContextOptionsBuilder<BlogContext>()
+        => new(new DbContextOptionsBuilder<BlogContext>().AllowManyDialects()
             .UseAdoNet(fixture.Factory, fixture.ConnectionString, MySqlDialect.NoBackslashEscapes)
             .Options);
 

@@ -85,7 +85,7 @@ public class MySqlBackslashTests(MySqlFixture fixture) : IClassFixture<MySqlFixt
         }
 
         await using var context = new pengdows.efcore.adonet.Testing.BlogContext(
-            new Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<pengdows.efcore.adonet.Testing.BlogContext>()
+            new Microsoft.EntityFrameworkCore.DbContextOptionsBuilder<pengdows.efcore.adonet.Testing.BlogContext>().AllowManyDialects()
                 .UseAdoNet(MySqlConnector.MySqlConnectorFactory.Instance, fixture.ConnectionString, MySqlDialect.NoBackslashEscapes)
                 .Options);
 
@@ -159,7 +159,7 @@ public class MySqlSizedStoreTypeTests
     [Fact]
     public void A_fixed_length_property_is_created_as_a_fixed_length_column()
     {
-        using var context = new CodedContext(new DbContextOptionsBuilder<CodedContext>().UseAdoNetMySql("Server=localhost").Options);
+        using var context = new CodedContext(new DbContextOptionsBuilder<CodedContext>().AllowManyDialects().UseAdoNetMySql("Server=localhost").Options);
 
         var script = context.Database.GenerateCreateScript();
 

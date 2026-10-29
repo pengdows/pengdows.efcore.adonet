@@ -20,7 +20,7 @@ public sealed class MySqlOracleTrimBugTests(MySqlFixture fixture) : IClassFixtur
     {
         var database = "oracle_trim_bug_" + Guid.NewGuid().ToString("N");
         var connectionString = fixture.ConnectionStringFor(database) + ";AllowPublicKeyRetrieval=true";
-        await using var context = new TrimBugContext(new DbContextOptionsBuilder<TrimBugContext>().UseMySQL(connectionString).Options);
+        await using var context = new TrimBugContext(global::Microsoft.EntityFrameworkCore.MySQLDbContextOptionsExtensions.UseMySQL(new DbContextOptionsBuilder<TrimBugContext>().AllowManyDialects(), connectionString).Options);
         await context.Database.EnsureDeletedAsync(Ct);
         await context.Database.EnsureCreatedAsync(Ct);
 

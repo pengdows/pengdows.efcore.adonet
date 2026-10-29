@@ -13,7 +13,7 @@ public class MySqlFixture : ContainerFixture
     public override IAdoNetDialect ExpectedDialect => MySqlDialect.Instance;
 
     protected override void UseProvider(DbContextOptionsBuilder builder)
-        => builder.UseAdoNetMySql(ConnectionString);
+        => builder.AllowManyDialects().UseAdoNetMySql(ConnectionString);
 
     // A connection the application opens itself must already allow the user variables the dialect reads procedure outputs
     // through; the provider adds the option only to connection strings and closed connections.
@@ -78,7 +78,7 @@ public sealed class MySqlDataFixture : MySqlFixture
         => base.ConnectionString + ";AllowPublicKeyRetrieval=true";
 
     protected override void UseProvider(DbContextOptionsBuilder builder)
-        => builder.UseAdoNet(Factory, ConnectionString, MySqlDialect.Instance);
+        => builder.AllowManyDialects().UseAdoNet(Factory, ConnectionString, MySqlDialect.Instance);
 }
 
 public class MySqlDataConformanceTests(MySqlDataFixture fixture) : ProviderConformanceTests<MySqlDataFixture>(fixture);

@@ -68,7 +68,7 @@ public class MySqlMigrationApiTests
 
     private static BlogContext Context(FakeMySql? db = null, bool mariaDb = false)
         => db == null
-            ? new BlogContext(new DbContextOptionsBuilder<BlogContext>()
+            ? new BlogContext(new DbContextOptionsBuilder<BlogContext>().AllowManyDialects()
                 .UseAdoNetMySql("Server=localhost", o => o.UseDialect(mariaDb ? MySqlDialect.MariaDb : MySqlDialect.Instance))
                 .Options)
             : db.Context<BlogContext>(o => new BlogContext(o), mariaDb);

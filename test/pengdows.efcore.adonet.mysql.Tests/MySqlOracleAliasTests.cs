@@ -74,7 +74,7 @@ public class MySqlOracleAliasTests
 
     private static BookContext Context(Action<DbContextOptionsBuilder> configure)
     {
-        var builder = new DbContextOptionsBuilder<BookContext>();
+        var builder = new DbContextOptionsBuilder<BookContext>().AllowManyDialects();
         configure(builder);
         return new BookContext(builder.Options);
     }
@@ -84,7 +84,7 @@ public class MySqlOracleAliasTests
     {
         using var withString = Context(o => o.UseMySQL("Server=localhost"));
         using var withNone = Context(o => o.UseMySQL());
-        using var generic = new BookContext(new DbContextOptionsBuilder<BookContext>().UseMySQL("Server=localhost").Options);
+        using var generic = new BookContext(new DbContextOptionsBuilder<BookContext>().AllowManyDialects().UseMySQL("Server=localhost").Options);
 
         Assert.Same(MySqlDialect.Instance, withString.GetService<IAdoNetDialect>());
         Assert.Same(MySqlDialect.Instance, withNone.GetService<IAdoNetDialect>());
@@ -96,7 +96,7 @@ public class MySqlOracleAliasTests
     {
         var db = new FakeMySql();
         db.Returns([("Name", "fiction")]);
-        await using var context = new BookContext(db.Logged(new DbContextOptionsBuilder<BookContext>().UseMySQL(db.Connection)).Options);
+        await using var context = new BookContext(db.Logged(new DbContextOptionsBuilder<BookContext>().AllowManyDialects().UseMySQL(db.Connection)).Options);
 
         var names = await context.Tags.Select(t => t.Name).ToListAsync(Ct);
 
@@ -131,7 +131,7 @@ public class MySqlOracleAliasTests
     public void Add_mysql_server_registers_the_context_and_add_entity_framework_mysql_the_provider()
     {
         var services = new ServiceCollection();
-        services.AddMySQLServer<BookContext>("Server=localhost", m => m.EnableRetryOnFailure(), o => o.EnableSensitiveDataLogging());
+        services.AddMySQLServer<BookContext>("Server=localhost", m => m.EnableRetryOnFailure(), o => o.EnableSensitiveDataLogging().AllowManyDialects());
         using var provider = services.BuildServiceProvider();
         using var scope = provider.CreateScope();
         var internalServices = new ServiceCollection().AddEntityFrameworkMySQL().BuildServiceProvider();
@@ -168,7 +168,7 @@ public class MySqlOracleAliasTests
     {
         var db = new FakeMySql();
         db.Connection.EnqueueScalarResult(0L);
-        await using var context = new BookContext(db.Logged(new DbContextOptionsBuilder<BookContext>().UseMySQL(db.Connection)).Options);
+        await using var context = new BookContext(db.Logged(new DbContextOptionsBuilder<BookContext>().AllowManyDialects().UseMySQL(db.Connection)).Options);
 
         Assert.True(await context.Database.EnsureCreatedAsync(Ct));
 
@@ -183,7 +183,7 @@ public class MySqlOracleAliasTests
     {
         var db = new FakeMySql();
         db.Returns([("Relevance", 0.5)]);
-        await using var context = new BookContext(db.Logged(new DbContextOptionsBuilder<BookContext>().UseMySQL(db.Connection)).Options);
+        await using var context = new BookContext(db.Logged(new DbContextOptionsBuilder<BookContext>().AllowManyDialects().UseMySQL(db.Connection)).Options);
 
         var relevance = await context.Books
             .Select(b => EF.Functions.Match(new[] { b.Summary, b.Title }, "+cast", MySQLMatchSearchMode.Boolean))

@@ -7,7 +7,7 @@ namespace pengdows.efcore.adonet.mysql.Tests;
 public class MySqlLockingTests
 {
     private static BlogContext Context()
-        => new(new DbContextOptionsBuilder<BlogContext>().UseAdoNetMySql("Server=localhost").Options);
+        => new(new DbContextOptionsBuilder<BlogContext>().AllowManyDialects().UseAdoNetMySql("Server=localhost").Options);
 
     [Fact]
     public void For_update_appends_for_update()

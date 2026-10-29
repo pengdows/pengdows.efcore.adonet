@@ -32,7 +32,7 @@ public class MySqlJsonFunctionsTests
     }
 
     private static CustomerContext Context(bool mariaDb = false)
-        => new(new DbContextOptionsBuilder<CustomerContext>()
+        => new(new DbContextOptionsBuilder<CustomerContext>().AllowManyDialects()
             .UseAdoNetMySql("Server=localhost", o => o.UseDialect(mariaDb ? MySqlDialect.MariaDb : MySqlDialect.Instance))
             .Options);
 
@@ -190,7 +190,7 @@ public class MySqlJsonFunctionsTests
     public async Task Json_extract_reads_an_object_and_a_scalar_back()
     {
         await using var connection = new pengdows.crud.fakeDb.fakeDbConnection { ConnectionString = "Data Source=fake;EmulatedProduct=MySql" };
-        await using var context = new CustomerContext(new DbContextOptionsBuilder<CustomerContext>()
+        await using var context = new CustomerContext(new DbContextOptionsBuilder<CustomerContext>().AllowManyDialects()
             .UseAdoNetMySql(connection, contextOwnsConnection: false)
             .Options);
         connection.EnqueueReaderResult([new Dictionary<string, object?> { ["c0"] = "{\"City\": \"Oslo\"}" }]);

@@ -53,14 +53,14 @@ public abstract class EntryPointConformanceTests<TEntryPoints>
 
     [Fact]
     public void A_connection_string()
-        => UsesTheDialect(_entryPoints.UseConnectionString(new DbContextOptionsBuilder<BlogContext>(), _entryPoints.ConnectionString).Options);
+        => UsesTheDialect(_entryPoints.UseConnectionString(new DbContextOptionsBuilder<BlogContext>().AllowManyServiceProviders(), _entryPoints.ConnectionString).Options);
 
     [Fact]
     public void A_connection_the_context_may_own()
     {
         using var connection = _entryPoints.Factory.CreateConnection()!;
         connection.ConnectionString = _entryPoints.ConnectionString;
-        var options = _entryPoints.UseConnection(new DbContextOptionsBuilder<BlogContext>(), connection, false, o => o.CommandTimeout(5)).Options;
+        var options = _entryPoints.UseConnection(new DbContextOptionsBuilder<BlogContext>().AllowManyServiceProviders(), connection, false, o => o.CommandTimeout(5)).Options;
 
         UsesTheDialect(options);
         using var context = new BlogContext(options);
@@ -73,13 +73,13 @@ public abstract class EntryPointConformanceTests<TEntryPoints>
     {
         using var dataSource = _entryPoints.Factory.CreateDataSource(_entryPoints.ConnectionString);
 
-        UsesTheDialect(_entryPoints.UseDataSource(new DbContextOptionsBuilder<BlogContext>(), dataSource).Options);
+        UsesTheDialect(_entryPoints.UseDataSource(new DbContextOptionsBuilder<BlogContext>().AllowManyServiceProviders(), dataSource).Options);
     }
 
     [Fact]
     public void A_connection_string_set_later()
     {
-        using var context = new BlogContext(_entryPoints.UseNoConnection(new DbContextOptionsBuilder<BlogContext>()).Options);
+        using var context = new BlogContext(_entryPoints.UseNoConnection(new DbContextOptionsBuilder<BlogContext>().AllowManyServiceProviders()).Options);
         context.Database.SetConnectionString(_entryPoints.ConnectionString);
 
         Assert.Same(_entryPoints.Dialect, context.GetService<IAdoNetDialect>());
@@ -89,7 +89,7 @@ public abstract class EntryPointConformanceTests<TEntryPoints>
     [Fact]
     public void The_non_generic_builder_works_too()
     {
-        var builder = new DbContextOptionsBuilder<BlogContext>();
+        var builder = new DbContextOptionsBuilder<BlogContext>().AllowManyServiceProviders();
         _entryPoints.UseConnectionString((DbContextOptionsBuilder)builder, _entryPoints.ConnectionString);
 
         UsesTheDialect(builder.Options);

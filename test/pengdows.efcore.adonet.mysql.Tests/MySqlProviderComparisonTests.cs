@@ -202,10 +202,11 @@ public sealed class MySqlProviderComparisonTests(MySqlFixture fixture, ITestOutp
 
     private static ComparisonContext CreateContext(string connectionString, ProviderKind provider)
     {
-        var options = new DbContextOptionsBuilder<ComparisonContext>();
+        var options = new DbContextOptionsBuilder<ComparisonContext>().AllowManyDialects();
         if (provider == ProviderKind.Oracle)
         {
-            options.UseMySQL(connectionString);
+            // Oracle's own UseMySQL: this provider's Oracle-named alias would otherwise bind first.
+            global::Microsoft.EntityFrameworkCore.MySQLDbContextOptionsExtensions.UseMySQL(options, connectionString);
         }
         else if (provider == ProviderKind.OursMySqlData)
         {

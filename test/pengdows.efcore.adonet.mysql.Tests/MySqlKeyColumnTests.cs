@@ -16,7 +16,7 @@ public class MySqlKeyColumnTests
     [Fact]
     public void Key_and_index_columns_are_bounded()
     {
-        using var context = new KeyedContext(new DbContextOptionsBuilder<KeyedContext>().UseAdoNetMySql("Server=localhost").Options);
+        using var context = new KeyedContext(new DbContextOptionsBuilder<KeyedContext>().AllowManyDialects().UseAdoNetMySql("Server=localhost").Options);
         var entity = context.GetService<IDesignTimeModel>().Model.FindEntityType(typeof(Keyed))!;
         string Column(string property)
             => entity.FindProperty(property)!.GetColumnType();
@@ -85,7 +85,7 @@ public class MySqlDateTimeParameterTests
     [Fact]
     public void A_date_time_parameter_binds_as_DateTime()
     {
-        using var context = new pengdows.efcore.adonet.Testing.BlogContext(new DbContextOptionsBuilder<pengdows.efcore.adonet.Testing.BlogContext>().UseAdoNetMySql("Server=localhost").Options);
+        using var context = new pengdows.efcore.adonet.Testing.BlogContext(new DbContextOptionsBuilder<pengdows.efcore.adonet.Testing.BlogContext>().AllowManyDialects().UseAdoNetMySql("Server=localhost").Options);
 
         var mapping = context.GetService<Microsoft.EntityFrameworkCore.Storage.IRelationalTypeMappingSource>().FindMapping(typeof(DateTime))!;
 

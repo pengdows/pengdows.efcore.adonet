@@ -58,7 +58,7 @@ public class MySqlAnnotationCodeGeneratorTests
 
     private static (IModel Model, IAnnotationCodeGenerator Generator) Design()
     {
-        using var context = new PlaceContext(new DbContextOptionsBuilder<PlaceContext>()
+        using var context = new PlaceContext(new DbContextOptionsBuilder<PlaceContext>().AllowManyDialects()
             .UseAdoNetMySql("Server=localhost", o => o.UseNetTopologySuite())
             .Options);
 

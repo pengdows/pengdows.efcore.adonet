@@ -31,7 +31,7 @@ public class MySqlDbFunctionsTests
     }
 
     private static ArticleContext Context(bool mariaDb)
-        => new(new DbContextOptionsBuilder<ArticleContext>()
+        => new(new DbContextOptionsBuilder<ArticleContext>().AllowManyDialects()
             .UseAdoNetMySql("Server=localhost", o => o.UseDialect(mariaDb ? MySqlDialect.MariaDb : MySqlDialect.Instance))
             .Options);
 

@@ -261,11 +261,11 @@ public abstract class ConnectionConformanceTests<TFixture>(TFixture fixture) : I
         var services = new ServiceCollection();
         if (generic)
         {
-            services.AddDbContext<ConfiguredContext>(b => b.UseAdoNet(Fixture.Factory, Fixture.ConnectionString, Dialect));
+            services.AddDbContext<ConfiguredContext>(b => b.AllowManyServiceProviders().UseAdoNet(Fixture.Factory, Fixture.ConnectionString, Dialect));
         }
         else
         {
-            services.AddScoped(_ => new DbContextOptionsBuilder().UseAdoNet(Fixture.Factory, Fixture.ConnectionString, Dialect).Options);
+            services.AddScoped(_ => new DbContextOptionsBuilder().AllowManyServiceProviders().UseAdoNet(Fixture.Factory, Fixture.ConnectionString, Dialect).Options);
             services.AddScoped(p => new ConfiguredContext(p.GetRequiredService<DbContextOptions>()));
         }
 
@@ -285,7 +285,7 @@ public abstract class ConnectionConformanceTests<TFixture>(TFixture fixture) : I
             .Build();
         var services = new ServiceCollection()
             .AddSingleton<IConfiguration>(configuration)
-            .AddDbContext<ConfiguredContext>(b => b.UseAdoNet(Fixture.Factory, "Name=ConnectionStrings:Blogs", Dialect));
+            .AddDbContext<ConfiguredContext>(b => b.AllowManyServiceProviders().UseAdoNet(Fixture.Factory, "Name=ConnectionStrings:Blogs", Dialect));
 
         await using var provider = services.BuildServiceProvider();
         await using var scope = provider.CreateAsyncScope();
@@ -320,6 +320,7 @@ public abstract class ConnectionConformanceTests<TFixture>(TFixture fixture) : I
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             OptionsWereConfigured = optionsBuilder.IsConfigured;
+            optionsBuilder.AllowManyServiceProviders();
             _configure?.Invoke(optionsBuilder);
             if (_services != null)
             {

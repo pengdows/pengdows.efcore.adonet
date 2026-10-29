@@ -87,7 +87,7 @@ public class MySqlServerVersionTests
 
     private static DbContextOptionsBuilder<TContext> Options<TContext>(MySqlDialect dialect)
         where TContext : DbContext
-        => new DbContextOptionsBuilder<TContext>()
+        => new DbContextOptionsBuilder<TContext>().AllowManyDialects()
             .UseAdoNetMySql("Server=localhost", o => o.UseDialect(dialect).UseNetTopologySuite())
             .UseInternalServiceProvider(Provider(dialect));
 

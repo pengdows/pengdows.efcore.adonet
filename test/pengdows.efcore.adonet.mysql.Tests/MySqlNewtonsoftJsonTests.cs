@@ -52,7 +52,7 @@ public class MySqlNewtonsoftJsonTests
     }
 
     private static CustomerContext Context(bool mariaDb = false)
-        => new(new DbContextOptionsBuilder<CustomerContext>()
+        => new(new DbContextOptionsBuilder<CustomerContext>().AllowManyDialects()
             .UseAdoNetMySql("Server=localhost", o => o.UseDialect(mariaDb ? MySqlDialect.MariaDb : MySqlDialect.Instance).UseNewtonsoftJson())
             .Isolated("newtonsoft-json " + mariaDb)
             .Options);
@@ -141,7 +141,7 @@ public class MySqlNewtonsoftJsonTests
         bool perProperty,
         bool tracked)
     {
-        var options = new DbContextOptionsBuilder()
+        var options = new DbContextOptionsBuilder().AllowManyDialects()
             .UseAdoNetMySql("Server=localhost", o => o.UseNewtonsoftJson(everyColumn))
             .Isolated("newtonsoft-json " + everyColumn)
             .Options;

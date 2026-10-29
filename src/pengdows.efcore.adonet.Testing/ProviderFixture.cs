@@ -45,7 +45,7 @@ public abstract class ProviderFixture : IAsyncLifetime
         {
             if (_options == null)
             {
-                var builder = new DbContextOptionsBuilder<BlogContext>();
+                var builder = new DbContextOptionsBuilder<BlogContext>().AllowManyServiceProviders();
                 UseProvider(builder);
                 _options = builder.Options;
             }
@@ -70,7 +70,7 @@ public abstract class ProviderFixture : IAsyncLifetime
     public TContext CreateContext<TContext>(Func<DbContextOptions<TContext>, TContext> create, Action<AdoNetDbContextOptionsBuilder> configure)
         where TContext : DbContext
     {
-        var builder = new DbContextOptionsBuilder<TContext>();
+        var builder = new DbContextOptionsBuilder<TContext>().AllowManyServiceProviders();
         UseProvider(builder);
         configure(new AdoNetDbContextOptionsBuilder(builder));
         return create(builder.ForTestMigrations().Options);

@@ -58,7 +58,7 @@ public class MySqlMicrosoftJsonTests
     }
 
     private static CustomerContext Context(bool mariaDb = false)
-        => new(new DbContextOptionsBuilder<CustomerContext>()
+        => new(new DbContextOptionsBuilder<CustomerContext>().AllowManyDialects()
             .UseAdoNetMySql("Server=localhost", o => o.UseDialect(mariaDb ? MySqlDialect.MariaDb : MySqlDialect.Instance).UseMicrosoftJson())
             .Isolated("microsoft-json " + mariaDb)
             .Options);
@@ -173,7 +173,7 @@ public class MySqlMicrosoftJsonTests
         bool perProperty,
         bool tracked)
     {
-        var options = new DbContextOptionsBuilder()
+        var options = new DbContextOptionsBuilder().AllowManyDialects()
             .UseAdoNetMySql("Server=localhost", o => o.UseMicrosoftJson(everyColumn))
             .Isolated("microsoft-json " + everyColumn)
             .Options;

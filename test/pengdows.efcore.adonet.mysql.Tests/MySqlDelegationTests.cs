@@ -66,7 +66,7 @@ public class MySqlDelegationTests
     private static NoteContext Context(string name, FakeMySql? db = null)
         => db == null
             ? new NoteContext(
-                new DbContextOptionsBuilder<NoteContext>().UseAdoNetMySql("Server=localhost").ReplaceService<IModelCacheKeyFactory, ByName>().Options,
+                new DbContextOptionsBuilder<NoteContext>().AllowManyDialects().UseAdoNetMySql("Server=localhost").ReplaceService<IModelCacheKeyFactory, ByName>().Options,
                 name,
                 Configurations[name])
             : db.Context<NoteContext>(

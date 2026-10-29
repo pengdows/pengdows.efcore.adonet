@@ -15,7 +15,7 @@ public sealed class MariaDbFixture : MySqlFixture
     public override IAdoNetDialect ExpectedDialect => MySqlDialect.MariaDb;
 
     protected override void UseProvider(DbContextOptionsBuilder builder)
-        => builder.UseAdoNetMySql(ConnectionString, o => o.UseDialect(MySqlDialect.MariaDb));
+        => builder.AllowManyDialects().UseAdoNetMySql(ConnectionString, o => o.UseDialect(MySqlDialect.MariaDb));
 
     protected override IDatabaseContainer CreateContainer()
         // As root: the database-creator tests create and drop databases, which the container's own user may not.

@@ -32,7 +32,7 @@ public sealed class FakeMySql
         Action<DbContextOptionsBuilder<TContext>>? options = null)
         where TContext : DbContext
     {
-        var builder = new DbContextOptionsBuilder<TContext>()
+        var builder = new DbContextOptionsBuilder<TContext>().AllowManyDialects()
             .UseAdoNetMySql(Connection, contextOwnsConnection: false, o =>
             {
                 o.UseDialect(mariaDb ? MySqlDialect.MariaDb : MySqlDialect.Instance);

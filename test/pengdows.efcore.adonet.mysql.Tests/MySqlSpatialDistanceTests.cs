@@ -28,7 +28,7 @@ public class MySqlSpatialDistanceTests
     }
 
     private static PlaceContext Context(bool mariaDb)
-        => new(new DbContextOptionsBuilder<PlaceContext>()
+        => new(new DbContextOptionsBuilder<PlaceContext>().AllowManyDialects()
             .UseAdoNetMySql("Server=localhost", o => o.UseDialect(mariaDb ? MySqlDialect.MariaDb : MySqlDialect.Instance).UseMySqlNetTopologySuite())
             .Isolated("mysql-nts " + mariaDb)
             .Options);

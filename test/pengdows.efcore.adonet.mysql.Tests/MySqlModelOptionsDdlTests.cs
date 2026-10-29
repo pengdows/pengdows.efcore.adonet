@@ -63,7 +63,7 @@ public class MySqlModelOptionsDdlTests
     }
 
     private static ShelfContext Context(bool mariaDb)
-        => new(new DbContextOptionsBuilder<ShelfContext>()
+        => new(new DbContextOptionsBuilder<ShelfContext>().AllowManyDialects()
             .UseAdoNetMySql("Server=localhost", o =>
             {
                 o.UseDialect(mariaDb ? MySqlDialect.MariaDb : MySqlDialect.Instance);
