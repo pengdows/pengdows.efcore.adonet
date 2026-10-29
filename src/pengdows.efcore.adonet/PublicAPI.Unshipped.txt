@@ -751,6 +751,8 @@ virtual pengdows.efcore.adonet.FunctionSyntax.FractionalModulo.get -> string?
 virtual pengdows.efcore.adonet.FunctionSyntax.DecimalDivide.get -> string?
 pengdows.efcore.adonet.ISqlDialect.KeysWithoutReturning.get -> pengdows.efcore.adonet.SelectAfterKeyRetrieval?
 virtual pengdows.efcore.adonet.AnsiSqlDialect.KeysWithoutReturning.get -> pengdows.efcore.adonet.SelectAfterKeyRetrieval?
+pengdows.efcore.adonet.ISqlDialect.ReturningClauseAnnotation.get -> string!
+virtual pengdows.efcore.adonet.AnsiSqlDialect.ReturningClauseAnnotation.get -> string!
 const pengdows.efcore.adonet.AdoNetAnnotationNames.UseReturningClause = "AdoNet:UseReturningClause" -> string!
 static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffQuarter(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTime start, System.DateTime end) -> int
 static pengdows.efcore.adonet.AdoNetDbFunctionsExtensions.DateDiffQuarter(this Microsoft.EntityFrameworkCore.DbFunctions! _, System.DateTime? start, System.DateTime? end) -> int?

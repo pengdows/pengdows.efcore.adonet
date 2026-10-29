@@ -124,6 +124,12 @@ public interface ISqlDialect
     /// </summary>
     SelectAfterKeyRetrieval? KeysWithoutReturning { get; }
 
+    /// <summary>
+    ///     The annotation that turns RETURNING off for a table, named by the dialect where it names one;
+    ///     <see cref="AdoNetAnnotationNames.UseReturningClause" /> where the dialect names none.
+    /// </summary>
+    string ReturningClauseAnnotation => AdoNetAnnotationNames.UseReturningClause;
+
     /// <summary>How <c>ExecuteDelete</c>/<c>ExecuteUpdate</c> are written.</summary>
     DmlSyntax Dml { get; }
 

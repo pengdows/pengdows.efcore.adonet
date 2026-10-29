@@ -54,6 +54,26 @@ public class SqliteModelOptionsTests
         Assert.Contains("RETURNING \"Id\"", Assert.Single(_commands));
     }
 
+    // A model written against this provider's earlier annotation name: still leaves out RETURNING.
+    [Fact]
+    public async Task A_table_marked_with_the_legacy_annotation_name_still_leaves_out_returning()
+    {
+        await using var context = new LegacyTriggeredContext(new DbContextOptionsBuilder<LegacyTriggeredContext>()
+            .UseAdoNetSqlite(_connection)
+            .LogTo(m => _commands.Add(m.ReplaceLineEndings("\n")), [RelationalEventId.CommandExecuted])
+            .Options);
+        _connection.EnqueueReaderResult([new Dictionary<string, object?> { ["Id"] = 7 }]);
+        var audited = new Audited { Name = "x" };
+
+        context.Add(audited);
+        await context.SaveChangesAsync(Ct);
+
+        Assert.Equal(7, audited.Id);
+        var command = Assert.Single(_commands);
+        Assert.DoesNotContain("RETURNING", command);
+        Assert.False(context.Model.FindEntityType(typeof(Audited))!.IsSqlReturningClauseUsed());
+    }
+
     [Fact]
     public void The_option_is_read_back_and_can_be_turned_on_again()
     {
@@ -63,6 +83,16 @@ public class SqliteModelOptionsTests
         Assert.False(model.FindEntityType(typeof(Audited))!.IsSqlReturningClauseUsed());
         Assert.True(model.FindEntityType(typeof(Plain))!.IsSqlReturningClauseUsed());
         Assert.True(model.FindEntityType(typeof(Reenabled))!.IsSqlReturningClauseUsed());
+    }
+
+    [Fact]
+    public void The_option_is_stored_under_the_upstream_annotation_name()
+    {
+        using var context = Context();
+        var model = context.GetService<IDesignTimeModel>().Model;
+
+        Assert.Equal(false, model.FindEntityType(typeof(Audited))!.FindAnnotation("Sqlite:UseSqlReturningClause")?.Value);
+        Assert.Null(model.FindEntityType(typeof(Audited))!.FindAnnotation("AdoNet:UseReturningClause"));
     }
 
     [Fact]
@@ -102,7 +132,7 @@ public class SqliteModelOptionsTests
         Assert.Contains("SELECT changes();", details);
         Assert.DoesNotContain("RETURNING", details);
         Assert.Contains("RETURNING 1", command[command.IndexOf("DELETE FROM \"Plain\"\n", StringComparison.Ordinal)..].Split("DELETE FROM \"PlainDetails\"")[0]);
-        Assert.False(context.Model.FindEntityType(typeof(Plain))!.FindMappingFragment(StoreObjectIdentifier.Table("PlainDetails"))![AdoNetAnnotationNames.UseReturningClause] as bool?);
+        Assert.False(context.Model.FindEntityType(typeof(Plain))!.FindMappingFragment(StoreObjectIdentifier.Table("PlainDetails"))!["Sqlite:UseSqlReturningClause"] as bool?);
     }
 
     public sealed class SplitContext(DbContextOptions<SplitContext> options) : DbContext(options)
@@ -131,6 +161,12 @@ public class SqliteModelOptionsTests
     public class Reenabled
     {
         public int Id { get; set; }
+    }
+
+    public sealed class LegacyTriggeredContext(DbContextOptions<LegacyTriggeredContext> options) : DbContext(options)
+    {
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+            => modelBuilder.Entity<Audited>().HasAnnotation("AdoNet:UseReturningClause", false);
     }
 
     public sealed class TriggeredContext(DbContextOptions<TriggeredContext> options) : DbContext(options)

@@ -58,6 +58,8 @@ public sealed class LegacySqliteDialect : SqliteDialect
 
 internal class SqliteSql : AnsiSqlDialect
 {
+    public override string ReturningClauseAnnotation => SqliteModelOptionsExtensions.UseSqlReturningClauseAnnotation;
+
     public override bool SupportsNullOrderingClauses => true;
 
     // A file, created in write-ahead-log mode, with its -wal and -shm files; :memory: or Mode=Memory exists while open.

@@ -16,7 +16,7 @@ public static class SqliteModelOptionsExtensions
     /// <summary>Whether the table's inserts, updates and deletes use RETURNING; false for a table with triggers or a virtual table.</summary>
     public static TableBuilder UseSqlReturningClause(this TableBuilder tableBuilder, bool useSqlReturningClause = true)
     {
-        tableBuilder.Metadata.SetAnnotation(AdoNetAnnotationNames.UseReturningClause, useSqlReturningClause);
+        tableBuilder.Metadata.SetAnnotation(UseSqlReturningClauseAnnotation, useSqlReturningClause);
         return tableBuilder;
     }
 
@@ -28,7 +28,7 @@ public static class SqliteModelOptionsExtensions
     /// <inheritdoc cref="UseSqlReturningClause(TableBuilder, bool)" />
     public static OwnedNavigationTableBuilder UseSqlReturningClause(this OwnedNavigationTableBuilder tableBuilder, bool useSqlReturningClause = true)
     {
-        tableBuilder.Metadata.SetAnnotation(AdoNetAnnotationNames.UseReturningClause, useSqlReturningClause);
+        tableBuilder.Metadata.SetAnnotation(UseSqlReturningClauseAnnotation, useSqlReturningClause);
         return tableBuilder;
     }
 
@@ -44,7 +44,7 @@ public static class SqliteModelOptionsExtensions
     /// <summary>Whether one table of an entity type split across tables uses RETURNING; false for a table with triggers.</summary>
     public static SplitTableBuilder UseSqlReturningClause(this SplitTableBuilder tableBuilder, bool useSqlReturningClause = true)
     {
-        tableBuilder.MappingFragment.SetAnnotation(AdoNetAnnotationNames.UseReturningClause, useSqlReturningClause);
+        tableBuilder.MappingFragment.SetAnnotation(UseSqlReturningClauseAnnotation, useSqlReturningClause);
         return tableBuilder;
     }
 
@@ -55,9 +55,14 @@ public static class SqliteModelOptionsExtensions
 
     /// <summary>Whether the entity type's table uses RETURNING (true unless <see cref="UseSqlReturningClause(TableBuilder, bool)" /> said not).</summary>
     public static bool IsSqlReturningClauseUsed(this IReadOnlyEntityType entityType)
-        => entityType.GetRootType().FindAnnotation(AdoNetAnnotationNames.UseReturningClause)?.Value as bool?
-            ?? entityType.FindAnnotation(AdoNetAnnotationNames.UseReturningClause)?.Value as bool?
+        => ReturningClauseSetting(entityType, UseSqlReturningClauseAnnotation)
+            ?? ReturningClauseSetting(entityType, AdoNetAnnotationNames.UseReturningClause)
             ?? true;
+
+    // The root type's setting, else the type's own; a type's annotation under this provider's earlier name still counts.
+    private static bool? ReturningClauseSetting(IReadOnlyEntityType entityType, string annotation)
+        => entityType.GetRootType().FindAnnotation(annotation)?.Value as bool?
+            ?? entityType.FindAnnotation(annotation)?.Value as bool?;
 
     /// <summary>
     ///     Makes the column the table's <c>INTEGER PRIMARY KEY AUTOINCREMENT</c>, never reusing a deleted row's key: the core's
@@ -70,6 +75,8 @@ public static class SqliteModelOptionsExtensions
     /// <inheritdoc cref="UseAutoincrement(PropertyBuilder)" />
     public static PropertyBuilder<TProperty> UseAutoincrement<TProperty>(this PropertyBuilder<TProperty> propertyBuilder)
         => propertyBuilder.UseIdentityColumn();
+
+    internal const string UseSqlReturningClauseAnnotation = "Sqlite:UseSqlReturningClause";
 
     internal const string SridAnnotation = "Sqlite:Srid";
 
@@ -94,5 +101,5 @@ public static class SqliteModelOptionsExtensions
 
     /// <summary>Whether the context's database is SQLite: its dialect is <see cref="SqliteDialect" /> or a variant of it.</summary>
     public static bool IsSqlite(this DatabaseFacade database)
-        => ((IInfrastructure<IServiceProvider>)database).Instance.GetService(typeof(IAdoNetDialect)) is SqliteDialect;
+        => Microsoft.EntityFrameworkCore.SqliteDatabaseFacadeExtensions.IsSqlite(database);
 }

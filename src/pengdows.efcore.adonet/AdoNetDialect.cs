@@ -70,6 +70,7 @@ public class AnsiSqlDialect : ISqlDialect
     public virtual BooleanSyntax Booleans => BooleanSyntax.Native;
     public virtual KeyRetrieval Keys => KeyRetrieval.Returning;
     public virtual SelectAfterKeyRetrieval? KeysWithoutReturning => null;
+    public virtual string ReturningClauseAnnotation => AdoNetAnnotationNames.UseReturningClause;
     public virtual DmlSyntax Dml => DmlSyntax.Standard;
     public virtual FunctionSyntax Functions => FunctionSyntax.Iso;
     public virtual bool PreferExistsToIn => false;

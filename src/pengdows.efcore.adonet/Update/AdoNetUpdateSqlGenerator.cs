@@ -603,8 +603,13 @@ internal class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependenc
                 : dialect.Sql.Keys;
 
     // An entity type split across tables says so for one table on that table's mapping fragment, else for all its tables.
-    private static bool? UsesReturningClause(ITypeBase type, ITable table)
+    // The dialect's name first, then the shared one, which models written before a dialect named its own still use.
+    private bool? UsesReturningClause(ITypeBase type, ITable table)
+        => ReturningClauseSetting(type, table, dialect.Sql.ReturningClauseAnnotation)
+            ?? ReturningClauseSetting(type, table, AdoNetAnnotationNames.UseReturningClause);
+
+    private static bool? ReturningClauseSetting(ITypeBase type, ITable table, string annotation)
         => ((type as IEntityType)?.FindMappingFragment(StoreObjectIdentifier.Table(table.Name, table.Schema))
-                ?.FindAnnotation(AdoNetAnnotationNames.UseReturningClause)?.Value as bool?)
-            ?? (type.FindAnnotation(AdoNetAnnotationNames.UseReturningClause)?.Value as bool?);
+                ?.FindAnnotation(annotation)?.Value as bool?)
+            ?? (type.FindAnnotation(annotation)?.Value as bool?);
 }
