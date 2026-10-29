@@ -10,6 +10,13 @@ public class FlatFileSqlTests
         => Assert.True(FlatFileDialect.Instance.Capabilities.SupportsMultipleActiveReaders);
 
     [Fact]
+    public void Uses_pengdows_delta_tables_with_include_for_store_generated_values()
+    {
+        var keys = Assert.IsType<DeltaTableKeyRetrieval>(FlatFileDialect.Instance.Sql.Keys);
+        Assert.True(keys.UseIncludeColumns);
+    }
+
+    [Fact]
     public void Advertises_iso_json_queries_and_json_table_without_vendor_mutation()
     {
         var json = FlatFileDialect.Instance.Sql.Json!;
@@ -41,5 +48,14 @@ public class FlatFileSqlTests
 
         Assert.Contains("= :name", sql);
         Assert.Matches(@"OFFSET :p\w* ROWS FETCH NEXT :p\w* ROWS ONLY", sql);
+    }
+
+    [Fact]
+    public void Uses_interval_parameters_for_time_of_day_arithmetic()
+    {
+        using var context = Context(b => b.UseAdoNetFlatFile("path=/nonexistent"));
+        var sql = context.Blogs.Select(b => (b.CreatedAt.TimeOfDay + TimeSpan.FromHours(1)).Hours).ToQueryString();
+
+        Assert.Contains("INTERVAL '01:00:00' HOUR TO SECOND", sql, StringComparison.OrdinalIgnoreCase);
     }
 }

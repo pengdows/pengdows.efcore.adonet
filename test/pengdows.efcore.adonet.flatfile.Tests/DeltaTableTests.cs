@@ -6,7 +6,7 @@ using pengdows.flatfile;
 namespace pengdows.efcore.adonet.flatfile.Tests;
 
 /// <summary>
-///     SQL:2023 T495 data change delta tables, written by <see cref="KeyRetrieval.DeltaTable" /> and run by the engine
+///     Pengdows data-change delta tables, written by <see cref="KeyRetrieval.DeltaTable" /> and run by the engine
 ///     (<c>SELECT ... FROM FINAL TABLE (INSERT ...)</c>, <c>NEW TABLE (UPDATE ...)</c>, <c>OLD TABLE (DELETE ...)</c>).
 ///     Flatfile has no identity columns yet, so keys here are the application's: the delta table returns a value the database
 ///     fills in (a column default), checks each updated row's concurrency token and each deleted row.
