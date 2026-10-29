@@ -177,9 +177,40 @@ public sealed class CapabilitySkipTestFramework(IMessageSink messageSink) : Xuni
     }
 
     /// <summary>Turns each capability failure into a skip, and corrects the finished counts of its case, method, class and collection.</summary>
+    private static readonly string SkipType = typeof(CapabilitySkipException).FullName!;
+
+    /// <summary>
+    ///     The refusal's reason, where a failure is one: a <see cref="CapabilitySkipException" /> anywhere in its exception
+    ///     chain, or named in its message, as EF's query precompiler reports a translation failure ("Precompilation error:
+    ///     &lt;type&gt;: &lt;message&gt;"). Null for any other failure.
+    /// </summary>
+    internal static string? SkipReason(string[] exceptionTypes, string[] messages)
+    {
+        var at = Array.IndexOf(exceptionTypes, SkipType);
+        if (at >= 0)
+        {
+            return messages[at];
+        }
+
+        var marker = SkipType + ": ";
+        foreach (var message in messages)
+        {
+            var start = message.IndexOf(marker, StringComparison.Ordinal);
+            if (start < 0)
+            {
+                continue;
+            }
+
+            var reason = message[(start + marker.Length)..];
+            var end = reason.IndexOfAny(['\r', '\n']);
+            return (end < 0) ? reason : reason[..end];
+        }
+
+        return null;
+    }
+
     internal sealed class SkippingMessageBus(IMessageBus inner) : IMessageBus
     {
-        private static readonly string SkipType = typeof(CapabilitySkipException).FullName!;
 
         private readonly ConcurrentDictionary<object, int> _skipped = new(ReferenceEqualityComparer.Instance);
 
@@ -198,13 +229,13 @@ public sealed class CapabilitySkipTestFramework(IMessageSink messageSink) : Xuni
             switch (message)
             {
                 // Anywhere in the chain: an assertion expecting another failure gets the refusal as its inner exception.
-                case ITestFailed failed when Array.IndexOf(failed.ExceptionTypes, SkipType) is var at and >= 0:
+                case ITestFailed failed when SkipReason(failed.ExceptionTypes, failed.Messages) is { } reason:
                     foreach (var scope in new object[] { failed.TestCase, failed.TestMethod, failed.TestClass, failed.TestCollection })
                     {
                         _skipped.AddOrUpdate(scope, 1, (_, count) => count + 1);
                     }
 
-                    return new TestSkipped(failed.Test, failed.Messages[at]);
+                    return new TestSkipped(failed.Test, reason);
                 case ITestCaseFinished finished when SkippedIn(finished.TestCase) is var n and > 0:
                     return new TestCaseFinished(
                         finished.TestCase, finished.ExecutionTime, finished.TestsRun, finished.TestsFailed - n, finished.TestsSkipped + n);

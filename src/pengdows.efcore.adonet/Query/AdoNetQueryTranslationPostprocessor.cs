@@ -21,7 +21,8 @@ internal sealed class AdoNetQueryTranslationPostprocessor(
                 $"This query joins a subquery correlated with the rows before it (a lateral join, EF's APPLY), which {dialect.Name} doesn't have.");
         }
 
-        if (!dialect.Sql.SupportsOuterReferencesInDerivedTables && OuterReferenceInDerivedTableFinder.Finds(processed))
+        if (!dialect.Sql.SupportsOuterReferencesInDerivedTables
+            && OuterReferenceInDerivedTableFinder.Finds(processed, dialect.Sql.LimitInPredicateSubqueries))
         {
             throw new OuterReferenceInDerivedTableNotSupportedException(
                 $"This query reads the outer row from inside a derived table (a subquery in FROM), which {dialect.Name} doesn't allow.");
@@ -38,7 +39,11 @@ internal sealed class AdoNetQueryTranslationPostprocessor(
 
     protected override Expression ProcessTypeMappings(Expression expression)
         => new AdoNetTypeMappingPostprocessor(
-            Dependencies, RelationalDependencies, RelationalQueryCompilationContext, dialect.Sql.Json?.ArrayElementsBinaryValue).Process(expression);
+            Dependencies,
+            RelationalDependencies,
+            RelationalQueryCompilationContext,
+            dialect.Sql.Json?.ArrayElementsBinaryValue,
+            dialect.Sql.Json?.DateTimeOffsetFromText).Process(expression);
 }
 
 /// <summary>
@@ -52,7 +57,8 @@ internal sealed class AdoNetTypeMappingPostprocessor(
     QueryTranslationPostprocessorDependencies dependencies,
     RelationalQueryTranslationPostprocessorDependencies relationalDependencies,
     RelationalQueryCompilationContext queryCompilationContext,
-    string? binaryValue)
+    string? binaryValue,
+    string? dateTimeOffsetFromText)
     : RelationalTypeMappingPostprocessor(dependencies, relationalDependencies, queryCompilationContext)
 {
     private readonly Microsoft.EntityFrameworkCore.Storage.IRelationalTypeMappingSource _typeMappingSource
@@ -86,8 +92,15 @@ internal sealed class AdoNetTypeMappingPostprocessor(
             var typedColumn = valueColumn.TypeMapping == null
                 ? valueColumn.ApplyTypeMapping(elementMapping)
                 : valueColumn;
-            return elementMapping.ClrType == typeof(byte[]) && binaryValue != null
-                ? RelationalDependencies.SqlExpressionFactory.Call(binaryValue, [typedColumn], typeof(byte[]), elementMapping)!
+            if ((elementMapping.ClrType == typeof(byte[])) && (binaryValue != null))
+            {
+                return RelationalDependencies.SqlExpressionFactory.Call(binaryValue, [typedColumn], typeof(byte[]), elementMapping)!;
+            }
+
+            // A DateTimeOffset element is read as its JSON text where the dialect converts it.
+            return ((Nullable.GetUnderlyingType(elementMapping.ClrType) ?? elementMapping.ClrType) == typeof(DateTimeOffset))
+                && (dateTimeOffsetFromText != null)
+                ? RelationalDependencies.SqlExpressionFactory.Call(dateTimeOffsetFromText, [typedColumn], elementMapping.ClrType, elementMapping)!
                 : typedColumn;
         }
 
@@ -215,17 +228,20 @@ internal sealed class WindowFunctionFinder : ExpressionVisitor
 }
 
 /// <summary>
-///     Whether a translated query has a derived table (a subquery, set operation or VALUES in FROM, joined other than laterally) in
+///     Whether a translated query has a derived table (a subquery, set operation or VALUES in FROM, joined other than laterally,
+///     or a paged IN subquery the SQL generator writes as one) in
 ///     which anything, at any depth, reads a column of a table outside it. A lateral join reads the rows before it by
 ///     definition, and is refused on its own where the database has none.
 /// </summary>
-internal sealed class OuterReferenceInDerivedTableFinder : ExpressionVisitor
+internal sealed class OuterReferenceInDerivedTableFinder(bool limitInPredicateSubqueries) : ExpressionVisitor
 {
     private bool _found;
 
-    public static bool Finds(Expression expression)
+    // Where the database can't page under IN, a paged IN subquery is written as a derived table (the SQL generator's
+    // GenerateIn), so it is checked as one.
+    public static bool Finds(Expression expression, bool limitInPredicateSubqueries)
     {
-        var finder = new OuterReferenceInDerivedTableFinder();
+        var finder = new OuterReferenceInDerivedTableFinder(limitInPredicateSubqueries);
         finder.Visit(expression);
         return finder._found;
     }
@@ -241,6 +257,15 @@ internal sealed class OuterReferenceInDerivedTableFinder : ExpressionVisitor
         {
             Visit(shaped.QueryExpression);
             Visit(shaped.ShaperExpression);
+            return node;
+        }
+
+        if (!limitInPredicateSubqueries
+            && (node is InExpression { Subquery: { } paged })
+            && ((paged.Limit != null) || (paged.Offset != null))
+            && ReadsOutside(paged))
+        {
+            _found = true;
             return node;
         }
 

@@ -645,6 +645,13 @@ public sealed class JsonSyntax(
     /// </summary>
     public string? ArrayElementsBinaryValue { get; init; }
 
+    /// <summary>
+    ///     A DateTimeOffset from its JSON text <c>{0}</c> (ISO 8601 with its offset), for a database whose conversion of that text
+    ///     ignores the offset; null to read it as any other typed value. Applies to a value read out of a document and to an
+    ///     element of <see cref="ArrayElements" />, which is then declared as text.
+    /// </summary>
+    public string? DateTimeOffsetFromText { get; init; }
+
     /// <summary>An optimizer hint written after <c>SELECT</c> in a query that reads <see cref="ArrayElements" />; null for none.</summary>
     public string? ArrayElementsHint { get; init; }
 }

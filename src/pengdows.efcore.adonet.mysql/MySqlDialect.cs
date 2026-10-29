@@ -204,6 +204,11 @@ public sealed partial class MySqlDialect : AdoNetDialect
 
 internal sealed class MySqlSql(bool backslashEscapes, bool savepoints, bool mariaDb, MySqlServerFeatures features) : AnsiSqlDialect
 {
+    private const string MariaDbDateTimeOffsetFromText =
+        "CASE WHEN {0} REGEXP '[+-][0-9][0-9]:[0-9][0-9]$' THEN CAST(LEFT({0}, CHAR_LENGTH({0}) - 6) AS DATETIME(6)) - INTERVAL "
+        + "((CASE SUBSTRING({0}, -6, 1) WHEN '-' THEN -1 ELSE 1 END) * (SUBSTRING({0}, -5, 2) * 60 + SUBSTRING({0}, -2, 2))) MINUTE "
+        + "ELSE CAST({0} AS DATETIME(6)) END";
+
     // MariaDB's DDL differs from MySQL's where its migrations write it (a column's REF_SYSTEM_ID for MySQL's SRID).
     internal bool IsMariaDb => mariaDb;
 
@@ -259,7 +264,12 @@ internal sealed class MySqlSql(bool backslashEscapes, bool savepoints, bool mari
 
         // MariaDB's JSON is LONGTEXT, so = compares spellings (its JSON functions write "[1, 2]", EF writes "[1,2]").
         // Before JSON_EQUALS (MariaDB 10.7) the documents are compared compacted: the same whitespace, not the same key order.
-        Equality = !mariaDb ? null : features.JsonEquals ? "JSON_EQUALS({0}, {1})" : "JSON_COMPACT({0}) = JSON_COMPACT({1})"
+        Equality = !mariaDb ? null : features.JsonEquals ? "JSON_EQUALS({0}, {1})" : "JSON_COMPACT({0}) = JSON_COMPACT({1})",
+
+        // MariaDB's CAST of JSON's "2000-01-01T12:34:56-08:00" to DATETIME, and its JSON_TABLE, ignore the offset; MySQL applies
+        // it. The offset is subtracted in minutes (CONVERT_TZ only converts within the TIMESTAMP range); text without one is
+        // cast as it is.
+        DateTimeOffsetFromText = mariaDb ? MariaDbDateTimeOffsetFromText : null
     };
 
     // MySQL's own quoting, so no session-level mode is needed before this dialect's SQL means what it says.

@@ -117,4 +117,26 @@ public sealed class CapabilitySkipTests
     [Fact]
     public void A_suite_needing_procedures_fails_where_the_host_has_not_written_them()
         => Assert.IsType<NotSupportedException>(CapabilitySkips.NoProcedures<PostgreSqlHost>("stored procedures"));
+
+    // A refusal is a skip wherever it sits in the failure's exception chain.
+    [Fact]
+    public void A_refusal_in_the_exception_chain_is_a_skip()
+        => Assert.Equal(
+            "[SKIP:MariaDB] no lateral joins",
+            CapabilitySkipTestFramework.SkipReason(
+                ["Xunit.Sdk.ThrowsException", typeof(CapabilitySkipException).FullName!], ["Assert.Throws() Failure", "[SKIP:MariaDB] no lateral joins"]));
+
+    // EF's query precompiler reports a translation failure as text ("Precompilation error: <type>: <message>"), not as the
+    // exception itself, so a refusal it met is recognised in the message.
+    [Fact]
+    public void A_refusal_reported_by_the_query_precompiler_is_a_skip()
+        => Assert.Equal(
+            "[SKIP:MariaDB] This query reads the outer row from inside a derived table.",
+            CapabilitySkipTestFramework.SkipReason(
+                ["System.InvalidOperationException"],
+                ["Precompilation error: " + typeof(CapabilitySkipException).FullName + ": [SKIP:MariaDB] This query reads the outer row from inside a derived table.\n   at Foo.Bar()"]));
+
+    [Fact]
+    public void Any_other_failure_is_not_a_skip()
+        => Assert.Null(CapabilitySkipTestFramework.SkipReason(["System.InvalidOperationException"], ["Precompilation error: [SKIP:MariaDB] said by a test"]));
 }

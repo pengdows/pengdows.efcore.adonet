@@ -783,3 +783,5 @@ pengdows.efcore.adonet.Storage.IArrayTypeMapping.Contains.get -> string?
 pengdows.efcore.adonet.Storage.IArrayTypeMapping.Count.get -> string?
 pengdows.efcore.adonet.Storage.IArrayTypeMapping.ElementAt.get -> string?
 pengdows.efcore.adonet.Storage.IArrayTypeMapping.Elements.get -> string!
+pengdows.efcore.adonet.JsonSyntax.DateTimeOffsetFromText.get -> string?
+pengdows.efcore.adonet.JsonSyntax.DateTimeOffsetFromText.init -> void

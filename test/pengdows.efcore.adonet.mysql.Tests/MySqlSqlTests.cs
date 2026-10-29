@@ -249,6 +249,19 @@ public class MariaDbSqlTests
         Assert.DoesNotContain("IS NULL THEN NULL", MySqlDialect.Instance.Sql.Spatial!.Functions.GetValueOrDefault(member) ?? "");
     }
 
+    // MariaDB's CAST of "2000-01-01T12:34:56-08:00" to DATETIME, and its JSON_TABLE, ignore the offset (12:34:56, not
+    // 20:34:56 UTC); MySQL applies it. MariaDB's dialect subtracts the offset itself, in minutes, which unlike CONVERT_TZ
+    // isn't limited to the TIMESTAMP range.
+    [Fact]
+    public void MariaDb_applies_the_offset_of_a_json_date_time_offset()
+    {
+        var template = MySqlDialect.MariaDb.Sql.Json!.DateTimeOffsetFromText!;
+
+        Assert.Contains("REGEXP '[+-][0-9][0-9]:[0-9][0-9]$'", template);
+        Assert.Contains("- INTERVAL", template);
+        Assert.Null(MySqlDialect.Instance.Sql.Json!.DateTimeOffsetFromText);
+    }
+
     [Fact]
     public void A_query_with_a_lateral_join_is_refused_on_MariaDb()
     {

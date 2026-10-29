@@ -110,6 +110,21 @@ public class QueryGrammarTests
         Assert.Contains("VALUES", Sql(TestDialects.OuterReferencesInDerivedTables, c => c.Items.Select(i => new[] { i.Id, i.Version }.Max())));
     }
 
+    // A paged IN subquery is written as a derived table where the database can't page under IN (LimitInPredicateSubqueries):
+    // reading the outer row inside it is then an outer reference in a derived table too (MariaDB's "Unknown column").
+    private static IQueryable ItemsAmongTheirFirstTwoParts(ItemContext c)
+        => c.Items.Where(i => c.Parts.Where(p => p.ItemId == i.Id).OrderBy(p => p.Id).Select(p => p.Id).Take(2).Contains(i.Version));
+
+    [Fact]
+    public void A_paged_in_subquery_reading_the_outer_row_is_refused_where_it_becomes_a_derived_table()
+    {
+        Assert.Throws<pengdows.efcore.adonet.Query.OuterReferenceInDerivedTableNotSupportedException>(
+            () => Sql(TestDialects.NoOuterReferencesNorLimitInPredicates, ItemsAmongTheirFirstTwoParts));
+
+        // Where IN takes the LIMIT itself, no derived table is written, so the outer row is read as usual.
+        Assert.Contains("IN (", Sql(TestDialects.NoOuterReferencesInDerivedTables, ItemsAmongTheirFirstTwoParts));
+    }
+
     [Fact]
     public void What_reads_the_outer_row_outside_a_derived_table_is_written_where_the_database_has_no_outer_references_in_them()
     {

@@ -186,6 +186,16 @@ internal class AdoNetQuerySqlGenerator(
         var json = dialect.Json
             ?? throw new InvalidOperationException("This query reads a value inside a JSON column, which the dialect has no functions for.");
         var typeMapping = jsonScalarExpression.TypeMapping;
+
+        // A DateTimeOffset is JSON text with its offset, which some databases' conversions ignore: read as text, then converted.
+        if ((json.DateTimeOffsetFromText is { } fromText)
+            && ((Nullable.GetUnderlyingType(jsonScalarExpression.Type) ?? jsonScalarExpression.Type) == typeof(DateTimeOffset)))
+        {
+            WriteTemplate(
+                fromText,
+                () => WriteTemplate(json.Value, () => Visit(jsonScalarExpression.Json), () => WriteJsonPath(json, jsonScalarExpression.Path)));
+            return jsonScalarExpression;
+        }
         var template = (Nullable.GetUnderlyingType(jsonScalarExpression.Type) ?? jsonScalarExpression.Type) == typeof(byte[]) && json.BinaryValue != null ? json.BinaryValue
             : typeMapping is Storage.AdoNetJsonTypeMapping || typeMapping?.ElementTypeMapping != null ? json.Query
             : typeMapping is not null
@@ -578,11 +588,15 @@ internal class AdoNetQuerySqlGenerator(
         dialect.Paging.GenerateTop(this, selectExpression);
     }
 
-    // Text elements in the dialect's text form; binary ones are read as their base64 text, then decoded.
+    // Text elements in the dialect's text form; binary ones are read as their base64 text, then decoded, and a DateTimeOffset
+    // as its text where the dialect converts it (JsonSyntax.DateTimeOffsetFromText).
     private string ArrayElementType(RelationalTypeMapping element)
     {
         var json = dialect.Json!;
-        var storeType = (element.ClrType == typeof(byte[])) && (json.ArrayElementsBinaryValue != null)
+        var readAsText = ((element.ClrType == typeof(byte[])) && (json.ArrayElementsBinaryValue != null))
+            || (((Nullable.GetUnderlyingType(element.ClrType) ?? element.ClrType) == typeof(DateTimeOffset))
+                && (json.DateTimeOffsetFromText != null));
+        var storeType = readAsText
             ? typeMappings.GetStoreType(typeof(string))!
             : element.StoreType;
         return ((element.ClrType == typeof(string)) || (storeType != element.StoreType)) && (json.ArrayElementsTextType is { } textType)
