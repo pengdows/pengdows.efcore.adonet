@@ -2,6 +2,7 @@
 // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.SqlServer/Storage/Internal/SqlServerTransientExceptionDetector.cs
 
 using System.ComponentModel;
+using System.Data.Common;
 using Microsoft.Data.SqlClient;
 
 namespace pengdows.efcore.adonet.sqlserver;
@@ -32,7 +33,30 @@ internal sealed record SqlServerCapabilities : DatabaseCapabilities
     // SqlClient holds several open readers on a connection only with MultipleActiveResultSets, which each connection string
     // chooses.
     public override bool SupportsMultipleActiveReadersFor(string? connectionString)
-        => (connectionString != null) && new SqlConnectionStringBuilder(connectionString).MultipleActiveResultSets;
+    {
+        if (connectionString == null)
+        {
+            return false;
+        }
+
+        try
+        {
+            return new SqlConnectionStringBuilder(connectionString).MultipleActiveResultSets;
+        }
+        catch (ArgumentException)
+        {
+            // fakeDb deliberately keeps EmulatedProduct in its connection string. SqlClient rejects that test-only
+            // keyword before the dialect can inspect the otherwise valid MARS setting.
+            var generic = new DbConnectionStringBuilder { ConnectionString = connectionString };
+            if (generic.TryGetValue("MultipleActiveResultSets", out var value)
+                && bool.TryParse(Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture), out var enabled))
+            {
+                return enabled;
+            }
+
+            return false;
+        }
+    }
 
     public override bool IsTransient(Exception exception)
         => base.IsTransient(exception)

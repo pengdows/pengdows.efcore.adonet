@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Migrations.Operations;
 using pengdows.efcore.adonet.Migrations;
@@ -9,6 +10,26 @@ namespace pengdows.efcore.adonet.sqlserver;
 internal class SqlServerMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dependencies, IAdoNetDialect dialect)
     : AdoNetMigrationsSqlGenerator(dependencies, dialect)
 {
+    protected override void Generate(CreateTableOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
+    {
+        base.Generate(operation, model, builder, terminate);
+
+        // EF's SQL Server annotation is carried onto the create-table operation. Keep the temporal clause in a
+        // separate statement so the provider can still use the shared CREATE TABLE column/constraint generator.
+        if (operation["SqlServer:IsTemporal"] is true
+            || model?.GetEntityTypes().Any(entity =>
+                string.Equals(entity.GetTableName(), operation.Name, StringComparison.Ordinal)
+                && string.Equals(entity.GetSchema(), operation.Schema, StringComparison.Ordinal)
+                && entity.FindAnnotation("SqlServer:IsTemporal")?.Value is true) == true)
+        {
+            builder
+                .Append("ALTER TABLE ")
+                .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Name, operation.Schema))
+                .AppendLine(" SET (SYSTEM_VERSIONING = ON);");
+            EndStatement(builder);
+        }
+    }
+
     protected override void ForeignKeyAction(ReferentialAction referentialAction, MigrationCommandListBuilder builder)
     {
         // SQL Server has no RESTRICT action; NO ACTION is its equivalent and is the ISO spelling.
