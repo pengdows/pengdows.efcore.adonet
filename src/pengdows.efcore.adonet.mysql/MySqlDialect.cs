@@ -522,6 +522,16 @@ internal sealed class MySqlTypeMappings : AnsiTypeMappings
 
     private static readonly TimeSpan MaxTime = new(838, 59, 59);
 
+    // MySQL's TIMESTAMP and DATETIME each hold a DateTime or a DateTimeOffset (its UTC instant), as both MySQL EF providers
+    // map them; ISO's TIMESTAMP holds a DateTime only.
+    private static readonly Type[] DateTimes = [typeof(DateTime), typeof(DateTimeOffset)];
+
+    public override IReadOnlyList<Type> GetClrTypes(string storeTypeBase)
+        => (string.Equals(storeTypeBase, "TIMESTAMP", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(storeTypeBase, "DATETIME", StringComparison.OrdinalIgnoreCase))
+            ? DateTimes
+            : base.GetClrTypes(storeTypeBase);
+
     // One datetime type: bound as DbType.DateTime, as both MySQL EF providers bind it. Oracle's MySql.Data maps
     // DbType.DateTime2 to a BLOB and sends current-culture text (UPSTREAM_ISSUES.md); MySqlConnector takes either.
     public override System.Data.DbType DateTimeDbType

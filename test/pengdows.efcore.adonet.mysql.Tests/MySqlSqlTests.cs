@@ -76,6 +76,41 @@ public class MySqlSqlTests
 }
 
 /// <summary>
+///     MySQL's TIMESTAMP and DATETIME hold a DateTime or a DateTimeOffset (its UTC instant), as both MySQL EF providers map
+///     them; ISO's TIMESTAMP holds a DateTime only. A model naming either for a DateTimeOffset maps.
+/// </summary>
+public class MySqlDateTimeOffsetColumnTests
+{
+    public class Stamped
+    {
+        public int Id { get; set; }
+        public DateTimeOffset Created { get; set; }
+        public DateTimeOffset Changed { get; set; }
+    }
+
+    private sealed class StampedContext(DbContextOptions<StampedContext> options) : DbContext(options)
+    {
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+            => modelBuilder.Entity<Stamped>(b =>
+            {
+                b.Property(e => e.Created).HasColumnType("timestamp(6)");
+                b.Property(e => e.Changed).HasColumnType("datetime(3)");
+            });
+    }
+
+    [Fact]
+    public void A_date_time_offset_maps_to_a_timestamp_or_datetime_column()
+    {
+        using var context = new StampedContext(new DbContextOptionsBuilder<StampedContext>().AllowManyDialects().UseAdoNetMySql("Server=localhost").Options);
+
+        var script = context.Database.GenerateCreateScript();
+
+        Assert.Contains("`Created` timestamp(6) NOT NULL", script);
+        Assert.Contains("`Changed` datetime(3) NOT NULL", script);
+    }
+}
+
+/// <summary>
 ///     SingleStore speaks MySQL but accepts SAVEPOINT and ROLLBACK TO SAVEPOINT and ignores them, so rolled-back work is
 ///     committed. MySqlConnector reports savepoints there anyway (it declined to tell servers apart:
 ///     https://github.com/mysql-net/MySqlConnector/issues/1677), so the dialect says there are none.
