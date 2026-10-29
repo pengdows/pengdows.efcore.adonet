@@ -17,7 +17,7 @@ internal class AdoNetIdentityConvention : IModelFinalizingConvention
                 && entityType.GetTableName() != null
                 && entityType.FindPrimaryKey() is { } key)
             {
-                foreach (var property in key.Properties.Where(IsIdentity))
+                foreach (var property in key.Properties.Where(IsIdentityKey))
                 {
                     property.Builder.HasAnnotation(AdoNetAnnotationNames.Identity, true);
                 }
@@ -28,7 +28,19 @@ internal class AdoNetIdentityConvention : IModelFinalizingConvention
     // The type the database stores, after any value converter: an integer key stored as text or bytes can't be numbered.
     // Behaviour reference (not copied):
     // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.SqlServer/Metadata/Conventions/SqlServerValueGenerationStrategyConvention.cs
-    private static bool IsIdentity(IConventionProperty property)
+    /// <summary>
+    ///     Whether the database numbers this property: an integer key of its entity's table, generated on add. Shared by the
+    ///     convention, which records it, and the migrations' annotation provider, which recognises it in a snapshot that no
+    ///     convention ran for (as Pomelo derives it from the property, with no annotation at all).
+    /// </summary>
+    internal static bool IsIdentityKey(IReadOnlyProperty property)
+        => property.DeclaringType is IReadOnlyEntityType { BaseType: null } entityType
+            && entityType.GetTableName() != null
+            && entityType.FindPrimaryKey() is { } key
+            && key.Properties.Contains(property)
+            && IsIdentity(property);
+
+    private static bool IsIdentity(IReadOnlyProperty property)
         => property.ValueGenerated == ValueGenerated.OnAdd
             && (property.GetValueConverter()?.ProviderClrType ?? property.GetProviderClrType() ?? property.ClrType) is var storedType
             && (Nullable.GetUnderlyingType(storedType) ?? storedType) is var unwrapped
@@ -41,7 +53,7 @@ internal class AdoNetIdentityConvention : IModelFinalizingConvention
             // EF's own conventions attach a temporary-value factory to database-generated keys; one the model asked for
             // means the application numbers the key.
             && (property.GetValueGeneratorFactory() == null
-                || property.GetValueGeneratorFactoryConfigurationSource() == ConfigurationSource.Convention)
+                || (property is IConventionProperty convention && convention.GetValueGeneratorFactoryConfigurationSource() == ConfigurationSource.Convention))
             // GetDefaultValue() is the CLR default (0) when none is configured.
             && !property.TryGetDefaultValue(out _)
             && property.GetDefaultValueSql() == null

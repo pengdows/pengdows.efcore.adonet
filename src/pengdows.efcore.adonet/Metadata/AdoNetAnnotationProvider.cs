@@ -26,7 +26,14 @@ internal class AdoNetAnnotationProvider(RelationalAnnotationProviderDependencies
     ///     type table holds whole rows, so it numbers its own.
     /// </summary>
     internal static bool IsIdentity(IColumn column)
-        => column.PropertyMappings.Any(m => (m.Property.FindAnnotation(AdoNetAnnotationNames.Identity)?.Value is true)
+        => column.PropertyMappings.Any(m => HasIdentity(m.Property)
             && ((m.TableMapping.TypeBase == m.Property.DeclaringType)
                 || (m.Property.DeclaringType.GetMappingStrategy() == RelationalAnnotationNames.TpcMappingStrategy)));
+
+    // The convention's annotation when it ran. A model built without conventions (a migrations snapshot) has none, so the
+    // convention's rule decides, as the database does: the same answer the convention would have recorded.
+    private static bool HasIdentity(IReadOnlyProperty property)
+        => property.FindAnnotation(AdoNetAnnotationNames.Identity) is { } annotation
+            ? annotation.Value is true
+            : AdoNetIdentityConvention.IsIdentityKey(property);
 }
