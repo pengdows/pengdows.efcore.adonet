@@ -4,7 +4,10 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\pengdows.efcore.adonet\pengdows.efcore.adonet.csproj" />
-    <PackageReference Include="DuckDB.NET.Data" />
+    <!-- Giorgi's DuckDB.NET from the local develop checkout: it reports DataSourceInformation and DataTypes, which 1.5.6.1 does not. -->
+    <ProjectReference Include="..\..\..\..\Giorgi-DuckDB.NET\DuckDB.NET.Data\Data.csproj" />
+    <!-- Native libduckdb only (DuckDB v1.5.6): the managed assemblies come from the project reference above. -->
+    <PackageReference Include="DuckDB.NET.Bindings.Full" ExcludeAssets="compile" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="pengdows.efcore.adonet.duckdb.Tests" />

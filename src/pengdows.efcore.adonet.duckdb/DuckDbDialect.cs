@@ -1,6 +1,8 @@
 using System.Globalization;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace pengdows.efcore.adonet.duckdb;
@@ -27,10 +29,18 @@ public sealed class DuckDbDialect : AdoNetDialect
     };
 
     public override void ConfigureServices(IServiceCollection services)
-        => new EntityFrameworkRelationalServicesBuilder(services)
+    {
+        new EntityFrameworkRelationalServicesBuilder(services)
             .TryAdd<IMigrationsSqlGenerator, DuckDbMigrationsSqlGenerator>()
             .TryAdd<Microsoft.EntityFrameworkCore.Storage.IRelationalTypeMappingSourcePlugin, DuckDbListTypeMappingSourcePlugin>()
-            .TryAdd<Microsoft.EntityFrameworkCore.Storage.IRelationalTypeMappingSourcePlugin, DuckDbStructTypeMappingSourcePlugin>();
+            .TryAdd<Microsoft.EntityFrameworkCore.Storage.IRelationalTypeMappingSourcePlugin, DuckDbStructTypeMappingSourcePlugin>()
+            .TryAdd<Microsoft.EntityFrameworkCore.Query.IMethodCallTranslatorPlugin, DuckDbMethodCallTranslatorPlugin>();
+
+        // Registered before EF's defaults, which TryAdd then leaves alone: the decorator wraps EF's own builder.
+        services.AddScoped<IRawSqlCommandBuilder>(sp => new DuckDbRawSqlCommandBuilder(
+            (IRawSqlCommandBuilder)ActivatorUtilities.CreateInstance(sp, DuckDbRawSqlCommandBuilder.InnerType)));
+        services.AddSingleton<IInterceptor, DuckDbRawSqlInterceptor>();
+    }
 }
 
 internal sealed class DuckDbSql : AnsiSqlDialect

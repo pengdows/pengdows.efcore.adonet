@@ -6,7 +6,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\pengdows.efcore.adonet.duckdb\pengdows.efcore.adonet.duckdb.csproj" />
     <ProjectReference Include="..\..\src\pengdows.efcore.adonet.Testing\pengdows.efcore.adonet.Testing.csproj" />
-    <PackageReference Include="DuckDB.NET.Data.Full" />
+    <PackageReference Include="DuckDB.NET.Bindings.Full" ExcludeAssets="compile" />
     <PackageReference Include="pengdows.crud.fakeDb" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
