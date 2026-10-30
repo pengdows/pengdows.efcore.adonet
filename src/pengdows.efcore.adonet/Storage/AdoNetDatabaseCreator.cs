@@ -313,8 +313,7 @@ internal class AdoNetDatabaseCreator(
     // dialect needn't name its driver's connection type and works with any driver for its database. A driver without one
     // pools per data source (evicted above) or not at all.
     private static void DriverClearPool(DbConnection connection)
-        => connection.GetType()
-            .GetMethod("ClearPool", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static, [connection.GetType()])
+        => DriverMembers.StaticMethod(connection.GetType(), "ClearPool", connection.GetType())
             ?.Invoke(null, [connection]);
 
     private IRelationalConnection AdminConnection(DatabaseLifecycle lifecycle, out string name)
