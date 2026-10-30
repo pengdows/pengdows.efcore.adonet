@@ -76,7 +76,7 @@ public class AdoNetStringTypeMapping : StringTypeMapping
         if (_sql.Json is { } jsonSyntax
             && StoreType.Equals(jsonSyntax.StoreType, StringComparison.OrdinalIgnoreCase)
             && (parameter.Value is null or DBNull || parameter.Value is string json && IsJson(json))
-            && parameter.GetType().GetProperty(string.Concat("N", "pgsql", "DbType")) is { PropertyType.IsEnum: true } npgsqlDbType)
+            && DriverMembers.Property(parameter.GetType(), string.Concat("N", "pgsql", "DbType")) is { PropertyType.IsEnum: true } npgsqlDbType)
         {
             npgsqlDbType.SetValue(parameter, Enum.Parse(npgsqlDbType.PropertyType, "Jsonb", ignoreCase: false));
         }

@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
 using Microsoft.EntityFrameworkCore.Storage;
+using pengdows.efcore.adonet.Storage;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite;
 using NetTopologySuite.Geometries;
@@ -93,12 +94,12 @@ internal sealed class AdoNetSqlServerGeometryTypeMapping<TGeometry>
         }
 
         var type = parameter.GetType();
-        if (type.GetProperty("SqlDbType") is { PropertyType.IsEnum: true } sqlDbType)
+        if (DriverMembers.Property(type, "SqlDbType") is { PropertyType.IsEnum: true } sqlDbType)
         {
             sqlDbType.SetValue(parameter, Enum.Parse(sqlDbType.PropertyType, nameof(SqlDbType.Udt)));
         }
 
-        type.GetProperty("UdtTypeName")?.SetValue(parameter, _geography ? "geography" : "geometry");
+        DriverMembers.Property(type, "UdtTypeName")?.SetValue(parameter, _geography ? "geography" : "geometry");
     }
 
     private static bool IsGeography(string storeType)

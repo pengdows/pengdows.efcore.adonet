@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using pengdows.efcore.adonet.Infrastructure;
+using pengdows.efcore.adonet.Storage;
 
 namespace pengdows.efcore.adonet.mysql;
 
@@ -94,7 +95,7 @@ public static class MySqlOracleAliases
     {
         var numbers = errorNumbers.ToHashSet();
         return exception => (exception is DbException)
-                            && (exception.GetType().GetProperty("Number")?.GetValue(exception) is int number)
+                            && (DriverMembers.Property(exception.GetType(), "Number")?.GetValue(exception) is int number)
                             && numbers.Contains(number);
     }
 
