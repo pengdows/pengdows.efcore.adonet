@@ -114,4 +114,17 @@ public class DuckDbExecutionTests
         Assert.Equal("CREATE SEQUENCE \"Orders_Number_seq\";", _db.Commands[1]);
         Assert.StartsWith("CREATE TABLE \"Orders\"", _db.Commands[2]);
     }
+
+    [Fact]
+    public async Task EF_Functions_Random_is_DuckDBs_random()
+    {
+        await using var context = _db.Context<BlogContext>(o => new BlogContext(o));
+        _db.Returns([0.25]);
+
+        var values = await context.Blogs.Select(_ => EF.Functions.Random()).ToListAsync(Ct);
+
+        Assert.Equal([0.25], values);
+        Assert.Contains("random()", Assert.Single(_db.Commands));
+        Assert.DoesNotContain("RAND", Assert.Single(_db.Commands));
+    }
 }

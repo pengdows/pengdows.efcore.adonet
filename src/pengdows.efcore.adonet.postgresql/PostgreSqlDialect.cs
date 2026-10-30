@@ -68,6 +68,15 @@ internal sealed class PostgreSqlMigrationsSqlGenerator(MigrationsSqlGeneratorDep
     {
         operation.Columns.RemoveAll(c => SystemColumns.Contains(c.Name));
         base.Generate(operation, model, builder, terminate);
+        if (operation.Comment is not null)
+        {
+            TableComment(operation.Name, operation.Schema, operation.Comment, builder);
+        }
+
+        foreach (var column in operation.Columns.Where(c => c.Comment is not null))
+        {
+            ColumnComment(operation.Name, operation.Schema, column.Name, column.Comment, builder);
+        }
     }
 
     protected override void Generate(AddColumnOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
@@ -75,6 +84,10 @@ internal sealed class PostgreSqlMigrationsSqlGenerator(MigrationsSqlGeneratorDep
         if (!SystemColumns.Contains(operation.Name))
         {
             base.Generate(operation, model, builder, terminate);
+            if (operation.Comment is not null)
+            {
+                ColumnComment(operation.Table, operation.Schema, operation.Name, operation.Comment, builder);
+            }
         }
     }
 
@@ -83,6 +96,10 @@ internal sealed class PostgreSqlMigrationsSqlGenerator(MigrationsSqlGeneratorDep
         if (!SystemColumns.Contains(operation.Name))
         {
             base.Generate(operation, model, builder);
+            if (operation.Comment != operation.OldColumn.Comment)
+            {
+                ColumnComment(operation.Table, operation.Schema, operation.Name, operation.Comment, builder);
+            }
         }
     }
 
@@ -92,6 +109,36 @@ internal sealed class PostgreSqlMigrationsSqlGenerator(MigrationsSqlGeneratorDep
         {
             base.Generate(operation, model, builder, terminate);
         }
+    }
+
+    // A table comment is COMMENT ON TABLE; the core generator has no table comment, so it was dropped. Clearing one is IS NULL.
+    protected override void Generate(AlterTableOperation operation, IModel? model, MigrationCommandListBuilder builder)
+    {
+        TableComment(operation.Name, operation.Schema, operation.Comment, builder);
+    }
+
+    private void ColumnComment(string table, string? schema, string column, string? comment, MigrationCommandListBuilder builder)
+    {
+        builder
+            .Append("COMMENT ON COLUMN ")
+            .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(table, schema))
+            .Append(".")
+            .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(column))
+            .Append(" IS ")
+            .Append(comment is null ? "NULL" : Dialect.Sql.StringLiteral(comment))
+            .AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
+        EndStatement(builder);
+    }
+
+    private void TableComment(string table, string? schema, string? comment, MigrationCommandListBuilder builder)
+    {
+        builder
+            .Append("COMMENT ON TABLE ")
+            .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(table, schema))
+            .Append(" IS ")
+            .Append(comment is null ? "NULL" : Dialect.Sql.StringLiteral(comment))
+            .AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
+        EndStatement(builder);
     }
 
     protected override void ColumnDefinition(
@@ -159,6 +206,12 @@ internal sealed class PostgreSqlTypeMappings : AnsiTypeMappings
     // A uint row version is the xid every row's xmin system column holds (PostgreSqlRowVersionConvention names it).
     public override string? RowVersionStoreType(Type clrType)
         => clrType == typeof(uint) ? "xid" : null;
+
+    // A timestamptz holds an instant: a DateTime (Npgsql writes it as UTC) as well as a DateTimeOffset.
+    public override IReadOnlyList<Type> GetClrTypes(string storeTypeBase)
+        => string.Equals(storeTypeBase, "TIMESTAMP WITH TIME ZONE", StringComparison.OrdinalIgnoreCase)
+            ? [typeof(DateTimeOffset), typeof(DateTime)]
+            : base.GetClrTypes(storeTypeBase);
 
     public override string? GetStoreType(Type clrType)
         => clrType == typeof(byte[]) ? "BYTEA" : base.GetStoreType(clrType);
@@ -242,7 +295,7 @@ internal static class PostgreSqlJson
             "CAST((jsonb_path_query_first({0}, CAST({1} AS jsonpath)) #>> '{}') AS boolean)",
             "decode((jsonb_path_query_first({0}, CAST({1} AS jsonpath)) #>> '{}'), 'base64')",
             "({0} || {1})",
-            "jsonb_set({0}, string_to_array(ltrim(regexp_replace(regexp_replace({1}, '^\\$\\.?', ''), '\\[([0-9]+)\\]', '.\\1', 'g'), '.'), '.'), {2}, true)",
+            "jsonb_set({0}, string_to_array(ltrim(regexp_replace(regexp_replace({1}, '^\\$\\.?', ''), '\\[([0-9]+)\\]', '.\\1', 'g'), '.'), '.'), to_jsonb({2}), true)",
             "CAST({0} AS jsonb)")
     {
         UsesBinaryDocument = true,

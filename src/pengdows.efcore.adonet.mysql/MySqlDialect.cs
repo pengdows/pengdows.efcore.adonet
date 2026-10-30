@@ -1,9 +1,11 @@
+using pengdows.efcore.adonet.Bulk;
 using System.Data;
 using System.Data.Common;
 using System.Globalization;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace pengdows.efcore.adonet.mysql;
 
@@ -188,6 +190,12 @@ public sealed partial class MySqlDialect : AdoNetDialect
     }
 
     public override void ConfigureServices(IServiceCollection services)
+    {
+        services.TryAddScoped<IAdoNetBulkLoader, MySqlBulkLoader>();
+        MySqlServices(services);
+    }
+
+    private static void MySqlServices(IServiceCollection services)
         => new EntityFrameworkRelationalServicesBuilder(services)
             .TryAdd<IMigrationsSqlGenerator, MySqlMigrationsSqlGenerator>()
             .TryAdd<IHistoryRepository, MySqlHistoryRepository>()
@@ -505,6 +513,11 @@ internal sealed class MySqlTypeMappings : AnsiTypeMappings
     {
         [typeof(bool)] = "TINYINT(1)",
         [typeof(byte)] = "TINYINT UNSIGNED",
+        [typeof(sbyte)] = "TINYINT",
+        [typeof(ulong)] = "BIGINT UNSIGNED",
+        // 65 digits, 30 after the point: every CLR decimal, with its 28 places, round-trips exactly. MySQL's bare DECIMAL is
+        // DECIMAL(10,0), which rounds the fraction away.
+        [typeof(decimal)] = "DECIMAL(65,30)",
         // MySQL's own name, as its catalog reports it.
         [typeof(int)] = "INT",
         [typeof(float)] = "FLOAT",
@@ -526,11 +539,17 @@ internal sealed class MySqlTypeMappings : AnsiTypeMappings
     // map them; ISO's TIMESTAMP holds a DateTime only.
     private static readonly Type[] DateTimes = [typeof(DateTime), typeof(DateTimeOffset)];
 
+    // The CLR types each store type holds without conversion, the default first. The lookup has no width: TINYINT is a
+    // signed byte, and a bool column names its CLR type (TINYINT(1)).
     public override IReadOnlyList<Type> GetClrTypes(string storeTypeBase)
-        => (string.Equals(storeTypeBase, "TIMESTAMP", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(storeTypeBase, "DATETIME", StringComparison.OrdinalIgnoreCase))
-            ? DateTimes
-            : base.GetClrTypes(storeTypeBase);
+        => storeTypeBase.ToUpperInvariant() switch
+        {
+            "TIMESTAMP" or "DATETIME" => DateTimes,
+            "TINYINT" => [typeof(sbyte), typeof(bool)],
+            "BIT" or "BIGINT UNSIGNED" => [typeof(ulong)],
+            "CHAR" => [typeof(string), typeof(Guid)],
+            _ => base.GetClrTypes(storeTypeBase)
+        };
 
     // One datetime type: bound as DbType.DateTime, as both MySQL EF providers bind it. Oracle's MySql.Data maps
     // DbType.DateTime2 to a BLOB and sends current-culture text (UPSTREAM_ISSUES.md); MySqlConnector takes either.

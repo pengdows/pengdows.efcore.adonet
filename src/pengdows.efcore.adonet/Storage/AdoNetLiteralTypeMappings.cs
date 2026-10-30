@@ -71,6 +71,48 @@ public class AdoNetIntTypeMapping : IntTypeMapping
         => _dialect.FormatLiteral(value, StoreType, base.GenerateNonNullSqlLiteral(value));
 }
 
+public class AdoNetSByteTypeMapping : SByteTypeMapping
+{
+    public static new AdoNetSByteTypeMapping Default { get; } = new("TINYINT", AnsiTypeMappings.Instance);
+
+    private readonly ITypeMappingDialect _dialect;
+
+    public AdoNetSByteTypeMapping(string storeType, ITypeMappingDialect dialect)
+        : base(storeType)
+        => _dialect = dialect;
+
+    protected AdoNetSByteTypeMapping(RelationalTypeMappingParameters parameters, ITypeMappingDialect dialect)
+        : base(parameters)
+        => _dialect = dialect;
+
+    protected override RelationalTypeMapping Clone(RelationalTypeMappingParameters parameters)
+        => new AdoNetSByteTypeMapping(parameters, _dialect);
+
+    protected override string GenerateNonNullSqlLiteral(object value)
+        => _dialect.FormatLiteral(value, StoreType, base.GenerateNonNullSqlLiteral(value));
+}
+
+public class AdoNetULongTypeMapping : ULongTypeMapping
+{
+    public static new AdoNetULongTypeMapping Default { get; } = new("BIGINT", AnsiTypeMappings.Instance);
+
+    private readonly ITypeMappingDialect _dialect;
+
+    public AdoNetULongTypeMapping(string storeType, ITypeMappingDialect dialect)
+        : base(storeType)
+        => _dialect = dialect;
+
+    protected AdoNetULongTypeMapping(RelationalTypeMappingParameters parameters, ITypeMappingDialect dialect)
+        : base(parameters)
+        => _dialect = dialect;
+
+    protected override RelationalTypeMapping Clone(RelationalTypeMappingParameters parameters)
+        => new AdoNetULongTypeMapping(parameters, _dialect);
+
+    protected override string GenerateNonNullSqlLiteral(object value)
+        => _dialect.FormatLiteral(value, StoreType, base.GenerateNonNullSqlLiteral(value));
+}
+
 public class AdoNetLongTypeMapping : LongTypeMapping
 {
     public static new AdoNetLongTypeMapping Default { get; } = new("BIGINT", AnsiTypeMappings.Instance);

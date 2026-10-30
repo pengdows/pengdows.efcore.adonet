@@ -370,8 +370,9 @@ public class QueryGrammarTests
         Assert.Contains(
             "LEFT JOIN \"Parts\" AS \"p\" ON \"i\".\"Id\" = \"p\".\"ItemId\"",
             Sql(TestDialects.Bit, c => c.Items.LeftJoin(c.Parts, i => i.Id, p => p.ItemId, (i, p) => new { i.Name, p!.Label })));
+        // A right join is written as a left join of the operands swapped, so the left side's filter can't drop its rows.
         Assert.Contains(
-            "RIGHT JOIN \"Parts\" AS \"p\" ON \"i\".\"Id\" = \"p\".\"ItemId\"",
+            "LEFT JOIN \"Items\" AS \"i\" ON \"p\".\"ItemId\" = \"i\".\"Id\"",
             Sql(TestDialects.Bit, c => c.Items.RightJoin(c.Parts, i => i.Id, p => p.ItemId, (i, p) => new { i!.Name, p.Label })));
     }
 

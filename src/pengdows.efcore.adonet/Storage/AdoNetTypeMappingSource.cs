@@ -49,9 +49,11 @@ internal class AdoNetTypeMappingSource : RelationalTypeMappingSource
         {
             _ when clrType == typeof(bool) => new AdoNetBoolTypeMapping(storeType, sql.TrueLiteral, sql.FalseLiteral),
             _ when clrType == typeof(byte) => new AdoNetByteTypeMapping(storeType, _typeMappings),
+            _ when clrType == typeof(sbyte) => new AdoNetSByteTypeMapping(storeType, _typeMappings),
             _ when clrType == typeof(short) => new AdoNetShortTypeMapping(storeType, _typeMappings),
             _ when clrType == typeof(int) => new AdoNetIntTypeMapping(storeType, _typeMappings),
             _ when clrType == typeof(long) => new AdoNetLongTypeMapping(storeType, _typeMappings),
+            _ when clrType == typeof(ulong) => new AdoNetULongTypeMapping(storeType, _typeMappings),
             _ when clrType == typeof(float) => new AdoNetFloatTypeMapping(storeType, _typeMappings),
             _ when clrType == typeof(double) => new AdoNetDoubleTypeMapping(storeType, _typeMappings),
             _ when clrType == typeof(decimal) => DecimalMapping(storeType),
@@ -96,9 +98,21 @@ internal class AdoNetTypeMappingSource : RelationalTypeMappingSource
         Type? providerType,
         CoreTypeMapping? elementMapping)
     {
-        if (FindMapping(info.WithConverter(new ValueConverterInfo(modelType, typeof(string), _ => null!))) == null)
+        // A collection the provider maps as its own array type (an array of ranges, say) needs no JSON text mapping.
+        if (FindMapping(info.WithConverter(new ValueConverterInfo(modelType, typeof(string), _ => null!))) == null
+            && FindMapping(info) == null)
         {
             return null;
+        }
+
+        // EF asks without an element mapping when the element has no store type of its own; the collection's store type names it
+        // (a collection of ranges, for one, names its range element), so the element is mapped under that store type.
+        if (elementMapping is null
+            && info.StoreTypeName is { } collectionStore
+            && collectionStore.EndsWith("[]", StringComparison.Ordinal)
+            && TryGetCollectionElementType(modelType) is { } elementClr)
+        {
+            elementMapping = FindMapping(elementClr, collectionStore[..^2]) as CoreTypeMapping;
         }
 
         var mapping = base.FindCollectionMapping(info, modelType, providerType, elementMapping);

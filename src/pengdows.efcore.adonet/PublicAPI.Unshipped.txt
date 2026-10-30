@@ -31,7 +31,11 @@ override pengdows.efcore.adonet.Storage.AdoNetGuidTypeMapping.GenerateNonNullSql
 override pengdows.efcore.adonet.Storage.AdoNetIntTypeMapping.Clone(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters) -> Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping!
 override pengdows.efcore.adonet.Storage.AdoNetIntTypeMapping.GenerateNonNullSqlLiteral(object! value) -> string!
 override pengdows.efcore.adonet.Storage.AdoNetLongTypeMapping.Clone(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters) -> Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping!
+override pengdows.efcore.adonet.Storage.AdoNetSByteTypeMapping.Clone(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters) -> Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping!
+override pengdows.efcore.adonet.Storage.AdoNetULongTypeMapping.Clone(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters) -> Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping!
 override pengdows.efcore.adonet.Storage.AdoNetLongTypeMapping.GenerateNonNullSqlLiteral(object! value) -> string!
+override pengdows.efcore.adonet.Storage.AdoNetSByteTypeMapping.GenerateNonNullSqlLiteral(object! value) -> string!
+override pengdows.efcore.adonet.Storage.AdoNetULongTypeMapping.GenerateNonNullSqlLiteral(object! value) -> string!
 override pengdows.efcore.adonet.Storage.AdoNetShortTypeMapping.Clone(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters) -> Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping!
 override pengdows.efcore.adonet.Storage.AdoNetShortTypeMapping.GenerateNonNullSqlLiteral(object! value) -> string!
 override pengdows.efcore.adonet.Storage.AdoNetStringTypeMapping.Clone(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters) -> Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping!
@@ -170,8 +174,14 @@ pengdows.efcore.adonet.Storage.AdoNetIntTypeMapping
 pengdows.efcore.adonet.Storage.AdoNetIntTypeMapping.AdoNetIntTypeMapping(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
 pengdows.efcore.adonet.Storage.AdoNetIntTypeMapping.AdoNetIntTypeMapping(string! storeType, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
 pengdows.efcore.adonet.Storage.AdoNetLongTypeMapping
+pengdows.efcore.adonet.Storage.AdoNetSByteTypeMapping
+pengdows.efcore.adonet.Storage.AdoNetULongTypeMapping
 pengdows.efcore.adonet.Storage.AdoNetLongTypeMapping.AdoNetLongTypeMapping(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
+pengdows.efcore.adonet.Storage.AdoNetSByteTypeMapping.AdoNetSByteTypeMapping(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
+pengdows.efcore.adonet.Storage.AdoNetULongTypeMapping.AdoNetULongTypeMapping(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
 pengdows.efcore.adonet.Storage.AdoNetLongTypeMapping.AdoNetLongTypeMapping(string! storeType, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
+pengdows.efcore.adonet.Storage.AdoNetSByteTypeMapping.AdoNetSByteTypeMapping(string! storeType, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
+pengdows.efcore.adonet.Storage.AdoNetULongTypeMapping.AdoNetULongTypeMapping(string! storeType, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
 pengdows.efcore.adonet.Storage.AdoNetShortTypeMapping
 pengdows.efcore.adonet.Storage.AdoNetShortTypeMapping.AdoNetShortTypeMapping(Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping.RelationalTypeMappingParameters parameters, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
 pengdows.efcore.adonet.Storage.AdoNetShortTypeMapping.AdoNetShortTypeMapping(string! storeType, pengdows.efcore.adonet.ITypeMappingDialect! dialect) -> void
@@ -199,6 +209,8 @@ static pengdows.efcore.adonet.Storage.AdoNetFloatTypeMapping.Default.get -> peng
 static pengdows.efcore.adonet.Storage.AdoNetGuidTypeMapping.Default.get -> pengdows.efcore.adonet.Storage.AdoNetGuidTypeMapping!
 static pengdows.efcore.adonet.Storage.AdoNetIntTypeMapping.Default.get -> pengdows.efcore.adonet.Storage.AdoNetIntTypeMapping!
 static pengdows.efcore.adonet.Storage.AdoNetLongTypeMapping.Default.get -> pengdows.efcore.adonet.Storage.AdoNetLongTypeMapping!
+static pengdows.efcore.adonet.Storage.AdoNetSByteTypeMapping.Default.get -> pengdows.efcore.adonet.Storage.AdoNetSByteTypeMapping!
+static pengdows.efcore.adonet.Storage.AdoNetULongTypeMapping.Default.get -> pengdows.efcore.adonet.Storage.AdoNetULongTypeMapping!
 static pengdows.efcore.adonet.Storage.AdoNetShortTypeMapping.Default.get -> pengdows.efcore.adonet.Storage.AdoNetShortTypeMapping!
 static pengdows.efcore.adonet.Storage.AdoNetStringTypeMapping.Default.get -> pengdows.efcore.adonet.Storage.AdoNetStringTypeMapping!
 static pengdows.efcore.adonet.Storage.AdoNetTimeOnlyTypeMapping.Default.get -> pengdows.efcore.adonet.Storage.AdoNetTimeOnlyTypeMapping!
