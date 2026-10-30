@@ -101,11 +101,13 @@ internal class AdoNetDatabaseCreator(
     public override void Delete()
     {
         var lifecycle = Lifecycle;
+        var target = Connection.ConnectionString;
         ClearPool(lifecycle);
         if (lifecycle.Storage == DatabaseStorage.Server)
         {
             using var admin = AdminConnection(lifecycle, out var name);
             Execute(admin, lifecycle.DropSql.Select(sql => Statement(sql, name)).ToList());
+            ClearPoolAfterDrop(lifecycle, target);
             return;
         }
 
@@ -115,11 +117,13 @@ internal class AdoNetDatabaseCreator(
     public override async Task DeleteAsync(CancellationToken cancellationToken = default)
     {
         var lifecycle = Lifecycle;
+        var target = Connection.ConnectionString;
         ClearPool(lifecycle);
         if (lifecycle.Storage == DatabaseStorage.Server)
         {
             await using var admin = AdminConnection(lifecycle, out var name);
             await ExecuteAsync(admin, lifecycle.DropSql.Select(sql => Statement(sql, name)).ToList(), cancellationToken);
+            ClearPoolAfterDrop(lifecycle, target);
             return;
         }
 
@@ -265,6 +269,25 @@ internal class AdoNetDatabaseCreator(
         {
             File.Delete(path + suffix);
         }
+    }
+
+    // A drop can end sessions the pool still holds (a forcing drop does), and the next connection taken from that pool
+    // would then fail on its first command. The pool for the dropped database's connection string is cleared once it is gone.
+    private void ClearPoolAfterDrop(DatabaseLifecycle lifecycle, string? connectionString)
+    {
+        if (connectionString is null)
+        {
+            return;
+        }
+
+        using var connection = Factory().CreateConnection();
+        if (connection is null)
+        {
+            return;
+        }
+
+        connection.ConnectionString = connectionString;
+        (lifecycle.ClearPool ?? DriverClearPool)(connection);
     }
 
     // Pooled connections to the database would keep it open (a file locked, a server database in use), or, once it is

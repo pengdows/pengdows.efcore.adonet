@@ -40,6 +40,12 @@ internal sealed class PostgreSqlDbFunctionsTranslator(ISqlExpressionFactory sqlE
         IReadOnlyList<SqlExpression> arguments,
         IDiagnosticsLogger<DbLoggerCategory.Query> logger)
     {
+        // EF.Functions.Random() is random(), a double from zero up to but not including one; EF's default is RAND(), which PostgreSQL lacks.
+        if ((method.DeclaringType == typeof(DbFunctionsExtensions)) && (method.Name == nameof(DbFunctionsExtensions.Random)) && (arguments.Count == 1))
+        {
+            return sqlExpressionFactory.Call("random()", [], typeof(double), typeMappingSource.FindMapping(typeof(double)));
+        }
+
         if ((method.DeclaringType != typeof(PostgreSqlDbFunctionsExtensions)) || (method.Name != nameof(PostgreSqlDbFunctionsExtensions.ILike)))
         {
             return null;

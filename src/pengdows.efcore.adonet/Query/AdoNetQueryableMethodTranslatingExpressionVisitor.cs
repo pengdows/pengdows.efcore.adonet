@@ -308,6 +308,22 @@ internal class AdoNetQueryableMethodTranslatingExpressionVisitor : RelationalQue
     }
 #pragma warning restore EF1001
 
+    // A right join is the left join of the same two sources the other way round. Translated as RIGHT JOIN, the outer side's
+    // filter applies after the join and drops the unmatched right rows the join keeps, so the join is written as LEFT JOIN
+    // with the operands swapped; the result selector takes them in the swapped order.
+    protected override ShapedQueryExpression? TranslateRightJoin(
+        ShapedQueryExpression outer,
+        ShapedQueryExpression inner,
+        LambdaExpression outerKeySelector,
+        LambdaExpression innerKeySelector,
+        LambdaExpression resultSelector)
+        => TranslateLeftJoin(
+            inner,
+            outer,
+            innerKeySelector,
+            outerKeySelector,
+            Expression.Lambda(resultSelector.Body, resultSelector.Parameters[1], resultSelector.Parameters[0]));
+
     protected override ShapedQueryExpression? TranslateElementAtOrDefault(ShapedQueryExpression source, Expression index, bool returnDefault)
     {
         if ((WholeArray(source) is ({ ElementAt: { } elementAt }, var whole))

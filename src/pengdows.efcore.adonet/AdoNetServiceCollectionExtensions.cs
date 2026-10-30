@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore.Update;
 using Microsoft.EntityFrameworkCore.ValueGeneration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using pengdows.efcore.adonet.Bulk;
 using pengdows.efcore.adonet.Diagnostics;
 using pengdows.efcore.adonet.Infrastructure;
@@ -57,7 +58,6 @@ public static class AdoNetServiceCollectionExtensions
             .TryAdd<IModificationCommandBatchFactory, AdoNetModificationCommandBatchFactory>()
             .TryAdd<IRelationalParameterBasedSqlProcessorFactory, AdoNetParameterBasedSqlProcessorFactory>()
             .TryAdd<IValueGeneratorSelector, AdoNetValueGeneratorSelector>()
-            .TryAdd<IInterceptor, BinaryAsStreamReaderInterceptor>()
             .TryAdd<IModelValidator, AdoNetModelValidator>()
             .TryAdd<IExceptionDetector, AdoNetExceptionDetector>()
             .TryAdd<ISingletonOptions, IAdoNetSingletonOptions>(p => p.GetRequiredService<IAdoNetSingletonOptions>())
@@ -70,6 +70,9 @@ public static class AdoNetServiceCollectionExtensions
                 .TryAddSingleton<AdoNetDataSources, AdoNetDataSources>()
                 .TryAddScoped<IAdoNetBulkLoader, AdoNetInsertBulkLoader>())
             .TryAddCoreServices();
+
+        // Interceptors are many: a dialect may register its own, so this one is added alongside rather than instead.
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IInterceptor, BinaryAsStreamReaderInterceptor>());
 
         return services;
     }

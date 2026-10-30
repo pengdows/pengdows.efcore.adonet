@@ -148,9 +148,12 @@ public class AnsiTypeMappings : ITypeMappingDialect
         ["UUID"] = [typeof(Guid)]
     };
 
+    // CLR types ISO SQL has no store type for: a dialect with a native one maps them, and the rest leave them to EF's converters.
+    private static readonly Type[] DialectStoreTypes = [typeof(sbyte), typeof(ulong)];
+
     /// <summary>CLR types the provider maps; <see cref="ITypeMappingDialect.GetStoreType" /> supplies each one's store type.</summary>
     public static IReadOnlyCollection<Type> SupportedClrTypes
-        => StoreTypes.Keys;
+        => [.. StoreTypes.Keys, .. DialectStoreTypes];
 
     public virtual string? GetStoreType(Type clrType)
         => StoreTypes.GetValueOrDefault(clrType);
