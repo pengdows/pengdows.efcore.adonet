@@ -69,4 +69,78 @@ public class SqliteDatabaseTests
         Assert.True(await context.Database.EnsureCreatedAsync(Ct));
         Assert.True(await context.Database.EnsureDeletedAsync(Ct));
     }
+
+    [Fact]
+    public async Task Decimal_precision_round_trips_large_values_asynchronously()
+    {
+        var path = NewFile();
+        var connectionString = $"Data Source={path}";
+        var expected = new[]
+        {
+            99999999999999.9999m,
+            -99999999999999.9999m
+        };
+
+        await using (var write = new PrecisionDecimalContext(connectionString))
+        {
+            await write.Database.EnsureCreatedAsync(Ct);
+            write.Values.AddRange(expected.Select(amount => new PrecisionDecimalValue { Amount = amount }));
+            await write.SaveChangesAsync(Ct);
+        }
+
+        await using (var verify = new PrecisionDecimalContext(connectionString))
+        {
+            var actual = await verify.Values.AsNoTracking()
+                .OrderBy(value => value.Id)
+                .Select(value => value.Amount)
+                .ToArrayAsync(Ct);
+            Assert.Equal(expected, actual);
+            await verify.Database.EnsureDeletedAsync(Ct);
+        }
+    }
+
+    [Fact]
+    public void Decimal_precision_round_trips_large_values_synchronously()
+    {
+        var path = NewFile();
+        var connectionString = $"Data Source={path}";
+        var expected = new[]
+        {
+            99999999999999.9999m,
+            -99999999999999.9999m
+        };
+
+        using (var write = new PrecisionDecimalContext(connectionString))
+        {
+            write.Database.EnsureCreated();
+            write.Values.AddRange(expected.Select(amount => new PrecisionDecimalValue { Amount = amount }));
+            write.SaveChanges();
+        }
+
+        using (var verify = new PrecisionDecimalContext(connectionString))
+        {
+            var actual = verify.Values.AsNoTracking()
+                .OrderBy(value => value.Id)
+                .Select(value => value.Amount)
+                .ToArray();
+            Assert.Equal(expected, actual);
+            verify.Database.EnsureDeleted();
+        }
+    }
+
+    private sealed class PrecisionDecimalContext(string connectionString)
+        : DbContext(new DbContextOptionsBuilder<PrecisionDecimalContext>().UseAdoNetSqlite(connectionString).Options)
+    {
+        public DbSet<PrecisionDecimalValue> Values => Set<PrecisionDecimalValue>();
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+            => modelBuilder.Entity<PrecisionDecimalValue>().Property(value => value.Amount).HasPrecision(18, 4);
+    }
+
+    private sealed class PrecisionDecimalValue
+    {
+        public int Id { get; set; }
+
+        public decimal Amount { get; set; }
+    }
 }

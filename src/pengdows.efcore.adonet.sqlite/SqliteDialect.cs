@@ -110,6 +110,11 @@ internal sealed class SqliteTypeMappings : AnsiTypeMappings
             : clrType == typeof(long) || clrType == typeof(short) || clrType == typeof(byte) ? "INTEGER"
             : base.GetStoreType(clrType);
 
+    // Precision is an EF model facet, not a reason to switch SQLite decimal storage to NUMERIC affinity. NUMERIC affinity
+    // converts large decimal parameters to REAL and loses precision; TEXT preserves the exact decimal representation.
+    public override string? GetStoreType(Type clrType, StoreTypeFacets facets)
+        => clrType == typeof(decimal) ? "TEXT" : base.GetStoreType(clrType, facets);
+
     // SQLite has no date, time or uuid types: Microsoft.Data.Sqlite binds them as text. A constant must be the same text, or
     // it won't compare equal to what a parameter stored.
     public override string FormatLiteral(object value, string storeType, string literal)
