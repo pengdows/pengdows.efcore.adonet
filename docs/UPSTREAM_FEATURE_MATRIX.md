@@ -134,6 +134,7 @@ Source baseline: [`sqlserver.md`](upstream-baselines/sqlserver.md). Local source
 | HierarchyId | ❌ | ✅ | Provider-owned gap. |
 | Bulk copy / bulk loader | ✅ | ✅ | Local reusable loader/conformance path. |
 | SQL Server migrations | ✅ | ✅ | Core path present; provider metadata surface incomplete. |
+| Table and column comments | ✅ | ✅ | Stored as `MS_Description` extended properties by migrations. |
 | Schema reverse engineering | ◐ | ✅ | Needs full metadata comparison. |
 
 ## PostgreSQL feature grid

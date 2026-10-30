@@ -12,6 +12,11 @@ internal class SqlServerMigrationsSqlGenerator(MigrationsSqlGeneratorDependencie
 {
     protected override void Generate(CreateTableOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
     {
+        if (!terminate && (operation.Comment is not null || operation.Columns.Any(column => column.Comment is not null)))
+        {
+            throw new ArgumentException("SQL Server cannot generate an unterminated CREATE TABLE statement with comments.", nameof(terminate));
+        }
+
         base.Generate(operation, model, builder, terminate);
 
         // EF's SQL Server annotation is carried onto the create-table operation. Keep the temporal clause in a
@@ -27,6 +32,30 @@ internal class SqlServerMigrationsSqlGenerator(MigrationsSqlGeneratorDependencie
                 .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Name, operation.Schema))
                 .AppendLine(" SET (SYSTEM_VERSIONING = ON);");
             EndStatement(builder);
+        }
+
+        if (operation.Comment is { Length: > 0 } tableComment)
+        {
+            AddDescription(builder, tableComment, operation.Schema, operation.Name);
+        }
+
+        foreach (var column in operation.Columns.Where(column => column.Comment is { Length: > 0 }))
+        {
+            AddDescription(builder, column.Comment!, operation.Schema, operation.Name, column.Name);
+        }
+    }
+
+    protected override void Generate(AddColumnOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
+    {
+        if (!terminate && operation.Comment is not null)
+        {
+            throw new ArgumentException("SQL Server cannot generate an unterminated ADD COLUMN statement with comments.", nameof(terminate));
+        }
+
+        base.Generate(operation, model, builder, terminate);
+        if (operation.Comment is { Length: > 0 } comment)
+        {
+            AddDescription(builder, comment, operation.Schema, operation.Table, operation.Name);
         }
     }
 
@@ -101,6 +130,27 @@ internal class SqlServerMigrationsSqlGenerator(MigrationsSqlGeneratorDependencie
     protected override void Generate(RenameIndexOperation operation, IModel? model, MigrationCommandListBuilder builder)
         => Rename(builder, ObjectName(operation.Schema, operation.Table!, operation.Name), operation.NewName, "INDEX");
 
+    protected override void Generate(AlterTableOperation operation, IModel? model, MigrationCommandListBuilder builder)
+    {
+        base.Generate(operation, model, builder);
+        if (operation.OldTable.Comment == operation.Comment)
+        {
+            return;
+        }
+
+        if (operation.OldTable.Comment is { Length: > 0 })
+        {
+            DropDescription(builder, operation.Schema, operation.Name);
+        }
+
+        if (operation.Comment is { Length: > 0 } comment)
+        {
+            AddDescription(builder, comment, operation.Schema, operation.Name);
+        }
+
+        EndStatement(builder);
+    }
+
     protected override void Generate(DropIndexOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
     {
         builder
@@ -142,6 +192,19 @@ internal class SqlServerMigrationsSqlGenerator(MigrationsSqlGeneratorDependencie
                 .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Name))
                 .AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
             EndStatement(builder);
+        }
+
+        if (operation.OldColumn.Comment != operation.Comment)
+        {
+            if (operation.OldColumn.Comment is { Length: > 0 })
+            {
+                DropDescription(builder, operation.Schema, operation.Table, operation.Name);
+            }
+
+            if (operation.Comment is { Length: > 0 } comment)
+            {
+                AddDescription(builder, comment, operation.Schema, operation.Table, operation.Name);
+            }
         }
     }
 
@@ -189,6 +252,55 @@ internal class SqlServerMigrationsSqlGenerator(MigrationsSqlGeneratorDependencie
 
     private string ObjectName(string? schema, params string[] parts)
         => string.Join(".", (schema == null ? parts : [schema, .. parts]).Select(Dependencies.SqlGenerationHelper.DelimitIdentifier));
+
+    private void AddDescription(
+        MigrationCommandListBuilder builder,
+        string description,
+        string? schema,
+        string table,
+        string? column = null)
+    {
+        var schemaName = schema is null ? "@commentSchema" : Literal(schema);
+        if (schema is null)
+        {
+            builder.AppendLine("DECLARE @commentSchema sysname = SCHEMA_NAME();");
+        }
+
+        builder.Append("EXEC sys.sp_addextendedproperty @name = N'MS_Description', @value = ")
+            .Append(Literal(description))
+            .Append(", @level0type = N'SCHEMA', @level0name = ")
+            .Append(schemaName)
+            .Append(", @level1type = N'TABLE', @level1name = ")
+            .Append(Literal(table));
+        if (column is not null)
+        {
+            builder.Append(", @level2type = N'COLUMN', @level2name = ").Append(Literal(column));
+        }
+
+        builder.AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
+        EndStatement(builder);
+    }
+
+    private void DropDescription(MigrationCommandListBuilder builder, string? schema, string table, string? column = null)
+    {
+        var schemaName = schema is null ? "@commentSchema" : Literal(schema);
+        if (schema is null)
+        {
+            builder.AppendLine("DECLARE @commentSchema sysname = SCHEMA_NAME();");
+        }
+
+        builder.Append("EXEC sys.sp_dropextendedproperty @name = N'MS_Description', @level0type = N'SCHEMA', @level0name = ")
+            .Append(schemaName)
+            .Append(", @level1type = N'TABLE', @level1name = ")
+            .Append(Literal(table));
+        if (column is not null)
+        {
+            builder.Append(", @level2type = N'COLUMN', @level2name = ").Append(Literal(column));
+        }
+
+        builder.AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
+        EndStatement(builder);
+    }
 
     private static string Literal(string value)
         => "N'" + value.Replace("'", "''", StringComparison.Ordinal) + "'";
