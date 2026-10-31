@@ -9,6 +9,13 @@ namespace pengdows.efcore.adonet.Storage;
 ///     internal service provider, which owns it: the data sources, their pools and the connection strings they hold are
 ///     released when that provider is disposed. Data sources the application passes in are the application's.
 /// </summary>
+/// <remarks>
+///     Lifetime: an entry is added the first time a (factory, connection string) pair is used and stays until
+///     <see cref="Evict" /> removes it or the provider is disposed. Nothing evicts it on age or size, because a data source may be
+///     in use by an open connection; the cache therefore grows with the number of distinct connection strings a provider sees.
+///     A stable set of databases keeps it small; dynamically built connection strings (per tenant, say) grow it, and an
+///     application that does this should dispose its service provider, or evict, when a database is retired.
+/// </remarks>
 internal sealed class AdoNetDataSources : IDisposable
 {
     // Lazy keeps a lost race from creating, and leaking, a second data source.
@@ -19,6 +26,14 @@ internal sealed class AdoNetDataSources : IDisposable
     // for the same connection string.
     private readonly ConcurrentDictionary<(DbProviderFactory Factory, string ConnectionString), string> _augmented = new();
     private bool _disposed;
+
+    /// <summary>The data sources retained, one per (factory, connection string) pair used.</summary>
+    internal int Count
+        => _dataSources.Count;
+
+    /// <summary>The connection strings retained with their dialect options added.</summary>
+    internal int AugmentedCount
+        => _augmented.Count;
 
     public DbDataSource GetOrCreate(DbProviderFactory factory, string connectionString)
     {
