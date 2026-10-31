@@ -1,6 +1,7 @@
 using System.Runtime.ExceptionServices;
 using System.Data.Common;
 using System.Globalization;
+using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Migrations.Operations;
@@ -119,8 +120,9 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
         {
             try
             {
-                Command(AcquireLockSql()).ExecuteNonQuery(Parameters());
-                return new Lock(this);
+                var token = NewLockToken();
+                Command(AcquireLockSql(token)).ExecuteNonQuery(Parameters());
+                return new Lock(this, token);
             }
             catch (DbException refused)
             {
@@ -160,8 +162,9 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
             DbException refused;
             try
             {
-                await Command(AcquireLockSql()).ExecuteNonQueryAsync(Parameters(), cancellationToken).ConfigureAwait(false);
-                return new Lock(this);
+                var token = NewLockToken();
+                await Command(AcquireLockSql(token)).ExecuteNonQueryAsync(Parameters(), cancellationToken).ConfigureAwait(false);
+                return new Lock(this, token);
             }
             catch (DbException e)
             {
@@ -192,7 +195,7 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
             throw new TimeoutException($"Timed out after {LockTimeout} waiting for the migrations session lock.");
         }
 
-        return new Lock(this);
+        return new Lock(this, string.Empty);
     }
 
     private async Task<IMigrationsDatabaseLock> AcquireSessionLockAsync(string sql, CancellationToken cancellationToken)
@@ -203,14 +206,14 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
             throw new TimeoutException($"Timed out after {LockTimeout} waiting for the migrations session lock.");
         }
 
-        return new Lock(this);
+        return new Lock(this, string.Empty);
     }
 
     private static bool SessionLockTaken(object? value)
         => value is not null and not DBNull && Convert.ToInt64(value, CultureInfo.InvariantCulture) == 1;
 
-    private string ReleaseSql()
-        => SessionUnlockSql ?? ReleaseLockSql();
+    private string ReleaseSql(string token)
+        => SessionUnlockSql ?? ReleaseLockSql(token);
 
     private enum Retry
     {
@@ -258,7 +261,7 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
         }
 
         if (!refusals.TookOver
-            && DateTimeOffset.TryParse(holder, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var since)
+            && DateTimeOffset.TryParse(holder.Split('|')[0], CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var since)
             && (DateTimeOffset.UtcNow - since > LockTimeout))
         {
             refusals.TookOver = true;
@@ -271,9 +274,13 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
     private static string? Holder(object? value)
         => value is null or DBNull ? null : Convert.ToString(value, CultureInfo.InvariantCulture);
 
-    protected virtual string AcquireLockSql()
+    /// <summary>A lock token: the acquisition time (which a takeover reads), then random bits that no other acquisition shares.</summary>
+    private static string NewLockToken()
+        => DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture) + "|" + Convert.ToHexString(RandomNumberGenerator.GetBytes(8));
+
+    protected virtual string AcquireLockSql(string token)
         => $"INSERT INTO {LockTable} ({Column("Id")}, {Column("Timestamp")}) VALUES (1, "
-            + Literal(DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture)) + ")";
+            + Literal(token) + ")";
 
     protected virtual string HolderSql()
         => $"SELECT {Column("Timestamp")} FROM {LockTable} WHERE {Column("Id")} = 1";
@@ -282,8 +289,9 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
     protected virtual string TakeOverSql(string holder)
         => $"DELETE FROM {LockTable} WHERE {Column("Id")} = 1 AND {Column("Timestamp")} = {Literal(holder)}";
 
-    protected virtual string ReleaseLockSql()
-        => $"DELETE FROM {LockTable} WHERE {Column("Id")} = 1";
+    // Only this acquisition's row: a lock taken over from it, and taken again by another migrator, is that migrator's to release.
+    protected virtual string ReleaseLockSql(string token)
+        => $"DELETE FROM {LockTable} WHERE {Column("Id")} = 1 AND {Column("Timestamp")} = {Literal(token)}";
 
     /// <summary>The lock table, through the migrations SQL generator so its DDL is the dialect's.</summary>
     protected virtual IReadOnlyList<MigrationCommand> GetCreateLockTableCommands()
@@ -366,7 +374,7 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
     // EF's migrator begins its transaction before generating a migration's SQL and, if generating throws, releases the lock
     // before disposing that transaction: a DELETE there would be rolled back with it, leaving the lock held. The transaction
     // is doomed and the lock is the migrator's only while it owns a transaction, so it is rolled back first.
-    private sealed class Lock(AdoNetHistoryRepository repository) : IMigrationsDatabaseLock
+    private sealed class Lock(AdoNetHistoryRepository repository, string token) : IMigrationsDatabaseLock
     {
         public IHistoryRepository HistoryRepository
             => repository;
@@ -374,7 +382,7 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
         public void Dispose()
         {
             repository.Dependencies.Connection.CurrentTransaction?.Rollback();
-            repository.Command(repository.ReleaseSql()).ExecuteNonQuery(repository.Parameters());
+            repository.Command(repository.ReleaseSql(token)).ExecuteNonQuery(repository.Parameters());
         }
 
         public async ValueTask DisposeAsync()
@@ -384,7 +392,7 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
                 await transaction.RollbackAsync().ConfigureAwait(false);
             }
 
-            await repository.Command(repository.ReleaseSql()).ExecuteNonQueryAsync(repository.Parameters()).ConfigureAwait(false);
+            await repository.Command(repository.ReleaseSql(token)).ExecuteNonQueryAsync(repository.Parameters()).ConfigureAwait(false);
         }
     }
 }

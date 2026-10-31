@@ -13,6 +13,7 @@ public class HistoryRepositoryTests
     private const string LockInsert = "INSERT INTO \"__EFMigrationsLock\"";
     private const string LockTableCreate = "CREATE TABLE \"__EFMigrationsLock\"";
     private const string AppLockInsert = "INSERT INTO \"app\".\"__EFMigrationsLock\"";
+    private const string ReleasePrefix = "DELETE FROM \"app\".\"__EFMigrationsLock\" WHERE \"Id\" = 1 AND \"Timestamp\" = '";
     private const string HolderQuery = "SELECT \"Timestamp\" FROM \"app\".\"__EFMigrationsLock\" WHERE \"Id\" = 1";
 
     private static string Stamp(DateTimeOffset at)
@@ -132,7 +133,26 @@ public class HistoryRepositoryTests
 
         Assert.Equal(1, commands.NonQueries.Count(c => c.StartsWith("CREATE TABLE \"app\".\"__EFMigrationsLock\"", StringComparison.Ordinal)));
         Assert.Equal(2, commands.NonQueries.Count(c => c.StartsWith("INSERT INTO \"app\".\"__EFMigrationsLock\" (\"Id\", \"Timestamp\") VALUES (1, '", StringComparison.Ordinal)));
-        Assert.Equal(2, commands.NonQueries.Count(c => c == "DELETE FROM \"app\".\"__EFMigrationsLock\" WHERE \"Id\" = 1"));
+        Assert.Equal(2, commands.NonQueries.Count(c => c.StartsWith("DELETE FROM \"app\".\"__EFMigrationsLock\" WHERE \"Id\" = 1 AND \"Timestamp\" = '", StringComparison.Ordinal)));
+    }
+
+    // A lock whose row another migrator has taken over must not remove that migrator's row when it is released late.
+    [Fact]
+    public void A_release_deletes_only_the_row_its_own_acquisition_inserted()
+    {
+        var commands = new CommandLog();
+        using var context = Context(configure: b => b.AddInterceptors(commands));
+        var history = context.GetService<IHistoryRepository>();
+
+        _db.Connection.EnqueueScalarResult(0);
+        using (history.AcquireDatabaseLock())
+        {
+        }
+
+        var insert = commands.NonQueries.Single(c => c.StartsWith(AppLockInsert, StringComparison.Ordinal));
+        const string valuesStart = "VALUES (1, '";
+        var token = insert[(insert.IndexOf(valuesStart, StringComparison.Ordinal) + valuesStart.Length)..^"')".Length];
+        Assert.Single(commands.NonQueries, c => c == $"DELETE FROM \"app\".\"__EFMigrationsLock\" WHERE \"Id\" = 1 AND \"Timestamp\" = '{token}'");
     }
 
     [Fact]
@@ -265,18 +285,21 @@ public class HistoryRepositoryTests
         using var transaction = context.Database.BeginTransaction();
         databaseLock.Dispose();
 
-        Assert.Equal(["rollback", "DELETE FROM \"app\".\"__EFMigrationsLock\" WHERE \"Id\" = 1"], events.Skip(1));
+        var afterRollback = events.Skip(1).ToList();
+        Assert.Equal("rollback", afterRollback[0]);
+        Assert.StartsWith(ReleasePrefix, afterRollback[1], StringComparison.Ordinal);
+        Assert.Equal(2, afterRollback.Count);
         Assert.Null(context.Database.CurrentTransaction);
     }
 
     [Fact]
     public async Task A_lock_that_cannot_be_released_says_so()
     {
-        await using var context = Context();
+        var commands = new CommandLog { FailAlways = ReleasePrefix };
+        await using var context = Context(configure: b => b.AddInterceptors(commands));
         var history = context.GetService<IHistoryRepository>();
         _db.Connection.EnqueueScalarResult(1);
         var databaseLock = history.AcquireDatabaseLock();
-        _db.Connection.SetCommandFailure("DELETE FROM \"app\".\"__EFMigrationsLock\" WHERE \"Id\" = 1", new LockConflict());
 
         // Not swallowed: a lock left behind blocks every later migration until it goes stale.
         Assert.Throws<LockConflict>(() => databaseLock.Dispose());
@@ -325,7 +348,10 @@ public class HistoryRepositoryTests
         await using var transaction = await context.Database.BeginTransactionAsync(Ct);
         await databaseLock.DisposeAsync();
 
-        Assert.Equal(["rollback", "DELETE FROM \"app\".\"__EFMigrationsLock\" WHERE \"Id\" = 1"], events.Skip(1));
+        var afterRollback = events.Skip(1).ToList();
+        Assert.Equal("rollback", afterRollback[0]);
+        Assert.StartsWith(ReleasePrefix, afterRollback[1], StringComparison.Ordinal);
+        Assert.Equal(2, afterRollback.Count);
         Assert.Null(context.Database.CurrentTransaction);
     }
 
