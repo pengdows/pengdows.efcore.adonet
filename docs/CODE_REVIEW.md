@@ -114,15 +114,28 @@ The primary success criterion is whether another database or feature can be adde
 
 ## Remediation status
 
-Status as of the commits named below; each open item is still open.
+Status at the commits named. "Open" means not done; each open item says what remains.
 
-| Finding | Status | Commit / note |
+| Finding | Status | Commit / evidence |
 | --- | --- | --- |
-| P0 — migration lock takeover and unowned release | **Partly fixed.** The release deletes only the row its own acquisition wrote (token = acquisition time plus random bits); takeover reads the time before the `\|`. **Not fixed:** a migration longer than the lock timeout can still be taken over while its owner runs; lease renewal and a two-migrator test against a real server are still needed. | `e6e7cd4` |
-| P1 — PostgreSQL-specific behaviour in the shared core | Open. Not started. | — |
-| P1 — MySQL lock not scoped to the database | **Fixed.** The lock name hashes `DATABASE()`; acquire and release use the same expression. Session pinning for the whole migration is not yet tested. | `afc4bda` |
-| P1 — async open runs synchronous session SQL | Open. Root cause identified: the `StateChange` handler in `AdoNetRelationalConnection` calls `ExecuteNonQuery()`, and the watch cache is static. No test yet. | — |
-| P1 — no CI pipeline | Open. | — |
-| P2 — bulk insert materializes data twice | Open. Needs a benchmark before any change, as the review says. | — |
-| P2 — data-source cache growth | Open. Needs documented lifetime and a measurement under dynamic connection strings. | — |
-| P2 — JSON mapping repeated parsing | Open. Needs a measurement first. | — |
+| P0 — migration lock takeover and unowned release | **Fixed for SQL Server and MySQL.** Both use a session-owned lock (`sp_getapplock`, `GET_LOCK`): no row, no takeover, released when the session ends. SQL Server has a server test (`SqlServerMigrationLockTests`). The release is owner-checked for the table lock too (`e6e7cd4`). **Open:** providers on the table lock (SQLite, DuckDB, flat file) can still take over a lock held longer than its timeout, and a two-migrator test on those servers is not written. | `510dd7a`, `e6e7cd4` |
+| P1 — PostgreSQL-specific behaviour in the shared core | **Fixed.** The `::inet` cast and the `Jsonb` parameter type moved behind `ISqlDialect.ParameterCast` and `JsonSyntax.ConfigureParameter`. A guard test names the PostgreSQL tokens the core must not contain; it failed on the leaks first. | `20cc5ea` |
+| P1 — MySQL lock not scoped to the database | **Fixed.** The lock name hashes `DATABASE()`. A test shows the connection stays open from `GET_LOCK` to `RELEASE_LOCK`. | `afc4bda`, `13d1324` |
+| P1 — async open runs synchronous session SQL | **Fixed.** `OpenAsync` runs the setup asynchronously; a driver that rejects synchronous I/O passes. The static watch table is per-connection session state. | `3b8e0fe` |
+| P1 — no CI pipeline | **Fixed.** `.github/workflows/ci.yml` builds and tests the core, each provider, the specification suite, and the outside-plugin sample. It has not run on GitHub yet. | `18190ef`, `ec1a248` |
+| P2 — bulk insert materializes data twice | **Measured; no change.** About 25.5 KB per row on fakeDb, flat across sizes; the input copies are not the cost. The SQL Server `DataTable` copy is **open**: it needs a server measurement. | `7db4287`, `docs/PERFORMANCE.md` |
+| P2 — data-source cache grows with connection strings | **Documented and measured; no eviction.** Lifetime is stated on the class; tests measure growth, reuse, disposal and eviction. | `359fed1` |
+| P2 — JSON mapping repeated parsing | **Measured; no change.** About 2.9 µs per JSON parameter against 0.19 µs for a plain string. | `7db4287` |
+
+### Pasted review items
+
+| Item | Status | Commit / evidence |
+| --- | --- | --- |
+| Plugin `InternalsVisibleTo` entries; outside authors cannot compile | **Fixed.** The core grants no plugin internals; nine types are public and in the baseline with reasons. A guard test keeps plugin IVT out. An outside sample builds against the packed core and runs an EF query (`OutsidePluginSample`, in CI). **Open:** the sample does not yet pass the `pengdows.efcore.adonet.Testing` suites, which the review also suggested. | `34a1443`, `ec1a248` |
+| README: 1,692 failed vs 0 failed | **Fixed by footnote.** The row is marked as a historical snapshot at `d238404`, not re-run. | `d33ce5e` |
+| README: "Where suite: 408 of 408" | **Fixed:** "Where-query suite". | `d33ce5e` |
+| README: 6,648 vs 6,591 line counts | **Fixed.** The core is measured at `34a1443` (8,464 code lines); the coverage row's commit is stated. | `d33ce5e` |
+| No `.github/workflows` | **Fixed** (see P1 CI above). | `18190ef` |
+| `GenerateDocumentationFile` false on the core | **Fixed for the dialect contract and syntax parts**, which are documented. **Open:** about 700 other public members have no summary; their CS1591 warnings are suppressed and listed in `docs/PUBLIC_API.md`. | `5ebe08a` |
+| `local-packages/` vendored | **Documented.** nuget.org has only `2.0.6-rc1` through `rc6`, not `2.0.6`. | `d33ce5e` |
+| Specification tests did not build (duplicate DuckDB package) | **Fixed.** | `632cf5e` |
