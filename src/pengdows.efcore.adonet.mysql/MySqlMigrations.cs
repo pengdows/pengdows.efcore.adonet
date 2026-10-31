@@ -666,10 +666,12 @@ internal class MySqlHistoryRepository(HistoryRepositoryDependencies dependencies
     // on another connection waits rather than fails. Behaviour reference (not copied):
     // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Migrations/Internal/MySqlHistoryRepository.cs
     protected override string? SessionLockSql(TimeSpan timeout)
-        => "SELECT GET_LOCK('" + LockName + "', " + (long)timeout.TotalSeconds + ")";
+        => "SELECT GET_LOCK(" + LockName + ", " + (long)timeout.TotalSeconds + ")";
 
     protected override string? SessionUnlockSql
-        => "SELECT RELEASE_LOCK('" + LockName + "')";
+        => "SELECT RELEASE_LOCK(" + LockName + ")";
 
-    private const string LockName = "__EFMigrationsLock";
+    // The lock is named for the database the migrator is connected to, so migrations of different databases on one server
+    // do not wait for each other. MD5 keeps the name within MySQL's 64-character limit for any database name.
+    private const string LockName = "CONCAT('__EFMigrationsLock:', MD5(COALESCE(DATABASE(), '')))";
 }

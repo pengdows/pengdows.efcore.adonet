@@ -82,8 +82,9 @@ public class MySqlMigrationExecutionTests
 
         await context.Database.MigrateAsync(Ct);
 
-        Assert.Contains(db.Commands, c => c == "SELECT GET_LOCK('__EFMigrationsLock', 120)");
-        Assert.Contains(db.Commands, c => c == "SELECT RELEASE_LOCK('__EFMigrationsLock')");
+        // Named for the database, so migrators of different databases on one server do not wait for each other.
+        Assert.Contains(db.Commands, c => c == "SELECT GET_LOCK(CONCAT('__EFMigrationsLock:', MD5(COALESCE(DATABASE(), ''))), 120)");
+        Assert.Contains(db.Commands, c => c == "SELECT RELEASE_LOCK(CONCAT('__EFMigrationsLock:', MD5(COALESCE(DATABASE(), ''))))");
         Assert.DoesNotContain(db.Commands, c => c.Contains("CREATE TABLE", StringComparison.Ordinal) && c.Contains("__EFMigrationsLock", StringComparison.Ordinal));
     }
 
