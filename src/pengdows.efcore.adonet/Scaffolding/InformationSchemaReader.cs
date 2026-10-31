@@ -34,7 +34,7 @@ public class InformationSchemaReader : SchemaReader
     public virtual string ColumnsSql
         => "SELECT TABLE_SCHEMA AS \"SCHEMA\", TABLE_NAME AS \"TABLE\", COLUMN_NAME AS \"NAME\", ORDINAL_POSITION AS \"POSITION\", "
             + "IS_NULLABLE AS \"NULLABLE\", COLUMN_DEFAULT AS \"DEFAULT\", DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION, "
-            + "NUMERIC_SCALE, DATETIME_PRECISION, COLLATION_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = {schema}";
+            + "NUMERIC_SCALE, DATETIME_PRECISION, COLLATION_NAME, NULL AS \"COMMENT\" FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = {schema}";
 
     public virtual string KeysSql
         => "SELECT k.TABLE_SCHEMA AS \"SCHEMA\", k.TABLE_NAME AS \"TABLE\", k.CONSTRAINT_NAME AS \"NAME\", "
@@ -133,7 +133,8 @@ public class InformationSchemaReader : SchemaReader
             StoreType = StoreType(row),
             IsNullable = string.Equals(Text(row, "NULLABLE"), "YES", StringComparison.OrdinalIgnoreCase),
             DefaultValueSql = DefaultValueSql(row),
-            Collation = row.TryGetValue("COLLATION_NAME", out var collation) ? collation as string : null
+            Collation = row.TryGetValue("COLLATION_NAME", out var collation) ? collation as string : null,
+            Comment = Text(row, "COMMENT") is { Length: > 0 } comment ? comment : null
         };
 
     /// <summary>The column's store type: ISO's data type, with its length or precision and scale.</summary>

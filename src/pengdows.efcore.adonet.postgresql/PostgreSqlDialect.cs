@@ -14,6 +14,8 @@ namespace pengdows.efcore.adonet.postgresql;
 
 public sealed class PostgreSqlDialect : AdoNetDialect
 {
+    public override pengdows.efcore.adonet.Scaffolding.SchemaReader SchemaReader => PostgreSqlSchemaReader.Instance;
+
     public static readonly PostgreSqlDialect Instance = new();
 
     static PostgreSqlDialect()
