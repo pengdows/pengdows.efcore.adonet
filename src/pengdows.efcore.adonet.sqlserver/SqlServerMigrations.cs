@@ -1,7 +1,6 @@
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Migrations.Operations;
 using pengdows.efcore.adonet.Migrations;
@@ -16,41 +15,6 @@ namespace pengdows.efcore.adonet.sqlserver;
 internal class SqlServerMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dependencies, IAdoNetDialect dialect)
     : AdoNetMigrationsSqlGenerator(dependencies, dialect)
 {
-    protected override void Generate(CreateTableOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
-    {
-        if (!terminate && (operation.Comment is not null || operation.Columns.Any(column => column.Comment is not null)))
-        {
-            throw new ArgumentException("SQL Server cannot generate an unterminated CREATE TABLE statement with comments.", nameof(terminate));
-        }
-
-        base.Generate(operation, model, builder, terminate);
-
-        // EF's SQL Server annotation is carried onto the create-table operation. Keep the temporal clause in a
-        // separate statement so the provider can still use the shared CREATE TABLE column/constraint generator.
-        if (operation["SqlServer:IsTemporal"] is true
-            || model?.GetEntityTypes().Any(entity =>
-                string.Equals(entity.GetTableName(), operation.Name, StringComparison.Ordinal)
-                && string.Equals(entity.GetSchema(), operation.Schema, StringComparison.Ordinal)
-                && entity.FindAnnotation("SqlServer:IsTemporal")?.Value is true) == true)
-        {
-            builder
-                .Append("ALTER TABLE ")
-                .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Name, operation.Schema))
-                .AppendLine(" SET (SYSTEM_VERSIONING = ON);");
-            EndStatement(builder);
-        }
-
-        if (operation.Comment is { Length: > 0 } tableComment)
-        {
-            AddDescription(builder, tableComment, operation.Schema, operation.Name);
-        }
-
-        foreach (var column in operation.Columns.Where(column => column.Comment is { Length: > 0 }))
-        {
-            AddDescription(builder, column.Comment!, operation.Schema, operation.Name, column.Name);
-        }
-    }
-
     protected override void Generate(AddColumnOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
     {
         if (!terminate && operation.Comment is not null)
@@ -240,11 +204,17 @@ internal class SqlServerMigrationsSqlGenerator(MigrationsSqlGeneratorDependencie
     // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.SqlServer/Migrations/SqlServerMigrationsSqlGenerator.cs
     protected override void Generate(CreateTableOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
     {
+        if (!terminate && (operation.Comment is not null || operation.Columns.Any(column => column.Comment is not null)))
+        {
+            throw new ArgumentException("SQL Server cannot generate an unterminated CREATE TABLE statement with comments.", nameof(terminate));
+        }
+
         var memoryOptimized = IsMemoryOptimized(operation, model, operation.Schema, operation.Name);
         var temporal = operation[SqlServerAnnotationNames.IsTemporal] is true;
         if (!memoryOptimized && !temporal)
         {
             base.Generate(operation, model, builder, terminate);
+            CreateTableComments(operation, builder);
             return;
         }
 
@@ -291,6 +261,21 @@ internal class SqlServerMigrationsSqlGenerator(MigrationsSqlGeneratorDependencie
         {
             builder.AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
             EndStatement(builder, suppressTransaction: memoryOptimized);
+        }
+
+        CreateTableComments(operation, builder);
+    }
+
+    private void CreateTableComments(CreateTableOperation operation, MigrationCommandListBuilder builder)
+    {
+        if (operation.Comment is { Length: > 0 } tableComment)
+        {
+            AddDescription(builder, tableComment, operation.Schema, operation.Name);
+        }
+
+        foreach (var column in operation.Columns.Where(column => column.Comment is { Length: > 0 }))
+        {
+            AddDescription(builder, column.Comment!, operation.Schema, operation.Name, column.Name);
         }
     }
 
@@ -356,6 +341,22 @@ internal class SqlServerMigrationsSqlGenerator(MigrationsSqlGeneratorDependencie
         }
 
         base.Generate(operation, model, builder);
+        if (operation.OldTable.Comment == operation.Comment)
+        {
+            return;
+        }
+
+        if (operation.OldTable.Comment is { Length: > 0 })
+        {
+            DropDescription(builder, operation.Schema, operation.Name);
+        }
+
+        if (operation.Comment is { Length: > 0 } comment)
+        {
+            AddDescription(builder, comment, operation.Schema, operation.Name);
+        }
+
+        EndStatement(builder);
     }
 
     // A memory-optimized table's indexes are part of the table: ALTER TABLE ... ADD INDEX, outside a transaction.
@@ -421,27 +422,6 @@ internal class SqlServerMigrationsSqlGenerator(MigrationsSqlGeneratorDependencie
 
     protected override void Generate(RenameIndexOperation operation, IModel? model, MigrationCommandListBuilder builder)
         => Rename(builder, ObjectName(operation.Schema, operation.Table!, operation.Name), operation.NewName, "INDEX");
-
-    protected override void Generate(AlterTableOperation operation, IModel? model, MigrationCommandListBuilder builder)
-    {
-        base.Generate(operation, model, builder);
-        if (operation.OldTable.Comment == operation.Comment)
-        {
-            return;
-        }
-
-        if (operation.OldTable.Comment is { Length: > 0 })
-        {
-            DropDescription(builder, operation.Schema, operation.Name);
-        }
-
-        if (operation.Comment is { Length: > 0 } comment)
-        {
-            AddDescription(builder, comment, operation.Schema, operation.Name);
-        }
-
-        EndStatement(builder);
-    }
 
     protected override void Generate(DropIndexOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
     {

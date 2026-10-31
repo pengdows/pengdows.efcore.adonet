@@ -70,6 +70,33 @@ public class SqlServerMigrationsTests
     ///     hostile; seed data leaving the key to the database doesn't touch it.
     /// </summary>
     [Fact]
+    public void A_temporal_table_with_comments_is_versioned_and_documented()
+    {
+        var table = new CreateTableOperation
+        {
+            Name = "Accounts",
+            Comment = "Account master data",
+            Columns =
+            {
+                new AddColumnOperation { Name = "Id", ClrType = typeof(int), ColumnType = "int", Comment = "Surrogate key" },
+                new AddColumnOperation { Name = "ValidFrom", ClrType = typeof(DateTime), ColumnType = "datetime2" },
+                new AddColumnOperation { Name = "ValidTo", ClrType = typeof(DateTime), ColumnType = "datetime2" }
+            }
+        };
+        table[SqlServerAnnotationNames.IsTemporal] = true;
+        table[SqlServerAnnotationNames.TemporalPeriodStartColumnName] = "ValidFrom";
+        table[SqlServerAnnotationNames.TemporalPeriodEndColumnName] = "ValidTo";
+
+        var sql = Sql(table);
+
+        Assert.Contains("SYSTEM_VERSIONING = ON", sql);
+        Assert.Contains("PERIOD FOR SYSTEM_TIME([ValidFrom], [ValidTo])", sql);
+        Assert.Equal(2, sql.Split("sp_addextendedproperty", StringSplitOptions.None).Length - 1);
+        Assert.Contains("N'Account master data'", sql);
+        Assert.Contains("N'Surrogate key'", sql);
+    }
+
+    [Fact]
     public void Seed_data_with_identity_values_switches_identity_insert_for_its_table()
     {
         using var context = new HostileTableContext(
