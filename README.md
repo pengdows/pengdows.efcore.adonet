@@ -16,44 +16,62 @@ options.UseAdoNetPostgreSql(connectionString);
 The core never names a database. Adding one must not require changing it; if it does, that's a missing extension
 point. A test enforces that the core references no driver and defines no dialect but ANSI.
 
-## What this project is not
+## Two different data-access models
 
-**This is not `pengdows.crud` for EF Core.** The EF Core core and dialect plugins do not
-wrap, use, or depend on `pengdows.crud` at runtime. Tests use `pengdows.crud.fakeDb`
-as test infrastructure; that does not add CRUD behavior to the product.
+**`pengdows.crud` and `pengdows.efcore.adonet` solve different problems.**
+This is not a reduced version of CRUD, a CRUD adapter, or an attempt to bring
+CRUD's behavior into EF Core.
 
-The purpose of this repository is **to make EF Core providers less fragile and easier
-for provider maintainers to implement, test, and maintain**. It supplies shared EF
-Core/ADO.NET plumbing and keeps genuine SQL/driver differences in dialect plugins.
-It does **not** bring the distinctive `pengdows.crud` features into EF Core:
+| | `pengdows.crud` | `pengdows.efcore.adonet` |
+|---|---|---|
+| **Programming model** | SQL-first, explicit commands and table gateways | EF Core ORM: LINQ, entity mapping, change tracking, and `SaveChanges` |
+| **Primary responsibility** | Control database access, SQL construction, execution, resource usage, and operational behavior | Implement EF Core's relational provider contract on ADO.NET and reusable SQL dialects |
+| **Who decides the work** | The application chooses SQL, execution intent, and transaction boundaries | EF Core's query/update pipelines derive SQL and persistence operations from the model and API calls |
+| **Connection behavior** | Application-level governance, read/write pools, routing, modes, and backpressure | Ordinary EF Core connection behavior and driver pooling; no CRUD governor or routing |
+| **Provider coverage** | ADO.NET-based SQL access across its supported databases | One common EF Core implementation exercised by independent dialect plugins |
 
-- **No pool governance:** no `PoolGovernor`, split read/write pools, application-defined
-  pool ceilings or reserves, adaptive concurrency gating, pool protection, or backpressure.
-- **No intent-aware routing:** no automatic reader/writer selection, read-replica routing,
-  or CRUD-style read-only session enforcement.
-- **No CRUD connection modes:** no `Standard`, `PreventDatabaseUnload` (KeepAlive),
-  `SingleWriter`, or `SingleConnection` modes.
-- **No tenant-per-database management:** no CRUD tenant database registry, connection
-  resolution, or routing. Applications use their own tenant resolution and EF Core's
-  normal multi-tenancy patterns; this project does not add a tenancy subsystem.
-- **No CRUD SQL construction tools:** no standalone dialect-aware SQL builder or
-  `TableGateway`. EF Core still generates SQL for its own queries and updates.
-- **No automatic CRUD audit/version handling:** no gateway-managed audit fields,
-  audit/version columns, or CRUD-specific upsert behaviors.
-- **No CRUD operational policies:** no `RetryContext` or adaptive load governance.
-- **No built-in runtime metrics:** no CRUD-style pool occupancy, saturation, queue/wait-time,
-  operation latency (p95/p99), or connection-governance counters.
+`pengdows.crud` is **not an ORM**: it does not implement EF Core's change
+tracker, LINQ query provider, or implicit unit-of-work model. Conversely,
+`pengdows.efcore.adonet` does not implement the connection-governance and
+application-level data-access model of `pengdows.crud`. Sharing the ADO.NET
+contract does not make the two packages interchangeable.
 
-The core necessarily manages **EF Core's** connections, transactions, commands,
-and query generation. Standard EF Core logging and diagnostic events remain available;
-this library adds **no standalone metrics collection or CRUD metrics subsystem**.
-An ADO.NET driver's ordinary connection pooling is **not** `pengdows.crud` pool
-protection or governance. Do not infer CRUD features
-from the shared ADO.NET contract, the Pengdows name, or the use of FakeDb in tests.
+### Scope boundaries
 
-For those capabilities, see [pengdows.crud](https://github.com/pengdows/pengdows.crud).
-For a source-level engineering assessment of this repository, see
-[docs/CODE_REVIEW.md](docs/CODE_REVIEW.md).
+The EF Core core and dialect plugins **do not wrap, use, or depend on
+`pengdows.crud` at runtime**. The `pengdows.crud.fakeDb` package is used
+only as an independent ADO.NET test provider.
+
+These capabilities belong to CRUD's separate programming model and are
+**not** supplied by this EF Core provider implementation:
+
+- **Connection governance:** `PoolGovernor`, separate reader/writer pools,
+  pool protection, reserves, adaptive gates, fairness, and backpressure.
+- **Intent-based data access:** automatic reader/writer selection,
+  read-replica routing, and CRUD's read-only enforcement.
+- **Database execution modes:** `Standard`, `PreventDatabaseUnload`
+  (KeepAlive), `SingleWriter`, and `SingleConnection`.
+- **Tenant database orchestration:** CRUD's database-per-tenant context
+  selection and routing. EF Core applications can still implement
+  database-per-tenant patterns using tenant-specific connection strings;
+  this package adds no tenancy manager.
+- **Explicit SQL and gateway APIs:** CRUD's `ISqlContainer`,
+  `TableGateway`, upsert helpers, and automatic gateway-based audit/version
+  handling. EF Core has its own SQL generation and tracking model instead.
+- **CRUD operating policies:** `RetryContext`, adaptive load control,
+  and Pengdows-specific metrics such as pool saturation, queue wait times,
+  and latency percentiles. Standard EF Core logging, diagnostics, and
+  framework metrics remain separate and available.
+
+The goal here is **to make EF Core provider implementations more correct,
+less fragile, easier to test, and easier to maintain** by sharing their
+ADO.NET-facing implementation instead of duplicating it in each database
+provider. It does **not** claim to replace the capabilities or control
+model of `pengdows.crud`.
+
+For SQL-first, explicitly governed data access, see
+[pengdows.crud](https://github.com/pengdows/pengdows.crud).
+For the code review, see [docs/CODE_REVIEW.md](docs/CODE_REVIEW.md).
 
 ## Database-free EF Core testing
 
