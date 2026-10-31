@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <!-- The system libsqlite3 that mod_spatialite links. Its copy in the output is the one SQLite engine this process uses. -->
+    <SystemSqliteLibrary Condition="'$(SystemSqliteLibrary)' == ''">/usr/lib/x86_64-linux-gnu/libsqlite3.so.0</SystemSqliteLibrary>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" />
+    <!-- Only the managed bundle's native SQLite is left out: loading mod_spatialite beside it crashes the process. -->
+    <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" ExcludeAssets="native" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+  <Target Name="UseSystemSqliteAsBundledNative" AfterTargets="Build" Condition="'$(OS)' != 'Windows_NT'">
+    <Error Text="System SQLite not found at $(SystemSqliteLibrary); install libsqlite3-0." Condition="!Exists('$(SystemSqliteLibrary)')" />
+    <Copy SourceFiles="$(SystemSqliteLibrary)" DestinationFiles="$(OutDir)libe_sqlite3.so" />
+  </Target>
+</Project>
