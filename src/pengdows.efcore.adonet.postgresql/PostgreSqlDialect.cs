@@ -287,6 +287,17 @@ internal sealed class PostgreSqlFunctions : FunctionSyntax
     public override string? TimeSpanMilliseconds => "FLOOR(EXTRACT(MILLISECONDS FROM {0}) % 1000)";
     public override string? TimeSpanMicroseconds => "EXTRACT(MICROSECONDS FROM {0}) % 1000";
     public override string? TimeSpanNanoseconds => "0";
+
+    // A time of day: PostgreSQL's time keeps microseconds, so the sub-microsecond part is zero.
+    public override string? Millisecond => "FLOOR(EXTRACT(MILLISECONDS FROM {0}) % 1000)";
+    public override string? Microsecond => "EXTRACT(MICROSECONDS FROM {0}) % 1000";
+    public override string? Nanosecond => "0";
+    public override string? TimeFromDateTime => "CAST({0} AS time)";
+    public override string? TimeFromTimeSpan => "CAST({0} AS time)";
+
+    // time + interval wraps past midnight, as TimeOnly.Add does; IsBetween wraps when its end is earlier than its start.
+    public override string? AddTime => "(CAST({0} AS time) + {1})";
+    public override string? TimeIsBetween => "(CASE WHEN {1} <= {2} THEN {0} >= {1} AND {0} < {2} ELSE {0} >= {1} OR {0} < {2} END)";
 }
 
 internal static class PostgreSqlJson
