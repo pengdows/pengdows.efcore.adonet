@@ -221,7 +221,7 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
     // process alone, so there is nothing to coordinate and no file is needed.
     private void RefuseSingleWriterWithoutLockFile()
     {
-        if (!Dialect.Capabilities.SingleWriter || DescribeDatabase().InMemory)
+        if (Dialect.Sql.Databases is not { SingleWriter: true } || DescribeDatabase().InMemory)
         {
             return;
         }

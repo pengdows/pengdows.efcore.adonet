@@ -20,8 +20,6 @@ public sealed class DuckDbDialect : AdoNetDialect
     public override ITypeMappingDialect TypeMappings { get; } = new DuckDbTypeMappings();
     public override IDatabaseCapabilities Capabilities { get; } = new DatabaseCapabilities
     {
-        // One writer at a time, any number of readers: migrations take the database's lock file.
-        SingleWriter = true,
         SupportsMultipleStatementsPerCommand = true,
         DefaultMaxBatchSize = 128,
         MaxParametersPerCommand = 65535,
@@ -59,7 +57,9 @@ internal sealed class DuckDbSql : AnsiSqlDialect
         "Data Source",
         [".wal"],
         isInMemory: b => (Convert.ToString(b.TryGetValue("Data Source", out var path) ? path : null, CultureInfo.InvariantCulture) is not { Length: > 0 } text)
-            || text.StartsWith(":memory:", StringComparison.OrdinalIgnoreCase));
+            || text.StartsWith(":memory:", StringComparison.OrdinalIgnoreCase),
+        // One writer at a time, any number of readers: migrations take the database's lock file.
+        singleWriter: true);
 
     public override string ParameterMarker => "$";
     public override bool ParameterNameIncludesMarker => false;

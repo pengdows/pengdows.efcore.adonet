@@ -113,3 +113,10 @@ The core generates its XML documentation file. The dialect contract (`IAdoNetDia
 other public members (mainly the literal type mappings, the reader and the scaffolding types) have no summary yet; their CS1591 warnings
 are suppressed in the core project until they are written, rather than failing the build.
 
+## Testing package review
+
+`pengdows.efcore.adonet.Testing` has 454 unshipped API lines. About 170 of its names are not referenced by this repository's test
+projects. They are the conformance suites' test methods and the fixture models those suites run against. Outside plugin test
+projects subclass the suites, so the members are the product for plugin authors and are kept. The rule for this package is that each
+public member is one a plugin test project needs, and the baseline records why.
+

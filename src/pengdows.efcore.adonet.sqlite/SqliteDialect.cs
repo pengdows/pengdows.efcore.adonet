@@ -23,8 +23,6 @@ public class SqliteDialect : AdoNetDialect
     public override ITypeMappingDialect TypeMappings { get; } = new SqliteTypeMappings();
     public override IDatabaseCapabilities Capabilities { get; } = new DatabaseCapabilities
     {
-        // One writer at a time, any number of readers: migrations take the database's lock file.
-        SingleWriter = true,
         SupportsMultipleStatementsPerCommand = true,
         DefaultMaxBatchSize = 128,
         MaxParametersPerCommand = 32766,
@@ -75,7 +73,9 @@ internal class SqliteSql : AnsiSqlDialect
             || string.Equals(Convert.ToString(b.TryGetValue("Mode", out var mode) ? mode : null, CultureInfo.InvariantCulture), "Memory", StringComparison.OrdinalIgnoreCase),
         // A file: URI can carry query options in its path, so no lock file can be named beside it.
         isLockable: b => !(Convert.ToString(b.TryGetValue("Data Source", out var uriPath) ? uriPath : null, CultureInfo.InvariantCulture) ?? string.Empty)
-            .StartsWith("file:", StringComparison.OrdinalIgnoreCase));
+            .StartsWith("file:", StringComparison.OrdinalIgnoreCase),
+        // One writer at a time, any number of readers: migrations take the database's lock file.
+        singleWriter: true);
 
     public override bool SupportsSchemas => false;
     public override bool SupportsStoredProcedures => false;

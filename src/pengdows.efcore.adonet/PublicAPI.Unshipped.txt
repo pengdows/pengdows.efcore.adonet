@@ -370,8 +370,8 @@ static pengdows.efcore.adonet.AnsiTypeMappings.SupportedClrTypes.get -> System.C
 static pengdows.efcore.adonet.BooleanSyntax.BitValues.get -> pengdows.efcore.adonet.BooleanSyntax!
 static pengdows.efcore.adonet.BooleanSyntax.BitValuesWithBitwiseOperators.get -> pengdows.efcore.adonet.BooleanSyntax!
 static pengdows.efcore.adonet.BooleanSyntax.Native.get -> pengdows.efcore.adonet.BooleanSyntax!
-static pengdows.efcore.adonet.DatabaseLifecycle.Directory(string! pathKeyword) -> pengdows.efcore.adonet.DatabaseLifecycle!
-static pengdows.efcore.adonet.DatabaseLifecycle.File(string! pathKeyword, System.Collections.Generic.IReadOnlyList<string!>? companionSuffixes = null, string? initializeSql = null, System.Func<System.Data.Common.DbConnectionStringBuilder!, bool>? isInMemory = null, System.Action<System.Data.Common.DbConnection!>? clearPool = null, System.Func<System.Data.Common.DbConnectionStringBuilder!, bool>? isLockable = null) -> pengdows.efcore.adonet.DatabaseLifecycle!
+static pengdows.efcore.adonet.DatabaseLifecycle.Directory(string! pathKeyword, bool singleWriter = false) -> pengdows.efcore.adonet.DatabaseLifecycle!
+static pengdows.efcore.adonet.DatabaseLifecycle.File(string! pathKeyword, System.Collections.Generic.IReadOnlyList<string!>? companionSuffixes = null, string? initializeSql = null, System.Func<System.Data.Common.DbConnectionStringBuilder!, bool>? isInMemory = null, System.Action<System.Data.Common.DbConnection!>? clearPool = null, System.Func<System.Data.Common.DbConnectionStringBuilder!, bool>? isLockable = null, bool singleWriter = false) -> pengdows.efcore.adonet.DatabaseLifecycle!
 static pengdows.efcore.adonet.DatabaseLifecycle.Server(string! databaseKeyword, string? adminDatabase, string! createSql = "CREATE DATABASE {0}", System.Collections.Generic.IReadOnlyList<string!>? dropSql = null, System.Action<System.Data.Common.DbConnection!>? clearPool = null) -> pengdows.efcore.adonet.DatabaseLifecycle!
 static pengdows.efcore.adonet.DmlSyntax.AppendSetters(pengdows.efcore.adonet.IQuerySqlWriter! sql, Microsoft.EntityFrameworkCore.Query.SqlExpressions.UpdateExpression! update, bool qualified) -> void
 static pengdows.efcore.adonet.DmlSyntax.AppendTables(pengdows.efcore.adonet.IQuerySqlWriter! sql, Microsoft.EntityFrameworkCore.Query.SqlExpressions.SelectExpression! select) -> void
@@ -921,9 +921,8 @@ override pengdows.efcore.adonet.Storage.AdoNetSequenceValueGenerator<TValue>.Gen
 override pengdows.efcore.adonet.Storage.AdoNetSequenceValueGenerator<TValue>.Next(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry! entry) -> TValue
 override pengdows.efcore.adonet.Storage.AdoNetSequenceValueGenerator<TValue>.NextAsync(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry! entry, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<TValue>
 virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.FileLockPath.get -> string?
-pengdows.efcore.adonet.IDatabaseCapabilities.SingleWriter.get -> bool
-virtual pengdows.efcore.adonet.DatabaseCapabilities.SingleWriter.get -> bool
-virtual pengdows.efcore.adonet.DatabaseCapabilities.SingleWriter.init -> void
 
 pengdows.efcore.adonet.DatabaseLifecycle.IsLockable.get -> System.Func<System.Data.Common.DbConnectionStringBuilder!, bool>!
 pengdows.efcore.adonet.DatabaseLifecycle.LockFileFor(System.Data.Common.DbConnectionStringBuilder! connection) -> string?
+
+pengdows.efcore.adonet.DatabaseLifecycle.SingleWriter.get -> bool

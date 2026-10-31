@@ -48,6 +48,12 @@ public sealed class DatabaseLifecycle
     /// <summary>Run once on a database just created, such as a journal mode the database keeps.</summary>
     public string? InitializeSql { get; private init; }
 
+    /// <summary>
+    ///     Whether the database is single-writer: one writer at a time, any number of readers. Its migrations take the lock file beside it,
+    ///     and a single-writer database with no lock file to name refuses to migrate. Runtime writer control is not this library's concern.
+    /// </summary>
+    public bool SingleWriter { get; private init; }
+
     /// <summary>Whether a connection string names a database held in memory, which exists while it is open.</summary>
     public Func<DbConnectionStringBuilder, bool> IsInMemory { get; private init; } = _ => false;
 
@@ -85,19 +91,21 @@ public sealed class DatabaseLifecycle
         string? initializeSql = null,
         Func<DbConnectionStringBuilder, bool>? isInMemory = null,
         Action<DbConnection>? clearPool = null,
-        Func<DbConnectionStringBuilder, bool>? isLockable = null)
+        Func<DbConnectionStringBuilder, bool>? isLockable = null,
+        bool singleWriter = false)
         => new(DatabaseStorage.File, pathKeyword)
         {
             CompanionSuffixes = companionSuffixes ?? [],
             InitializeSql = initializeSql,
             IsInMemory = isInMemory ?? (_ => false),
             IsLockable = isLockable ?? (_ => true),
-            ClearPool = clearPool
+            ClearPool = clearPool,
+            SingleWriter = singleWriter
         };
 
     /// <summary>A database held in a directory.</summary>
-    public static DatabaseLifecycle Directory(string pathKeyword)
-        => new(DatabaseStorage.Directory, pathKeyword);
+    public static DatabaseLifecycle Directory(string pathKeyword, bool singleWriter = false)
+        => new(DatabaseStorage.Directory, pathKeyword) { SingleWriter = singleWriter };
 
     /// <summary>
     ///     The migrations lock file for the database a connection string names: a sidecar beside the file or directory, or null where

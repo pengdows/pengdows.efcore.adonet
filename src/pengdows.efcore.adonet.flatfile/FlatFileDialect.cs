@@ -21,8 +21,6 @@ public sealed class FlatFileDialect : AdoNetDialect
     // capability boundary instead of silently emitting vendor syntax.
     public override IDatabaseCapabilities Capabilities { get; } = new DatabaseCapabilities
     {
-        // One writer at a time, any number of readers: migrations take the database's lock file.
-        SingleWriter = true,
         SupportsMultipleStatementsPerCommand = true,
         DefaultMaxBatchSize = 128,
         MaxParametersPerCommand = 999,
@@ -61,7 +59,7 @@ internal sealed class FlatFileSql : AnsiSqlDialect
     public override FunctionSyntax Functions { get; } = new FlatFileFunctions();
 
     // A database is a directory of table files.
-    public override DatabaseLifecycle Databases { get; } = DatabaseLifecycle.Directory("path");
+    public override DatabaseLifecycle Databases { get; } = DatabaseLifecycle.Directory("path", singleWriter: true);
 
     public override string ParameterMarker => ":";
     public override bool ParameterNameIncludesMarker => false;

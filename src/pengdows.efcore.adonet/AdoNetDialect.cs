@@ -258,11 +258,6 @@ public record DatabaseCapabilities : IDatabaseCapabilities
     /// <summary>False, the safe assumption: a split query is buffered.</summary>
     public virtual bool SupportsMultipleActiveReaders { get; init; }
 
-    /// <summary>
-    ///     True for a single-writer database. Its migrations take the database's lock file, and a single-writer dialect with no lock
-    ///     file to name refuses to migrate.
-    /// </summary>
-    public virtual bool SingleWriter { get; init; }
 
     /// <summary>False: drivers read a binary value as <c>byte[]</c>.</summary>
     public virtual bool ReadsBinaryAsStream { get; init; }
