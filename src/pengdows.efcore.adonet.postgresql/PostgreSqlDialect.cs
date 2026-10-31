@@ -292,6 +292,28 @@ internal sealed class PostgreSqlFunctions : FunctionSyntax
     public override string? Millisecond => "FLOOR(EXTRACT(MILLISECONDS FROM {0}) % 1000)";
     public override string? Microsecond => "EXTRACT(MICROSECONDS FROM {0}) % 1000";
     public override string? Nanosecond => "0";
+
+    // Calendar parts and the current date and time. DayOfWeek counts Sunday as 0, as PostgreSQL's DOW does; DayNumber counts
+    // days from 0001-01-01, which is day 0.
+    public override string? DayOfYear => "CAST(EXTRACT(DOY FROM {0}) AS integer)";
+    public override string? DayOfWeek => "CAST(EXTRACT(DOW FROM {0}) AS integer)";
+    public override string? DateOf => "CAST({0} AS date)";
+    public override string? DayNumber => "(CAST({0} AS date) - DATE '0001-01-01')";
+    public override string? Now => "LOCALTIMESTAMP";
+    public override string? Today => "CAST(CAST(LOCALTIMESTAMP AS date) AS timestamp)";
+    public override string? OffsetNow => "CURRENT_TIMESTAMP";
+
+    // A date at a time of day: the date's timestamp plus the time as an interval.
+    public override string? DateAtTime => "(CAST({0} AS timestamp) + CAST({1} AS interval))";
+
+    // IndexOf from a start: POSITION finds the value in the rest of the string, so its position is moved back into the whole
+    // string, and zero stays zero (not found).
+    public override string? PositionFrom
+        => "(CASE WHEN POSITION({0} IN SUBSTRING({1} FROM {2})) = 0 THEN 0 "
+           + "ELSE POSITION({0} IN SUBSTRING({1} FROM {2})) + {2} - 1 END)";
+
+    // Regex.IsMatch is PostgreSQL's case-sensitive regular-expression match, as .NET's default is.
+    public override string? RegexIsMatch => "({0} ~ {1})";
     public override string? TimeFromDateTime => "CAST({0} AS time)";
     public override string? TimeFromTimeSpan => "CAST({0} AS time)";
 
