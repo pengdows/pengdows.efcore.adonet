@@ -9,19 +9,35 @@
 - Cross-test the design across SQL Server, PostgreSQL, MySQL, SQLite, DuckDB, and FlatFile. FlatFile provides an ISO SQL baseline.
 - Use the ADO.NET driver contract and its implementations directly; no pengdows.crud runtime integration.
 
-## Critical distinction from pengdows.crud
+## Distinct data-access models
 
-This is not pengdows.crud for EF Core. It neither wraps nor depends on pengdows.crud at runtime. Unit tests may use pengdows.crud.fakeDb; that is test infrastructure, not CRUD functionality.
+`pengdows.crud` and `pengdows.efcore.adonet` are independent libraries
+with different architectural responsibilities; this project is **not
+CRUD-minus-features**, a CRUD adapter, or a CRUD runtime dependency.
 
-Features **not** provided here:
-- PoolGovernor; separate read/write pools; pool limits and reserves; CRUD pool protection; adaptive concurrency, backpressure, and fairness.
-- Routing by read/write intent, automatic read-replica selection, and CRUD-specific read-only enforcement.
-- CRUD connection modes: Standard, PreventDatabaseUnload/KeepAlive, SingleWriter, SingleConnection.
-- Tenant-per-database provisioning, tenant connection resolution, and database routing. Applications may use EF Core multi-tenancy patterns, but this library adds no CRUD tenant manager.
-- TableGateway; general-purpose dialect-aware SQL-building tools; CRUD upsert and automatic audit/version handling.
-- RetryContext, CRUD-specific load control, or **built-in runtime metrics** (pool usage, saturation, wait times, execution-latency percentiles, and CRUD operation counters).
+- **pengdows.crud:** SQL-first, application-directed ADO.NET data access.
+  The application selects SQL and execution intent; CRUD supplies explicit
+  command/container and table gateway APIs, dialect-aware SQL construction,
+  connection/pool governance, database-per-tenant routing, execution modes,
+  backpressure, auditing/version handling, retries, and operational metrics.
+  No LINQ query provider, ORM tracking, or implicit EF unit-of-work model.
+- **pengdows.efcore.adonet:** infrastructure for implementing EF Core 10
+  relational providers. EF Core supplies the ORM, LINQ, entity mapping,
+  change tracking, and SaveChanges contract; this library implements shared
+  EF Core-to-ADO.NET behavior and dialect-specific adapters. It intentionally
+  follows EF Core's programming and execution model, **not** CRUD's.
 
-This library manages ordinary EF Core connections, transactions, and SQL. Standard EF Core logging and diagnostic events remain available, but this library does **not** implement its own metrics collection. Driver connection pooling is not the same as the application-level pool governance offered by pengdows.crud.
+The library does not use or wrap `pengdows.crud` at runtime. In particular,
+it adds none of CRUD's PoolGovernor, read/write pool splitting, intent-based
+routing, connection modes, tenant database orchestration, TableGateway,
+ISqlContainer, automatic CRUD audit/version handling, RetryContext,
+adaptive load control, or Pengdows-specific metrics. Database-per-tenant
+is still possible using ordinary EF Core connection configuration; this
+package adds no tenant-management subsystem.
+
+Standard EF Core logging, diagnostics and framework metrics remain
+available. They are **not** the CRUD-specific metrics subsystem.
+Normal ADO.NET driver pooling is **not** CRUD pool governance.
 
 ## Testing without a database
 
