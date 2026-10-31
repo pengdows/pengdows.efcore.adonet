@@ -251,11 +251,25 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
             && lifecycle.IsInMemory(new DbConnectionStringBuilder { ConnectionString = Dependencies.Connection.DbConnection.ConnectionString });
     }
 
+    // An exclusive file lock is exclusive on one host only. A lock file on a network share would let two hosts migrate at once,
+    // so the migrations are refused, before any lock is taken, and the database must move to local storage or a server.
+    private static void RefuseNetworkLock(string path)
+    {
+        var mounts = OperatingSystem.IsLinux() && File.Exists("/proc/mounts") ? File.ReadAllText("/proc/mounts") : null;
+        if (NetworkPath.IsNetwork(path, mounts))
+        {
+            throw new InvalidOperationException(
+                $"The migrations lock file {path} is on a network share, where an exclusive file lock is not exclusive across hosts. "
+                + "Move the database to local storage, or use a database server, before migrating.");
+        }
+    }
+
     private const string SingleWriterWithoutLockFile =
         "This single-writer database has no lock file to name, so its migrations cannot be coordinated and will not run.";
 
     private IMigrationsDatabaseLock AcquireFileLock(string path)
     {
+        RefuseNetworkLock(path);
         var deadline = DateTime.UtcNow + LockTimeout;
         while (true)
         {
@@ -275,6 +289,7 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
 
     private async Task<IMigrationsDatabaseLock> AcquireFileLockAsync(string path, CancellationToken cancellationToken)
     {
+        RefuseNetworkLock(path);
         var deadline = DateTime.UtcNow + LockTimeout;
         while (true)
         {

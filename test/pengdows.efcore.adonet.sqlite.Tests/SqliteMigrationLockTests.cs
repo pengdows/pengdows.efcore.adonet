@@ -49,6 +49,17 @@ public class SqliteMigrationLockTests : IDisposable
         using var acquired = waiter.AcquireDatabaseLock();
     }
 
+    // A database on a network share has no exclusive lock across hosts, so its migrations are refused before any lock is taken.
+    [Fact]
+    public void A_database_on_a_network_share_is_refused_for_migrations()
+    {
+        var shared = new DbContextOptionsBuilder<ProbeContext>().UseAdoNetSqlite("Data Source=//server/share/app.db").Options;
+        using var context = new ProbeContext(shared);
+        var waiter = new ShortTimeoutSqliteHistory(context.GetService<HistoryRepositoryDependencies>(), SqliteDialect.Instance);
+
+        Assert.Throws<InvalidOperationException>(() => waiter.AcquireDatabaseLock());
+    }
+
     private sealed class ProbeContext(DbContextOptions<ProbeContext> options) : DbContext(options);
 
     private sealed class ShortTimeoutSqliteHistory(HistoryRepositoryDependencies dependencies, IAdoNetDialect dialect)
