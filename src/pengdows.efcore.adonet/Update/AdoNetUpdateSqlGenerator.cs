@@ -15,7 +15,7 @@ namespace pengdows.efcore.adonet.Update;
 ///     Reads back generated values and checks concurrency with <c>RETURNING</c>, with a follow-up <c>SELECT</c> in the
 ///     same command, or with plain statements checked via RecordsAffected, as chosen by <see cref="ISqlDialect.Keys" />.
 /// </summary>
-internal class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependencies, IAdoNetDialect dialect)
+internal partial class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependencies, IAdoNetDialect dialect)
     : UpdateAndSelectSqlGenerator(dependencies)
 {
     private const string IncludeCorrelationColumn = "__pengdows_correlation";
@@ -99,120 +99,12 @@ internal class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependenc
                 .Replace("{2}", replacement, StringComparison.Ordinal));
     }
 
-    // Where the driver returns no output parameters from a text CALL, each output goes through a session variable: set before
-    // the call (an input-output one to its input), passed in the parameter's place, and selected back after it. With other
-    // outputs, a rows-affected one filters that row, so a procedure that changed no row returns none: a concurrency failure.
-    // Behaviour reference (not copied): Pomelo's MySqlUpdateSqlGenerator (MIT, Pomelo Foundation):
-    // https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/blob/14c2cd558e37c71e7a2fca75e339ef902effdf60/src/EFCore.MySql/Update/Internal/MySqlUpdateSqlGenerator.cs
-    public override ResultSetMapping AppendStoredProcedureCall(
-        StringBuilder commandStringBuilder,
-        IReadOnlyModificationCommand command,
-        int commandPosition,
-        out bool requiresTransaction)
-    {
-        var outputs = command.ColumnModifications.Where(AdoNetModificationCommand.IsOutput).ToList();
-        if ((dialect.Sql.ProcedureOutputVariable is not { } template) || (outputs.Count == 0))
-        {
-            return base.AppendStoredProcedureCall(commandStringBuilder, command, commandPosition, out requiresTransaction);
-        }
 
-        var procedure = command.StoreStoredProcedure!;
-        if (procedure.ResultColumns.Any() || (procedure.ReturnValue != null))
-        {
-            throw new InvalidOperationException(
-                $"The stored procedure '{procedure.SchemaQualifiedName}' has output parameters, which this dialect reads back as a "
-                + "result set, so it can have neither result columns nor a return value.");
-        }
 
-        AppendOutputVariableInitialization(commandStringBuilder, outputs, template);
-        AppendProcedureInvocation(commandStringBuilder, command, procedure, outputs, template);
-        var rowsAffected = outputs.FirstOrDefault(o => o.Column == command.RowsAffectedColumn);
-        AppendOutputProjection(commandStringBuilder, outputs, rowsAffected, template);
-        requiresTransaction = true;
-        return OutputResultMapping(rowsAffected, outputs.Count);
-    }
 
-    private void AppendOutputVariableInitialization(
-        StringBuilder builder,
-        IReadOnlyList<IColumnModification> outputs,
-        string template)
-    {
-        var terminator = SqlGenerationHelper.StatementTerminator;
-        foreach (var output in outputs)
-        {
-            builder.Append("SET ").Append(Variable(template, output)).Append(" = ");
-            var parameter = (IStoreStoredProcedureParameter)output.Column!;
-            if (parameter.Direction.HasFlag(System.Data.ParameterDirection.Input))
-            {
-                SqlGenerationHelper.GenerateParameterNamePlaceholder(builder, ParameterName(output));
-            }
-            else
-            {
-                builder.Append("NULL");
-            }
 
-            builder.AppendLine(terminator);
-        }
-    }
 
-    private void AppendProcedureInvocation(
-        StringBuilder builder,
-        IReadOnlyModificationCommand command,
-        IStoreStoredProcedure procedure,
-        IReadOnlyList<IColumnModification> outputs,
-        string template)
-    {
-        builder.Append("CALL ");
-        SqlGenerationHelper.DelimitIdentifier(builder, procedure.Name, procedure.Schema);
-        builder.Append('(');
 
-        var first = true;
-        foreach (var modification in command.ColumnModifications.Where(m => m.Column is IStoreStoredProcedureParameter))
-        {
-            if (!first)
-            {
-                builder.Append(", ");
-            }
-
-            first = false;
-            if (outputs.Contains(modification))
-            {
-                builder.Append(Variable(template, modification));
-            }
-            else
-            {
-                SqlGenerationHelper.GenerateParameterNamePlaceholder(builder, ParameterName(modification));
-            }
-        }
-
-        builder.Append(')').AppendLine(SqlGenerationHelper.StatementTerminator);
-    }
-
-    private void AppendOutputProjection(
-        StringBuilder builder,
-        IReadOnlyList<IColumnModification> outputs,
-        IColumnModification? rowsAffected,
-        string template)
-    {
-        builder.Append("SELECT ").AppendJoin(", ", outputs.Select(o => Variable(template, o)));
-        if ((rowsAffected != null) && (outputs.Count > 1))
-        {
-            builder.AppendLine().Append("WHERE ").Append(Variable(template, rowsAffected)).Append(" = 1");
-        }
-
-        builder.AppendLine(SqlGenerationHelper.StatementTerminator);
-    }
-
-    private static ResultSetMapping OutputResultMapping(IColumnModification? rowsAffected, int outputCount)
-        => (rowsAffected != null) && (outputCount == 1)
-            ? ResultSetMapping.LastInResultSet | ResultSetMapping.ResultSetWithRowsAffectedOnly
-            : ResultSetMapping.LastInResultSet;
-
-    private static string ParameterName(IColumnModification modification)
-        => modification.UseOriginalValueParameter ? modification.OriginalParameterName! : modification.ParameterName!;
-
-    private static string Variable(string template, IColumnModification modification)
-        => template.Replace("{0}", "_out_" + ParameterName(modification), StringComparison.Ordinal);
 
     public override ResultSetMapping AppendInsertOperation(
         StringBuilder commandStringBuilder,
@@ -325,187 +217,12 @@ internal class AdoNetUpdateSqlGenerator(UpdateSqlGeneratorDependencies dependenc
             _ => AppendPlainOperation(commandStringBuilder, command, out requiresTransaction)
         };
 
-    // SELECT cols FROM FINAL TABLE (INSERT ...): the generated columns come back as the delta table's rows.
-    private ResultSetMapping AppendInsertDeltaTableOperation(
-        StringBuilder commandStringBuilder,
-        IReadOnlyModificationCommand command,
-        out bool requiresTransaction)
-    {
-        var writeOperations = command.ColumnModifications.Where(o => o.IsWrite).ToList();
-        var readOperations = command.ColumnModifications.Where(o => o.IsRead).ToList();
-        requiresTransaction = false;
-        if (readOperations.Count == 0)
-        {
-            AppendInsertCommand(commandStringBuilder, command.TableName, command.Schema, writeOperations, []);
-            return ResultSetMapping.NoResults;
-        }
 
-        AppendDeltaTable(
-            commandStringBuilder, readOperations.Select(o => o.ColumnName), "FINAL",
-            inner => AppendDeltaTableInsert(inner, command, writeOperations));
-        return ResultSetMapping.LastInResultSet;
-    }
 
-    // An update's row comes back from the new table: its generated columns, or a 1 where nothing is generated, which is how a
-    // concurrency conflict (no row) is told from success.
-    private ResultSetMapping AppendUpdateDeltaTableOperation(
-        StringBuilder commandStringBuilder,
-        IReadOnlyModificationCommand command,
-        out bool requiresTransaction)
-    {
-        var writeOperations = command.ColumnModifications.Where(o => o.IsWrite).ToList();
-        var readOperations = command.ColumnModifications.Where(o => o.IsRead).ToList();
-        var conditionOperations = command.ColumnModifications.Where(o => o.IsCondition).ToList();
-        requiresTransaction = false;
-        AppendDeltaTable(
-            commandStringBuilder,
-            readOperations.Count == 0 ? null : readOperations.Select(o => o.ColumnName),
-            readOperations.Count == 0 ? "NEW" : "FINAL",
-            inner => AppendDeltaTableUpdate(inner, command, writeOperations, conditionOperations));
-        return ResultSetMapping.LastInResultSet;
-    }
 
-    private void AppendDeltaTableInsert(
-        StringBuilder builder,
-        IReadOnlyModificationCommand command,
-        IReadOnlyList<IColumnModification> writeOperations)
-    {
-        var statement = new StringBuilder();
-        AppendInsertCommand(statement, command.TableName, command.Schema, writeOperations, []);
-        if (UseIncludeColumns())
-        {
-            AddInsertInclude(statement);
-        }
 
-        builder.Append(statement);
-    }
 
-    private void AppendDeltaTableUpdate(
-        StringBuilder builder,
-        IReadOnlyModificationCommand command,
-        IReadOnlyList<IColumnModification> writeOperations,
-        IReadOnlyList<IColumnModification> conditionOperations)
-    {
-        var statement = new StringBuilder();
-        AppendUpdateCommand(
-            statement, command.TableName, command.Schema, writeOperations, [], conditionOperations, appendReturningOneClause: false);
-        if (UseIncludeColumns())
-        {
-            AddUpdateInclude(statement);
-        }
 
-        builder.Append(statement);
-    }
-
-    private bool UseIncludeColumns()
-        => dialect.Sql.Keys is DeltaTableKeyRetrieval { UseIncludeColumns: true };
-
-    private string DelimitedIncludeColumn
-        => SqlGenerationHelper.DelimitIdentifier(IncludeCorrelationColumn);
-
-    private void AddInsertInclude(StringBuilder statement)
-    {
-        var text = statement.ToString();
-        var values = text.IndexOf("VALUES (", StringComparison.Ordinal);
-        if (values < 0)
-        {
-            // The Pengdows specification defines an omitted INCLUDE value for DEFAULT VALUES as NULL.
-            // EF's generated-key path does not project an INSERT source row, though, and the flatfile
-            // binder consequently cannot bind an INCLUDE-bearing DEFAULT VALUES statement. The include
-            // column is not part of EF's result projection in this path, so retain the ordinary delta
-            // table shape; explicit-value inserts use INCLUDE below.
-            return;
-        }
-
-        var lineStart = text.LastIndexOf('\n', values);
-        var withInclude = text.Insert(lineStart < 0 ? values : lineStart, $" INCLUDE ({DelimitedIncludeColumn} INTEGER)");
-        var valuesKeyword = withInclude.IndexOf("VALUES", StringComparison.Ordinal);
-        var openParen = withInclude.IndexOf('(', valuesKeyword);
-        if (openParen < 0)
-        {
-            throw new InvalidOperationException("The INSERT delta-table statement has no VALUES row for INCLUDE columns.");
-        }
-
-        var closeParen = withInclude.IndexOf(')', openParen);
-        if (closeParen < 0)
-        {
-            throw new InvalidOperationException("The INSERT delta-table statement has no complete VALUES row for INCLUDE columns.");
-        }
-
-        statement.Clear().Append(withInclude.Insert(closeParen, ", 1"));
-    }
-
-    private void AddUpdateInclude(StringBuilder statement)
-    {
-        var text = statement.ToString();
-        var set = text.IndexOf("SET", StringComparison.Ordinal);
-        if (set < 0)
-        {
-            throw new InvalidOperationException("The UPDATE delta-table statement has no SET clause for INCLUDE columns.");
-        }
-
-        var lineStart = text.LastIndexOf('\n', set);
-        var withInclude = text.Insert(lineStart < 0 ? set : lineStart, $" INCLUDE ({DelimitedIncludeColumn} INTEGER)");
-        var setKeyword = withInclude.IndexOf("SET", set + $" INCLUDE ({DelimitedIncludeColumn} INTEGER)".Length, StringComparison.Ordinal);
-        statement.Clear().Append(withInclude.Insert(setKeyword + 3, $" {DelimitedIncludeColumn} = 1,"));
-    }
-
-    private ResultSetMapping AppendDeleteDeltaTableOperation(
-        StringBuilder commandStringBuilder,
-        IReadOnlyModificationCommand command,
-        out bool requiresTransaction)
-    {
-        var conditionOperations = command.ColumnModifications.Where(o => o.IsCondition).ToList();
-        requiresTransaction = false;
-        AppendDeltaTable(
-            commandStringBuilder,
-            null,
-            "OLD",
-            inner => AppendDeleteCommand(inner, command.TableName, command.Schema, [], conditionOperations, appendReturningOneClause: false));
-        return ResultSetMapping.LastInResultSet;
-    }
-
-    // SELECT {columns, or 1} FROM {FINAL|NEW|OLD} TABLE ({statement});
-    private void AppendDeltaTable(
-        StringBuilder commandStringBuilder,
-        IEnumerable<string>? columns,
-        string resultOption,
-        Action<StringBuilder> appendStatement)
-    {
-        var statement = new StringBuilder();
-        appendStatement(statement);
-        var terminator = SqlGenerationHelper.StatementTerminator;
-        var text = statement.ToString().TrimEnd();
-        if (text.EndsWith(terminator, StringComparison.Ordinal))
-        {
-            text = text[..^terminator.Length];
-        }
-
-        commandStringBuilder.Append("SELECT ");
-        if (columns == null)
-        {
-            commandStringBuilder.Append('1');
-        }
-        else
-        {
-            var first = true;
-            foreach (var column in columns)
-            {
-                if (!first)
-                {
-                    commandStringBuilder.Append(", ");
-                }
-
-                first = false;
-                SqlGenerationHelper.DelimitIdentifier(commandStringBuilder, column);
-            }
-        }
-
-        commandStringBuilder
-            .AppendLine()
-            .Append("FROM ").Append(resultOption).Append(" TABLE (").Append(text).Append(')')
-            .AppendLine(terminator);
-    }
 
     /// <summary>
     ///     <see cref="SequenceKeyRetrieval" />: the statement alone, with no result set;
