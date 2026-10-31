@@ -18,6 +18,7 @@ internal class AdoNetRelationalConnection : RelationalConnection
     private readonly AdoNetDataSources _dataSources;
     private readonly IDatabaseCapabilities _capabilities;
     private readonly IsolationLevel _defaultIsolationLevel;
+    private readonly IReadOnlySet<IsolationLevel> _supportedIsolationLevels;
     private readonly string? _sessionSetup;
     private readonly IReadOnlyDictionary<string, string> _connectionOptions;
 
@@ -37,6 +38,7 @@ internal class AdoNetRelationalConnection : RelationalConnection
         _dataSources = dataSources;
         _capabilities = capabilities;
         _defaultIsolationLevel = sql.DefaultTransactionIsolationLevel;
+        _supportedIsolationLevels = sql.SupportedIsolationLevels;
         _sessionSetup = sql.SessionSetup;
         _connectionOptions = sql.ConnectionOptions;
         _extension = dependencies.ContextOptions.FindExtension<AdoNetOptionsExtension>()
@@ -223,9 +225,20 @@ internal class AdoNetRelationalConnection : RelationalConnection
     }
 
     private IsolationLevel DefaultIsolationLevel(IsolationLevel isolationLevel)
-        => isolationLevel == IsolationLevel.Unspecified
-            ? _defaultIsolationLevel
-            : isolationLevel;
+    {
+        if (isolationLevel == IsolationLevel.Unspecified)
+        {
+            return _defaultIsolationLevel;
+        }
+
+        if (!_supportedIsolationLevels.Contains(isolationLevel))
+        {
+            throw new NotSupportedException(
+                $"This provider does not support the {isolationLevel} isolation level. It is refused rather than replaced by another level.");
+        }
+
+        return isolationLevel;
+    }
 
     // Some drivers' DisposeAsync skips what Dispose does (one neither raises Disposed nor disposes, another raises nothing):
     // close asynchronously, which does the I/O, then dispose synchronously, which every driver gets right and which costs

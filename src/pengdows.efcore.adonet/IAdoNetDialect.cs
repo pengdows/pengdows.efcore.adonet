@@ -37,6 +37,12 @@ public interface ISqlDialect
     /// <summary>The isolation level to pass to the driver when EF requests its default.</summary>
     System.Data.IsolationLevel DefaultTransactionIsolationLevel { get; }
 
+    /// <summary>
+    /// The isolation levels the engine can honour. A transaction asking for any other level is refused with a
+    /// NotSupportedException that names it; a level is never silently replaced by a different one.
+    /// </summary>
+    IReadOnlySet<System.Data.IsolationLevel> SupportedIsolationLevels { get; }
+
     /// <summary>Whether a suppressed transaction completion must keep the connection open for the caller.</summary>
     bool KeepConnectionOpenAfterSuppressedTransaction { get; }
 

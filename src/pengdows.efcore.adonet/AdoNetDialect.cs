@@ -43,6 +43,21 @@ public class AnsiSqlDialect : ISqlDialect
     public virtual System.Data.IsolationLevel DefaultTransactionIsolationLevel
         => System.Data.IsolationLevel.Unspecified;
 
+    // Every level the EF Core relational layer can ask for. A provider narrows this to what its engine honours.
+    private static readonly IReadOnlySet<System.Data.IsolationLevel> AllIsolationLevels = new HashSet<System.Data.IsolationLevel>
+    {
+        System.Data.IsolationLevel.Unspecified,
+        System.Data.IsolationLevel.Chaos,
+        System.Data.IsolationLevel.ReadUncommitted,
+        System.Data.IsolationLevel.ReadCommitted,
+        System.Data.IsolationLevel.RepeatableRead,
+        System.Data.IsolationLevel.Serializable,
+        System.Data.IsolationLevel.Snapshot,
+    };
+
+    public virtual IReadOnlySet<System.Data.IsolationLevel> SupportedIsolationLevels => AllIsolationLevels;
+
+
     public virtual bool KeepConnectionOpenAfterSuppressedTransaction => false;
 
     public virtual string IdentifierQuotePrefix => "\"";

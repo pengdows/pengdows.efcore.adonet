@@ -45,6 +45,10 @@ public sealed class DuckDbDialect : AdoNetDialect
 
 internal sealed class DuckDbSql : AnsiSqlDialect
 {
+    // DuckDB.NET accepts only these: Serializable and the rest are refused, not remapped.
+    public override IReadOnlySet<System.Data.IsolationLevel> SupportedIsolationLevels { get; } =
+        new HashSet<System.Data.IsolationLevel> { System.Data.IsolationLevel.Unspecified, System.Data.IsolationLevel.Snapshot };
+
     public override bool SupportsStoredProcedures => false;
     public override bool SupportsNullOrderingClauses => true;
 

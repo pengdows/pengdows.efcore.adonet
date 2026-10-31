@@ -337,6 +337,25 @@ internal class AdoNetQueryableMethodTranslatingExpressionVisitor : RelationalQue
                 elementMapping)!);
         }
 
+        // ElementAtOrDefault's documented result for a position outside the sequence, a negative one included, is the
+        // default value. The guard is in SQL, so it holds whether the index is a constant or a parameter: a negative
+        // position matches no row, and the OFFSET is clamped to 0 so the database never sees a negative value.
+        if (returnDefault
+            && source.QueryExpression is SelectExpression guarded
+            && TranslateExpression(index) is { } guardIndex)
+        {
+            var intMapping = _typeMappingSource.FindMapping(typeof(int))!;
+            guardIndex = _sqlExpressionFactory.ApplyTypeMapping(guardIndex, intMapping)!;
+            var zero = _sqlExpressionFactory.Constant(0, intMapping);
+            guarded.ApplyPredicate(_sqlExpressionFactory.GreaterThanOrEqual(guardIndex, zero));
+            guarded.ApplyOffset(_sqlExpressionFactory.Case(
+                operand: null,
+                whenClauses: [new CaseWhenClause(_sqlExpressionFactory.LessThan(guardIndex, zero), zero)],
+                elseResult: guardIndex));
+            guarded.ApplyLimit(_sqlExpressionFactory.Constant(1, intMapping));
+            return source;
+        }
+
         if (!_dialect.Paging.ComputesLimits
             && (source.QueryExpression is SelectExpression
             {

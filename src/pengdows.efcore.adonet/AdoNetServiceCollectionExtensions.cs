@@ -1,3 +1,5 @@
+#pragma warning disable EF1001 // EF's query compiler is an internal extension point; the provider replaces it on purpose.
+using Microsoft.EntityFrameworkCore.Query.Internal;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -38,6 +40,7 @@ public static class AdoNetServiceCollectionExtensions
             .TryAdd<ISqlGenerationHelper, AdoNetSqlGenerationHelper>()
             .TryAdd<IProviderConventionSetBuilder, AdoNetConventionSetBuilder>()
             .TryAdd<IRelationalConnection, AdoNetRelationalConnection>()
+            .TryAdd<IQueryCompiler, pengdows.efcore.adonet.Query.AdoNetQueryCompiler>() // EF1001: the provider replaces EF's internal query compiler on purpose
             .TryAdd<IRelationalTransactionFactory, AdoNetRelationalTransactionFactory>()
             .TryAdd<IRelationalDatabaseCreator, AdoNetDatabaseCreator>()
             .TryAdd<IHistoryRepository, AdoNetHistoryRepository>()

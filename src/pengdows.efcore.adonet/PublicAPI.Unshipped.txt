@@ -810,3 +810,5 @@ pengdows.efcore.adonet.Design.AdoNetProviderCodeGenerator.AdoNetProviderCodeGene
 override pengdows.efcore.adonet.Design.AdoNetProviderCodeGenerator.GenerateUseProvider(string! connectionString, Microsoft.EntityFrameworkCore.Design.MethodCallCodeFragment? providerOptions) -> Microsoft.EntityFrameworkCore.Design.MethodCallCodeFragment!
 static pengdows.efcore.adonet.Design.AdoNetProviderCodeGenerator.UseMethod(System.Type! extensions, string! name) -> System.Reflection.MethodInfo!
 virtual pengdows.efcore.adonet.Design.AdoNetDesignTimeServices.UseProvider.get -> System.Reflection.MethodInfo?
+virtual pengdows.efcore.adonet.AnsiSqlDialect.SupportedIsolationLevels.get -> System.Collections.Generic.IReadOnlySet<System.Data.IsolationLevel>!
+pengdows.efcore.adonet.ISqlDialect.SupportedIsolationLevels.get -> System.Collections.Generic.IReadOnlySet<System.Data.IsolationLevel>!
