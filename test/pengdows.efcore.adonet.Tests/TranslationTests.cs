@@ -363,7 +363,6 @@ public class TranslationTests
     {
         { "Trim(char[]) of two", i => i.Name!.Trim('x', 'y') == "a" },
         { "PadLeft", i => i.Name!.PadLeft(3) == "a" },
-        { "string.Join", i => string.Join(",", new[] { i.Name, i.Name }) == "a" },
         { "Round(MidpointRounding)", i => System.Math.Round(i.Double, MidpointRounding.ToEven) > 1 },
         { "Math.Sign (not ISO)", i => System.Math.Sign(i.Double) > 0 },
         { "DayOfYear", i => i.At.DayOfYear > 1 },
@@ -409,6 +408,21 @@ public class TranslationTests
         { "PadLeft", i => i.Name!.PadLeft(5) == "a", "LPAD(\"i\".\"Name\", 5, ' ')" },
         { "PadRight with a character", i => i.Name!.PadRight(5, '*') == "a", "RPAD(\"i\".\"Name\", 5, '*')" }
     };
+
+    // String.Join treats a null element as an empty string, where SQL's concatenation would make the whole result null. Each
+    // element is therefore coalesced to '' before the separators are joined in.
+    public static TheoryData<string, Expression<Func<Item, bool>>, string> JoinTranslations => new()
+    {
+        {
+            "Join with nulls as empty", i => string.Join(",", new[] { i.Name, i.Name }) == "a",
+            "COALESCE(\"i\".\"Name\", '') || ',' || COALESCE(\"i\".\"Name\", '')"
+        }
+    };
+
+    [Theory]
+    [MemberData(nameof(JoinTranslations))]
+    public void Join_treats_a_null_element_as_empty(string _, Expression<Func<Item, bool>> predicate, string expected)
+        => Assert.Contains(expected, Ansi(c => c.Items.Where(predicate)));
 
     // EF.Functions.DateDiff*: the dialect's count of units from the first to the second; untranslated where it has none.
     [Fact]

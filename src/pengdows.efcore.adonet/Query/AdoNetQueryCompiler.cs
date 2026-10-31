@@ -40,13 +40,13 @@ internal sealed class AdoNetQueryCompiler(
     public override TResult Execute<TResult>(Expression query)
     {
         NegativePositionFinder.Check(query);
-        return base.Execute<TResult>(query);
+        return base.Execute<TResult>(new AdoNetJoinRewriter().Visit(query));
     }
 
     public override TResult ExecuteAsync<TResult>(Expression query, CancellationToken cancellationToken = default)
     {
         NegativePositionFinder.Check(query);
-        return base.ExecuteAsync<TResult>(query, cancellationToken);
+        return base.ExecuteAsync<TResult>(new AdoNetJoinRewriter().Visit(query), cancellationToken);
     }
 
     private sealed class NegativePositionFinder : ExpressionVisitor
