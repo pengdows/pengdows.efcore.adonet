@@ -113,6 +113,8 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
             return AcquireFileLock(fileLockPath);
         }
 
+        RefuseSingleWriterWithoutLockFile();
+
         if (!TableExists(LockTableName))
         {
             CreateLockTable();
@@ -158,6 +160,8 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
         {
             return await AcquireFileLockAsync(fileLockPath, cancellationToken).ConfigureAwait(false);
         }
+
+        RefuseSingleWriterWithoutLockFile();
 
         if (!await TableExistsAsync(LockTableName, cancellationToken).ConfigureAwait(false))
         {
@@ -227,6 +231,28 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
 
         return Path.TrimEndingDirectorySeparator(path) + ".migrations.lock";
     }
+
+    // A single-writer database that another process can open must be coordinated by its lock file. An in-memory one belongs to this
+    // process alone, so there is nothing to coordinate and no file is needed.
+    private void RefuseSingleWriterWithoutLockFile()
+    {
+        if (!Dialect.Capabilities.SingleWriter || IsInMemoryDatabase())
+        {
+            return;
+        }
+
+        throw new InvalidOperationException(SingleWriterWithoutLockFile);
+    }
+
+    private bool IsInMemoryDatabase()
+    {
+        var lifecycle = Dialect.Sql.Databases;
+        return lifecycle is not null
+            && lifecycle.IsInMemory(new DbConnectionStringBuilder { ConnectionString = Dependencies.Connection.DbConnection.ConnectionString });
+    }
+
+    private const string SingleWriterWithoutLockFile =
+        "This single-writer database has no lock file to name, so its migrations cannot be coordinated and will not run.";
 
     private IMigrationsDatabaseLock AcquireFileLock(string path)
     {

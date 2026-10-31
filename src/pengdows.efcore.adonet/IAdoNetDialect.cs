@@ -312,6 +312,12 @@ public sealed record StoreTypeFacets(
 /// <summary>What the driver accepts, as opposed to what the SQL looks like.</summary>
 public interface IDatabaseCapabilities
 {
+    /// <summary>
+    ///     Whether the database is single-writer: one writer at a time, any number of readers. Migrations coordinate through the
+    ///     database's lock file. Runtime writer coordination is not this library's concern; pengdows.crud provides it.
+    /// </summary>
+    bool SingleWriter => false;
+
     /// <summary>Whether a single DbCommand may contain several <c>;</c>-separated statements.</summary>
     bool SupportsMultipleStatementsPerCommand { get; }
 

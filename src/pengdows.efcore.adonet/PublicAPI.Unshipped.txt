@@ -927,3 +927,6 @@ override pengdows.efcore.adonet.Storage.AdoNetSequenceValueGenerator<TValue>.Gen
 override pengdows.efcore.adonet.Storage.AdoNetSequenceValueGenerator<TValue>.Next(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry! entry) -> TValue
 override pengdows.efcore.adonet.Storage.AdoNetSequenceValueGenerator<TValue>.NextAsync(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry! entry, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<TValue>
 virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.FileLockPath.get -> string?
+pengdows.efcore.adonet.IDatabaseCapabilities.SingleWriter.get -> bool
+virtual pengdows.efcore.adonet.DatabaseCapabilities.SingleWriter.get -> bool
+virtual pengdows.efcore.adonet.DatabaseCapabilities.SingleWriter.init -> void

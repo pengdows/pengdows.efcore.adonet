@@ -23,6 +23,8 @@ public class SqliteDialect : AdoNetDialect
     public override ITypeMappingDialect TypeMappings { get; } = new SqliteTypeMappings();
     public override IDatabaseCapabilities Capabilities { get; } = new DatabaseCapabilities
     {
+        // One writer at a time, any number of readers: migrations take the database's lock file.
+        SingleWriter = true,
         SupportsMultipleStatementsPerCommand = true,
         DefaultMaxBatchSize = 128,
         MaxParametersPerCommand = 32766,

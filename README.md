@@ -137,6 +137,18 @@ server's `sql_mode`; nothing here changes that, so pick `MySqlDialect.Instance` 
 `BulkInsert` doesn't read back keys the database generates (sequence keys are drawn first and set on the entities),
 writes every mapped column (database defaults don't apply), and doesn't support owned or complex types.
 
+**Single-writer databases.** SQLite, DuckDB, pengdows.flatfile, and (when added) Access and SQL CE allow one writer at a time and
+any number of readers. Their migrations take an exclusive lock file beside the database (`<database>.migrations.lock`), and a
+single-writer database that can be opened by another process refuses to migrate without one. This coordinates migrations only.
+This project does not control writers during normal use: that cannot be done reliably from an EF Core provider, and it is what
+pengdows.crud is for.
+
+**Not supported: Google Cloud Spanner's native ADO.NET provider** (`Google.Cloud.Spanner.Data`). It does not satisfy the ADO.NET
+contract that pengdows.crud and pengdows.efcore.adonet require: our conformance tests identify violations that prevent reliable
+provider substitution. We will not add provider-specific workarounds that compromise correctness or the shared architecture.
+Support will be reconsidered when those defects are corrected and verified. Spanner remains supported in pengdows.crud through
+Npgsql and PGAdapter, using its PostgreSQL interface.
+
 ## Size
 
 Code lines (no blanks or comments) and Release DLL size, against the official providers on the same EF Core:
