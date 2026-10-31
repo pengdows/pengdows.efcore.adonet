@@ -109,6 +109,16 @@ public abstract class TranslationConformanceTests<TFixture>(TFixture fixture) : 
         await Server(b => b.Name.Trim(' ', '%'));
     }
 
+    // String.Join treats a null element as an empty string, where SQL's concatenation would make the whole result null.
+    [Fact]
+    public Task Joining_strings_treats_a_null_element_as_empty()
+        => Server(b => string.Join(",", new[] { b.Name, (string?)null, b.Name }));
+
+    // A null separator joins with nothing between the elements, as .NET does.
+    [Fact]
+    public Task Joining_strings_treats_a_null_separator_as_empty()
+        => Server(b => string.Join((string?)null, new[] { b.Name, b.Name }));
+
     // DateTime.UtcNow is the server's clock in UTC, read by the database (a predicate isn't evaluated on the client):
     // within a couple of minutes of this machine's, which the databases under test share.
     [Fact]

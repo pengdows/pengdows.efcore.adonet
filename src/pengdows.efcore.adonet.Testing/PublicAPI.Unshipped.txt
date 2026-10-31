@@ -452,3 +452,5 @@ pengdows.efcore.adonet.Testing.DatabaseCreatorConformanceTests<TFixture>.Owned_c
 pengdows.efcore.adonet.Testing.ProviderConformanceTests<TFixture>.A_deleted_rows_generated_key_is_not_reused() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Padding() -> System.Threading.Tasks.Task!
 pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Date_differences() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Joining_strings_treats_a_null_element_as_empty() -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.Testing.TranslationConformanceTests<TFixture>.Joining_strings_treats_a_null_separator_as_empty() -> System.Threading.Tasks.Task!
