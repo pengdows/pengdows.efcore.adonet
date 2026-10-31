@@ -2,7 +2,7 @@ name: CI
 
 # Public, checkable evidence for the validation claims in the README. Builds and tests what a clean clone contains. Left out:
 # the benchmark and Pomelo comparison projects (a Pomelo checkout beside the repository), the DuckDB plugin and the specification
-# suite (a DuckDB.NET checkout beside the repository).
+# suite (DuckDB.NET packages in local-packages, not yet on nuget.org).
 
 on:
   push:
@@ -50,8 +50,8 @@ jobs:
       # Server-backed suites start their database with Testcontainers, which needs the Docker daemon on the runner.
       - run: dotnet test ${{ matrix.project }}
 
-  # The EF Core specification suite is not in CI yet: it references the DuckDB plugin, which needs a DuckDB.NET checkout
-  # beside this repository, and it runs every configured provider. Run it locally with: dotnet test test/pengdows.efcore.adonet.Specification.Tests
+  # The EF Core specification suite is not in CI yet: it references the DuckDB plugin, whose DuckDB.NET packages come from
+  # local-packages, and it runs every configured provider. Run it locally with: dotnet test test/pengdows.efcore.adonet.Specification.Tests
 
   outside-plugin:
     name: Outside plugin (packed core, no InternalsVisibleTo)

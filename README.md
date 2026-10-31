@@ -137,7 +137,7 @@ server's `sql_mode`; nothing here changes that, so pick `MySqlDialect.Instance` 
 `BulkInsert` doesn't read back keys the database generates (sequence keys are drawn first and set on the entities),
 writes every mapped column (database defaults don't apply), and doesn't support owned or complex types.
 
-**Single-writer databases.** SQLite, DuckDB, pengdows.flatfile, and (when added) Access and SQL CE allow one writer at a time and
+**Single-writer databases.** SQLite, DuckDB, pengdows.flatfile, and (when added) Access allow one writer at a time and
 any number of readers. Their migrations take an exclusive lock file beside the database (`<database>.migrations.lock`), and a
 single-writer database that can be opened by another process refuses to migrate without one. A lock file on a network share (UNC, NFS or SMB, or a mapped network drive on Windows) is refused too; macOS mounts are not checked: an exclusive file lock is not exclusive across hosts, so a file-based database must be on local storage, or behind a server, to migrate. This coordinates migrations only.
 This project does not control writers during normal use: that cannot be done reliably from an EF Core provider, and it is what
@@ -251,10 +251,10 @@ larger codebase.
 Public API is declared in each project's `PublicAPI.*.txt` and enforced by PublicApiAnalyzers; why each public type is
 public is in [docs/PUBLIC_API.md](docs/PUBLIC_API.md). Reviews follow [REVIEW_POLICY.md](REVIEW_POLICY.md).
 
-**DuckDB dependency.** The DuckDB plugin builds against a local checkout of DuckDB.NET (`Giorgi-DuckDB.NET`, beside this
-repository), because the upstream release it needs isn't published yet. Clone that checkout next to this repository before
-building the DuckDB plugin or the specification project. Once upstream publishes, the plugin moves to the NuGet package. CI does
-not build the DuckDB plugin or the specification project until then.
+**DuckDB dependency.** The DuckDB plugin uses DuckDB.NET packages from [local-packages](local-packages/README.md), built from
+Giorgi's `Giorgi-DuckDB.NET` develop checkout (version `0.0.0-local.4240e4d`), because the release it needs isn't published yet.
+The native `libduckdb` comes from `DuckDB.NET.Bindings.Full` on nuget.org. Once Giorgi publishes, the plugin moves to the NuGet
+release and the local packages are removed. CI does not build the DuckDB plugin or the specification project until then.
 
 ## Writing a plugin
 

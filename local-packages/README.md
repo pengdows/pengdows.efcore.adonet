@@ -9,3 +9,12 @@ Why vendored: nuget.org has `pengdows.stormgate` and `pengdows.stormgate.EntityF
 
 `nuget.config` maps only `pengdows.stormgate*` to this folder. When the packages are published, delete this folder and the
 mapping, and nothing else changes.
+
+## DuckDB.NET
+
+`DuckDB.NET.Data` and `DuckDB.NET.Bindings` at `0.0.0-local.4240e4d`, packed from Giorgi's `Giorgi-DuckDB.NET` develop checkout
+(commit `4240e4d`). The DuckDB plugin uses them until upstream publishes a release that reports `DataSourceInformation` and
+`DataTypes`. The native `libduckdb` still comes from `DuckDB.NET.Bindings.Full` on nuget.org; its managed assembly is excluded so
+the checkout's build is the one that runs. `nuget.config` maps only these two names to this folder. To rebuild: pack
+`DuckDB.NET.Bindings/Bindings.csproj` and `DuckDB.NET.Data/Data.csproj` from the checkout with `-p:Version=0.0.0-local.<commit>`.
+
