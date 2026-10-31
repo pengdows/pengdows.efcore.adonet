@@ -44,6 +44,10 @@ public sealed class SqlServerDialect : AdoNetDialect
     /// <summary>The database compatibility level whose T-SQL this dialect writes.</summary>
     public int CompatibilityLevel { get; }
 
+    // A plugin's services see the dialect as IAdoNetDialect; a context configured with another dialect gets the default level.
+    internal static int CompatibilityLevelOf(IAdoNetDialect dialect)
+        => dialect is SqlServerDialect sqlServer ? sqlServer.CompatibilityLevel : Instance.CompatibilityLevel;
+
     public override string Name => CompatibilityLevel == 160 ? "SQL Server" : $"SQL Server (compatibility level {CompatibilityLevel})";
     public override ISqlDialect Sql { get; }
     public override ITypeMappingDialect TypeMappings { get; } = new SqlServerTypeMappings();
@@ -64,7 +68,14 @@ public sealed class SqlServerDialect : AdoNetDialect
 
         new EntityFrameworkRelationalServicesBuilder(services)
             .TryAdd<IMigrationsSqlGenerator, SqlServerMigrationsSqlGenerator>()
-            .TryAdd<IRelationalQueryStringFactory, SqlServerQueryStringFactory>();
+            .TryAdd<IRelationalQueryStringFactory, SqlServerQueryStringFactory>()
+            .TryAdd<IMethodCallTranslatorPlugin, SqlServerFunctionsTranslatorPlugin>()
+            .TryAdd<IAggregateMethodCallTranslatorPlugin, SqlServerAggregateTranslatorPlugin>()
+            .TryAdd<IEvaluatableExpressionFilterPlugin, SqlServerEvaluatableExpressionFilterPlugin>()
+            .TryAdd<Microsoft.EntityFrameworkCore.Metadata.IRelationalAnnotationProvider, SqlServerAnnotationProvider>()
+            .TryAdd<IMigrationsAnnotationProvider, SqlServerMigrationsAnnotationProvider>()
+            .TryAdd<Microsoft.EntityFrameworkCore.ValueGeneration.IValueGeneratorSelector, SqlServerValueGeneratorSelector>();
+        services.TryAddSingleton<SqlServerHiLoStates>();
         services.TryAddScoped<IAdoNetBulkLoader, SqlServerBulkLoader>();
     }
 }

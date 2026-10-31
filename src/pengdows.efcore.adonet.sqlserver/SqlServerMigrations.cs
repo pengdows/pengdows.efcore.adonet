@@ -1,3 +1,5 @@
+using System.Globalization;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -6,7 +8,11 @@ using pengdows.efcore.adonet.Migrations;
 
 namespace pengdows.efcore.adonet.sqlserver;
 
-/// <summary>T-SQL where it differs from ISO: IDENTITY, sp_rename, ALTER COLUMN, and named default constraints.</summary>
+/// <summary>
+///     T-SQL where it differs from ISO: IDENTITY (with its seed and increment), sp_rename, ALTER COLUMN, named default
+///     constraints, SPARSE columns, clustered and nonclustered keys and indexes with their options, and memory-optimized
+///     tables. It reads Microsoft's annotation names, so migrations scaffolded by its provider keep their meaning.
+/// </summary>
 internal class SqlServerMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dependencies, IAdoNetDialect dialect)
     : AdoNetMigrationsSqlGenerator(dependencies, dialect)
 {
@@ -99,8 +105,294 @@ internal class SqlServerMigrationsSqlGenerator(MigrationsSqlGeneratorDependencie
         }
     }
 
+    // As the core writes a column (name, type, default, identity, NOT NULL, collation), with SPARSE after the type and an
+    // identity Microsoft's annotations name. Behaviour reference (not copied):
+    // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.SqlServer/Migrations/SqlServerMigrationsSqlGenerator.cs
+    protected override void ColumnDefinition(
+        string? schema,
+        string table,
+        string name,
+        ColumnOperation operation,
+        IModel? model,
+        MigrationCommandListBuilder builder)
+    {
+        if (operation.ComputedColumnSql != null)
+        {
+            ComputedColumnDefinition(schema, table, name, operation, model, builder);
+            return;
+        }
+
+        var columnType = operation.ColumnType ?? GetColumnType(schema, table, name, operation, model)!;
+        builder.Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(name)).Append(" ").Append(columnType);
+
+        if (operation[SqlServerAnnotationNames.Sparse] is true)
+        {
+            builder.Append(" SPARSE");
+        }
+
+        if (operation[SqlServerAnnotationNames.TemporalIsPeriodStartColumn] is true)
+        {
+            builder.Append(" GENERATED ALWAYS AS ROW START HIDDEN");
+        }
+
+        if (operation[SqlServerAnnotationNames.TemporalIsPeriodEndColumn] is true)
+        {
+            builder.Append(" GENERATED ALWAYS AS ROW END HIDDEN");
+        }
+
+        DefaultValue(operation.DefaultValue, operation.DefaultValueSql, columnType, builder);
+
+        if (IsIdentity(operation)
+            || (operation[SqlServerAnnotationNames.Identity] is string)
+            || (operation[SqlServerAnnotationNames.ValueGenerationStrategy] is SqlServerValueGenerationStrategy.IdentityColumn))
+        {
+            IdentityDefinition(schema, table, name, operation, builder);
+        }
+
+        if (!operation.IsNullable)
+        {
+            builder.Append(" NOT NULL");
+        }
+
+        if (operation.Collation != null)
+        {
+            builder.Append(" COLLATE ").Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Collation));
+        }
+    }
+
+    // IDENTITY, or IDENTITY(seed, increment) where the annotation names other than "1, 1". The annotation is parsed, not
+    // copied, so a migration can't put anything but two numbers there.
     protected override void IdentityDefinition(string? schema, string table, string name, ColumnOperation operation, MigrationCommandListBuilder builder)
-        => builder.Append(" IDENTITY");
+    {
+        builder.Append(" IDENTITY");
+        if (operation[SqlServerAnnotationNames.Identity] is not string seedAndIncrement)
+        {
+            return;
+        }
+
+        var parts = seedAndIncrement.Split(',');
+        if ((parts.Length != 2)
+            || !long.TryParse(parts[0].Trim(), NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var seed)
+            || !int.TryParse(parts[1].Trim(), NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var increment))
+        {
+            throw new InvalidOperationException(
+                $"'{table}.{name}' has the identity '{seedAndIncrement}', which is not a seed and an increment such as '1, 1'.");
+        }
+
+        if ((seed != 1) || (increment != 1))
+        {
+            builder.Append(string.Create(CultureInfo.InvariantCulture, $"({seed}, {increment})"));
+        }
+    }
+
+    protected override void IndexTraits(MigrationOperation operation, IModel? model, MigrationCommandListBuilder builder)
+    {
+        if (operation[SqlServerAnnotationNames.Clustered] is bool clustered)
+        {
+            builder.Append(clustered ? "CLUSTERED " : "NONCLUSTERED ");
+        }
+    }
+
+    // INCLUDE (...), then the filter, then WITH (...), as T-SQL orders them. Behaviour reference (not copied):
+    // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.SqlServer/Migrations/SqlServerMigrationsSqlGenerator.cs
+    protected override void IndexOptions(MigrationOperation operation, IModel? model, MigrationCommandListBuilder builder)
+    {
+        if ((operation[SqlServerAnnotationNames.Include] is IReadOnlyList<string> includes) && (includes.Count > 0))
+        {
+            builder
+                .Append(" INCLUDE (")
+                .Append(string.Join(", ", includes.Select(c => Dependencies.SqlGenerationHelper.DelimitIdentifier(c))))
+                .Append(")");
+        }
+
+        base.IndexOptions(operation, model, builder);
+
+        var options = new List<string>();
+        if (operation[SqlServerAnnotationNames.FillFactor] is int fillFactor)
+        {
+            options.Add("FILLFACTOR = " + fillFactor.ToString(CultureInfo.InvariantCulture));
+        }
+
+        if (operation[SqlServerAnnotationNames.CreatedOnline] is true)
+        {
+            options.Add("ONLINE = ON");
+        }
+
+        if (operation[SqlServerAnnotationNames.SortInTempDb] is true)
+        {
+            options.Add("SORT_IN_TEMPDB = ON");
+        }
+
+        if (operation[SqlServerAnnotationNames.DataCompression] is DataCompressionType compression)
+        {
+            options.Add("DATA_COMPRESSION = " + compression.ToString().ToUpperInvariant());
+        }
+
+        if (options.Count > 0)
+        {
+            builder.Append(" WITH (").Append(string.Join(", ", options)).Append(")");
+        }
+    }
+
+    // A memory-optimized table is created WITH (MEMORY_OPTIMIZED = ON), outside a transaction, which such DDL refuses. A
+    // temporal table is created WITH (SYSTEM_VERSIONING = ON (HISTORY_TABLE = schema.name)); HISTORY_TABLE needs a schema, so
+    // without one the statement runs through EXEC with the session's SCHEMA_NAME(). Behaviour reference (not copied):
+    // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.SqlServer/Migrations/SqlServerMigrationsSqlGenerator.cs
+    protected override void Generate(CreateTableOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
+    {
+        var memoryOptimized = IsMemoryOptimized(operation, model, operation.Schema, operation.Name);
+        var temporal = operation[SqlServerAnnotationNames.IsTemporal] is true;
+        if (!memoryOptimized && !temporal)
+        {
+            base.Generate(operation, model, builder, terminate);
+            return;
+        }
+
+        var options = new List<string>();
+        var historySchema = operation[SqlServerAnnotationNames.TemporalHistoryTableSchema] as string;
+        var historyName = operation[SqlServerAnnotationNames.TemporalHistoryTableName] as string ?? operation.Name + "History";
+        if (temporal && (historySchema != null) && (historySchema != operation.Schema))
+        {
+            Generate(new EnsureSchemaOperation { Name = historySchema }, model, builder);
+        }
+
+        if (temporal && (historySchema != null))
+        {
+            options.Add("SYSTEM_VERSIONING = ON (HISTORY_TABLE = " + Dependencies.SqlGenerationHelper.DelimitIdentifier(historyName, historySchema) + ")");
+        }
+
+        if (memoryOptimized)
+        {
+            options.Add("MEMORY_OPTIMIZED = ON");
+        }
+
+        if (temporal && (historySchema == null))
+        {
+            var table = new MigrationCommandListBuilder(Dependencies);
+            base.Generate(operation, model, table, terminate: false);
+            table.EndCommand();
+            options.Insert(
+                0,
+                "SYSTEM_VERSIONING = ON (HISTORY_TABLE = ' + QUOTENAME(@historyTableSchema) + N'."
+                + Dependencies.SqlGenerationHelper.DelimitIdentifier(historyName).Replace("'", "''", StringComparison.Ordinal) + ")");
+            builder
+                .AppendLine("DECLARE @historyTableSchema sysname = SCHEMA_NAME();")
+                .Append("EXEC(N'")
+                .Append(table.GetCommandList().Single().CommandText.Replace("'", "''", StringComparison.Ordinal))
+                .Append(" WITH (").Append(string.Join(", ", options)).Append(")')");
+        }
+        else
+        {
+            base.Generate(operation, model, builder, terminate: false);
+            builder.Append(" WITH (").Append(string.Join(", ", options)).Append(")");
+        }
+
+        if (terminate)
+        {
+            builder.AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
+            EndStatement(builder, suppressTransaction: memoryOptimized);
+        }
+    }
+
+    // A temporal table names its period after its columns: PERIOD FOR SYSTEM_TIME (start, end).
+    protected override void CreateTableConstraints(CreateTableOperation operation, IModel? model, MigrationCommandListBuilder builder)
+    {
+        base.CreateTableConstraints(operation, model, builder);
+        if ((operation[SqlServerAnnotationNames.IsTemporal] is not true)
+            || (operation[SqlServerAnnotationNames.TemporalPeriodStartColumnName] is not string start)
+            || (operation[SqlServerAnnotationNames.TemporalPeriodEndColumnName] is not string end))
+        {
+            return;
+        }
+
+        builder
+            .AppendLine(",")
+            .Append("PERIOD FOR SYSTEM_TIME(")
+            .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(start))
+            .Append(", ")
+            .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(end))
+            .Append(")");
+    }
+
+    // A temporal table stops versioning before it is dropped, and its history table is dropped after it.
+    protected override void Generate(DropTableOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
+    {
+        if (operation[SqlServerAnnotationNames.IsTemporal] is not true)
+        {
+            base.Generate(operation, model, builder, terminate);
+            return;
+        }
+
+        builder
+            .Append("ALTER TABLE ")
+            .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Name, operation.Schema))
+            .Append(" SET (SYSTEM_VERSIONING = OFF)")
+            .AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
+        EndStatement(builder);
+        base.Generate(operation, model, builder, terminate: true);
+        builder
+            .Append("DROP TABLE ")
+            .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(
+                operation[SqlServerAnnotationNames.TemporalHistoryTableName] as string ?? operation.Name + "History",
+                operation[SqlServerAnnotationNames.TemporalHistoryTableSchema] as string ?? operation.Schema))
+            .AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
+        EndStatement(builder);
+    }
+
+    // Turning versioning on or off, or moving the history table, of an existing table isn't generated: refused, not skipped.
+    protected override void Generate(AlterTableOperation operation, IModel? model, MigrationCommandListBuilder builder)
+    {
+        string[] temporalAnnotations =
+        [
+            SqlServerAnnotationNames.IsTemporal,
+            SqlServerAnnotationNames.TemporalHistoryTableName,
+            SqlServerAnnotationNames.TemporalHistoryTableSchema
+        ];
+        if (temporalAnnotations.Any(a => !Equals(operation[a], operation.OldTable[a])))
+        {
+            throw new NotSupportedException(
+                $"'{operation.Name}' changes whether it is a temporal table, or its history table; write that change in the migration with "
+                + "migrationBuilder.Sql (ALTER TABLE ... SET (SYSTEM_VERSIONING = ...)).");
+        }
+
+        base.Generate(operation, model, builder);
+    }
+
+    // A memory-optimized table's indexes are part of the table: ALTER TABLE ... ADD INDEX, outside a transaction.
+    protected override void Generate(CreateIndexOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
+    {
+        if (!IsMemoryOptimized(operation, model, operation.Schema, operation.Table))
+        {
+            base.Generate(operation, model, builder, terminate);
+            return;
+        }
+
+        builder
+            .Append("ALTER TABLE ")
+            .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Table, operation.Schema))
+            .Append(" ADD INDEX ")
+            .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Name))
+            .Append(" ");
+        if (operation.IsUnique)
+        {
+            builder.Append("UNIQUE ");
+        }
+
+        IndexTraits(operation, model, builder);
+        builder
+            .Append("(")
+            .Append(string.Join(", ", operation.Columns.Select(c => Dependencies.SqlGenerationHelper.DelimitIdentifier(c))))
+            .Append(")");
+        if (terminate)
+        {
+            builder.AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
+            EndStatement(builder, suppressTransaction: true);
+        }
+    }
+
+    private static bool IsMemoryOptimized(MigrationOperation operation, IModel? model, string? schema, string table)
+        => operation[SqlServerAnnotationNames.MemoryOptimized] as bool?
+            ?? ((model?.GetRelationalModel().FindTable(table, schema) is { } modelTable) && SqlServerAnnotationProvider.IsMemoryOptimized(modelTable));
 
     protected override void Generate(RenameColumnOperation operation, IModel? model, MigrationCommandListBuilder builder)
         => Rename(builder, ObjectName(operation.Schema, operation.Table, operation.Name), operation.NewName, "COLUMN");

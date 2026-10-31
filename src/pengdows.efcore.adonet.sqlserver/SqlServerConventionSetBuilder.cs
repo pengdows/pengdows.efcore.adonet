@@ -18,8 +18,11 @@ internal sealed class SqlServerConventionSetBuilder(
     public override ConventionSet CreateConventionSet()
     {
         var conventionSet = base.CreateConventionSet();
+        conventionSet.ModelFinalizingConventions.Insert(0, new SqlServerTemporalConvention());
         conventionSet.ModelFinalizingConventions.Add(new SqlServerNullableUniqueIndexConvention(sqlGenerationHelper));
         conventionSet.ModelFinalizingConventions.Add(new SqlServerSingleCascadePathConvention());
+        conventionSet.ModelFinalizingConventions.Add(new SqlServerValueGenerationConvention(sqlGenerationHelper));
+        conventionSet.ModelFinalizingConventions.Add(new SqlServerMemoryOptimizedTablesConvention());
         return conventionSet;
     }
 }

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
+using pengdows.efcore.adonet.Query;
 
 namespace pengdows.efcore.adonet.Tests;
 
@@ -463,6 +464,23 @@ public class TranslationTests
 
         Assert.Contains(@"REVERSE(""i"".""Name"")", context.Items.Select(i => PluginFunctions.Reverse(i.Name!)).ToQueryString());
     }
+
+    /// <summary>
+    ///     A plugin's template that is a search condition (a predicate such as SQL Server's FREETEXT) stays bare where a condition
+    ///     goes and becomes a CASE where a value goes, on a database whose bools are bit values; it is never compared with TRUE.
+    /// </summary>
+    [Fact]
+    public void A_plugin_condition_template_is_a_search_condition_not_a_value()
+    {
+        var where = Sql(TestDialects.ConditionTranslator, c => c.Items.Where(i => PluginFunctions.Matches(i.Name!, "x")));
+        var select = Sql(TestDialects.ConditionTranslator, c => c.Items.Select(i => PluginFunctions.Matches(i.Name!, "x")));
+        var negated = Sql(TestDialects.ConditionTranslator, c => c.Items.Where(i => !PluginFunctions.Matches(i.Name!, "x")));
+
+        Assert.Contains(@"WHERE ""i"".""Name"" MATCHES 'x'", where);
+        Assert.DoesNotContain("= 1", where);
+        Assert.Contains("CASE\n    WHEN \"i\".\"Name\" MATCHES 'x' THEN 1\n    ELSE 0\nEND", select);
+        Assert.Contains(@"WHERE NOT (""i"".""Name"" MATCHES 'x')", negated);
+    }
 }
 
 /// <summary>Spellings a non-ISO database would use, and one function it lacks.</summary>
@@ -567,6 +585,29 @@ public static class PluginFunctions
 {
     public static string Reverse(string value)
         => throw new InvalidOperationException("Only in queries.");
+
+    public static bool Matches(string value, string pattern)
+        => throw new InvalidOperationException("Only in queries.");
+}
+
+/// <summary>A predicate written from a template: <c>{0} MATCHES {1}</c>.</summary>
+public sealed class ConditionTranslatorPlugin(ISqlExpressionFactory sqlExpressionFactory, Microsoft.EntityFrameworkCore.Storage.IRelationalTypeMappingSource typeMappingSource)
+    : IMethodCallTranslatorPlugin, IMethodCallTranslator
+{
+    public IEnumerable<IMethodCallTranslator> Translators
+        => [this];
+
+    public SqlExpression? Translate(
+        SqlExpression? instance,
+        MethodInfo method,
+        IReadOnlyList<SqlExpression> arguments,
+        IDiagnosticsLogger<DbLoggerCategory.Query> logger)
+        => method.Name == nameof(PluginFunctions.Matches)
+            ? sqlExpressionFactory.Condition(
+                "{0} MATCHES {1}",
+                arguments.Select(a => sqlExpressionFactory.ApplyDefaultTypeMapping(a)).ToList(),
+                typeMappingSource.FindMapping(typeof(bool)))
+            : null;
 }
 
 /// <summary>Registered the way any EF provider plugin registers one: <see cref="IMethodCallTranslatorPlugin" />.</summary>

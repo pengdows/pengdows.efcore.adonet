@@ -181,6 +181,11 @@ public static class TestDialects
     public static readonly IAdoNetDialect ReverseTranslator = new PartsDialect(
         "Reverse translator",
         services: s => new EntityFrameworkRelationalServicesBuilder(s).TryAdd<IMethodCallTranslatorPlugin, ReverseTranslatorPlugin>());
+
+    public static readonly IAdoNetDialect ConditionTranslator = new PartsDialect(
+        "Condition translator",
+        new PartsSql(booleans: BooleanSyntax.BitValues, trueLiteral: "1", falseLiteral: "0"),
+        services: s => new EntityFrameworkRelationalServicesBuilder(s).TryAdd<IMethodCallTranslatorPlugin, ConditionTranslatorPlugin>());
 }
 
 /// <summary>Sizes unbounded string parameters as SQL Server's provider does.</summary>

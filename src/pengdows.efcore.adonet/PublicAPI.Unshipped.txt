@@ -393,6 +393,7 @@ static pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.IsIdentity
 static pengdows.efcore.adonet.PagingSyntax.LimitOffset(string? noLimitValue = null) -> pengdows.efcore.adonet.PagingSyntax!
 static pengdows.efcore.adonet.PagingSyntax.OffsetFetch.get -> pengdows.efcore.adonet.PagingSyntax!
 static pengdows.efcore.adonet.PagingSyntax.TopOrOffsetFetch.get -> pengdows.efcore.adonet.PagingSyntax!
+static pengdows.efcore.adonet.Query.SqlTemplate.Condition(this Microsoft.EntityFrameworkCore.Query.ISqlExpressionFactory! sqlExpressionFactory, string? template, System.Collections.Generic.IReadOnlyList<Microsoft.EntityFrameworkCore.Query.SqlExpressions.SqlExpression!>! arguments, Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping? boolTypeMapping) -> Microsoft.EntityFrameworkCore.Query.SqlExpressions.SqlExpression?
 static pengdows.efcore.adonet.Query.SqlTemplate.Call(this Microsoft.EntityFrameworkCore.Query.ISqlExpressionFactory! sqlExpressionFactory, string? template, System.Collections.Generic.IReadOnlyList<Microsoft.EntityFrameworkCore.Query.SqlExpressions.SqlExpression!>! arguments, System.Type! returnType, Microsoft.EntityFrameworkCore.Storage.RelationalTypeMapping? typeMapping) -> Microsoft.EntityFrameworkCore.Query.SqlExpressions.SqlExpression?
 static pengdows.efcore.adonet.Query.SqlTemplate.TryGetTemplate(Microsoft.EntityFrameworkCore.Query.SqlExpressions.SqlFunctionExpression! function, out string! template) -> bool
 static pengdows.efcore.adonet.SavepointSyntax.Iso.get -> pengdows.efcore.adonet.SavepointSyntax!
