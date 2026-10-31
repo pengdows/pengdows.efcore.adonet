@@ -23,6 +23,29 @@ Features **not** provided here:
 
 This library **does** manage ordinary EF Core connections, transactions, SQL, and diagnostics. Driver connection pooling is not the same as the application-level pool governance offered by pengdows.crud.
 
+## Testing without a database
+
+The EF Core core and dialect code can be exercised with `pengdows.crud.fakeDb`,
+a standalone in-process ADO.NET provider used as test infrastructure. It permits
+database-free testing of LINQ translation, SQL and parameter generation, command
+execution, reader materialization, change tracking, SaveChanges, transactions,
+async flows, and injected failures. This is **not** a runtime dependency
+on `pengdows.crud`. See
+[fakeDb coverage](https://github.com/pengdows/pengdows.efcore.adonet/blob/main/docs/FAKEDB_EFCORE_COVERAGE.md).
+Real database tests are still necessary for engine semantics, actual query execution,
+migrations, and type fidelity. Some tests use embedded SQLite instead of fakeDb.
+
+## Optional pool protection and backpressure
+
+Use the separate
+[`pengdows.stormgate.EntityFrameworkCore`](https://github.com/pengdows/pengdows.crud/tree/2.0.6/pengdows.stormgate.EntityFrameworkCore)
+package to add connection admission control and fail-fast backpressure
+via EF Core `DbConnectionInterceptor`/`UseStormGate(interceptor)`.
+Share one `StormGate` budget across contexts. This is an **opt-in integration**,
+not a feature bundled with `pengdows.efcore.adonet`, and not the full CRUD
+`PoolGovernor`: no pool splitting, intention routing, connection modes, or
+hard physical connection-pool ceiling is supplied.
+
 ## Entry points
 
 - [README](https://github.com/pengdows/pengdows.efcore.adonet/blob/main/README.md): scope, architecture, plugin contract, supported engines, testing.
