@@ -1,0 +1,62 @@
+name: CI
+
+# Public, checkable evidence for the validation claims in the README. Builds and tests what a clean clone contains. The
+# benchmark and Pomelo comparison projects reference a Pomelo checkout outside this repository, so they are not built here.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  core:
+    name: Core (no database servers)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - run: dotnet restore src/pengdows.efcore.adonet/pengdows.efcore.adonet.csproj
+      - run: dotnet build src/pengdows.efcore.adonet/pengdows.efcore.adonet.csproj --no-restore
+      - run: dotnet test test/pengdows.efcore.adonet.Tests --no-restore
+
+  providers:
+    name: Provider ${{ matrix.provider }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - provider: sqlite
+            project: test/pengdows.efcore.adonet.sqlite.Tests
+          - provider: duckdb
+            project: test/pengdows.efcore.adonet.duckdb.Tests
+          - provider: flatfile
+            project: test/pengdows.efcore.adonet.flatfile.Tests
+          - provider: sqlserver
+            project: test/pengdows.efcore.adonet.sqlserver.Tests
+          - provider: mysql
+            project: test/pengdows.efcore.adonet.mysql.Tests
+          - provider: postgresql
+            project: test/pengdows.efcore.adonet.postgresql.Tests
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      # Server-backed suites start their database with Testcontainers, which needs the Docker daemon on the runner.
+      - run: dotnet test ${{ matrix.project }}
+
+  specification:
+    name: EF Core specification tests (SQLite)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - run: dotnet test test/pengdows.efcore.adonet.Specification.Tests
