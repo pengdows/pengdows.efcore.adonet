@@ -22,8 +22,9 @@ internal class AdoNetRelationalConnection : RelationalConnection
     private readonly string? _sessionSetup;
     private readonly IReadOnlyDictionary<string, string> _connectionOptions;
 
-    // Connections whose sessions get the dialect's setup, with it; contexts can share one connection, which is watched once.
-    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<DbConnection, string> Watched = new();
+    // Each connection's session: the setup its latest context asked for, and whether that setup has run in the current open.
+    // Contexts can share one connection; the setup is the latest context's, and the connection's events are subscribed once.
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<DbConnection, Session> Sessions = new();
 
     // Connections already given the dialect's connection options, or found to have them.
     private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<DbConnection, object> Optioned = new();
@@ -145,8 +146,9 @@ internal class AdoNetRelationalConnection : RelationalConnection
             $"The {source} lacks connection string options this dialect's SQL relies on, and its connection string can't be changed: "
             + "include " + string.Join(";", _connectionOptions.Select(o => o.Key + "=" + o.Value)) + " in it.");
 
-    // The dialect's session setup runs as each connection opens, whoever opens it (EF, or the application), before anything
-    // else can run on it; a connection already open when EF first sees it is set up then, in EF's transaction if it has one.
+    // The dialect's session setup runs as each connection opens, before anything else runs on it. EF's own opens run it inside
+    // OpenAsync/Open, asynchronously for OpenAsync, since some drivers refuse synchronous I/O. A connection the application
+    // opened is set up synchronously when EF first sees it, which is the only synchronous path left.
     [System.Diagnostics.CodeAnalysis.AllowNull]
     public override DbConnection DbConnection
     {
@@ -158,7 +160,7 @@ internal class AdoNetRelationalConnection : RelationalConnection
                 AddOptions(connection);
             }
 
-            if ((_sessionSetup != null) && !Watched.TryGetValue(connection, out _))
+            if (_sessionSetup != null)
             {
                 Watch(connection, _sessionSetup, CurrentTransaction?.GetDbTransaction());
             }
@@ -168,22 +170,55 @@ internal class AdoNetRelationalConnection : RelationalConnection
         set => base.DbConnection = value;
     }
 
+    public override bool Open(bool errorsExpected = false)
+    {
+        var opened = base.Open(errorsExpected);
+        var connection = base.DbConnection;
+        if (Sessions.TryGetValue(connection, out var session) && !session.Ready && session.Setup is { } setup)
+        {
+            Run(connection, setup, transaction: null);
+            session.Ready = true;
+        }
+
+        return opened;
+    }
+
+    public override async Task<bool> OpenAsync(CancellationToken cancellationToken, bool errorsExpected = false)
+    {
+        var opened = await base.OpenAsync(cancellationToken, errorsExpected).ConfigureAwait(false);
+        var connection = base.DbConnection;
+        if (Sessions.TryGetValue(connection, out var session) && !session.Ready && session.Setup is { } setup)
+        {
+            await RunAsync(connection, setup, cancellationToken).ConfigureAwait(false);
+            session.Ready = true;
+        }
+
+        return opened;
+    }
+
     private static void Watch(DbConnection connection, string setup, DbTransaction? transaction)
     {
-        Watched.AddOrUpdate(connection, setup);
-        connection.StateChange += SessionStarted;
-        if (connection.State == ConnectionState.Open)
+        var session = Sessions.GetValue(connection, Subscribe);
+        session.Setup = setup;
+        if ((connection.State == ConnectionState.Open) && !session.Ready)
         {
             Run(connection, setup, transaction);
+            session.Ready = true;
         }
     }
 
-    private static void SessionStarted(object? sender, StateChangeEventArgs e)
+    // Closing or breaking the connection ends its session, so the next open sets it up again.
+    private static Session Subscribe(DbConnection connection)
     {
-        if ((e.CurrentState == ConnectionState.Open) && (sender is DbConnection connection) && Watched.TryGetValue(connection, out var setup))
+        var session = new Session();
+        connection.StateChange += (_, e) =>
         {
-            Run(connection, setup, transaction: null);
-        }
+            if (e.CurrentState != ConnectionState.Open)
+            {
+                session.Ready = false;
+            }
+        };
+        return session;
     }
 
     private static void Run(DbConnection connection, string setup, DbTransaction? transaction)
@@ -192,6 +227,20 @@ internal class AdoNetRelationalConnection : RelationalConnection
         command.CommandText = setup;
         command.Transaction = transaction;
         command.ExecuteNonQuery();
+    }
+
+    private static async Task RunAsync(DbConnection connection, string setup, CancellationToken cancellationToken)
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = setup;
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    private sealed class Session
+    {
+        public string? Setup { get; set; }
+
+        public bool Ready { get; set; }
     }
 
     // EF opens the connection to begin a transaction and, when beginning fails (a transient failure, an interceptor), leaves
