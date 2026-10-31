@@ -74,7 +74,8 @@ public sealed class SqlServerDialect : AdoNetDialect
             .TryAdd<IEvaluatableExpressionFilterPlugin, SqlServerEvaluatableExpressionFilterPlugin>()
             .TryAdd<Microsoft.EntityFrameworkCore.Metadata.IRelationalAnnotationProvider, SqlServerAnnotationProvider>()
             .TryAdd<IMigrationsAnnotationProvider, SqlServerMigrationsAnnotationProvider>()
-            .TryAdd<Microsoft.EntityFrameworkCore.ValueGeneration.IValueGeneratorSelector, SqlServerValueGeneratorSelector>();
+            .TryAdd<Microsoft.EntityFrameworkCore.ValueGeneration.IValueGeneratorSelector, SqlServerValueGeneratorSelector>()
+            .TryAdd<Microsoft.EntityFrameworkCore.Migrations.IHistoryRepository, SqlServerHistoryRepository>();
         services.TryAddSingleton<SqlServerHiLoStates>();
         services.TryAddScoped<IAdoNetBulkLoader, SqlServerBulkLoader>();
     }
