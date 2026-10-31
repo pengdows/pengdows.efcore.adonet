@@ -104,6 +104,25 @@ public sealed class PostgreSqlHost : ServerHost
     // A DateTimeOffset is a timestamptz instant, read back at offset zero.
     public override bool KeepsOffsets => false;
 
+    // "C" compares by byte, so it is case-sensitive, and every PostgreSQL server has it.
+    public override string? CaseSensitiveCollation => "C";
+
+    // PostgreSQL has no CALL for a result set: the functions return tables, and a call selects from them. Each returns the
+    // columns EF's suites read, and the call templates are the raw SQL they run.
+    public override NorthwindProcedures Procedures { get; } = new(
+        [
+            "CREATE FUNCTION \"Ten Most Expensive Products\"() RETURNS TABLE(\"TenMostExpensiveProducts\" text, \"UnitPrice\" numeric) "
+            + "LANGUAGE sql AS $$ SELECT \"ProductName\", \"UnitPrice\" FROM \"Products\" ORDER BY \"UnitPrice\" DESC LIMIT 10 $$",
+            "CREATE FUNCTION \"CustOrderHist\"(pCustomerID text) RETURNS TABLE(\"ProductName\" text, \"Total\" bigint) "
+            + "LANGUAGE sql AS $$ SELECT p.\"ProductName\", SUM(od.\"Quantity\")::bigint FROM \"Products\" p "
+            + "JOIN \"Order Details\" od ON od.\"ProductID\" = p.\"ProductID\" JOIN \"Orders\" o ON o.\"OrderID\" = od.\"OrderID\" "
+            + "WHERE o.\"CustomerID\" = pCustomerID GROUP BY p.\"ProductName\" $$"
+        ],
+        "SELECT * FROM \"Ten Most Expensive Products\"()",
+        "SELECT * FROM \"CustOrderHist\"({0})",
+        "SELECT * FROM \"CustOrderHist\"(@CustomerID)",
+        CallRowsAffected: -1);
+
     private static readonly RunContainer Container = new(() => new PostgreSqlBuilder("postgres:17").Build());
 
     // The image allows 25 connections in all and a few go to administration. Npgsql pools per connection string and each test
