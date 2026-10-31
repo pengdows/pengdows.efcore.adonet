@@ -52,6 +52,62 @@ For those capabilities, see [pengdows.crud](https://github.com/pengdows/pengdows
 For a source-level engineering assessment of this repository, see
 [docs/CODE_REVIEW.md](docs/CODE_REVIEW.md).
 
+## Database-free EF Core testing
+
+**The EF Core implementation can be tested without a database server or database engine** using
+[`pengdows.crud.fakeDb`](https://github.com/pengdows/pengdows.crud/tree/2.0.6/pengdows.crud.fakeDb),
+an in-process ADO.NET provider implementation. This is a **test-only dependency**,
+not a dependency on `pengdows.crud` or its runtime features.
+
+FakeDb exercises real EF Core code paths rather than mocking EF Core internals:
+LINQ translation, command creation, parameter binding, reader materialization,
+tracking and fix-up, `SaveChanges`, generated values, transactions, async execution,
+and failure handling. Tests can inspect generated SQL and parameters, provide
+deterministic results, and inject provider failures without starting Docker
+or a real database. See [fakeDb EF Core coverage](docs/FAKEDB_EFCORE_COVERAGE.md).
+
+**This does not eliminate real-database tests.** FakeDb validates the provider's
+use of the ADO.NET contract and EF Core pipeline. Actual SQL execution,
+database-specific semantics, migration behavior, and type fidelity still need
+integration and EF Core specification tests against the target engines.
+Some core tests also use in-memory SQLite; these need no external server.
+
+## Optional pool protection and backpressure
+
+This project intentionally contains no `PoolGovernor` or built-in
+connection-admission policy. Applications that need **a limit on concurrently
+open EF Core connections and fail-fast backpressure** can add
+[`pengdows.stormgate.EntityFrameworkCore`](https://github.com/pengdows/pengdows.crud/tree/2.0.6/pengdows.stormgate.EntityFrameworkCore).
+It plugs into EF Core through a `DbConnectionInterceptor`; no modification
+to this provider's shared core or dialects is required.
+
+```csharp
+using pengdows.stormgate;
+using pengdows.stormgate.EntityFrameworkCore;
+
+// Create once and share across the contexts governed by the same budget.
+var gate = StormGate.Create(
+    NpgsqlFactory.Instance,
+    connectionString,
+    maxConcurrentOpens: 32,
+    acquireTimeout: TimeSpan.FromSeconds(1));
+
+var interceptor = new StormGateConnectionInterceptor(gate);
+
+services.AddDbContext<AppDbContext>(options => options
+    .UseAdoNet(NpgsqlFactory.Instance, connectionString, PostgreSqlDialect.Instance)
+    .UseStormGate(interceptor));
+```
+
+A permit is held for the EF connection's **open lifetime**, and saturation
+results in a timeout rather than unlimited waiting. Reuse **one shared
+`StormGate`** across all contexts that must share a concurrency budget.
+StormGate does **not** add read/write pool splitting, intention-aware routing,
+CRUD connection modes, or the full `pengdows.crud` governance model.
+It also does not cap idle physical connections retained by a driver's own pool.
+See the [StormGate EF Core README](https://github.com/pengdows/pengdows.crud/blob/2.0.6/pengdows.stormgate.EntityFrameworkCore/README.md)
+for setup, connection-lifecycle constraints, and retry-policy interactions.
+
 ## Layers
 
 | Layer | Responsibility |
