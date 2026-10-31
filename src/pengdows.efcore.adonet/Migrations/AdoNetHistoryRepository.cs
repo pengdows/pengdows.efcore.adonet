@@ -26,17 +26,6 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
     protected virtual TimeSpan LockTimeout
         => TimeSpan.FromMinutes(2);
 
-    /// <summary>
-    ///     A dialect with a server-side session lock returns the statement that takes it, which yields 1 when taken; it creates
-    ///     no table, and the lock is held by the connection rather than a transaction. Null for the lock table.
-    /// </summary>
-    protected virtual string? SessionLockSql(TimeSpan timeout)
-        => null;
-
-    /// <summary>The statement releasing the session lock, paired with <see cref="SessionLockSql" />.</summary>
-    protected virtual string? SessionUnlockSql
-        => null;
-
     public override LockReleaseBehavior LockReleaseBehavior
         => LockReleaseBehavior.Explicit;
 
@@ -285,7 +274,10 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
     }
 
     private string ReleaseSql(string token)
-        => SessionUnlockSql ?? ReleaseLockSql(token);
+        => Dialect.Sql.SessionLock?.Release ?? ReleaseLockSql(token);
+
+    private string? SessionLockSql(TimeSpan timeout)
+        => Dialect.Sql.SessionLock?.Acquire(timeout);
 
     private enum Retry
     {

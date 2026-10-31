@@ -504,8 +504,6 @@ virtual pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.WithDataSou
 virtual pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.WithDialect(pengdows.efcore.adonet.IAdoNetDialect! dialect) -> pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension!
 virtual pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.WithProviderFactory(System.Data.Common.DbProviderFactory! providerFactory) -> pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension!
 virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.LockTimeout.get -> System.TimeSpan
-virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.SessionLockSql(System.TimeSpan timeout) -> string?
-virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.SessionUnlockSql.get -> string?
 virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.TableExistsSql(string! table, string? schema) -> string!
 virtual pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.IdentityDefinition(string? schema, string! table, string! name, Microsoft.EntityFrameworkCore.Migrations.Operations.ColumnOperation! operation, Microsoft.EntityFrameworkCore.Migrations.MigrationCommandListBuilder! builder) -> void
 virtual pengdows.efcore.adonet.PagingSyntax.GenerateAfterOrderings(pengdows.efcore.adonet.IQuerySqlWriter! sql, Microsoft.EntityFrameworkCore.Query.SqlExpressions.SelectExpression! select) -> void
@@ -926,3 +924,10 @@ pengdows.efcore.adonet.DatabaseLifecycle.IsLockable.get -> System.Func<System.Da
 pengdows.efcore.adonet.DatabaseLifecycle.LockFileFor(System.Data.Common.DbConnectionStringBuilder! connection) -> string?
 
 pengdows.efcore.adonet.DatabaseLifecycle.SingleWriter.get -> bool
+
+pengdows.efcore.adonet.SessionLockStatements
+pengdows.efcore.adonet.SessionLockStatements.SessionLockStatements(System.Func<System.TimeSpan, string!>! acquire, string! release) -> void
+pengdows.efcore.adonet.SessionLockStatements.Acquire.get -> System.Func<System.TimeSpan, string!>!
+pengdows.efcore.adonet.SessionLockStatements.Release.get -> string!
+pengdows.efcore.adonet.ISqlDialect.SessionLock.get -> pengdows.efcore.adonet.SessionLockStatements?
+virtual pengdows.efcore.adonet.AnsiSqlDialect.SessionLock.get -> pengdows.efcore.adonet.SessionLockStatements?

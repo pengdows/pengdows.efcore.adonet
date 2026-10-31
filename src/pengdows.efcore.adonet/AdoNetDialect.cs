@@ -107,6 +107,7 @@ public class AnsiSqlDialect : ISqlDialect
     public virtual LateralJoinSyntax? LateralJoins => LateralJoinSyntax.Iso;
     public virtual bool RequiresDerivedTableColumnAliases => false;
     public virtual bool UsesNativeValuesTable => false;
+    public virtual SessionLockStatements? SessionLock => null;
     public virtual bool SupportsNullOrderingClauses => false;
     public virtual string? ParameterCast(string storeType) => null;
 

@@ -212,6 +212,16 @@ public sealed partial class MySqlDialect : AdoNetDialect
 
 internal sealed class MySqlSql(bool backslashEscapes, bool savepoints, bool mariaDb, MySqlServerFeatures features) : AnsiSqlDialect
 {
+    // The migrations lock is named for the database the migrator is connected to, so migrations of different databases on one server
+    // do not wait for each other. MD5 keeps the name within MySQL's 64-character limit for any database name.
+    private const string LockName = "CONCAT('__EFMigrationsLock:', MD5(COALESCE(DATABASE(), '')))";
+
+    // GET_LOCK waits for the lock up to the timeout (in whole seconds) and holds it for the connection, so a second migrator on another
+    // connection waits rather than fails.
+    public override SessionLockStatements? SessionLock { get; } = new(
+        timeout => "SELECT GET_LOCK(" + LockName + ", " + (long)timeout.TotalSeconds + ")",
+        "SELECT RELEASE_LOCK(" + LockName + ")");
+
     private const string MariaDbDateTimeOffsetFromText =
         "CASE WHEN {0} REGEXP '[+-][0-9][0-9]:[0-9][0-9]$' THEN CAST(LEFT({0}, CHAR_LENGTH({0}) - 6) AS DATETIME(6)) - INTERVAL "
         + "((CASE SUBSTRING({0}, -6, 1) WHEN '-' THEN -1 ELSE 1 END) * (SUBSTRING({0}, -5, 2) * 60 + SUBSTRING({0}, -2, 2))) MINUTE "

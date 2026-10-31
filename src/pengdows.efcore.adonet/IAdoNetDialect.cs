@@ -184,6 +184,12 @@ public interface ISqlDialect
     /// <summary>How a database is created and deleted; null when the dialect can do neither.</summary>
     DatabaseLifecycle? Databases { get; }
 
+    /// <summary>
+    ///     The server-side session lock migrations take, where the database has one (an application or advisory lock); null where the
+    ///     migrations lock is a file or a row instead.
+    /// </summary>
+    SessionLockStatements? SessionLock => null;
+
     /// <summary>JSON columns and the functions over them; null when the dialect has none.</summary>
     JsonSyntax? Json { get; }
 

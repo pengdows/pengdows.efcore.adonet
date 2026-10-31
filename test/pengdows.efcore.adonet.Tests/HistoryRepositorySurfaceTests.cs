@@ -4,12 +4,12 @@ using pengdows.efcore.adonet.Migrations;
 namespace pengdows.efcore.adonet.Tests;
 
 /// <summary>
-///     The history repository's protected lock members are the hooks a plugin overrides, and no others: the session-lock statements
-///     (SQL Server, MySQL), the file-lock path, and the timeout. The row lock's statements are the core's, not a plugin's contract.
+///     The history repository's protected lock members are the file-lock path and the timeout. A dialect supplies its session lock as data
+///     (<c>ISqlDialect.SessionLock</c>), so the repository has no session-lock hook to override.
 /// </summary>
 public class HistoryRepositorySurfaceTests
 {
-    private static readonly string[] AllowedProtectedLockMembers = ["SessionLockSql", "SessionUnlockSql", "FileLockPath", "LockTimeout"];
+    private static readonly string[] AllowedProtectedLockMembers = ["FileLockPath", "LockTimeout"];
 
     [Fact]
     public void The_protected_lock_members_are_only_the_plugin_hooks()

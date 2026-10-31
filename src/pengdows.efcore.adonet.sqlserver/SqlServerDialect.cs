@@ -74,8 +74,7 @@ public sealed class SqlServerDialect : AdoNetDialect
             .TryAdd<IEvaluatableExpressionFilterPlugin, SqlServerEvaluatableExpressionFilterPlugin>()
             .TryAdd<Microsoft.EntityFrameworkCore.Metadata.IRelationalAnnotationProvider, SqlServerAnnotationProvider>()
             .TryAdd<IMigrationsAnnotationProvider, SqlServerMigrationsAnnotationProvider>()
-            .TryAdd<Microsoft.EntityFrameworkCore.ValueGeneration.IValueGeneratorSelector, SqlServerValueGeneratorSelector>()
-            .TryAdd<Microsoft.EntityFrameworkCore.Migrations.IHistoryRepository, SqlServerHistoryRepository>();
+            .TryAdd<Microsoft.EntityFrameworkCore.ValueGeneration.IValueGeneratorSelector, SqlServerValueGeneratorSelector>();
         services.TryAddSingleton<SqlServerHiLoStates>();
         services.TryAddScoped<IAdoNetBulkLoader, SqlServerBulkLoader>();
     }
@@ -83,6 +82,16 @@ public sealed class SqlServerDialect : AdoNetDialect
 
 internal sealed class SqlServerSql(int compatibilityLevel) : AnsiSqlDialect
 {
+    private const string LockResource = "__EFMigrationsLock";
+
+    // An application lock held by the session: sp_getapplock waits up to the timeout and yields 1 on a grant (its non-negative
+    // return), and the session keeps the lock until it is released or its connection closes.
+    public override SessionLockStatements? SessionLock { get; } = new(
+        timeout => "DECLARE @result int; EXEC @result = sp_getapplock @Resource = N'" + LockResource
+            + "', @LockMode = 'Exclusive', @LockOwner = 'Session', @LockTimeout = " + (long)timeout.TotalMilliseconds
+            + "; SELECT CASE WHEN @result >= 0 THEN 1 ELSE 0 END",
+        "EXEC sp_releaseapplock @Resource = N'" + LockResource + "', @LockOwner = 'Session'");
+
     // Through master; a database still in use is put in single-user mode, rolling back other sessions, before it's dropped.
     // Behaviour reference (not copied):
     // https://github.com/dotnet/efcore/blob/v10.0.11/src/EFCore.SqlServer/Storage/Internal/SqlServerDatabaseCreator.cs
