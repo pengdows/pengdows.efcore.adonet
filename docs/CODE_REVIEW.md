@@ -111,3 +111,18 @@ The JSON binding path may parse strings and inspect reflected provider members. 
 **Suitable for continued development and integration testing.** A limited preview is reasonable with documented scope and supported configurations. This source review does **not** independently certify general production readiness or complete EF Core provider parity. The recent repository-reported MySQL specification result (29,903 passed / 0 failed / 437 skipped) is useful evidence, but not a test run performed as part of this review.
 
 The primary success criterion is whether another database or feature can be added without making the shared core know about that vendor or duplicating EF infrastructure. That is precisely why the six-provider concurrent-development strategy matters.
+
+## Remediation status
+
+Status as of the commits named below; each open item is still open.
+
+| Finding | Status | Commit / note |
+| --- | --- | --- |
+| P0 — migration lock takeover and unowned release | **Partly fixed.** The release deletes only the row its own acquisition wrote (token = acquisition time plus random bits); takeover reads the time before the `\|`. **Not fixed:** a migration longer than the lock timeout can still be taken over while its owner runs; lease renewal and a two-migrator test against a real server are still needed. | `e6e7cd4` |
+| P1 — PostgreSQL-specific behaviour in the shared core | Open. Not started. | — |
+| P1 — MySQL lock not scoped to the database | **Fixed.** The lock name hashes `DATABASE()`; acquire and release use the same expression. Session pinning for the whole migration is not yet tested. | `afc4bda` |
+| P1 — async open runs synchronous session SQL | Open. Root cause identified: the `StateChange` handler in `AdoNetRelationalConnection` calls `ExecuteNonQuery()`, and the watch cache is static. No test yet. | — |
+| P1 — no CI pipeline | Open. | — |
+| P2 — bulk insert materializes data twice | Open. Needs a benchmark before any change, as the review says. | — |
+| P2 — data-source cache growth | Open. Needs documented lifetime and a measurement under dynamic connection strings. | — |
+| P2 — JSON mapping repeated parsing | Open. Needs a measurement first. | — |
