@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+using pengdows.efcore.adonet.Migrations;
 
 namespace pengdows.efcore.adonet.duckdb.Tests;
 
@@ -50,7 +51,7 @@ public class DuckDbMigrationLockTests : IDisposable
     private sealed class ProbeContext(DbContextOptions<ProbeContext> options) : DbContext(options);
 
     private sealed class ShortTimeoutDuckDbHistory(HistoryRepositoryDependencies dependencies, IAdoNetDialect dialect)
-        : DuckDbHistoryRepository(dependencies, dialect)
+        : AdoNetHistoryRepository(dependencies, dialect)
     {
         protected override TimeSpan LockTimeout => TimeSpan.FromMilliseconds(300);
     }

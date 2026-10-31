@@ -13,6 +13,7 @@ public sealed class FlatFileDialect : AdoNetDialect
     }
 
     public override string Name => "pengdows.flatfile";
+
     public override ITypeMappingDialect TypeMappings { get; } = new FlatFileTypeMappings();
     public override ISqlDialect Sql { get; } = new FlatFileSql();
     // The engine implements the ISO SQL/JSON value/query functions and JSON_TABLE. JSON_SET is

@@ -69,7 +69,10 @@ internal class SqliteSql : AnsiSqlDialect
         "Data Source",
         ["-wal", "-shm"],
         "PRAGMA journal_mode = 'wal';",
-        isInMemory: b => string.Equals(Convert.ToString(b.TryGetValue("Data Source", out var path) ? path : null, CultureInfo.InvariantCulture), ":memory:", StringComparison.OrdinalIgnoreCase)
+        // A file: URI names a file this code doesn't lock beside (its path can carry query options), so it has no lock file.
+        isInMemory: b => (Convert.ToString(b.TryGetValue("Data Source", out var path) ? path : null, CultureInfo.InvariantCulture) is var source
+                && (string.Equals(source, ":memory:", StringComparison.OrdinalIgnoreCase)
+                    || (source?.StartsWith("file:", StringComparison.OrdinalIgnoreCase) ?? false)))
             || string.Equals(Convert.ToString(b.TryGetValue("Mode", out var mode) ? mode : null, CultureInfo.InvariantCulture), "Memory", StringComparison.OrdinalIgnoreCase));
 
     public override bool SupportsSchemas => false;

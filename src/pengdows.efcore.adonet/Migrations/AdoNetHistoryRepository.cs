@@ -204,7 +204,29 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
     ///     never left behind. Retried until <see cref="LockTimeout" />. The file stays where it is after release.
     /// </summary>
     protected virtual string? FileLockPath
-        => null;
+        => DefaultFileLockPath();
+
+    // Every dialect whose database is a file or a directory locks it the same way, from the lifecycle it already declares: a
+    // dialect that adds a file-based engine gets the lock with no code of its own. A server database, or an in-memory one, has
+    // none.
+    private string? DefaultFileLockPath()
+    {
+        var lifecycle = Dialect.Sql.Databases;
+        if (lifecycle is null || lifecycle.Storage == DatabaseStorage.Server)
+        {
+            return null;
+        }
+
+        var builder = new DbConnectionStringBuilder { ConnectionString = Dependencies.Connection.DbConnection.ConnectionString };
+        if (lifecycle.IsInMemory(builder)
+            || !builder.TryGetValue(lifecycle.Keyword, out var value)
+            || Convert.ToString(value, CultureInfo.InvariantCulture) is not { Length: > 0 } path)
+        {
+            return null;
+        }
+
+        return Path.TrimEndingDirectorySeparator(path) + ".migrations.lock";
+    }
 
     private IMigrationsDatabaseLock AcquireFileLock(string path)
     {
