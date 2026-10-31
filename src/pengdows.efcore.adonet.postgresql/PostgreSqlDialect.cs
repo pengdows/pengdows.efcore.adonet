@@ -298,6 +298,25 @@ internal sealed class PostgreSqlFunctions : FunctionSyntax
     // time + interval wraps past midnight, as TimeOnly.Add does; IsBetween wraps when its end is earlier than its start.
     public override string? AddTime => "(CAST({0} AS time) + {1})";
     public override string? TimeIsBetween => "(CASE WHEN {1} <= {2} THEN {0} >= {1} AND {0} < {2} ELSE {0} >= {1} OR {0} < {2} END)";
+
+    // The math functions PostgreSQL has under other names, or by the same name with a different argument type.
+    public override string? Atan2 => "ATAN2({0}, {1})";
+    public override string? Log2 => "(LN({0}) / LN(2.0))";
+    public override string? Sign => "SIGN({0})";
+    public override string? Truncate => "TRUNC({0})";
+    public override string? Degrees => "DEGREES({0})";
+    public override string? Radians => "RADIANS({0})";
+    public override string? Greatest => "GREATEST({0}, {1})";
+    public override string? Least => "LEAST({0}, {1})";
+    public override string? Asinh => "ASINH({0})";
+
+    // Outside their domains PostgreSQL raises an error where .NET returns NaN; the error is kept, not a NaN that PostgreSQL orders above
+    // every number. Recorded as an engine gap in the specification overrides.
+    public override string? Acosh => "ACOSH({0})";
+    public override string? Atanh => "ATANH({0})";
+
+    // LOG(base, x) takes numerics; the change of base is taken over doubles, as .NET computes it.
+    public override string? LogBase => "(LN(CAST({0} AS double precision)) / LN(CAST({1} AS double precision)))";
 }
 
 internal static class PostgreSqlJson
