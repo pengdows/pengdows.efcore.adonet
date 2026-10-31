@@ -236,7 +236,7 @@ Code lines (no blanks or comments) and Release DLL size, against the official pr
 
 | Package | Lines | DLL |
 |---|---|---|
-| core | 6,648 | 263 KB |
+| core (at commit 34a1443) | 8,464 | 309 KB |
 | sqlserver | 476 | 28 KB |
 | postgresql | 198 | 16 KB |
 | mysql | 684 | 51 KB |
@@ -246,6 +246,9 @@ Code lines (no blanks or comments) and Release DLL size, against the official pr
 | Microsoft.EntityFrameworkCore.SqlServer 10.0.11 | 23,474 | 627 KB |
 | Microsoft.EntityFrameworkCore.Sqlite.Core 10.0.11 | 8,677 | 304 KB |
 | Npgsql.EntityFrameworkCore.PostgreSQL 10.0.3 | — | 663 KB |
+
+The core row is measured at commit `34a1443`; the plugin and official-provider rows were measured at an earlier commit and
+will be measured again with the next release.
 
 Not a feature-for-feature comparison: the official providers also scaffold, translate hundreds of LINQ methods, and
 support spatial, JSON, temporal tables and more. The number to watch is how large a plugin grows as it reaches parity
@@ -271,7 +274,7 @@ dotnet test test/pengdows.efcore.adonet.Tests   # the core alone: fakeDb and an 
 - **Plugins** (`pengdows.efcore.adonet.<db>.Tests`): their fixture, the suites, their entry points and SQL shapes.
 - **EF Core's specification tests** (`pengdows.efcore.adonet.Specification.Tests`), run unchanged on all six databases
   through one database-neutral test store (harness: `pengdows.efcore.adonet.FunctionalTests.Shared`,
-  `test/FunctionalTests.props`). Results only: no provider's SQL baselines. Where suite: 408 of 408 on all six (SQL Server,
+  `test/FunctionalTests.props`). Results only: no provider's SQL baselines. Where-query suite: 408 of 408 on all six (SQL Server,
   PostgreSQL, MySQL, SQLite, DuckDB and pengdows.flatfile 0.2.1-preview.14).
 
   Latest local validation on 2026-10-27: core unit tests **340 passed / 0 failed**, MySQL provider tests **289 passed / 0 failed / 2 skipped**,
@@ -287,9 +290,12 @@ us, the core plus the MySQL plugin, since a MySQL user runs both). Measured 2026
 
 | Provider | Code (lines / coverable) | Line | Branch | Method | Tests run (passed / failed / skipped) |
 |---|---|---|---|---|---|
-| pengdows.efcore.adonet + mysql | 6,591 / 3,300 | **95.8%** | **89.0%** | **97.2%** | 27,927 / 1,692 / 225 |
+| pengdows.efcore.adonet + mysql† | 6,591 / 3,300 | **95.8%** | **89.0%** | **97.2%** | 27,927 / 1,692† / 225 |
 | Pomelo.EntityFrameworkCore.MySql 9.0.1 (EF Core 9) | 30,595 / 14,381 | 73.3% | 65.6% | 64.7% | 29,601 / 10 / 1,288 |
 | MySql.EntityFrameworkCore 26.10.0 (Oracle) | 18,085 / 6,859 | 58.9% | 42.0% | 53.6% | 137 / 3 / 2 |
+
+† Historical snapshot: measured on commit `d238404` on 2026-10-26 and not re-run. The 1,692 failures in that run have not been
+examined again here; the current MySQL results are the specification and provider runs below.
 
 The fresh EF Core 10 MySQL specification run (MySqlConnector) is **29,903 passed / 0 failed / 437 skipped / 30,340 total**;
 the provider test run covers both MySqlConnector and MySql.Data (**289 passed / 0 failed / 2 skipped**). These are result
@@ -328,7 +334,9 @@ public is in [docs/PUBLIC_API.md](docs/PUBLIC_API.md). Reviews follow [REVIEW_PO
 
 ## Writing a plugin
 
-1. Reference `pengdows.efcore.adonet` (and your driver, if you use its APIs).
+1. Reference `pengdows.efcore.adonet` (and your driver, if you use its APIs). A plugin needs only the packed core
+   and its public surface: the core grants no plugin `InternalsVisibleTo`, and `docs/PUBLIC_API.md` lists the
+   extension points (`AdoNetProviderOptions`, the annotation, convention and value generator bases, and others).
 2. Subclass `AdoNetDialect`; override `Sql`, `TypeMappings`, `Capabilities` with what differs from ISO.
 3. Add a `UseAdoNetXxx` extension and a `RegisterDialect()`.
 4. In a test project, reference `pengdows.efcore.adonet.Testing`, write a fixture, subclass the five suites.
