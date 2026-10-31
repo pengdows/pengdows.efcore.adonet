@@ -239,6 +239,11 @@ larger codebase.
 Public API is declared in each project's `PublicAPI.*.txt` and enforced by PublicApiAnalyzers; why each public type is
 public is in [docs/PUBLIC_API.md](docs/PUBLIC_API.md). Reviews follow [REVIEW_POLICY.md](REVIEW_POLICY.md).
 
+**DuckDB dependency.** The DuckDB plugin builds against a local checkout of DuckDB.NET (`Giorgi-DuckDB.NET`, beside this
+repository), because the upstream release it needs isn't published yet. Clone that checkout next to this repository before
+building the DuckDB plugin or the specification project. Once upstream publishes, the plugin moves to the NuGet package. CI does
+not build the DuckDB plugin or the specification project until then.
+
 ## Writing a plugin
 
 1. Reference `pengdows.efcore.adonet` (and your driver, if you use its APIs). A plugin needs only the packed core
