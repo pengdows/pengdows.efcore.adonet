@@ -204,39 +204,24 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
     // (NULL). Either way the migrator has not got it.
     /// <summary>
     ///     A file the migrator holds open with an exclusive lock, for an engine whose database is a file other processes open. The
-    ///     operating system releases the lock when the holder's process exits, however it exits, so a lock is never taken over and
-    ///     never left behind. Retried until <see cref="LockTimeout" />. The file stays where it is after release.
+    ///     operating system releases the lock when the holder's process exits, however it exits, so a lock is never taken over. The
+    ///     file itself is not removed on release: it stays beside the database, unlocked and holding no state. Retried until
+    ///     <see cref="LockTimeout" />.
     /// </summary>
     protected virtual string? FileLockPath
         => DefaultFileLockPath();
 
     // Every dialect whose database is a file or a directory locks it the same way, from the lifecycle it already declares: a
-    // dialect that adds a file-based engine gets the lock with no code of its own. A server database, or an in-memory one, has
-    // none.
+    // dialect that adds a file-based engine gets the lock with no code of its own. A server database has no lock file. An
+    // in-memory database, or one whose path can't be named beside, has none either.
     private string? DefaultFileLockPath()
-    {
-        var lifecycle = Dialect.Sql.Databases;
-        if (lifecycle is null || lifecycle.Storage == DatabaseStorage.Server)
-        {
-            return null;
-        }
-
-        var builder = new DbConnectionStringBuilder { ConnectionString = Dependencies.Connection.DbConnection.ConnectionString };
-        if (lifecycle.IsInMemory(builder)
-            || !builder.TryGetValue(lifecycle.Keyword, out var value)
-            || Convert.ToString(value, CultureInfo.InvariantCulture) is not { Length: > 0 } path)
-        {
-            return null;
-        }
-
-        return Path.TrimEndingDirectorySeparator(path) + ".migrations.lock";
-    }
+        => DescribeDatabase().LockFile;
 
     // A single-writer database that another process can open must be coordinated by its lock file. An in-memory one belongs to this
     // process alone, so there is nothing to coordinate and no file is needed.
     private void RefuseSingleWriterWithoutLockFile()
     {
-        if (!Dialect.Capabilities.SingleWriter || IsInMemoryDatabase())
+        if (!Dialect.Capabilities.SingleWriter || DescribeDatabase().InMemory)
         {
             return;
         }
@@ -244,11 +229,29 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
         throw new InvalidOperationException(SingleWriterWithoutLockFile);
     }
 
-    private bool IsInMemoryDatabase()
+    // The connection string is read once for both answers, so the lock path and the in-memory decision can't disagree.
+    private (bool InMemory, string? LockFile) DescribeDatabase()
     {
         var lifecycle = Dialect.Sql.Databases;
-        return lifecycle is not null
-            && lifecycle.IsInMemory(new DbConnectionStringBuilder { ConnectionString = Dependencies.Connection.DbConnection.ConnectionString });
+        if (lifecycle is null || lifecycle.Storage == DatabaseStorage.Server)
+        {
+            return (InMemory: false, LockFile: null);
+        }
+
+        var builder = new DbConnectionStringBuilder { ConnectionString = Dependencies.Connection.DbConnection.ConnectionString };
+        if (lifecycle.IsInMemory(builder))
+        {
+            return (InMemory: true, LockFile: null);
+        }
+
+        if (!lifecycle.IsLockable(builder)
+            || !builder.TryGetValue(lifecycle.Keyword, out var value)
+            || Convert.ToString(value, CultureInfo.InvariantCulture) is not { Length: > 0 } path)
+        {
+            return (InMemory: false, LockFile: null);
+        }
+
+        return (InMemory: false, LockFile: Path.TrimEndingDirectorySeparator(path) + ".migrations.lock");
     }
 
     // An exclusive file lock is exclusive on one host only. A lock file on a network share would let two hosts migrate at once,
@@ -256,7 +259,7 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
     private static void RefuseNetworkLock(string path)
     {
         var mounts = OperatingSystem.IsLinux() && File.Exists("/proc/mounts") ? File.ReadAllText("/proc/mounts") : null;
-        if (NetworkPath.IsNetwork(path, mounts))
+        if (NetworkPath.IsNetwork(path, mounts) || NetworkPath.IsNetworkDrive(path))
         {
             throw new InvalidOperationException(
                 $"The migrations lock file {path} is on a network share, where an exclusive file lock is not exclusive across hosts. "

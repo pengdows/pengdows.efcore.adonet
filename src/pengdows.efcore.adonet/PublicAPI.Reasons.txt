@@ -16,3 +16,4 @@ pengdows.efcore.adonet.Storage.AdoNetValueGeneratorSelector | The value generato
 pengdows.efcore.adonet.Storage.AdoNetSequenceValueGenerator<TValue> | The sequence value generator base a dialect derives from, which draws a key from the database sequence.
 virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.FileLockPath.get -> string? | The lock file a dialect whose database is a file names, so migrators on that file exclude each other and an exit releases the lock.
 pengdows.efcore.adonet.IDatabaseCapabilities.SingleWriter.get -> bool | Whether migrations must take the database lock file: one writer at a time, any number of readers. Runtime writer coordination is pengdows.crud's.
+pengdows.efcore.adonet.DatabaseLifecycle.IsLockable.get -> System.Func<System.Data.Common.DbConnectionStringBuilder!, bool>! | Whether a database's path can have a lock file beside it: a URI, which carries query options, can't, and its single-writer migrations are refused.

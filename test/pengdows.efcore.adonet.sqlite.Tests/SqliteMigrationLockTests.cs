@@ -60,6 +60,18 @@ public class SqliteMigrationLockTests : IDisposable
         Assert.Throws<InvalidOperationException>(() => waiter.AcquireDatabaseLock());
     }
 
+    // A file: URI is a real file on disk, not an in-memory database. Its path can't be locked beside, so a single-writer migration is
+    // refused rather than run under the row lock.
+    [Fact]
+    public void A_file_URI_database_on_disk_is_not_in_memory_and_is_refused_for_migrations()
+    {
+        var uri = new DbContextOptionsBuilder<ProbeContext>().UseAdoNetSqlite($"Data Source=file:{_path}").Options;
+        using var context = new ProbeContext(uri);
+        var waiter = new ShortTimeoutSqliteHistory(context.GetService<HistoryRepositoryDependencies>(), SqliteDialect.Instance);
+
+        Assert.Throws<InvalidOperationException>(() => waiter.AcquireDatabaseLock());
+    }
+
     private sealed class ProbeContext(DbContextOptions<ProbeContext> options) : DbContext(options);
 
     private sealed class ShortTimeoutSqliteHistory(HistoryRepositoryDependencies dependencies, IAdoNetDialect dialect)

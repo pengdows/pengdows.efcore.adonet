@@ -43,4 +43,13 @@ public class NetworkPathTests
 
         Assert.False(NetworkPath.IsNetwork("/mnt/nfs/local/app.db", nested));
     }
+
+    // The kernel writes a space in a mount point as \040 in /proc/mounts; the point must be unescaped before it is compared.
+    [Fact]
+    public void A_mount_point_with_an_escaped_space_is_matched()
+    {
+        const string escaped = "server:/export /mnt/nas\\040share nfs4 rw 0 0\n";
+
+        Assert.True(NetworkPath.IsNetwork("/mnt/nas share/app.db", escaped));
+    }
 }

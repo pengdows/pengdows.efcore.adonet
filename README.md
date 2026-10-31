@@ -139,7 +139,7 @@ writes every mapped column (database defaults don't apply), and doesn't support 
 
 **Single-writer databases.** SQLite, DuckDB, pengdows.flatfile, and (when added) Access and SQL CE allow one writer at a time and
 any number of readers. Their migrations take an exclusive lock file beside the database (`<database>.migrations.lock`), and a
-single-writer database that can be opened by another process refuses to migrate without one. A lock file on a network share (UNC, NFS or SMB) is refused too: an exclusive file lock is not exclusive across hosts, so a file-based database must be on local storage, or behind a server, to migrate. This coordinates migrations only.
+single-writer database that can be opened by another process refuses to migrate without one. A lock file on a network share (UNC, NFS or SMB, or a mapped network drive on Windows) is refused too; macOS mounts are not checked: an exclusive file lock is not exclusive across hosts, so a file-based database must be on local storage, or behind a server, to migrate. This coordinates migrations only.
 This project does not control writers during normal use: that cannot be done reliably from an EF Core provider, and it is what
 pengdows.crud is for.
 

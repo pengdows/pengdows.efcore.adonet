@@ -52,6 +52,12 @@ public sealed class DatabaseLifecycle
     public Func<DbConnectionStringBuilder, bool> IsInMemory { get; private init; } = _ => false;
 
     /// <summary>
+    ///     Whether the database's file (or directory) can have a lock file beside it. A path this code can't name as a plain file (a URI,
+    ///     say) can't, and a single-writer database at such a path is refused for migrations.
+    /// </summary>
+    public Func<DbConnectionStringBuilder, bool> IsLockable { get; private init; } = _ => true;
+
+    /// <summary>
     ///     Releases pooled connections to the database before it is deleted, so none still holds it. When null, the driver's
     ///     static <c>ClearPool(TheirConnection)</c> is found by convention.
     /// </summary>
@@ -78,12 +84,14 @@ public sealed class DatabaseLifecycle
         IReadOnlyList<string>? companionSuffixes = null,
         string? initializeSql = null,
         Func<DbConnectionStringBuilder, bool>? isInMemory = null,
-        Action<DbConnection>? clearPool = null)
+        Action<DbConnection>? clearPool = null,
+        Func<DbConnectionStringBuilder, bool>? isLockable = null)
         => new(DatabaseStorage.File, pathKeyword)
         {
             CompanionSuffixes = companionSuffixes ?? [],
             InitializeSql = initializeSql,
             IsInMemory = isInMemory ?? (_ => false),
+            IsLockable = isLockable ?? (_ => true),
             ClearPool = clearPool
         };
 
