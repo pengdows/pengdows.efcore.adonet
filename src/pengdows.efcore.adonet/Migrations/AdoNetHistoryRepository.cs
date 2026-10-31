@@ -265,9 +265,9 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
 
     private IMigrationsDatabaseLock AcquireSessionLock(string sql)
     {
-        if (!SessionLockTaken(Command(sql).ExecuteScalar(Parameters())))
+        if (!SessionMigrationLock.IsGranted(Command(sql).ExecuteScalar(Parameters())))
         {
-            throw new TimeoutException($"Timed out after {LockTimeout} waiting for the migrations session lock.");
+            throw SessionMigrationLock.Refusal(LockTimeout);
         }
 
         return new Lock(this, string.Empty);
@@ -276,16 +276,13 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
     private async Task<IMigrationsDatabaseLock> AcquireSessionLockAsync(string sql, CancellationToken cancellationToken)
     {
         var value = await Command(sql).ExecuteScalarAsync(Parameters(), cancellationToken).ConfigureAwait(false);
-        if (!SessionLockTaken(value))
+        if (!SessionMigrationLock.IsGranted(value))
         {
-            throw new TimeoutException($"Timed out after {LockTimeout} waiting for the migrations session lock.");
+            throw SessionMigrationLock.Refusal(LockTimeout);
         }
 
         return new Lock(this, string.Empty);
     }
-
-    private static bool SessionLockTaken(object? value)
-        => value is not null and not DBNull && Convert.ToInt64(value, CultureInfo.InvariantCulture) == 1;
 
     private string ReleaseSql(string token)
         => SessionUnlockSql ?? ReleaseLockSql(token);
