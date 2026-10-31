@@ -16,69 +16,11 @@ options.UseAdoNetPostgreSql(connectionString);
 The core never names a database. Adding one must not require changing it; if it does, that's a missing extension
 point. A test enforces that the core references no driver and defines no dialect but ANSI.
 
-## Two different data-access models
-
-**`pengdows.crud` and `pengdows.efcore.adonet` solve different problems.**
-This is not a reduced version of CRUD, a CRUD adapter, or an attempt to bring
-CRUD's behavior into EF Core.
-
-| | `pengdows.crud` | `pengdows.efcore.adonet` |
-|---|---|---|
-| **Programming model** | SQL-first, explicit commands and table gateways | EF Core ORM: LINQ, entity mapping, change tracking, and `SaveChanges` |
-| **Primary responsibility** | Control database access, SQL construction, execution, resource usage, and operational behavior | Implement EF Core's relational provider contract on ADO.NET and reusable SQL dialects |
-| **Who decides the work** | The application chooses SQL, execution intent, and transaction boundaries | EF Core's query/update pipelines derive SQL and persistence operations from the model and API calls |
-| **Connection behavior** | Application-level governance, read/write pools, routing, modes, and backpressure | Ordinary EF Core connection behavior and driver pooling; no CRUD governor or routing |
-| **Provider coverage** | ADO.NET-based SQL access across its supported databases | One common EF Core implementation exercised by independent dialect plugins |
-
-`pengdows.crud` is **not an ORM**: it does not implement EF Core's change
-tracker, LINQ query provider, or implicit unit-of-work model. Conversely,
-`pengdows.efcore.adonet` does not implement the connection-governance and
-application-level data-access model of `pengdows.crud`. Sharing the ADO.NET
-contract does not make the two packages interchangeable.
-
-### Scope boundaries
-
-The EF Core core and dialect plugins **do not wrap, use, or depend on
-`pengdows.crud` at runtime**. The `pengdows.crud.fakeDb` package is used
-only as an independent ADO.NET test provider.
-
-These capabilities belong to CRUD's separate programming model and are
-**not** supplied by this EF Core provider implementation:
-
-- **Connection governance:** `PoolGovernor`, separate reader/writer pools,
-  pool protection, reserves, adaptive gates, fairness, and backpressure.
-- **Intent-based data access:** automatic reader/writer selection,
-  read-replica routing, and CRUD's read-only enforcement.
-- **Database execution modes:** `Standard`, `PreventDatabaseUnload`
-  (KeepAlive), `SingleWriter`, and `SingleConnection`.
-- **Tenant database orchestration:** CRUD's database-per-tenant context
-  selection and routing. EF Core applications can still implement
-  database-per-tenant patterns using tenant-specific connection strings;
-  this package adds no tenancy manager.
-- **Explicit SQL and gateway APIs:** CRUD's `ISqlContainer`,
-  `TableGateway`, upsert helpers, and automatic gateway-based audit/version
-  handling. EF Core has its own SQL generation and tracking model instead.
-- **CRUD operating policies:** `RetryContext`, adaptive load control,
-  and Pengdows-specific metrics such as pool saturation, queue wait times,
-  and latency percentiles. Standard EF Core logging, diagnostics, and
-  framework metrics remain separate and available.
-
-The goal here is **to make EF Core provider implementations more correct,
-less fragile, easier to test, and easier to maintain** by sharing their
-ADO.NET-facing implementation instead of duplicating it in each database
-provider. It does **not** claim to replace the capabilities or control
-model of `pengdows.crud`.
-
-For SQL-first, explicitly governed data access, see
-[pengdows.crud](https://github.com/pengdows/pengdows.crud).
-For the code review, see [docs/CODE_REVIEW.md](docs/CODE_REVIEW.md).
-
 ## Database-free EF Core testing
 
 **The EF Core implementation can be tested without a database server or database engine** using
 [`pengdows.crud.fakeDb`](https://github.com/pengdows/pengdows.crud/tree/2.0.6/pengdows.crud.fakeDb),
-an in-process ADO.NET provider implementation. This is a **test-only dependency**,
-not a dependency on `pengdows.crud` or its runtime features.
+an in-process ADO.NET provider. It is a **test-only dependency**; the runtime packages do not reference it.
 
 FakeDb exercises real EF Core code paths rather than mocking EF Core internals:
 LINQ translation, command creation, parameter binding, reader materialization,
@@ -92,42 +34,6 @@ use of the ADO.NET contract and EF Core pipeline. Actual SQL execution,
 database-specific semantics, migration behavior, and type fidelity still need
 integration and EF Core specification tests against the target engines.
 Some core tests also use in-memory SQLite; these need no external server.
-
-## Optional pool protection and backpressure
-
-This project intentionally contains no `PoolGovernor` or built-in
-connection-admission policy. Applications that need **a limit on concurrently
-open EF Core connections and fail-fast backpressure** can add
-[`pengdows.stormgate.EntityFrameworkCore`](https://github.com/pengdows/pengdows.crud/tree/2.0.6/pengdows.stormgate.EntityFrameworkCore).
-It plugs into EF Core through a `DbConnectionInterceptor`; no modification
-to this provider's shared core or dialects is required.
-
-```csharp
-using pengdows.stormgate;
-using pengdows.stormgate.EntityFrameworkCore;
-
-// Create once and share across the contexts governed by the same budget.
-var gate = StormGate.Create(
-    NpgsqlFactory.Instance,
-    connectionString,
-    maxConcurrentOpens: 32,
-    acquireTimeout: TimeSpan.FromSeconds(1));
-
-var interceptor = new StormGateConnectionInterceptor(gate);
-
-services.AddDbContext<AppDbContext>(options => options
-    .UseAdoNet(NpgsqlFactory.Instance, connectionString, PostgreSqlDialect.Instance)
-    .UseStormGate(interceptor));
-```
-
-A permit is held for the EF connection's **open lifetime**, and saturation
-results in a timeout rather than unlimited waiting. Reuse **one shared
-`StormGate`** across all contexts that must share a concurrency budget.
-StormGate does **not** add read/write pool splitting, intention-aware routing,
-CRUD connection modes, built-in CRUD metrics, or the full `pengdows.crud` governance model.
-It also does not cap idle physical connections retained by a driver's own pool.
-See the [StormGate EF Core README](https://github.com/pengdows/pengdows.crud/blob/2.0.6/pengdows.stormgate.EntityFrameworkCore/README.md)
-for setup, connection-lifecycle constraints, and retry-policy interactions.
 
 ## Layers
 
@@ -346,3 +252,55 @@ public is in [docs/PUBLIC_API.md](docs/PUBLIC_API.md). Reviews follow [REVIEW_PO
 The SQL Server plugin is the fullest example: words, `TopOrOffsetFetch`, `BitValues`, `SelectAfter`,
 `TargetAliasFrom`, savepoint SQL, a migrations generator, a native bulk loader and a `ToQueryString` that writes
 runnable T-SQL, in 476 lines.
+
+## Relationship to pengdows.crud
+
+`pengdows.efcore.adonet` is a separate project from [pengdows.crud](https://github.com/pengdows/pengdows.crud), and like EF Core
+in general it does not have what makes pengdows.crud different. It is a different architecture: pengdows.crud is SQL-first, not an
+ORM, and porting its behavior to EF Core would mean rearchitecting EF Core. Those things will not be integrated here.
+
+Not in this project, and not planned for it:
+
+- **Connection governance:** `PoolGovernor`, separate reader and writer pools, pool protection, reserves, adaptive gates, fairness,
+  and backpressure.
+- **Intent-based data access:** automatic reader and writer selection, read-replica routing, and read-only enforcement.
+- **Database execution modes:** `Standard`, `PreventDatabaseUnload` (KeepAlive), `SingleWriter`, and `SingleConnection`.
+- **Tenant database orchestration:** database-per-tenant context selection and routing. EF Core applications can still use
+  tenant-specific connection strings; this package adds no tenancy manager.
+- **Explicit SQL and gateway APIs:** `ISqlContainer`, `TableGateway`, upsert helpers, and gateway-based audit and version
+  handling. EF Core has its own SQL generation and change tracking.
+- **Operating policies:** `RetryContext`, adaptive load control, and pengdows-specific metrics such as pool saturation, queue wait
+  times, and latency percentiles. Standard EF Core logging, diagnostics, and framework metrics remain available.
+
+What the EF Core provider takes from pengdows.crud:
+
+- **`pengdows.crud.fakeDb`**, the in-process ADO.NET provider used for the database-free tests above.
+- **`pengdows.stormgate.EntityFrameworkCore`**, optional pool protection: a limit on concurrently open EF Core connections with
+  fail-fast backpressure. It is injected and configured separately; the provider contains no `PoolGovernor` or admission policy.
+
+```csharp
+using pengdows.stormgate;
+using pengdows.stormgate.EntityFrameworkCore;
+
+// Create once and share across the contexts governed by the same budget.
+var gate = StormGate.Create(
+    NpgsqlFactory.Instance,
+    connectionString,
+    maxConcurrentOpens: 32,
+    acquireTimeout: TimeSpan.FromSeconds(1));
+
+var interceptor = new StormGateConnectionInterceptor(gate);
+
+services.AddDbContext<AppDbContext>(options => options
+    .UseAdoNet(NpgsqlFactory.Instance, connectionString, PostgreSqlDialect.Instance)
+    .UseStormGate(interceptor));
+```
+
+A permit is held for the EF connection's open lifetime, and saturation results in a timeout rather than unlimited waiting. Share one
+`StormGate` across the contexts that must share a concurrency budget. StormGate does not add read/write pool splitting, routing,
+connection modes, pengdows metrics, or the rest of the pengdows.crud governance model, and it does not cap idle physical connections
+held by a driver's own pool. See the [StormGate EF Core README](https://github.com/pengdows/pengdows.crud/blob/2.0.6/pengdows.stormgate.EntityFrameworkCore/README.md)
+for setup, connection-lifecycle constraints, and retry-policy interactions.
+
+For SQL-first, explicitly governed data access, use [pengdows.crud](https://github.com/pengdows/pengdows.crud).
+For the code review, see [docs/CODE_REVIEW.md](docs/CODE_REVIEW.md).
