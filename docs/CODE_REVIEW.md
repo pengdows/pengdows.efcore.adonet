@@ -9,7 +9,7 @@
 
 **Architecture: retain.** Shared EF Core/ADO.NET plumbing plus independent dialects is a sound direction. Developing six different providers concurrently tests the separation between common EF semantics and database-specific behavior; these providers act as architectural cross-checks, not merely feature-count targets. The system is under two weeks old at the time of review. Assess it as a rapidly validated new implementation, **not** a mature production substitute for every upstream EF Core provider.
 
-**Scope boundary:** This project does **not** use `pengdows.crud` at runtime, and it does **not** provide CRUD's PoolGovernor, pool splitting, intent routing, connection modes, pool protection, backpressure, tenant-per-database orchestration, SQL builder/TableGateway, or automatic auditing. See the [README](../README.md#what-this-project-is-not) and [llms.txt](../llms.txt). The goal is to make **EF Core provider implementations more correct, less fragile, and more maintainable**.
+**Scope boundary:** This project does **not** use `pengdows.crud` at runtime, and it does **not** provide CRUD's PoolGovernor, pool splitting, intent routing, connection modes, pool protection, backpressure, tenant-per-database orchestration, SQL builder/TableGateway, automatic auditing, or a built-in metrics subsystem. See the [README](../README.md#what-this-project-is-not) and [llms.txt](../llms.txt). The goal is to make **EF Core provider implementations more correct, less fragile, and more maintainable**.
 
 ### Five Rings assessment
 
