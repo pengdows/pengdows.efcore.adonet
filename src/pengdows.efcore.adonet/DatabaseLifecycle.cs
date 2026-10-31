@@ -98,4 +98,20 @@ public sealed class DatabaseLifecycle
     /// <summary>A database held in a directory.</summary>
     public static DatabaseLifecycle Directory(string pathKeyword)
         => new(DatabaseStorage.Directory, pathKeyword);
+
+    /// <summary>
+    ///     The migrations lock file for the database a connection string names: a sidecar beside the file or directory, or null where
+    ///     there is none (a server, an in-memory database, or a path that can't have a file beside it).
+    /// </summary>
+    public string? LockFileFor(DbConnectionStringBuilder connection)
+    {
+        if (Storage == DatabaseStorage.Server || IsInMemory(connection) || !IsLockable(connection))
+        {
+            return null;
+        }
+
+        return connection.TryGetValue(Keyword, out var value) && Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture) is { Length: > 0 } path
+            ? Path.TrimEndingDirectorySeparator(path) + ".migrations.lock"
+            : null;
+    }
 }

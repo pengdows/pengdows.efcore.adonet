@@ -19,7 +19,7 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
 {
     protected virtual IAdoNetDialect Dialect { get; } = dialect;
 
-    protected virtual string LockTableName
+    private string LockTableName
         => "__EFMigrationsLock";
 
     /// <summary>How long to wait for another migrator's lock.</summary>
@@ -238,20 +238,8 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
             return (InMemory: false, LockFile: null);
         }
 
-        var builder = new DbConnectionStringBuilder { ConnectionString = Dependencies.Connection.DbConnection.ConnectionString };
-        if (lifecycle.IsInMemory(builder))
-        {
-            return (InMemory: true, LockFile: null);
-        }
-
-        if (!lifecycle.IsLockable(builder)
-            || !builder.TryGetValue(lifecycle.Keyword, out var value)
-            || Convert.ToString(value, CultureInfo.InvariantCulture) is not { Length: > 0 } path)
-        {
-            return (InMemory: false, LockFile: null);
-        }
-
-        return (InMemory: false, LockFile: Path.TrimEndingDirectorySeparator(path) + ".migrations.lock");
+        var connection = new DbConnectionStringBuilder { ConnectionString = Dependencies.Connection.DbConnection.ConnectionString };
+        return (InMemory: lifecycle.IsInMemory(connection), LockFile: lifecycle.LockFileFor(connection));
     }
 
     private const string SingleWriterWithoutLockFile =
@@ -365,23 +353,23 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
     private static string NewLockToken()
         => DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture) + "|" + Convert.ToHexString(RandomNumberGenerator.GetBytes(8));
 
-    protected virtual string AcquireLockSql(string token)
+    private string AcquireLockSql(string token)
         => $"INSERT INTO {LockTable} ({Column("Id")}, {Column("Timestamp")}) VALUES (1, "
             + Literal(token) + ")";
 
-    protected virtual string HolderSql()
+    private string HolderSql()
         => $"SELECT {Column("Timestamp")} FROM {LockTable} WHERE {Column("Id")} = 1";
 
     // Only the stale holder's row: a migrator that took the lock in the meantime keeps it.
-    protected virtual string TakeOverSql(string holder)
+    private string TakeOverSql(string holder)
         => $"DELETE FROM {LockTable} WHERE {Column("Id")} = 1 AND {Column("Timestamp")} = {Literal(holder)}";
 
     // Only this acquisition's row: a lock taken over from it, and taken again by another migrator, is that migrator's to release.
-    protected virtual string ReleaseLockSql(string token)
+    private string ReleaseLockSql(string token)
         => $"DELETE FROM {LockTable} WHERE {Column("Id")} = 1 AND {Column("Timestamp")} = {Literal(token)}";
 
     /// <summary>The lock table, through the migrations SQL generator so its DDL is the dialect's.</summary>
-    protected virtual IReadOnlyList<MigrationCommand> GetCreateLockTableCommands()
+    private IReadOnlyList<MigrationCommand> GetCreateLockTableCommands()
         => Dependencies.MigrationsSqlGenerator.Generate(
         [
             new CreateTableOperation

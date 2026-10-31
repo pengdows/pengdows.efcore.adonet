@@ -503,16 +503,10 @@ virtual pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.Dialect.get
 virtual pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.WithDataSource(System.Data.Common.DbDataSource! dataSource) -> pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension!
 virtual pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.WithDialect(pengdows.efcore.adonet.IAdoNetDialect! dialect) -> pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension!
 virtual pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension.WithProviderFactory(System.Data.Common.DbProviderFactory! providerFactory) -> pengdows.efcore.adonet.Infrastructure.AdoNetOptionsExtension!
-virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.AcquireLockSql(string! token) -> string!
-virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.GetCreateLockTableCommands() -> System.Collections.Generic.IReadOnlyList<Microsoft.EntityFrameworkCore.Migrations.MigrationCommand!>!
-virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.HolderSql() -> string!
-virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.LockTableName.get -> string!
 virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.LockTimeout.get -> System.TimeSpan
-virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.ReleaseLockSql(string! token) -> string!
 virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.SessionLockSql(System.TimeSpan timeout) -> string?
 virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.SessionUnlockSql.get -> string?
 virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.TableExistsSql(string! table, string? schema) -> string!
-virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.TakeOverSql(string! holder) -> string!
 virtual pengdows.efcore.adonet.Migrations.AdoNetMigrationsSqlGenerator.IdentityDefinition(string? schema, string! table, string! name, Microsoft.EntityFrameworkCore.Migrations.Operations.ColumnOperation! operation, Microsoft.EntityFrameworkCore.Migrations.MigrationCommandListBuilder! builder) -> void
 virtual pengdows.efcore.adonet.PagingSyntax.GenerateAfterOrderings(pengdows.efcore.adonet.IQuerySqlWriter! sql, Microsoft.EntityFrameworkCore.Query.SqlExpressions.SelectExpression! select) -> void
 virtual pengdows.efcore.adonet.PagingSyntax.GenerateTop(pengdows.efcore.adonet.IQuerySqlWriter! sql, Microsoft.EntityFrameworkCore.Query.SqlExpressions.SelectExpression! select) -> void
@@ -932,3 +926,4 @@ virtual pengdows.efcore.adonet.DatabaseCapabilities.SingleWriter.get -> bool
 virtual pengdows.efcore.adonet.DatabaseCapabilities.SingleWriter.init -> void
 
 pengdows.efcore.adonet.DatabaseLifecycle.IsLockable.get -> System.Func<System.Data.Common.DbConnectionStringBuilder!, bool>!
+pengdows.efcore.adonet.DatabaseLifecycle.LockFileFor(System.Data.Common.DbConnectionStringBuilder! connection) -> string?
