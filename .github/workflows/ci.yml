@@ -52,7 +52,7 @@ jobs:
       - run: dotnet test ${{ matrix.project }}
 
   specification:
-    name: EF Core specification tests (SQLite)
+    name: EF Core specification tests (every configured provider; Docker for the servers)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -60,3 +60,15 @@ jobs:
         with:
           global-json-file: global.json
       - run: dotnet test test/pengdows.efcore.adonet.Specification.Tests
+
+  outside-plugin:
+    name: Outside plugin (packed core, no InternalsVisibleTo)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      # The sample is built against this package alone: it proves an assembly outside the repository can plug in.
+      - run: dotnet pack src/pengdows.efcore.adonet/pengdows.efcore.adonet.csproj -c Release -p:Version=0.0.0-outside.1 -o artifacts/packages
+      - run: dotnet run --project test/pengdows.efcore.adonet.OutsidePluginSample

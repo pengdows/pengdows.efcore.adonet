@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    A dialect plugin written the way an outside author would: against the packed pengdows.efcore.adonet only, with no
+    InternalsVisibleTo. CI packs the core into artifacts/packages and builds and runs this sample against that package.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- Outside the repository it would reference the packed core by version alone; central versions are the repo's, not the sample's. -->
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+    <PengdowsVersion Condition="'$(PengdowsVersion)' == ''">0.0.0-outside.1</PengdowsVersion>
+    <RestoreSources>$(MSBuildThisFileDirectory)../../artifacts/packages;https://api.nuget.org/v3/index.json</RestoreSources>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="pengdows.efcore.adonet" Version="$(PengdowsVersion)" />
+    <PackageReference Include="pengdows.crud.fakeDb" Version="3.0.1" />
+  </ItemGroup>
+</Project>
