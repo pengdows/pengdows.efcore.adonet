@@ -1,7 +1,8 @@
 # pengdows.efcore.adonet
 
-An EF Core 10 relational provider split in two: a **core** that knows only ADO.NET, EF Core and a plugin contract,
-and **dialect plugins** that describe and implement what makes each database different.
+A reusable ADO.NET core that EF Core providers build on. The **core** knows only ADO.NET, EF Core and a plugin contract;
+**dialect plugins** describe and implement what makes each database different. Any database that has an ADO.NET driver can be
+added as a plugin, and the EF Core provider for it is then the core plus that plugin.
 
 ```csharp
 // Switching databases changes two arguments: the ADO.NET factory and the dialect.
@@ -40,7 +41,7 @@ Some core tests also use in-memory SQLite; these need no external server.
 | Layer | Responsibility |
 |---|---|
 | EF Core | LINQ, mapping, change tracking |
-| **pengdows.efcore.adonet** (core) | Connections and `DbDataSource`s, transactions and savepoints, parameter binding through `DbType`, batching, concurrency checks, the query pipeline, and ISO SQL defaults for everything a dialect may override |
+| **pengdows.efcore.adonet** (core, the reusable ADO.NET layer) | Connections and `DbDataSource`s, transactions and savepoints, parameter binding through `DbType`, batching, concurrency checks, the query pipeline, and ISO SQL defaults for everything a dialect may override |
 | **Dialect plugin** | SQL words and grammar, type names, capabilities; optionally migrations, LINQ translations, bulk loading — and it may use its driver's own APIs |
 | ADO.NET driver | The database access contract |
 
