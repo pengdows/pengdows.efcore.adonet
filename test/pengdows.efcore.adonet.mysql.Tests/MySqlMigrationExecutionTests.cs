@@ -88,6 +88,33 @@ public class MySqlMigrationExecutionTests
         Assert.DoesNotContain(db.Commands, c => c.Contains("CREATE TABLE", StringComparison.Ordinal) && c.Contains("__EFMigrationsLock", StringComparison.Ordinal));
     }
 
+    // A session lock lives on its connection: if EF closed that connection between GET_LOCK and RELEASE_LOCK, the lock would be
+    // gone while the migration ran. Each close is recorded with how many commands had run, so a close inside the lock is seen.
+    [Fact]
+    public async Task The_migrations_connection_stays_open_from_GET_LOCK_until_RELEASE_LOCK()
+    {
+        var db = new FakeMySql();
+        var closedAfter = new List<int>();
+        db.Connection.StateChange += (_, e) =>
+        {
+            if (e.CurrentState == System.Data.ConnectionState.Closed)
+            {
+                closedAfter.Add(db.Commands.Count);
+            }
+        };
+        await using var context = db.Context<ShelfMigrationContext>(o => new ShelfMigrationContext(o));
+        db.Connection.EnqueueScalarResult(1L);
+        db.Connection.EnqueueScalarResult(0L);
+
+        await context.Database.MigrateAsync(Ct);
+
+        var commands = db.Commands.ToList();
+        var lockAt = commands.FindIndex(c => c.StartsWith("SELECT GET_LOCK", StringComparison.Ordinal));
+        var releaseAt = commands.FindIndex(c => c.StartsWith("SELECT RELEASE_LOCK", StringComparison.Ordinal));
+        Assert.True(lockAt >= 0 && releaseAt > lockAt);
+        Assert.DoesNotContain(closedAfter, n => n > lockAt && n <= releaseAt);
+    }
+
     // GET_LOCK returns 0 when the wait ends without the lock: the migrator must stop before changing anything.
     [Fact]
     public async Task A_migration_refused_the_session_lock_changes_nothing()
