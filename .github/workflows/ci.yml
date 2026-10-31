@@ -1,7 +1,8 @@
 name: CI
 
-# Public, checkable evidence for the validation claims in the README. Builds and tests what a clean clone contains. The
-# benchmark and Pomelo comparison projects reference a Pomelo checkout outside this repository, so they are not built here.
+# Public, checkable evidence for the validation claims in the README. Builds and tests what a clean clone contains. Left out:
+# the benchmark and Pomelo comparison projects (a Pomelo checkout beside the repository), the DuckDB plugin and the specification
+# suite (a DuckDB.NET checkout beside the repository).
 
 on:
   push:
@@ -33,8 +34,6 @@ jobs:
         include:
           - provider: sqlite
             project: test/pengdows.efcore.adonet.sqlite.Tests
-          - provider: duckdb
-            project: test/pengdows.efcore.adonet.duckdb.Tests
           - provider: flatfile
             project: test/pengdows.efcore.adonet.flatfile.Tests
           - provider: sqlserver
@@ -51,15 +50,8 @@ jobs:
       # Server-backed suites start their database with Testcontainers, which needs the Docker daemon on the runner.
       - run: dotnet test ${{ matrix.project }}
 
-  specification:
-    name: EF Core specification tests (every configured provider; Docker for the servers)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
-        with:
-          global-json-file: global.json
-      - run: dotnet test test/pengdows.efcore.adonet.Specification.Tests
+  # The EF Core specification suite is not in CI yet: it references the DuckDB plugin, which needs a DuckDB.NET checkout
+  # beside this repository, and it runs every configured provider. Run it locally with: dotnet test test/pengdows.efcore.adonet.Specification.Tests
 
   outside-plugin:
     name: Outside plugin (packed core, no InternalsVisibleTo)
