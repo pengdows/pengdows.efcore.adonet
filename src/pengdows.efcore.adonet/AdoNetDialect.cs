@@ -114,7 +114,7 @@ public class AnsiSqlDialect : ISqlDialect
         => "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'";
 }
 
-/// <summary>ISO SQL type names; subclass and override <see cref="GetStoreType" /> for what differs.</summary>
+/// <summary>ISO SQL type names; subclass and override <see cref="ITypeMappingDialect.GetStoreType(System.Type)" /> for what differs.</summary>
 public class AnsiTypeMappings : ITypeMappingDialect
 {
     public static readonly AnsiTypeMappings Instance = new();
@@ -167,7 +167,7 @@ public class AnsiTypeMappings : ITypeMappingDialect
     // CLR types ISO SQL has no store type for: a dialect with a native one maps them, and the rest leave them to EF's converters.
     private static readonly Type[] DialectStoreTypes = [typeof(sbyte), typeof(ulong)];
 
-    /// <summary>CLR types the provider maps; <see cref="ITypeMappingDialect.GetStoreType" /> supplies each one's store type.</summary>
+    /// <summary>CLR types the provider maps; <see cref="ITypeMappingDialect.GetStoreType(System.Type)" /> supplies each one's store type.</summary>
     public static IReadOnlyCollection<Type> SupportedClrTypes
         => [.. StoreTypes.Keys, .. DialectStoreTypes];
 

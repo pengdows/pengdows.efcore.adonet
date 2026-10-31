@@ -5,14 +5,14 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace pengdows.efcore.adonet.Metadata;
 
-/// <summary>
-///     Tells the operations the differ writes for a dropped or renamed table which of its columns are identities
-///     (<see cref="AdoNetAnnotationNames.IdentityColumns" />), so a sequence-key dialect drops or renames their sequences.
-/// </summary>
 // EF1001: EF's providers all derive from MigrationsAnnotationProvider through its dependencies object, which EF marks as
 // internal; the public alternative is implementing every member of IMigrationsAnnotationProvider to return nothing.
 #pragma warning disable EF1001
-/// <summary>EF Core's migrations annotation provider with the dialect's annotations, for a plugin's migration annotations.</summary>
+/// <summary>
+///     EF Core's migrations annotation provider with the dialect's annotations, for a plugin's migration annotations. It tells the
+///     operations the differ writes for a dropped or renamed table which of its columns are identities
+///     (<see cref="AdoNetAnnotationNames.IdentityColumns" />), so a sequence-key dialect drops or renames their sequences.
+/// </summary>
 public class AdoNetMigrationsAnnotationProvider(MigrationsAnnotationProviderDependencies dependencies)
     : MigrationsAnnotationProvider(dependencies)
 #pragma warning restore EF1001

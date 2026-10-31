@@ -9,12 +9,15 @@ namespace pengdows.efcore.adonet;
 /// <summary>What a grammar part may write: text, identifiers, and any SQL or table expression rendered by the query generator.</summary>
 public interface IQuerySqlWriter
 {
+    /// <summary>Appends SQL text to the statement being written.</summary>
     IQuerySqlWriter Append(string sql);
+    /// <summary>Appends a line break to the statement being written.</summary>
     IQuerySqlWriter AppendLine();
 
     /// <summary>A delimited identifier; the schema is dropped when the dialect has none.</summary>
     IQuerySqlWriter AppendIdentifier(string name, string? schema = null);
 
+    /// <summary>Writes an expression into the statement being written.</summary>
     IQuerySqlWriter Visit(Expression expression);
 
     /// <summary>Until disposed, columns of <paramref name="table" /> are qualified by its name instead of its alias.</summary>
@@ -203,8 +206,11 @@ public sealed class SavepointSyntax(string create, string rollbackTo, string? re
     /// <summary><c>SAVEPOINT</c>, <c>ROLLBACK TO SAVEPOINT</c>, <c>RELEASE SAVEPOINT</c> (SQL:1999).</summary>
     public static SavepointSyntax Iso { get; } = new("SAVEPOINT {0}", "ROLLBACK TO SAVEPOINT {0}", "RELEASE SAVEPOINT {0}");
 
+    /// <summary>The statement that creates a savepoint with the given name.</summary>
     public string Create { get; } = create;
+    /// <summary>The statement that rolls back to a savepoint.</summary>
     public string RollbackTo { get; } = rollbackTo;
+    /// <summary>The statement that releases a savepoint.</summary>
     public string? Release { get; } = release;
 }
 
@@ -217,7 +223,9 @@ public sealed class SavepointSyntax(string create, string rollbackTo, string? re
 /// <param name="disable">Run after it.</param>
 public sealed class IdentityInsertSyntax(string enable, string disable)
 {
+    /// <summary>The statement that lets an explicit value be inserted into an identity column.</summary>
     public string Enable { get; } = enable;
+    /// <summary>The statement that stops explicit values being inserted into an identity column.</summary>
     public string Disable { get; } = disable;
 }
 
@@ -239,9 +247,13 @@ public sealed class LateralJoinSyntax(string crossJoin, string outerJoin, string
     /// <summary><c>CROSS APPLY</c>, <c>OUTER APPLY</c>.</summary>
     public static LateralJoinSyntax Apply { get; } = new("CROSS APPLY ", "OUTER APPLY ", "", null);
 
+    /// <summary>The join that pairs each row with the rows of a lateral subquery.</summary>
     public string CrossJoin { get; } = crossJoin;
+    /// <summary>The join that keeps every row, pairing it with the rows of a lateral subquery when there are any.</summary>
     public string OuterJoin { get; } = outerJoin;
+    /// <summary>The lateral-subquery form of a join's right side.</summary>
     public string Lateral { get; } = lateral;
+    /// <summary>The condition of an outer lateral join, which is always true.</summary>
     public string? OuterJoinCondition { get; } = outerJoinCondition;
 }
 
@@ -297,6 +309,7 @@ public abstract class DmlSyntax
     private static bool IsSingleTableDelete(SelectExpression select)
         => select is { Tables: [TableExpression], Offset: null, Limit: null, GroupBy: [], Having: null };
 
+    /// <summary>Writes the tables an UPDATE or DELETE names.</summary>
     protected static void AppendTables(IQuerySqlWriter sql, SelectExpression select)
     {
         for (var i = 0; i < select.Tables.Count; i++)
@@ -310,6 +323,7 @@ public abstract class DmlSyntax
         }
     }
 
+    /// <summary>Writes the SET clause of an UPDATE.</summary>
     protected static void AppendSetters(IQuerySqlWriter sql, UpdateExpression update, bool qualified)
     {
         sql.AppendLine().Append("SET ");
@@ -334,6 +348,7 @@ public abstract class DmlSyntax
         }
     }
 
+    /// <summary>Writes the WHERE clause of an UPDATE or DELETE.</summary>
     protected static void AppendWhere(IQuerySqlWriter sql, SelectExpression select)
     {
         if (select.Predicate != null)
@@ -586,14 +601,23 @@ public sealed class JsonSyntax(
         "JSON_SET({0}, {1}, {2})",
         "JSON({0})");
 
+    /// <summary>The database's JSON column type.</summary>
     public string StoreType { get; } = storeType;
+    /// <summary>A JSON value at a path, as a SQL value expression.</summary>
     public string Value { get; } = value;
+    /// <summary>A JSON value at a path, as a JSON expression.</summary>
     public string Query { get; } = query;
+    /// <summary>A JSON value at a path, cast to a SQL type.</summary>
     public string TypedValue { get; } = typedValue;
+    /// <summary>A boolean inside a JSON document, where a typed value can't express it.</summary>
     public string? BooleanValue { get; } = booleanValue;
+    /// <summary>A base64-encoded binary value inside a JSON document, decoded to bytes.</summary>
     public string? BinaryValue { get; } = binaryValue;
+    /// <summary>Joins two strings into a JSON path.</summary>
     public string Concatenate { get; } = concatenate;
+    /// <summary>Replaces the value at a path in a JSON document.</summary>
     public string? Set { get; } = set;
+    /// <summary>Turns JSON text into a JSON value.</summary>
     public string FromText { get; } = fromText;
 
     /// <summary>

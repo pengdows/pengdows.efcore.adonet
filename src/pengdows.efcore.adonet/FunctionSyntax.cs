@@ -10,6 +10,7 @@ namespace pengdows.efcore.adonet;
 /// </remarks>
 public class FunctionSyntax
 {
+    /// <summary>ISO's function forms, which the dialects without their own use.</summary>
     public static readonly FunctionSyntax Iso = new();
 
     /// <summary>
@@ -62,10 +63,15 @@ public class FunctionSyntax
     /// <summary>String concatenation: the operator for <c>a + b</c> on strings.</summary>
     public virtual string Concat => "{0} || {1}";
 
+    /// <summary>Upper-cases a string.</summary>
     public virtual string? Upper => "UPPER({0})";
+    /// <summary>Lower-cases a string.</summary>
     public virtual string? Lower => "LOWER({0})";
+    /// <summary>Removes leading and trailing spaces from a string.</summary>
     public virtual string? Trim => "TRIM({0})";
+    /// <summary>Removes leading spaces from a string.</summary>
     public virtual string? TrimStart => "TRIM(LEADING FROM {0})";
+    /// <summary>Removes trailing spaces from a string.</summary>
     public virtual string? TrimEnd => "TRIM(TRAILING FROM {0})";
 
     /// <summary>Length in characters.</summary>
@@ -80,16 +86,22 @@ public class FunctionSyntax
     /// <summary>The 1-based position of <c>{0}</c> in <c>{1}</c>; 0 when absent, 1 when <c>{0}</c> is empty.</summary>
     public virtual string? Position => "POSITION({0} IN {1})";
 
+    /// <summary>Replaces every occurrence of a substring.</summary>
     public virtual string? Replace => "REPLACE({0}, {1}, {2})";
 
+    /// <summary>The absolute value of a number.</summary>
     public virtual string? Abs => "ABS({0})";
+    /// <summary>The largest whole number not above a number.</summary>
     public virtual string? Floor => "FLOOR({0})";
+    /// <summary>The smallest whole number not below a number.</summary>
     public virtual string? Ceiling => "CEILING({0})";
+    /// <summary>A number rounded to a number of decimal places.</summary>
     public virtual string? Round => "ROUND({0})";
 
     /// <summary><c>{0}</c> rounded to <c>{1}</c> decimal places.</summary>
     public virtual string? RoundDigits => "ROUND({0}, {1})";
 
+    /// <summary>A number raised to a power.</summary>
     public virtual string? Power => "POWER({0}, {1})";
 
     /// <summary>
@@ -127,23 +139,35 @@ public class FunctionSyntax
     ///     but no exclusive or can write <c>(({0} | {1}) - ({0} &amp; {1}))</c>, which equals it for integers.
     /// </summary>
     public virtual string? ExclusiveOr => null;
+    /// <summary>The square root of a number.</summary>
     public virtual string? Sqrt => "SQRT({0})";
 
     // ISO SQL:2016's trigonometric and logarithmic functions (features T622-T624).
+    /// <summary>The arc cosine of a number.</summary>
     public virtual string? Acos => "ACOS({0})";
+    /// <summary>The arc sine of a number.</summary>
     public virtual string? Asin => "ASIN({0})";
+    /// <summary>The arc tangent of a number.</summary>
     public virtual string? Atan => "ATAN({0})";
+    /// <summary>The cosine of an angle.</summary>
     public virtual string? Cos => "COS({0})";
+    /// <summary>The sine of an angle.</summary>
     public virtual string? Sin => "SIN({0})";
+    /// <summary>The tangent of an angle.</summary>
     public virtual string? Tan => "TAN({0})";
+    /// <summary>The hyperbolic cosine of a number.</summary>
     public virtual string? Cosh => "COSH({0})";
+    /// <summary>The hyperbolic sine of a number.</summary>
     public virtual string? Sinh => "SINH({0})";
+    /// <summary>The hyperbolic tangent of a number.</summary>
     public virtual string? Tanh => "TANH({0})";
+    /// <summary>e raised to a power.</summary>
     public virtual string? Exp => "EXP({0})";
 
     /// <summary>The natural logarithm.</summary>
     public virtual string? Ln => "LN({0})";
 
+    /// <summary>The base-10 logarithm of a number.</summary>
     public virtual string? Log10 => "LOG10({0})";
 
     /// <summary>The logarithm of <c>{0}</c> in base <c>{1}</c>.</summary>
@@ -152,9 +176,13 @@ public class FunctionSyntax
     /// <summary>The angle from the x-axis to the point (<c>{1}</c>, <c>{0}</c>): .NET's <c>Atan2(y, x)</c>.</summary>
     public virtual string? Atan2 => null;
 
+    /// <summary>The inverse hyperbolic cosine of a number.</summary>
     public virtual string? Acosh => null;
+    /// <summary>The inverse hyperbolic sine of a number.</summary>
     public virtual string? Asinh => null;
+    /// <summary>The inverse hyperbolic tangent of a number.</summary>
     public virtual string? Atanh => null;
+    /// <summary>The base-2 logarithm of a number.</summary>
     public virtual string? Log2 => null;
 
     /// <summary>-1, 0 or 1, as an integer.</summary>
@@ -329,6 +357,7 @@ public class FunctionSyntax
     public virtual string? BytesContain => null;
 
     // The parts of a time span: whole hours of the day (not the total), minutes of the hour, and so on.
+    /// <summary>The hours part of a time span.</summary>
     public virtual string? TimeSpanHours => null;
     /// <summary>How a date/time difference is represented when a database has no interval type.</summary>
     public virtual string? DateDifference => null;
@@ -336,18 +365,30 @@ public class FunctionSyntax
     public virtual string? DateDifferenceTotalDays => null;
     /// <summary>How <see cref="TimeSpan.TotalDays"/> is read from a translated span.</summary>
     public virtual string? TimeSpanTotalDays => null;
+    /// <summary>Adds a time span to a date or time.</summary>
     public virtual string? TimeSpanAdd => null;
+    /// <summary>Subtracts a time span from a date or time.</summary>
     public virtual string? TimeSpanSubtract => null;
+    /// <summary>The minutes part of a time span.</summary>
     public virtual string? TimeSpanMinutes => null;
+    /// <summary>The seconds part of a time span.</summary>
     public virtual string? TimeSpanSeconds => null;
+    /// <summary>The milliseconds part of a time span.</summary>
     public virtual string? TimeSpanMilliseconds => null;
+    /// <summary>The microseconds part of a time span.</summary>
     public virtual string? TimeSpanMicroseconds => null;
+    /// <summary>The nanoseconds part of a time span.</summary>
     public virtual string? TimeSpanNanoseconds => null;
 
+    /// <summary>The year part of a date.</summary>
     public virtual string? Year => "EXTRACT(YEAR FROM {0})";
+    /// <summary>The month part of a date.</summary>
     public virtual string? Month => "EXTRACT(MONTH FROM {0})";
+    /// <summary>The day part of a date.</summary>
     public virtual string? Day => "EXTRACT(DAY FROM {0})";
+    /// <summary>The hour part of a time.</summary>
     public virtual string? Hour => "EXTRACT(HOUR FROM {0})";
+    /// <summary>The minute part of a time.</summary>
     public virtual string? Minute => "EXTRACT(MINUTE FROM {0})";
 
     /// <summary>Whole seconds. ISO's SECOND field keeps the fraction (8.5), so the default floors it.</summary>
@@ -421,18 +462,29 @@ public class FunctionSyntax
 /// <summary>The units of <see cref="FunctionSyntax.DateDiff" />.</summary>
 public enum DateDiffUnit
 {
+    /// <summary>Years.</summary>
     Year,
+    /// <summary>Months.</summary>
     Month,
+    /// <summary>Days.</summary>
     Day,
+    /// <summary>Hours.</summary>
     Hour,
+    /// <summary>Minutes.</summary>
     Minute,
+    /// <summary>Seconds.</summary>
     Second,
+    /// <summary>Milliseconds.</summary>
     Millisecond,
+    /// <summary>Microseconds.</summary>
     Microsecond,
+    /// <summary>Quarters of a year.</summary>
     Quarter,
+    /// <summary>Weeks.</summary>
     Week,
 
     /// <summary>.NET's 100-nanosecond tick.</summary>
     Tick,
+    /// <summary>Nanoseconds.</summary>
     Nanosecond
 }

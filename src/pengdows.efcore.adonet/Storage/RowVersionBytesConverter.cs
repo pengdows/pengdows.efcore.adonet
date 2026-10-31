@@ -5,7 +5,7 @@ namespace pengdows.efcore.adonet.Storage;
 
 /// <summary>
 ///     A byte[] row version a database keeps as a time it sets on every insert and update (a dialect whose
-///     <see cref="IAdoNetDialect.RowVersionStoreType" /> for byte[] holds DateTime): the time's
+///     <see cref="pengdows.efcore.adonet.ITypeMappingDialect.RowVersionStoreType(System.Type)" /> for byte[] holds DateTime): the time's
 ///     <see cref="DateTime.ToBinary" /> as eight big-endian bytes, so later versions compare greater.
 /// </summary>
 internal sealed class RowVersionBytesConverter() : ValueConverter<byte[], DateTime>(v => FromBytes(v), v => ToBytes(v))

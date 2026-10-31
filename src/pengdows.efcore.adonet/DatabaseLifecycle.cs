@@ -27,6 +27,7 @@ public sealed class DatabaseLifecycle
         Keyword = keyword;
     }
 
+    /// <summary>How the database stores its data: on a server, in a file, or in a directory.</summary>
     public DatabaseStorage Storage { get; }
 
     /// <summary>The connection-string key naming the database (server) or its path (file, directory).</summary>
@@ -56,6 +57,7 @@ public sealed class DatabaseLifecycle
     /// </summary>
     public Action<DbConnection>? ClearPool { get; private init; }
 
+    /// <summary>A database on a server, created and deleted by statements the dialect writes.</summary>
     public static DatabaseLifecycle Server(
         string databaseKeyword,
         string? adminDatabase,
@@ -70,6 +72,7 @@ public sealed class DatabaseLifecycle
             ClearPool = clearPool
         };
 
+    /// <summary>A database held in a file.</summary>
     public static DatabaseLifecycle File(
         string pathKeyword,
         IReadOnlyList<string>? companionSuffixes = null,
@@ -84,6 +87,7 @@ public sealed class DatabaseLifecycle
             ClearPool = clearPool
         };
 
+    /// <summary>A database held in a directory.</summary>
     public static DatabaseLifecycle Directory(string pathKeyword)
         => new(DatabaseStorage.Directory, pathKeyword);
 }

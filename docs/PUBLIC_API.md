@@ -106,3 +106,10 @@ derives from; its `Inner` is the wrapped `DbDataReader`, which a subclass reads,
 convention, migrations annotation and value generator selector bases, `AdoNetQuerySqlGenerator`, `IAdoNetSingletonOptions` and
 `DriverMembers`. Protected members of these bases are public API.
 
+## Documentation debt
+
+The core generates its XML documentation file. The dialect contract (`IAdoNetDialect`, `ISqlDialect`), the syntax parts (`Syntax`,
+`FunctionSyntax`, `SpatialSyntax`, `KeyRetrieval`, `DatabaseLifecycle`) and the plugin extension points are documented. About 700
+other public members (mainly the literal type mappings, the reader and the scaffolding types) have no summary yet; their CS1591 warnings
+are suppressed in the core project until they are written, rather than failing the build.
+

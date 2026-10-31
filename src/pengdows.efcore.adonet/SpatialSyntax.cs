@@ -94,6 +94,7 @@ public sealed class SpatialSyntax
             + "WHEN 'ST_MultiPoint' THEN 4 WHEN 'ST_MultiLineString' THEN 5 WHEN 'ST_MultiPolygon' THEN 6 WHEN 'ST_GeomCollection' THEN 7 END"
     };
 
+    /// <summary>The spatial syntax with no database-specific functions.</summary>
     public static SpatialSyntax Iso { get; } = new();
 
     /// <summary>How values are stored and passed.</summary>

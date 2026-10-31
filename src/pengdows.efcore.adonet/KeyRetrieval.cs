@@ -45,20 +45,26 @@ public abstract class KeyRetrieval
             nextValueSql ?? (sequence => "VALUES (NEXT VALUE FOR " + sequence + ")"));
 }
 
+/// <summary>Gets a generated key from the statement itself, with RETURNING or OUTPUT.</summary>
 public sealed class ReturningKeyRetrieval : KeyRetrieval;
 
+/// <summary>Gets a generated key from the table the insert wrote to, through a delta-table query.</summary>
 public sealed class DeltaTableKeyRetrieval(bool useIncludeColumns = false) : KeyRetrieval
 {
     /// <summary>Whether INSERT and UPDATE delta tables carry the Pengdows INCLUDE correlation column.</summary>
     public bool UseIncludeColumns { get; } = useIncludeColumns;
 }
 
+/// <summary>Gets a generated key with a SELECT after the insert.</summary>
 public sealed class SelectAfterKeyRetrieval(string identityFunction, string rowsAffectedFunction) : KeyRetrieval
 {
+    /// <summary>The function that returns the last generated identity value.</summary>
     public string IdentityFunction { get; } = identityFunction;
+    /// <summary>The function that returns the number of rows the last statement affected.</summary>
     public string RowsAffectedFunction { get; } = rowsAffectedFunction;
 }
 
+/// <summary>Draws a key from a database sequence before the insert.</summary>
 public sealed class SequenceKeyRetrieval(Func<string, string, string> sequenceName, Func<string, string> nextValueSql)
     : KeyRetrieval
 {

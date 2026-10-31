@@ -13,12 +13,16 @@ namespace pengdows.efcore.adonet;
 /// </remarks>
 public interface IAdoNetDialect
 {
+    /// <summary>The provider's name, as the dialect identifies itself.</summary>
     string Name { get; }
 
+    /// <summary>The dialect's SQL syntax: quoting, functions, DML, paging and the other statement forms.</summary>
     ISqlDialect Sql { get; }
 
+    /// <summary>The dialect's type mappings: the store types its columns and parameters use.</summary>
     ITypeMappingDialect TypeMappings { get; }
 
+    /// <summary>What the database can do, for the shared code to check before it relies on a feature.</summary>
     IDatabaseCapabilities Capabilities { get; }
 
     /// <summary>
@@ -46,7 +50,9 @@ public interface ISqlDialect
     /// <summary>Whether a suppressed transaction completion must keep the connection open for the caller.</summary>
     bool KeepConnectionOpenAfterSuppressedTransaction { get; }
 
+    /// <summary>The character that opens a quoted identifier.</summary>
     string IdentifierQuotePrefix { get; }
+    /// <summary>The character that closes a quoted identifier.</summary>
     string IdentifierQuoteSuffix { get; }
 
     /// <summary>
@@ -113,14 +119,19 @@ public interface ISqlDialect
     /// <summary>A string constant as SQL text, quotes and any other characters the database treats specially escaped.</summary>
     string StringLiteral(string value);
 
+    /// <summary>The SQL literal for TRUE.</summary>
     string TrueLiteral { get; }
+    /// <summary>The SQL literal for FALSE.</summary>
     string FalseLiteral { get; }
 
     /// <summary>The aggregate for <c>LongCount</c>, for databases whose <c>COUNT</c> returns a 32-bit integer.</summary>
     string LongCountFunction { get; }
 
+    /// <summary>How the dialect pages results: LIMIT and OFFSET, FETCH, or TOP.</summary>
     PagingSyntax Paging { get; }
+    /// <summary>How the dialect writes boolean values and expressions.</summary>
     BooleanSyntax Booleans { get; }
+    /// <summary>How the dialect returns a generated key after an insert.</summary>
     KeyRetrieval Keys { get; }
 
     /// <summary>
