@@ -68,13 +68,7 @@ internal sealed class AdoNetJsonTypeMapping : JsonTypeMapping
             return;
         }
 
-        var property = parameter.GetType().GetProperty(string.Concat("N", "pgsql", "DbType"));
-        if (property?.PropertyType.IsEnum != true)
-        {
-            return;
-        }
-
-        property.SetValue(parameter, Enum.Parse(property.PropertyType, "Jsonb", ignoreCase: false));
+        _sql.Json?.ConfigureParameter?.Invoke(parameter);
     }
 
     private static bool IsJson(string value)

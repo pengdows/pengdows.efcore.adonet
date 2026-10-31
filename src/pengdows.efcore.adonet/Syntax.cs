@@ -1,3 +1,4 @@
+using System.Data.Common;
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
@@ -603,6 +604,12 @@ public sealed class JsonSyntax(
 
     /// <summary>Whether the database stores JSON in a native binary document type.</summary>
     public bool UsesBinaryDocument { get; init; }
+
+    /// <summary>
+    ///     Sets the driver's type for a parameter holding JSON, where the driver needs one for a native JSON document type. The
+    ///     provider owns the driver's API; the shared code only decides which parameters are JSON.
+    /// </summary>
+    public Action<DbParameter>? ConfigureParameter { get; init; }
 
     /// <summary>
     ///     A SQL value <c>{0}</c> as a JSON scalar, for <see cref="Set" />; null where the set function takes a SQL value as it is.

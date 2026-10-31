@@ -3,3 +3,4 @@ abstract pengdows.efcore.adonet.AdoNetDialect.Name.get -> string! | This provide
 pengdows.efcore.adonet.Storage.AdoNetSByteTypeMapping | Public so EF's compiled model can name its Default; the mapping for CLR sbyte, which a dialect's TINYINT holds.
 pengdows.efcore.adonet.Storage.AdoNetULongTypeMapping | Public so EF's compiled model can name its Default; the mapping for CLR ulong, which a dialect's unsigned BIGINT holds.
 pengdows.efcore.adonet.ISqlDialect.SupportedIsolationLevels.get -> System.Collections.Generic.IReadOnlySet<System.Data.IsolationLevel>! | The isolation levels a provider's engine honours, read by the connection to refuse any other level by name; a dialect that narrows it overrides it (AdoNetDialect).
+pengdows.efcore.adonet.ISqlDialect.ParameterCast(string! storeType) -> string? | The cast a provider's driver needs on a parameter of a store type (a PostgreSQL provider's inet cast), so the shared generator writes it without knowing the database.

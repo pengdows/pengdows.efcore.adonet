@@ -161,6 +161,10 @@ internal sealed class PostgreSqlSql : AnsiSqlDialect
 {
     public override bool SupportsNullOrderingClauses => true;
 
+    // PostgreSQL needs the cast on an inet parameter: the driver's text would otherwise be compared as text.
+    public override string? ParameterCast(string storeType)
+        => string.Equals(storeType, "inet", StringComparison.OrdinalIgnoreCase) ? "::inet" : null;
+
     // Through the postgres database; WITH (FORCE) ends other sessions (PostgreSQL 13+). Behaviour reference (not copied):
     // https://github.com/npgsql/efcore.pg/blob/v10.0.3/src/EFCore.PG/Storage/Internal/NpgsqlDatabaseCreator.cs
     public override DatabaseLifecycle Databases { get; } = DatabaseLifecycle.Server(
@@ -308,6 +312,19 @@ internal static class PostgreSqlJson
         // BOOLEAN, etc., which PostgreSQL correctly rejects.
         ArrayElements = "(SELECT CAST(e.value #>> '{}' AS {3}) AS {2}, e.ordinality AS {1} FROM jsonb_array_elements({0}) WITH ORDINALITY AS e(value))",
         ArrayElementsTextType = "{0}",
-        ArrayElementsBinaryValue = "decode({0}, 'base64')"
+        ArrayElementsBinaryValue = "decode({0}, 'base64')",
+        ConfigureParameter = ConfigureJsonParameter
     };
+
+    // Npgsql's NpgsqlDbType is the jsonb parameter type. Reflection keeps the driver out of this assembly's references.
+    private static void ConfigureJsonParameter(System.Data.Common.DbParameter parameter)
+    {
+        var property = parameter.GetType().GetProperty("NpgsqlDbType");
+        if (property?.PropertyType.IsEnum != true)
+        {
+            return;
+        }
+
+        property.SetValue(parameter, Enum.Parse(property.PropertyType, "Jsonb", ignoreCase: false));
+    }
 }

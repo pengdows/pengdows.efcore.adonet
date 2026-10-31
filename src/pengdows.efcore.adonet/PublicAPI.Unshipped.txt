@@ -813,3 +813,8 @@ static pengdows.efcore.adonet.Design.AdoNetProviderCodeGenerator.UseMethod(Syste
 virtual pengdows.efcore.adonet.Design.AdoNetDesignTimeServices.UseProvider.get -> System.Reflection.MethodInfo?
 virtual pengdows.efcore.adonet.AnsiSqlDialect.SupportedIsolationLevels.get -> System.Collections.Generic.IReadOnlySet<System.Data.IsolationLevel>!
 pengdows.efcore.adonet.ISqlDialect.SupportedIsolationLevels.get -> System.Collections.Generic.IReadOnlySet<System.Data.IsolationLevel>!
+
+pengdows.efcore.adonet.ISqlDialect.ParameterCast(string! storeType) -> string?
+virtual pengdows.efcore.adonet.AnsiSqlDialect.ParameterCast(string! storeType) -> string?
+pengdows.efcore.adonet.JsonSyntax.ConfigureParameter.get -> System.Action<System.Data.Common.DbParameter!>?
+pengdows.efcore.adonet.JsonSyntax.ConfigureParameter.init -> void

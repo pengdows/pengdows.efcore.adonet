@@ -209,6 +209,9 @@ public interface ISqlDialect
     /// <summary>Whether ORDER BY accepts <c>NULLS FIRST</c> and <c>NULLS LAST</c>, which the null-ordering option writes.</summary>
     bool SupportsNullOrderingClauses => false;
 
+    /// <summary>A cast a parameter of this store type needs after its placeholder, for a dialect whose driver sends it as text; null when none.</summary>
+    string? ParameterCast(string storeType) => null;
+
     /// <summary>Returns the number of user tables in the current database or schema.</summary>
     string HasTablesSql { get; }
 }

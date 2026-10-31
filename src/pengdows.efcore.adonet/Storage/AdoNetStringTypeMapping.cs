@@ -70,15 +70,14 @@ public class AdoNetStringTypeMapping : StringTypeMapping
     {
         base.ConfigureParameter(parameter);
 
-        // Primitive collections use EF's string mapping plus a JSON converter. A dialect's native
-        // JSON column still needs its provider-specific parameter type, otherwise the driver sends
-        // the JSON text as VARCHAR and the database rejects the assignment before SQL can run.
+        // Primitive collections use EF's string mapping plus a JSON converter. A dialect's native JSON column needs the
+        // driver's JSON parameter type, otherwise the driver sends the JSON text as VARCHAR and the database rejects it.
         if (_sql.Json is { } jsonSyntax
             && StoreType.Equals(jsonSyntax.StoreType, StringComparison.OrdinalIgnoreCase)
             && (parameter.Value is null or DBNull || parameter.Value is string json && IsJson(json))
-            && DriverMembers.Property(parameter.GetType(), string.Concat("N", "pgsql", "DbType")) is { PropertyType.IsEnum: true } npgsqlDbType)
+            && jsonSyntax.ConfigureParameter is { } configure)
         {
-            npgsqlDbType.SetValue(parameter, Enum.Parse(npgsqlDbType.PropertyType, "Jsonb", ignoreCase: false));
+            configure(parameter);
         }
 
         var length = (parameter.Value as string)?.Length;

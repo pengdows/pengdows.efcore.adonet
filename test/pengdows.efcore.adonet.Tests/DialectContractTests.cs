@@ -123,7 +123,8 @@ public class DialectContractTests
     {
         const string BehaviourReference = "Behaviour reference (not copied)";
         var core = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../src/pengdows.efcore.adonet"));
-        string[] names = ["SQL Server", "T-SQL", "PostgreSQL", "Npgsql", "MySQL", "MariaDB", "SQLite", "DuckDB", "Oracle", "SqlClient", "MySqlConnector", "SqlServer", "Sqlite", "PostgreSql", "MySql", "DuckDb", "jsonb"];
+        // The PostgreSQL tokens that used to be assembled at runtime to pass this check ("pgsql", "::inet") are named here too.
+        string[] names = ["SQL Server", "T-SQL", "PostgreSQL", "Npgsql", "MySQL", "MariaDB", "SQLite", "DuckDB", "Oracle", "SqlClient", "MySqlConnector", "SqlServer", "Sqlite", "PostgreSql", "MySql", "DuckDb", "jsonb", "pgsql", "Jsonb", "::inet"];
 
         var named = Directory.EnumerateFiles(core, "*.cs", SearchOption.AllDirectories)
             .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal))

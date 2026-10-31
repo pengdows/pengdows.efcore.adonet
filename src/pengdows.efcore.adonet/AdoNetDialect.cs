@@ -108,6 +108,7 @@ public class AnsiSqlDialect : ISqlDialect
     public virtual bool RequiresDerivedTableColumnAliases => false;
     public virtual bool UsesNativeValuesTable => false;
     public virtual bool SupportsNullOrderingClauses => false;
+    public virtual string? ParameterCast(string storeType) => null;
 
     public virtual string HasTablesSql
         => "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'";

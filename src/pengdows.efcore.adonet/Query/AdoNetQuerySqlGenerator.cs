@@ -19,9 +19,9 @@ internal class AdoNetQuerySqlGenerator(
     protected override Expression VisitSqlParameter(SqlParameterExpression sqlParameterExpression)
     {
         base.VisitSqlParameter(sqlParameterExpression);
-        if (string.Equals(sqlParameterExpression.TypeMapping?.StoreType, "inet", StringComparison.OrdinalIgnoreCase))
+        if (sqlParameterExpression.TypeMapping?.StoreType is { } storeType && dialect.ParameterCast(storeType) is { } cast)
         {
-            Sql.Append("::inet");
+            Sql.Append(cast);
         }
 
         return sqlParameterExpression;
