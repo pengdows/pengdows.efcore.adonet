@@ -1,0 +1,33 @@
+# pengdows.efcore.adonet
+
+> A shared EF Core 10 relational provider foundation built directly on ADO.NET. It reduces duplication, fragility, and maintenance work for EF Core provider authors by putting common implementation in one core and database differences in dialect plugins.
+
+## Project purpose
+
+- Implement common EF Core query/update, mapping, command, connection, transaction, migrations, and provider infrastructure once.
+- Keep database syntax, type mappings, capabilities, and custom EF services in independently maintained dialect plugins.
+- Cross-test the design across SQL Server, PostgreSQL, MySQL, SQLite, DuckDB, and FlatFile. FlatFile provides an ISO SQL baseline.
+- Use the ADO.NET driver contract and its implementations directly; no pengdows.crud runtime integration.
+
+## Critical distinction from pengdows.crud
+
+This is not pengdows.crud for EF Core. It neither wraps nor depends on pengdows.crud at runtime. Unit tests may use pengdows.crud.fakeDb; that is test infrastructure, not CRUD functionality.
+
+Features **not** provided here:
+- PoolGovernor; separate read/write pools; pool limits and reserves; CRUD pool protection; adaptive concurrency, backpressure, and fairness.
+- Routing by read/write intent, automatic read-replica selection, and CRUD-specific read-only enforcement.
+- CRUD connection modes: Standard, PreventDatabaseUnload/KeepAlive, SingleWriter, SingleConnection.
+- Tenant-per-database provisioning, tenant connection resolution, and database routing. Applications may use EF Core multi-tenancy patterns, but this library adds no CRUD tenant manager.
+- TableGateway; general-purpose dialect-aware SQL-building tools; CRUD upsert and automatic audit/version handling.
+- RetryContext, CRUD-specific load control, and CRUD pool/concurrency metrics.
+
+This library **does** manage ordinary EF Core connections, transactions, SQL, and diagnostics. Driver connection pooling is not the same as the application-level pool governance offered by pengdows.crud.
+
+## Entry points
+
+- [README](https://github.com/pengdows/pengdows.efcore.adonet/blob/main/README.md): scope, architecture, plugin contract, supported engines, testing.
+- [Source-level code review](https://github.com/pengdows/pengdows.efcore.adonet/blob/main/docs/CODE_REVIEW.md): findings, confidence, engineering priorities.
+- [Public API rationale](https://github.com/pengdows/pengdows.efcore.adonet/blob/main/docs/PUBLIC_API.md): exported contracts and justification.
+- [Feature gaps](https://github.com/pengdows/pengdows.efcore.adonet/blob/main/docs/FEATURE_GAPS.md): tracked provider gaps.
+- [Review policy](https://github.com/pengdows/pengdows.efcore.adonet/blob/main/REVIEW_POLICY.md): rules for PR reviews.
+- [pengdows.crud](https://github.com/pengdows/pengdows.crud): separate data-access library with pooling, routing, tenancy, SQL, and operational capabilities.
