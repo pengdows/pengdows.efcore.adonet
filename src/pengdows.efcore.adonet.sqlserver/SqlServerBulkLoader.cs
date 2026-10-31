@@ -30,7 +30,10 @@ internal class SqlServerBulkLoader(
         }
 
         using var copy = Create(load);
-        copy.WriteToServer(Rows(load));
+        foreach (var batch in Batches(load))
+        {
+            copy.WriteToServer(batch);
+        }
     }
 
     public override async Task LoadAsync(BulkLoad load, CancellationToken cancellationToken = default)
@@ -42,7 +45,10 @@ internal class SqlServerBulkLoader(
         }
 
         using var copy = Create(load);
-        await copy.WriteToServerAsync(Rows(load), cancellationToken).ConfigureAwait(false);
+        foreach (var batch in Batches(load))
+        {
+            await copy.WriteToServerAsync(batch, cancellationToken).ConfigureAwait(false);
+        }
     }
 
     private SqlBulkCopy Create(BulkLoad load)
@@ -63,7 +69,18 @@ internal class SqlServerBulkLoader(
         return copy;
     }
 
-    private static DataTable Rows(BulkLoad load)
+    // Rows per table: the copy writes each table as it is built, so a large load holds one batch at a time, not every row.
+    private const int BatchSize = 10_000;
+
+    private static IEnumerable<DataTable> Batches(BulkLoad load)
+    {
+        for (var start = 0; start < load.Rows.Count; start += BatchSize)
+        {
+            yield return Table(load, start, Math.Min(BatchSize, load.Rows.Count - start));
+        }
+    }
+
+    private static DataTable Table(BulkLoad load, int start, int count)
     {
         var table = new DataTable();
         foreach (var column in load.Columns)
@@ -72,9 +89,9 @@ internal class SqlServerBulkLoader(
             table.Columns.Add(column.Name, Nullable.GetUnderlyingType(type) ?? type);
         }
 
-        foreach (var row in load.Rows)
+        for (var i = start; i < start + count; i++)
         {
-            table.Rows.Add(row.Select(v => v ?? DBNull.Value).ToArray());
+            table.Rows.Add(load.Rows[i].Select(v => v ?? DBNull.Value).ToArray());
         }
 
         return table;

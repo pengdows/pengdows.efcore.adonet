@@ -17,8 +17,13 @@ Per-row allocation is nearly flat as the input grows, so the cost is linear in r
 by the list copies. The copies themselves are small by comparison: the entity list holds references, and each row adds one
 `object[]` of its column values, a few hundred bytes at most.
 
-**Decision:** no change. Bounded batches would not reduce this cost. The SQL Server loader also builds a `DataTable` copy of
-the rows; that path needs a server to measure and is **open**.
+**Decision:** no change on the fakeDb path; the cost there is per-row command work.
+
+SQL Server's native loader (`SqlBulkCopy`) is measured on a real server: about 875 bytes per row at 20,000 rows, 862 at
+100,000, with the one-off setup dominating at 2,000 rows. The loader used to build one `DataTable` for every row. It now
+writes 10,000-row batches over the same copy, so only one batch's table is alive at a time. Total allocation per row is
+unchanged (the batches are allocated in turn), so the saving is peak live memory, which this measurement does not capture.
+Covered by `SqlServerBulkBatchingTests`, which checks every row arrives, past the batch boundary.
 
 ## The data-source cache grows with connection strings
 
