@@ -19,9 +19,9 @@ Features **not** provided here:
 - CRUD connection modes: Standard, PreventDatabaseUnload/KeepAlive, SingleWriter, SingleConnection.
 - Tenant-per-database provisioning, tenant connection resolution, and database routing. Applications may use EF Core multi-tenancy patterns, but this library adds no CRUD tenant manager.
 - TableGateway; general-purpose dialect-aware SQL-building tools; CRUD upsert and automatic audit/version handling.
-- RetryContext, CRUD-specific load control, and CRUD pool/concurrency metrics.
+- RetryContext, CRUD-specific load control, or **built-in runtime metrics** (pool usage, saturation, wait times, execution-latency percentiles, and CRUD operation counters).
 
-This library **does** manage ordinary EF Core connections, transactions, SQL, and diagnostics. Driver connection pooling is not the same as the application-level pool governance offered by pengdows.crud.
+This library manages ordinary EF Core connections, transactions, and SQL. Standard EF Core logging and diagnostic events remain available, but this library does **not** implement its own metrics collection. Driver connection pooling is not the same as the application-level pool governance offered by pengdows.crud.
 
 ## Testing without a database
 
@@ -43,8 +43,8 @@ package to add connection admission control and fail-fast backpressure
 via EF Core `DbConnectionInterceptor`/`UseStormGate(interceptor)`.
 Share one `StormGate` budget across contexts. This is an **opt-in integration**,
 not a feature bundled with `pengdows.efcore.adonet`, and not the full CRUD
-`PoolGovernor`: no pool splitting, intention routing, connection modes, or
-hard physical connection-pool ceiling is supplied.
+`PoolGovernor`: no pool splitting, intention routing, connection modes,
+built-in CRUD metrics, or hard physical connection-pool ceiling is supplied.
 
 ## Entry points
 
