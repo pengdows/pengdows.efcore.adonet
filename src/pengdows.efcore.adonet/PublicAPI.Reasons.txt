@@ -14,3 +14,4 @@ pengdows.efcore.adonet.Metadata.AdoNetConventionSetBuilder | The convention set 
 pengdows.efcore.adonet.Metadata.AdoNetMigrationsAnnotationProvider | The migrations annotation provider base a plugin derives from for its migration annotations.
 pengdows.efcore.adonet.Storage.AdoNetValueGeneratorSelector | The value generator selector base a plugin derives from to add its generation strategy.
 pengdows.efcore.adonet.Storage.AdoNetSequenceValueGenerator<TValue> | The sequence value generator base a dialect derives from, which draws a key from the database sequence.
+virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.FileLockPath.get -> string? | The lock file a dialect whose database is a file names, so migrators on that file exclude each other and an exit releases the lock.

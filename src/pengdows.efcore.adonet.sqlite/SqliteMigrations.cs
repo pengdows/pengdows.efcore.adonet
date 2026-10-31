@@ -349,6 +349,22 @@ internal class SqliteMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies d
 internal class SqliteHistoryRepository(HistoryRepositoryDependencies dependencies, IAdoNetDialect dialect)
     : AdoNetHistoryRepository(dependencies, dialect)
 {
+    // The database file's lock: a sidecar file, locked exclusively while a migrator runs. An in-memory database is one process's and
+    // needs no file; a file URI names no path this code can lock.
+    protected override string? FileLockPath
+    {
+        get
+        {
+            var source = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder(Dependencies.Connection.DbConnection.ConnectionString).DataSource;
+            if (string.IsNullOrEmpty(source) || source == ":memory:" || source.StartsWith("file:", StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            return source + ".migrations.lock";
+        }
+    }
+
     protected override string TableExistsSql(string table, string? schema)
         => "SELECT COUNT(*) FROM \"sqlite_master\" WHERE \"type\" = 'table' AND \"name\" = '" + table.Replace("'", "''") + "'";
 }

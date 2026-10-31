@@ -108,6 +108,11 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
             return AcquireSessionLock(sessionLock);
         }
 
+        if (FileLockPath is { } fileLockPath)
+        {
+            return AcquireFileLock(fileLockPath);
+        }
+
         if (!TableExists(LockTableName))
         {
             CreateLockTable();
@@ -149,6 +154,11 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
             return await AcquireSessionLockAsync(sessionLock, cancellationToken).ConfigureAwait(false);
         }
 
+        if (FileLockPath is { } fileLockPath)
+        {
+            return await AcquireFileLockAsync(fileLockPath, cancellationToken).ConfigureAwait(false);
+        }
+
         if (!await TableExistsAsync(LockTableName, cancellationToken).ConfigureAwait(false))
         {
             await CreateLockTableAsync(cancellationToken).ConfigureAwait(false);
@@ -188,6 +198,83 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
 
     // The session lock waits up to LockTimeout itself; it is refused only when the wait ends without it (0), or on an error
     // (NULL). Either way the migrator has not got it.
+    /// <summary>
+    ///     A file the migrator holds open with an exclusive lock, for an engine whose database is a file other processes open. The
+    ///     operating system releases the lock when the holder's process exits, however it exits, so a lock is never taken over and
+    ///     never left behind. Retried until <see cref="LockTimeout" />. The file stays where it is after release.
+    /// </summary>
+    protected virtual string? FileLockPath
+        => null;
+
+    private IMigrationsDatabaseLock AcquireFileLock(string path)
+    {
+        var deadline = DateTime.UtcNow + LockTimeout;
+        while (true)
+        {
+            if (TryOpenFileLock(path) is { } held)
+            {
+                return held;
+            }
+
+            if (DateTime.UtcNow >= deadline)
+            {
+                throw new TimeoutException($"Timed out after {LockTimeout} waiting for the migrations lock file {path}.");
+            }
+
+            Thread.Sleep(FileLockRetryDelay);
+        }
+    }
+
+    private async Task<IMigrationsDatabaseLock> AcquireFileLockAsync(string path, CancellationToken cancellationToken)
+    {
+        var deadline = DateTime.UtcNow + LockTimeout;
+        while (true)
+        {
+            if (TryOpenFileLock(path) is { } held)
+            {
+                return held;
+            }
+
+            if (DateTime.UtcNow >= deadline)
+            {
+                throw new TimeoutException($"Timed out after {LockTimeout} waiting for the migrations lock file {path}.");
+            }
+
+            await Task.Delay(FileLockRetryDelay, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    private static readonly TimeSpan FileLockRetryDelay = TimeSpan.FromMilliseconds(25);
+
+    // FileShare.None is an exclusive lock on every platform .NET runs on: a second open of the file, from this process or another,
+    // fails while this one is open.
+    private FileLock? TryOpenFileLock(string path)
+    {
+        try
+        {
+            return new FileLock(this, new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None));
+        }
+        catch (IOException)
+        {
+            return null;
+        }
+    }
+
+    private sealed class FileLock(AdoNetHistoryRepository repository, FileStream file) : IMigrationsDatabaseLock
+    {
+        public IHistoryRepository HistoryRepository
+            => repository;
+
+        public void Dispose()
+            => file.Dispose();
+
+        public ValueTask DisposeAsync()
+        {
+            file.Dispose();
+            return ValueTask.CompletedTask;
+        }
+    }
+
     private IMigrationsDatabaseLock AcquireSessionLock(string sql)
     {
         if (!SessionLockTaken(Command(sql).ExecuteScalar(Parameters())))

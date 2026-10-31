@@ -926,3 +926,4 @@ pengdows.efcore.adonet.Storage.AdoNetSequenceValueGenerator<TValue>.AdoNetSequen
 override pengdows.efcore.adonet.Storage.AdoNetSequenceValueGenerator<TValue>.GeneratesTemporaryValues.get -> bool
 override pengdows.efcore.adonet.Storage.AdoNetSequenceValueGenerator<TValue>.Next(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry! entry) -> TValue
 override pengdows.efcore.adonet.Storage.AdoNetSequenceValueGenerator<TValue>.NextAsync(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry! entry, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<TValue>
+virtual pengdows.efcore.adonet.Migrations.AdoNetHistoryRepository.FileLockPath.get -> string?

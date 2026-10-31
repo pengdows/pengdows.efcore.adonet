@@ -32,6 +32,7 @@ public sealed class DuckDbDialect : AdoNetDialect
     {
         new EntityFrameworkRelationalServicesBuilder(services)
             .TryAdd<IMigrationsSqlGenerator, DuckDbMigrationsSqlGenerator>()
+            .TryAdd<Microsoft.EntityFrameworkCore.Migrations.IHistoryRepository, DuckDbHistoryRepository>()
             .TryAdd<Microsoft.EntityFrameworkCore.Storage.IRelationalTypeMappingSourcePlugin, DuckDbListTypeMappingSourcePlugin>()
             .TryAdd<Microsoft.EntityFrameworkCore.Storage.IRelationalTypeMappingSourcePlugin, DuckDbStructTypeMappingSourcePlugin>()
             .TryAdd<Microsoft.EntityFrameworkCore.Query.IMethodCallTranslatorPlugin, DuckDbMethodCallTranslatorPlugin>();
