@@ -254,91 +254,25 @@ public class AdoNetHistoryRepository(HistoryRepositoryDependencies dependencies,
         return (InMemory: false, LockFile: Path.TrimEndingDirectorySeparator(path) + ".migrations.lock");
     }
 
-    // An exclusive file lock is exclusive on one host only. A lock file on a network share would let two hosts migrate at once,
-    // so the migrations are refused, before any lock is taken, and the database must move to local storage or a server.
-    private static void RefuseNetworkLock(string path)
-    {
-        var mounts = OperatingSystem.IsLinux() && File.Exists("/proc/mounts") ? File.ReadAllText("/proc/mounts") : null;
-        if (NetworkPath.IsNetwork(path, mounts) || NetworkPath.IsNetworkDrive(path))
-        {
-            throw new InvalidOperationException(
-                $"The migrations lock file {path} is on a network share, where an exclusive file lock is not exclusive across hosts. "
-                + "Move the database to local storage, or use a database server, before migrating.");
-        }
-    }
-
     private const string SingleWriterWithoutLockFile =
         "This single-writer database has no lock file to name, so its migrations cannot be coordinated and will not run.";
 
     private IMigrationsDatabaseLock AcquireFileLock(string path)
-    {
-        RefuseNetworkLock(path);
-        var deadline = DateTime.UtcNow + LockTimeout;
-        while (true)
-        {
-            if (TryOpenFileLock(path) is { } held)
-            {
-                return held;
-            }
-
-            if (DateTime.UtcNow >= deadline)
-            {
-                throw new TimeoutException($"Timed out after {LockTimeout} waiting for the migrations lock file {path}.");
-            }
-
-            Thread.Sleep(FileLockRetryDelay);
-        }
-    }
+        => new FileLock(this, FileMigrationLock.Acquire(path, LockTimeout));
 
     private async Task<IMigrationsDatabaseLock> AcquireFileLockAsync(string path, CancellationToken cancellationToken)
-    {
-        RefuseNetworkLock(path);
-        var deadline = DateTime.UtcNow + LockTimeout;
-        while (true)
-        {
-            if (TryOpenFileLock(path) is { } held)
-            {
-                return held;
-            }
+        => new FileLock(this, await FileMigrationLock.AcquireAsync(path, LockTimeout, cancellationToken).ConfigureAwait(false));
 
-            if (DateTime.UtcNow >= deadline)
-            {
-                throw new TimeoutException($"Timed out after {LockTimeout} waiting for the migrations lock file {path}.");
-            }
-
-            await Task.Delay(FileLockRetryDelay, cancellationToken).ConfigureAwait(false);
-        }
-    }
-
-    private static readonly TimeSpan FileLockRetryDelay = TimeSpan.FromMilliseconds(25);
-
-    // FileShare.None is an exclusive lock on every platform .NET runs on: a second open of the file, from this process or another,
-    // fails while this one is open.
-    private FileLock? TryOpenFileLock(string path)
-    {
-        try
-        {
-            return new FileLock(this, new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None));
-        }
-        catch (IOException)
-        {
-            return null;
-        }
-    }
-
-    private sealed class FileLock(AdoNetHistoryRepository repository, FileStream file) : IMigrationsDatabaseLock
+    private sealed class FileLock(AdoNetHistoryRepository repository, FileMigrationLock held) : IMigrationsDatabaseLock
     {
         public IHistoryRepository HistoryRepository
             => repository;
 
         public void Dispose()
-            => file.Dispose();
+            => held.Dispose();
 
         public ValueTask DisposeAsync()
-        {
-            file.Dispose();
-            return ValueTask.CompletedTask;
-        }
+            => held.DisposeAsync();
     }
 
     private IMigrationsDatabaseLock AcquireSessionLock(string sql)
