@@ -7,7 +7,7 @@ namespace pengdows.efcore.adonet.Metadata;
 ///     Relational conventions (table/column naming, keys, etc.), plus marking database-generated integer keys and fitting
 ///     names EF makes up to the database's identifier length.
 /// </summary>
-internal class AdoNetConventionSetBuilder(
+public class AdoNetConventionSetBuilder(
     ProviderConventionSetBuilderDependencies dependencies,
     RelationalConventionSetBuilderDependencies relationalDependencies,
     IDatabaseCapabilities capabilities)

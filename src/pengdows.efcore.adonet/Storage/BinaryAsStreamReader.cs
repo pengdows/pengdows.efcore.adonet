@@ -61,7 +61,7 @@ internal sealed class BinaryAsStreamReader(DbDataReader reader) : DelegatingData
 ///     through <see cref="GetValue" /> and <see cref="DbDataReader.GetFieldValue{T}" />, which a subclass overrides. Owns the
 ///     driver's reader, which it disposes.
 /// </summary>
-internal abstract class DelegatingDataReader(DbDataReader reader) : DbDataReader
+public abstract class DelegatingDataReader(DbDataReader reader) : DbDataReader
 {
     protected DbDataReader Inner { get; } = reader;
 

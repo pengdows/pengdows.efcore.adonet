@@ -813,8 +813,116 @@ static pengdows.efcore.adonet.Design.AdoNetProviderCodeGenerator.UseMethod(Syste
 virtual pengdows.efcore.adonet.Design.AdoNetDesignTimeServices.UseProvider.get -> System.Reflection.MethodInfo?
 virtual pengdows.efcore.adonet.AnsiSqlDialect.SupportedIsolationLevels.get -> System.Collections.Generic.IReadOnlySet<System.Data.IsolationLevel>!
 pengdows.efcore.adonet.ISqlDialect.SupportedIsolationLevels.get -> System.Collections.Generic.IReadOnlySet<System.Data.IsolationLevel>!
-
 pengdows.efcore.adonet.ISqlDialect.ParameterCast(string! storeType) -> string?
 virtual pengdows.efcore.adonet.AnsiSqlDialect.ParameterCast(string! storeType) -> string?
 pengdows.efcore.adonet.JsonSyntax.ConfigureParameter.get -> System.Action<System.Data.Common.DbParameter!>?
 pengdows.efcore.adonet.JsonSyntax.ConfigureParameter.init -> void
+
+pengdows.efcore.adonet.Infrastructure.AdoNetProviderOptions
+static pengdows.efcore.adonet.Infrastructure.AdoNetProviderOptions.Configure(pengdows.efcore.adonet.IAdoNetDialect! dialect, System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>? additionalOptions, Microsoft.EntityFrameworkCore.ParameterTranslationMode? collectionMode = null) -> System.Action<pengdows.efcore.adonet.Infrastructure.AdoNetDbContextOptionsBuilder!>!
+
+pengdows.efcore.adonet.Storage.DelegatingDataReader
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.GetFieldValue<T>(int ordinal) -> T
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.GetFieldValueAsync<T>(int ordinal, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<T>!
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.GetValue(int ordinal) -> object!
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.GetValues(object![]! values) -> int
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.GetBoolean(int ordinal) -> bool
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.GetByte(int ordinal) -> byte
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.GetBytes(int ordinal, long dataOffset, byte[]? buffer, int bufferOffset, int length) -> long
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.GetChar(int ordinal) -> char
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.GetChars(int ordinal, long dataOffset, char[]? buffer, int bufferOffset, int length) -> long
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.GetDataTypeName(int ordinal) -> string!
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.GetDateTime(int ordinal) -> System.DateTime
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.GetDecimal(int ordinal) -> decimal
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.GetDouble(int ordinal) -> double
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.GetFieldType(int ordinal) -> System.Type!
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.GetFloat(int ordinal) -> float
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.GetGuid(int ordinal) -> System.Guid
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.GetInt16(int ordinal) -> short
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.GetInt32(int ordinal) -> int
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.GetInt64(int ordinal) -> long
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.GetName(int ordinal) -> string!
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.GetOrdinal(string! name) -> int
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.GetString(int ordinal) -> string!
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.GetStream(int ordinal) -> System.IO.Stream!
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.GetTextReader(int ordinal) -> System.IO.TextReader!
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.IsDBNull(int ordinal) -> bool
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.IsDBNullAsync(int ordinal, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<bool>!
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.GetSchemaTable() -> System.Data.DataTable?
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.NextResult() -> bool
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.NextResultAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<bool>!
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.Read() -> bool
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.ReadAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<bool>!
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.GetEnumerator() -> System.Collections.IEnumerator!
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.Close() -> void
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.CloseAsync() -> System.Threading.Tasks.Task!
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.DisposeAsync() -> System.Threading.Tasks.ValueTask
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.Depth.get -> int
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.FieldCount.get -> int
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.HasRows.get -> bool
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.IsClosed.get -> bool
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.RecordsAffected.get -> int
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.VisibleFieldCount.get -> int
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.this[int ordinal].get -> object!
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.this[string! name].get -> object!
+override pengdows.efcore.adonet.Storage.DelegatingDataReader.Dispose(bool disposing) -> void
+pengdows.efcore.adonet.Storage.DelegatingDataReader.DelegatingDataReader(System.Data.Common.DbDataReader! reader) -> void
+pengdows.efcore.adonet.Storage.DelegatingDataReader.Inner.get -> System.Data.Common.DbDataReader!
+
+pengdows.efcore.adonet.Metadata.AdoNetAnnotationProvider
+pengdows.efcore.adonet.Metadata.AdoNetAnnotationProvider.AdoNetAnnotationProvider(Microsoft.EntityFrameworkCore.Metadata.RelationalAnnotationProviderDependencies! dependencies) -> void
+override pengdows.efcore.adonet.Metadata.AdoNetAnnotationProvider.For(Microsoft.EntityFrameworkCore.Metadata.IColumn! column, bool designTime) -> System.Collections.Generic.IEnumerable<Microsoft.EntityFrameworkCore.Infrastructure.IAnnotation!>!
+static pengdows.efcore.adonet.Metadata.AdoNetAnnotationProvider.IsIdentity(Microsoft.EntityFrameworkCore.Metadata.IColumn! column) -> bool
+
+pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator
+pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator.AdoNetQuerySqlGenerator(Microsoft.EntityFrameworkCore.Query.QuerySqlGeneratorDependencies! dependencies, pengdows.efcore.adonet.ISqlDialect! dialect, pengdows.efcore.adonet.ITypeMappingDialect! typeMappings, bool reverseNullOrdering = false) -> void
+override pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator.VisitSqlParameter(Microsoft.EntityFrameworkCore.Query.SqlExpressions.SqlParameterExpression! sqlParameterExpression) -> System.Linq.Expressions.Expression!
+override pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator.VisitSelect(Microsoft.EntityFrameworkCore.Query.SqlExpressions.SelectExpression! selectExpression) -> System.Linq.Expressions.Expression!
+override pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator.GenerateProjection(Microsoft.EntityFrameworkCore.Query.SqlExpressions.SelectExpression! selectExpression) -> void
+override pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator.VisitValues(Microsoft.EntityFrameworkCore.Query.SqlExpressions.ValuesExpression! valuesExpression) -> System.Linq.Expressions.Expression!
+override pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator.VisitDelete(Microsoft.EntityFrameworkCore.Query.SqlExpressions.DeleteExpression! deleteExpression) -> System.Linq.Expressions.Expression!
+override pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator.VisitUpdate(Microsoft.EntityFrameworkCore.Query.SqlExpressions.UpdateExpression! updateExpression) -> System.Linq.Expressions.Expression!
+override pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator.GenerateValues(Microsoft.EntityFrameworkCore.Query.SqlExpressions.ValuesExpression! valuesExpression) -> void
+override pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator.GenerateSetOperationOperand(Microsoft.EntityFrameworkCore.Query.SqlExpressions.SetOperationBase! setOperation, Microsoft.EntityFrameworkCore.Query.SqlExpressions.SelectExpression! operand) -> void
+override pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator.VisitColumn(Microsoft.EntityFrameworkCore.Query.SqlExpressions.ColumnExpression! columnExpression) -> System.Linq.Expressions.Expression!
+override pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator.VisitJsonScalar(Microsoft.EntityFrameworkCore.Query.SqlExpressions.JsonScalarExpression! jsonScalarExpression) -> System.Linq.Expressions.Expression!
+override pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator.RequiresParentheses(Microsoft.EntityFrameworkCore.Query.SqlExpressions.SqlExpression! outerExpression, Microsoft.EntityFrameworkCore.Query.SqlExpressions.SqlExpression! innerExpression) -> bool
+override pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator.VisitExtension(System.Linq.Expressions.Expression! extensionExpression) -> System.Linq.Expressions.Expression!
+override pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator.VisitCrossApply(Microsoft.EntityFrameworkCore.Query.SqlExpressions.CrossApplyExpression! crossApplyExpression) -> System.Linq.Expressions.Expression!
+override pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator.VisitOuterApply(Microsoft.EntityFrameworkCore.Query.SqlExpressions.OuterApplyExpression! outerApplyExpression) -> System.Linq.Expressions.Expression!
+override pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator.GenerateIn(Microsoft.EntityFrameworkCore.Query.SqlExpressions.InExpression! inExpression, bool negated) -> void
+override pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator.VisitSqlUnary(Microsoft.EntityFrameworkCore.Query.SqlExpressions.SqlUnaryExpression! sqlUnaryExpression) -> System.Linq.Expressions.Expression!
+override pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator.VisitSqlBinary(Microsoft.EntityFrameworkCore.Query.SqlExpressions.SqlBinaryExpression! sqlBinaryExpression) -> System.Linq.Expressions.Expression!
+override pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator.TryGetOperatorInfo(Microsoft.EntityFrameworkCore.Query.SqlExpressions.SqlExpression! expression, out int precedence, out bool isAssociative) -> bool
+override pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator.GenerateTop(Microsoft.EntityFrameworkCore.Query.SqlExpressions.SelectExpression! selectExpression) -> void
+override pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator.VisitOrdering(Microsoft.EntityFrameworkCore.Query.SqlExpressions.OrderingExpression! orderingExpression) -> System.Linq.Expressions.Expression!
+override pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator.GenerateOrderings(Microsoft.EntityFrameworkCore.Query.SqlExpressions.SelectExpression! selectExpression) -> void
+override pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator.GenerateLimitOffset(Microsoft.EntityFrameworkCore.Query.SqlExpressions.SelectExpression! selectExpression) -> void
+override pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator.VisitSqlFunction(Microsoft.EntityFrameworkCore.Query.SqlExpressions.SqlFunctionExpression! sqlFunctionExpression) -> System.Linq.Expressions.Expression!
+
+pengdows.efcore.adonet.Query.IAdoNetSingletonOptions
+pengdows.efcore.adonet.Query.IAdoNetSingletonOptions.ReverseNullOrdering.get -> bool
+
+pengdows.efcore.adonet.Storage.DriverMembers
+static pengdows.efcore.adonet.Storage.DriverMembers.Property(System.Type! type, string! name) -> System.Reflection.PropertyInfo?
+static pengdows.efcore.adonet.Storage.DriverMembers.StaticMethod(System.Type! type, string! name, params System.Type![]! parameters) -> System.Reflection.MethodInfo?
+
+pengdows.efcore.adonet.Metadata.AdoNetConventionSetBuilder
+pengdows.efcore.adonet.Metadata.AdoNetConventionSetBuilder.AdoNetConventionSetBuilder(Microsoft.EntityFrameworkCore.Metadata.Conventions.Infrastructure.ProviderConventionSetBuilderDependencies! dependencies, Microsoft.EntityFrameworkCore.Metadata.Conventions.Infrastructure.RelationalConventionSetBuilderDependencies! relationalDependencies, pengdows.efcore.adonet.IDatabaseCapabilities! capabilities) -> void
+override pengdows.efcore.adonet.Metadata.AdoNetConventionSetBuilder.CreateConventionSet() -> Microsoft.EntityFrameworkCore.Metadata.Conventions.ConventionSet!
+
+pengdows.efcore.adonet.Metadata.AdoNetMigrationsAnnotationProvider
+pengdows.efcore.adonet.Metadata.AdoNetMigrationsAnnotationProvider.AdoNetMigrationsAnnotationProvider(Microsoft.EntityFrameworkCore.Migrations.MigrationsAnnotationProviderDependencies! dependencies) -> void
+override pengdows.efcore.adonet.Metadata.AdoNetMigrationsAnnotationProvider.ForRemove(Microsoft.EntityFrameworkCore.Metadata.ITable! table) -> System.Collections.Generic.IEnumerable<Microsoft.EntityFrameworkCore.Infrastructure.IAnnotation!>!
+override pengdows.efcore.adonet.Metadata.AdoNetMigrationsAnnotationProvider.ForRename(Microsoft.EntityFrameworkCore.Metadata.ITable! table) -> System.Collections.Generic.IEnumerable<Microsoft.EntityFrameworkCore.Infrastructure.IAnnotation!>!
+
+pengdows.efcore.adonet.Storage.AdoNetValueGeneratorSelector
+pengdows.efcore.adonet.Storage.AdoNetValueGeneratorSelector.AdoNetValueGeneratorSelector(Microsoft.EntityFrameworkCore.ValueGeneration.ValueGeneratorSelectorDependencies! dependencies, pengdows.efcore.adonet.ISqlDialect! dialect, Microsoft.EntityFrameworkCore.Storage.IRelationalConnection! connection, Microsoft.EntityFrameworkCore.Storage.IRawSqlCommandBuilder! rawSqlCommandBuilder, Microsoft.EntityFrameworkCore.Diagnostics.IRelationalCommandDiagnosticsLogger! commandLogger, Microsoft.EntityFrameworkCore.Storage.ISqlGenerationHelper! sqlGenerationHelper) -> void
+override pengdows.efcore.adonet.Storage.AdoNetValueGeneratorSelector.TrySelect(Microsoft.EntityFrameworkCore.Metadata.IProperty! property, Microsoft.EntityFrameworkCore.Metadata.ITypeBase! typeBase, out Microsoft.EntityFrameworkCore.ValueGeneration.ValueGenerator? valueGenerator) -> bool
+
+
+pengdows.efcore.adonet.Storage.AdoNetSequenceValueGenerator<TValue>
+pengdows.efcore.adonet.Storage.AdoNetSequenceValueGenerator<TValue>.AdoNetSequenceValueGenerator(string! nextValueSql, Microsoft.EntityFrameworkCore.Storage.IRelationalConnection! connection, Microsoft.EntityFrameworkCore.Storage.IRawSqlCommandBuilder! rawSqlCommandBuilder, Microsoft.EntityFrameworkCore.Diagnostics.IRelationalCommandDiagnosticsLogger! commandLogger) -> void
+override pengdows.efcore.adonet.Storage.AdoNetSequenceValueGenerator<TValue>.GeneratesTemporaryValues.get -> bool
+override pengdows.efcore.adonet.Storage.AdoNetSequenceValueGenerator<TValue>.Next(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry! entry) -> TValue
+override pengdows.efcore.adonet.Storage.AdoNetSequenceValueGenerator<TValue>.NextAsync(Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry! entry, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<TValue>

@@ -12,7 +12,8 @@ namespace pengdows.efcore.adonet.Metadata;
 // EF1001: EF's providers all derive from MigrationsAnnotationProvider through its dependencies object, which EF marks as
 // internal; the public alternative is implementing every member of IMigrationsAnnotationProvider to return nothing.
 #pragma warning disable EF1001
-internal class AdoNetMigrationsAnnotationProvider(MigrationsAnnotationProviderDependencies dependencies)
+/// <summary>EF Core's migrations annotation provider with the dialect's annotations, for a plugin's migration annotations.</summary>
+public class AdoNetMigrationsAnnotationProvider(MigrationsAnnotationProviderDependencies dependencies)
     : MigrationsAnnotationProvider(dependencies)
 #pragma warning restore EF1001
 {

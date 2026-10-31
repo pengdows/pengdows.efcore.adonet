@@ -97,3 +97,12 @@ A test kit: the conformance suites a plugin's test project subclasses, the fixtu
 migrations the suites run. All of it is public so a plugin outside this repository can run the same suites.
 `ProviderFixture.Factory` and `AdoNetEntryPoints.Factory` return a `DbProviderFactory` because a fixture is where a plugin
 names its provider.
+
+## Plugin extension points
+
+A dialect plugin in another assembly compiles against the packed core with no `InternalsVisibleTo`. The types it derives from or
+calls are public: `AdoNetProviderOptions` (its `UseAdoNetXxx` entry point), `DelegatingDataReader` (the reader base a provider
+derives from; its `Inner` is the wrapped `DbDataReader`, which a subclass reads, as `DbDataReader` itself exposes), the annotation,
+convention, migrations annotation and value generator selector bases, `AdoNetQuerySqlGenerator`, `IAdoNetSingletonOptions` and
+`DriverMembers`. Protected members of these bases are public API.
+

@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 namespace pengdows.efcore.adonet.Query;
 
 /// <summary>EF's relational SQL, with paging, functions, <c>LongCount</c> and bulk DML as the dialect writes them.</summary>
-internal class AdoNetQuerySqlGenerator(
+public class AdoNetQuerySqlGenerator(
     QuerySqlGeneratorDependencies dependencies, ISqlDialect dialect, ITypeMappingDialect typeMappings, bool reverseNullOrdering = false)
     : QuerySqlGenerator(dependencies), IQuerySqlWriter
 {
@@ -718,7 +718,7 @@ internal class AdoNetQuerySqlGeneratorFactory(
 ///     The settings from the context's options that the singleton services read. EF initializes this from the options of the
 ///     first context that uses the service provider, however the provider was built, and checks the others against it.
 /// </summary>
-internal interface IAdoNetSingletonOptions : ISingletonOptions
+public interface IAdoNetSingletonOptions : ISingletonOptions
 {
     /// <summary>Whether every ORDER BY says where nulls sort; see <see cref="AdoNetOptionsExtension.ReverseNullOrdering" />.</summary>
     bool ReverseNullOrdering { get; }

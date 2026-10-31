@@ -9,12 +9,5 @@
   <ItemGroup>
     <InternalsVisibleTo Include="pengdows.efcore.adonet.Tests" />
     <InternalsVisibleTo Include="pengdows.efcore.adonet.Specification.Tests" />
-    <InternalsVisibleTo Include="pengdows.efcore.adonet.duckdb" />
-    <InternalsVisibleTo Include="pengdows.efcore.adonet.flatfile" />
-    <InternalsVisibleTo Include="pengdows.efcore.adonet.mysql" />
-    <InternalsVisibleTo Include="pengdows.efcore.adonet.postgresql" />
-    <InternalsVisibleTo Include="pengdows.efcore.adonet.sqlite" />
-    <InternalsVisibleTo Include="pengdows.efcore.adonet.sqlserver" />
-    <InternalsVisibleTo Include="pengdows.efcore.adonet.NetTopologySuite" />
 </ItemGroup>
 </Project>

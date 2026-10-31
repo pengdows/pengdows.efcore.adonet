@@ -8,7 +8,7 @@ namespace pengdows.efcore.adonet.Storage;
 ///     a geometry UDT name, an exception's error number). Each lookup is cached per type, so the reflection runs once; an absent member is
 ///     cached too, so a missing one costs nothing after the first lookup.
 /// </summary>
-internal static class DriverMembers
+public static class DriverMembers
 {
     private static readonly ConcurrentDictionary<(Type Type, string Name), PropertyInfo?> Properties = new();
     private static readonly ConcurrentDictionary<(Type Type, string Name, Type[] Parameters), MethodInfo?> StaticMethods = new(new MethodKeyComparer());

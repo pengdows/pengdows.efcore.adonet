@@ -4,3 +4,13 @@ pengdows.efcore.adonet.Storage.AdoNetSByteTypeMapping | Public so EF's compiled 
 pengdows.efcore.adonet.Storage.AdoNetULongTypeMapping | Public so EF's compiled model can name its Default; the mapping for CLR ulong, which a dialect's unsigned BIGINT holds.
 pengdows.efcore.adonet.ISqlDialect.SupportedIsolationLevels.get -> System.Collections.Generic.IReadOnlySet<System.Data.IsolationLevel>! | The isolation levels a provider's engine honours, read by the connection to refuse any other level by name; a dialect that narrows it overrides it (AdoNetDialect).
 pengdows.efcore.adonet.ISqlDialect.ParameterCast(string! storeType) -> string? | The cast a provider's driver needs on a parameter of a store type (a PostgreSQL provider's inet cast), so the shared generator writes it without knowing the database.
+pengdows.efcore.adonet.Infrastructure.AdoNetProviderOptions | A UseAdoNetXxx entry point's options: how a dialect plugin attaches itself to EF Core through public API.
+pengdows.efcore.adonet.Storage.DelegatingDataReader | The reader base a provider derives from to change what a column returns.
+pengdows.efcore.adonet.Metadata.AdoNetAnnotationProvider | The annotation provider base a dialect derives from for its model annotations.
+pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator | The query SQL generator base a dialect plugin derives from to change query SQL.
+pengdows.efcore.adonet.Query.IAdoNetSingletonOptions | The singleton options a plugin's services implement so the shared services can read them.
+pengdows.efcore.adonet.Storage.DriverMembers | Reflection over a driver member, for a plugin that needs it without a reference to the driver's assembly.
+pengdows.efcore.adonet.Metadata.AdoNetConventionSetBuilder | The convention set builder base a plugin derives from to add its own conventions.
+pengdows.efcore.adonet.Metadata.AdoNetMigrationsAnnotationProvider | The migrations annotation provider base a plugin derives from for its migration annotations.
+pengdows.efcore.adonet.Storage.AdoNetValueGeneratorSelector | The value generator selector base a plugin derives from to add its generation strategy.
+pengdows.efcore.adonet.Storage.AdoNetSequenceValueGenerator<TValue> | The sequence value generator base a dialect derives from, which draws a key from the database sequence.

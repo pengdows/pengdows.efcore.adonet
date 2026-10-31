@@ -102,6 +102,7 @@ public class DialectContractTests
         string[] recorded =
         [
             "pengdows.efcore.adonet.Bulk.BulkLoad.Connection.get -> System.Data.Common.DbConnection!",
+            "pengdows.efcore.adonet.Storage.DelegatingDataReader.Inner.get -> System.Data.Common.DbDataReader!",
             "pengdows.efcore.adonet.Bulk.BulkLoad.Transaction.get -> System.Data.Common.DbTransaction!",
             "abstract pengdows.efcore.adonet.Testing.ProviderFixture.Factory.get -> System.Data.Common.DbProviderFactory!",
             "abstract pengdows.efcore.adonet.Testing.AdoNetEntryPoints.Factory.get -> System.Data.Common.DbProviderFactory!"
@@ -116,6 +117,23 @@ public class DialectContractTests
 
         Assert.True(Directory.Exists(src), src);
         Assert.Empty(handedOut);
+    }
+
+    // A plugin in another assembly must compile against the packed core, so the core grants internals to no plugin: the
+    // first-party plugins use the same public surface an outside author does. Test projects keep their access.
+    [Fact]
+    public void Core_grants_internals_to_no_plugin()
+    {
+        var csproj = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../src/pengdows.efcore.adonet/pengdows.efcore.adonet.csproj"));
+        var granted = File.ReadAllText(csproj)
+            .Split('\n')
+            .Where(l => l.Contains("InternalsVisibleTo", StringComparison.Ordinal))
+            .Select(l => l.Trim())
+            .Where(l => !l.Contains(".Tests", StringComparison.Ordinal) && !l.Contains("Specification.Tests", StringComparison.Ordinal))
+            .ToList();
+
+        Assert.True(File.Exists(csproj), csproj);
+        Assert.Empty(granted);
     }
 
     [Fact]

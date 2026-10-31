@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 namespace pengdows.efcore.adonet.Infrastructure;
 
 /// <summary>Applies the common provider registration contract before provider-specific options.</summary>
-internal static class AdoNetProviderOptions
+public static class AdoNetProviderOptions
 {
     public static Action<AdoNetDbContextOptionsBuilder> Configure(
         IAdoNetDialect dialect,
