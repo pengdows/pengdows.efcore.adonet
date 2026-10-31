@@ -40,12 +40,15 @@ It does **not** bring the distinctive `pengdows.crud` features into EF Core:
   `TableGateway`. EF Core still generates SQL for its own queries and updates.
 - **No automatic CRUD audit/version handling:** no gateway-managed audit fields,
   audit/version columns, or CRUD-specific upsert behaviors.
-- **No CRUD operational policies:** no `RetryContext`, CRUD-specific concurrency
-  instrumentation, or adaptive load governance.
+- **No CRUD operational policies:** no `RetryContext` or adaptive load governance.
+- **No built-in runtime metrics:** no CRUD-style pool occupancy, saturation, queue/wait-time,
+  operation latency (p95/p99), or connection-governance counters.
 
 The core necessarily manages **EF Core's** connections, transactions, commands,
-query generation, and diagnostics. An ADO.NET driver's ordinary connection pooling
-is **not** `pengdows.crud` pool protection or governance. Do not infer CRUD features
+and query generation. Standard EF Core logging and diagnostic events remain available;
+this library adds **no standalone metrics collection or CRUD metrics subsystem**.
+An ADO.NET driver's ordinary connection pooling is **not** `pengdows.crud` pool
+protection or governance. Do not infer CRUD features
 from the shared ADO.NET contract, the Pengdows name, or the use of FakeDb in tests.
 
 For those capabilities, see [pengdows.crud](https://github.com/pengdows/pengdows.crud).
@@ -103,7 +106,7 @@ A permit is held for the EF connection's **open lifetime**, and saturation
 results in a timeout rather than unlimited waiting. Reuse **one shared
 `StormGate`** across all contexts that must share a concurrency budget.
 StormGate does **not** add read/write pool splitting, intention-aware routing,
-CRUD connection modes, or the full `pengdows.crud` governance model.
+CRUD connection modes, built-in CRUD metrics, or the full `pengdows.crud` governance model.
 It also does not cap idle physical connections retained by a driver's own pool.
 See the [StormGate EF Core README](https://github.com/pengdows/pengdows.crud/blob/2.0.6/pengdows.stormgate.EntityFrameworkCore/README.md)
 for setup, connection-lifecycle constraints, and retry-policy interactions.
