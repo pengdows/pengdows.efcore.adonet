@@ -75,7 +75,7 @@ public static class AdoNetServiceCollectionExtensions
             .TryAddCoreServices();
 
         // Interceptors are many: a dialect may register its own, so this one is added alongside rather than instead.
-        services.TryAddEnumerable(ServiceDescriptor.Singleton<IInterceptor, BinaryAsStreamReaderInterceptor>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IInterceptor, BinaryAsStreamReaderInterceptor>());
 
         return services;
     }
