@@ -118,6 +118,15 @@ public sealed class CapabilitySkipTests
     public void A_suite_needing_procedures_fails_where_the_host_has_not_written_them()
         => Assert.IsType<NotSupportedException>(CapabilitySkips.NoProcedures<PostgreSqlHost>("stored procedures"));
 
+    [Fact]
+    public void A_suite_needing_multiple_active_readers_skips_where_the_capability_is_off()
+        => Assert.StartsWith(
+            "[SKIP:PostgreSQL]", Assert.IsType<CapabilitySkipException>(Assert.Throws<CapabilitySkipException>(CapabilitySkips.RequireMultipleActiveReaders<PostgreSqlHost>)).Message);
+
+    [Fact]
+    public void A_suite_needing_multiple_active_readers_runs_where_the_capability_is_on()
+        => CapabilitySkips.RequireMultipleActiveReaders<SqlServerHost>();
+
     // A refusal is a skip wherever it sits in the failure's exception chain.
     [Fact]
     public void A_refusal_in_the_exception_chain_is_a_skip()

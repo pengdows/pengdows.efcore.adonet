@@ -57,6 +57,12 @@ public interface IDatabaseHost
     /// <summary>Whether the shared store keeps its connection open after initialization.</summary>
     bool KeepStoreConnectionOpen { get; }
 
+    /// <summary>
+    ///     Whether a connection can hold a second open reader while the first is still being read: the dialect's capability, as
+    ///     this host's connections are opened. False by default, which is the one-reader-per-connection rule.
+    /// </summary>
+    bool SupportsMultipleActiveReaders => Dialect.Capabilities.SupportsMultipleActiveReadersFor(null);
+
     /// <summary>Whether the store can retain the malformed JSON documents used by EF's bad-property tests.</summary>
     bool SupportsMalformedJsonProperties => true;
 }

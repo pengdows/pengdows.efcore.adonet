@@ -54,6 +54,21 @@ public sealed class CapabilitySkips : IDbContextOptionsExtension
             : new CapabilitySkipException($"[SKIP:{dialect.Name}] {dialect.Name} has no stored procedures.");
     }
 
+    /// <summary>
+    ///     A suite test that needs a second open reader on one connection: skipped where the dialect's capability is off (the
+    ///     database or driver holds one reader per connection), and run where it is on.
+    /// </summary>
+    public static void RequireMultipleActiveReaders<THost>()
+        where THost : IDatabaseHost, new()
+    {
+        var host = new THost();
+        if (!host.SupportsMultipleActiveReaders)
+        {
+            throw new CapabilitySkipException(
+                $"[SKIP:{host.Dialect.Name}] {host.Dialect.Name} holds one open reader per connection, so this lazy-loading shape cannot run.");
+        }
+    }
+
     private sealed class SkippingModelValidator(
         ModelValidatorDependencies dependencies,
         RelationalModelValidatorDependencies relationalDependencies,

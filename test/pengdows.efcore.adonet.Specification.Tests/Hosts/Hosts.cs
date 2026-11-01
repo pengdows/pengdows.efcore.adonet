@@ -21,6 +21,8 @@ namespace pengdows.efcore.adonet.Specification.Tests;
 /// <summary>A server: one container for the run, a database per test store, made by the server's own DDL.</summary>
 public abstract class ServerHost : IDatabaseHost
 {
+    public virtual bool SupportsMultipleActiveReaders => Dialect.Capabilities.SupportsMultipleActiveReadersFor(null);
+
     public virtual bool KeepStoreConnectionOpen => true;
     public virtual bool SupportsMalformedJsonProperties => true;
     public virtual TimeSpan TemporalResolution => TimeSpan.FromTicks(1);
@@ -80,6 +82,9 @@ public sealed class SqlServerHost : ServerHost
 
     protected override IEnumerable<string> CreateSql(string database)
         => [$"CREATE DATABASE [{database}]"];
+
+    // Every connection this host opens sets MultipleActiveResultSets (below), so a second reader is open on it when needed.
+    public override bool SupportsMultipleActiveReaders => true;
 
     // With MultipleActiveResultSets, as Microsoft's SQL Server test store connects: EF's suites lazy-load while a query is
     // still being read. Behaviour reference (not copied):
