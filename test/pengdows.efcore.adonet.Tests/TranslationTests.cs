@@ -418,6 +418,18 @@ public class TranslationTests
         Assert.DoesNotContain("CASE", sql, StringComparison.Ordinal);
     }
 
+    // A parameter index: EF's offset is CASE WHEN @p < 0 THEN 0 ELSE @p END, and the WHERE @p >= 0 beside it already rules
+    // out a negative index. Paging takes the value itself, so the offset is the parameter.
+    [Fact]
+    public void ElementAtOrDefault_with_a_parameter_index_pages_by_that_parameter()
+    {
+        var index = 1;
+        var sql = Ansi(c => c.Items.Where(i => i.Name == c.Items.OrderBy(x => x.Name).Select(x => x.Name).ElementAtOrDefault(index)));
+
+        Assert.DoesNotContain("CASE", sql, StringComparison.Ordinal);
+        Assert.Contains("OFFSET @", sql, StringComparison.Ordinal);
+    }
+
     // String.Join treats a null element as an empty string, where SQL's concatenation would make the whole result null. Each
     // element is therefore coalesced to '' before the separators are joined in.
     public static TheoryData<string, Expression<Func<Item, bool>>, string> JoinTranslations => new()

@@ -27,37 +27,6 @@ public partial class AdoNetQuerySqlGenerator(
         return sqlParameterExpression;
     }
 
-    protected override Expression VisitSelect(SelectExpression selectExpression)
-    {
-        _selectDepth++;
-        try
-        {
-            if ((_selectDepth > 1)
-                && dialect.RequiresDerivedTableColumnAliases
-                && selectExpression.Projection.Any(projection => projection.Alias.Length == 0))
-            {
-                selectExpression = selectExpression.Update(
-                    tables: selectExpression.Tables,
-                    predicate: selectExpression.Predicate,
-                    groupBy: selectExpression.GroupBy,
-                    having: selectExpression.Having,
-                    projections: selectExpression.Projection.Select(projection =>
-                        projection.Alias.Length == 0
-                            ? new ProjectionExpression(projection.Expression, $"c{_derivedProjectionAlias++}")
-                            : projection).ToList(),
-                    orderings: selectExpression.Orderings,
-                    offset: selectExpression.Offset,
-                    limit: selectExpression.Limit);
-            }
-
-            return base.VisitSelect(selectExpression);
-        }
-        finally
-        {
-            _selectDepth--;
-        }
-    }
-
     protected override void GenerateProjection(SelectExpression selectExpression)
     {
         base.GenerateProjection(selectExpression);
@@ -186,7 +155,6 @@ public partial class AdoNetQuerySqlGenerator(
     protected override bool RequiresParentheses(SqlExpression outerExpression, SqlExpression innerExpression)
         => innerExpression is not JsonScalarExpression && base.RequiresParentheses(outerExpression, innerExpression);
 
-
     private void WriteConcatenation(string template, List<Action> parts, int first)
     {
         if (first == parts.Count - 1)
@@ -220,7 +188,7 @@ public partial class AdoNetQuerySqlGenerator(
 
     protected override Expression VisitExtension(Expression extensionExpression)
     {
-        if (extensionExpression is CaseExpression constantCase && ConstantCaseFolder.TryFold(constantCase, out var folded) && folded is not null)
+        if (TryFoldedCase(extensionExpression) is { } folded)
         {
             return Visit(folded);
         }
@@ -412,10 +380,6 @@ public partial class AdoNetQuerySqlGenerator(
 
         return base.VisitSqlBinary(sqlBinaryExpression);
     }
-
-
-
-
 
     private static bool IsFractional(SqlBinaryExpression expression)
         => IsOfType(expression.Left, typeof(decimal)) || IsOfType(expression.Right, typeof(decimal))
