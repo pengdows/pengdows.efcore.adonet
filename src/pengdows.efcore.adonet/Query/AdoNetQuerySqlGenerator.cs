@@ -216,16 +216,22 @@ public partial class AdoNetQuerySqlGenerator(
         return outerApplyExpression;
     }
 
-    // A table function sees the tables before it without LATERAL (ISO's rule, and some databases refuse the keyword there).
+    // A table function sees the tables before it without LATERAL (ISO's rule, and some databases refuse the keyword there). An
+    // array written as a derived table (a subquery over the JSON) is not a function: it needs LATERAL to see them.
     private void VisitLateral(TableExpressionBase table)
     {
-        if (table is not (TableExpression or TableValuedFunctionExpression))
+        if ((table is not (TableExpression or TableValuedFunctionExpression)) || IsDerivedArrayTable(table))
         {
             Sql.Append(dialect.LateralJoins?.Lateral ?? throw new InvalidOperationException("A lateral join was not refused at translation."));
         }
 
         Visit(table);
     }
+
+    private bool IsDerivedArrayTable(TableExpressionBase table)
+        => table is JsonArrayTableExpression json
+            && ((json.Json.TypeMapping as Storage.IArrayTypeMapping)?.Elements ?? dialect.Json!.ArrayElements!)
+                .TrimStart().StartsWith('(');
 
     // Without lateral joins, only a plain table is applied (a subquery has failed to translate): an ordinary ISO join.
     private LateralJoinSyntax LateralJoins
