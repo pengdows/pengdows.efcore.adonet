@@ -101,3 +101,10 @@ pass would not meet the repo's test-first rules.
 - **Still open:** DuckDB bulk insert uses multi-row INSERT; DuckDB.NET's Appender is the native tool and is not yet wired in.
   Bulk update and delete have no native driver tool in any provider here, so they stay SQL; `BulkDelete` isn't implemented
   (matrix M11).
+
+## MySQL status, measured 2026-11-01
+
+- **Full MySQL specification run (after `5f909ff`):** 29,890 passed, 0 failed, 444 skipped of 30,334. Every skip is an attributed `[SKIP:…]` reason in the overrides. This covers the MySQL side of M2, M5, M6, M9, M10, M12 and M14: none has a failing MySQL case.
+- **M13, spatial:** `Covers` and `CoveredBy` are now standard predicates (`ST_Covers`, `ST_CoveredBy`) in the core's spatial table. MySQL and SQL Server decline them, with attributed skips. `Relate` on MySQL is an attributed skip for MySQL's missing `ST_Relate`; `Boundary` and `PointOnSurface` pass on MySQL.
+- **Server-version gating:** built and tested. `MySqlServerFeatures` turns each MySQL and MariaDB feature on or off from the detected version (`MySqlServerVersionTests`, 30 of 30 pass). SingleStore is detected separately, by its handshake and version comment.
+- **Not MySQL, still open:** the other providers' full runs haven't been repeated since these changes, and PostgreSQL's M3 is still undecided.
