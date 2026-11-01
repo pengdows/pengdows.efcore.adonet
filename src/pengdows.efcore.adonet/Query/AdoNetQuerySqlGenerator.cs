@@ -27,18 +27,6 @@ public partial class AdoNetQuerySqlGenerator(
         return sqlParameterExpression;
     }
 
-    protected override void GenerateProjection(SelectExpression selectExpression)
-    {
-        base.GenerateProjection(selectExpression);
-        if ((_selectDepth > 1)
-            && dialect.RequiresDerivedTableColumnAliases
-            && (selectExpression.Projection.Count == 0))
-        {
-            Sql.Append(AliasSeparator)
-                .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier($"c{_derivedProjectionAlias++}"));
-        }
-    }
-
     protected override Expression VisitValues(ValuesExpression valuesExpression)
     {
         if (!dialect.UsesNativeValuesTable)
@@ -122,21 +110,6 @@ public partial class AdoNetQuerySqlGenerator(
             Sql.Append(dialect.ValuesRowPrefix);
             Visit(rows[j]);
         }
-    }
-
-    // VALUES of several rows is written SELECT ... UNION ALL VALUES ...; as an operand of another set operation it is
-    // parenthesized, or its UNION ALL would apply to the whole operation (a UNION would keep duplicates).
-    protected override void GenerateSetOperationOperand(SetOperationBase setOperation, SelectExpression operand)
-    {
-        if (operand.Tables is not [ValuesExpression { RowValues.Count: > 1 }])
-        {
-            base.GenerateSetOperationOperand(setOperation, operand);
-            return;
-        }
-
-        Sql.Append("(");
-        base.GenerateSetOperationOperand(setOperation, operand);
-        Sql.Append(")");
     }
 
     protected override Expression VisitColumn(ColumnExpression columnExpression)

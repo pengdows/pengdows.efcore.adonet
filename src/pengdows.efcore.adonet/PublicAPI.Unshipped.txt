@@ -871,6 +871,7 @@ pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator.AdoNetQuerySqlGenerator(Mic
 override pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator.VisitSqlParameter(Microsoft.EntityFrameworkCore.Query.SqlExpressions.SqlParameterExpression! sqlParameterExpression) -> System.Linq.Expressions.Expression!
 override pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator.VisitSelect(Microsoft.EntityFrameworkCore.Query.SqlExpressions.SelectExpression! selectExpression) -> System.Linq.Expressions.Expression!
 override pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator.GenerateProjection(Microsoft.EntityFrameworkCore.Query.SqlExpressions.SelectExpression! selectExpression) -> void
+override pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator.VisitSqlConstant(Microsoft.EntityFrameworkCore.Query.SqlExpressions.SqlConstantExpression! sqlConstantExpression) -> System.Linq.Expressions.Expression!
 override pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator.VisitValues(Microsoft.EntityFrameworkCore.Query.SqlExpressions.ValuesExpression! valuesExpression) -> System.Linq.Expressions.Expression!
 override pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator.VisitDelete(Microsoft.EntityFrameworkCore.Query.SqlExpressions.DeleteExpression! deleteExpression) -> System.Linq.Expressions.Expression!
 override pengdows.efcore.adonet.Query.AdoNetQuerySqlGenerator.VisitUpdate(Microsoft.EntityFrameworkCore.Query.SqlExpressions.UpdateExpression! updateExpression) -> System.Linq.Expressions.Expression!
