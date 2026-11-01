@@ -21,6 +21,17 @@ internal partial class AdoNetUpdateSqlGenerator
         out bool requiresTransaction)
     {
         var outputs = command.ColumnModifications.Where(AdoNetModificationCommand.IsOutput).ToList();
+        if (dialect.Sql.ProcedureOutputVariable is null && outputs.Count > 0 && command.StoreStoredProcedure is { } driverProcedure
+            && !driverProcedure.ResultColumns.Any() && (driverProcedure.ReturnValue == null))
+        {
+            // The driver binds the outputs itself. An output-only argument is passed as NULL: EF refuses an output parameter
+            // whose name appears in the SQL text, and the driver fills the parameter from the CALL's returned row. The mapping
+            // is EF's own for this command, taken from its base implementation, whose text is discarded.
+            var mapping = base.AppendStoredProcedureCall(new StringBuilder(), command, commandPosition, out requiresTransaction);
+            AppendCallWithNullOutputs(commandStringBuilder, command, driverProcedure);
+            return mapping;
+        }
+
         if ((dialect.Sql.ProcedureOutputVariable is not { } template) || (outputs.Count == 0))
         {
             return base.AppendStoredProcedureCall(commandStringBuilder, command, commandPosition, out requiresTransaction);
@@ -63,6 +74,38 @@ internal partial class AdoNetUpdateSqlGenerator
 
             builder.AppendLine(terminator);
         }
+    }
+
+    private void AppendCallWithNullOutputs(
+        StringBuilder builder,
+        IReadOnlyModificationCommand command,
+        IStoreStoredProcedure procedure)
+    {
+        builder.Append("CALL ");
+        SqlGenerationHelper.DelimitIdentifier(builder, procedure.Name, procedure.Schema);
+        builder.Append('(');
+
+        var first = true;
+        foreach (var modification in command.ColumnModifications.Where(m => m.Column is IStoreStoredProcedureParameter))
+        {
+            if (!first)
+            {
+                builder.Append(", ");
+            }
+
+            first = false;
+            var parameter = (IStoreStoredProcedureParameter)modification.Column!;
+            if (parameter.Direction.HasFlag(System.Data.ParameterDirection.Input))
+            {
+                SqlGenerationHelper.GenerateParameterNamePlaceholder(builder, ParameterName(modification));
+            }
+            else
+            {
+                builder.Append("NULL");
+            }
+        }
+
+        builder.Append(')').AppendLine(SqlGenerationHelper.StatementTerminator);
     }
 
     private void AppendProcedureInvocation(

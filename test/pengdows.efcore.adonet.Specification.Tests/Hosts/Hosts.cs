@@ -128,6 +128,8 @@ public sealed class PostgreSqlHost : ServerHost
         "SELECT * FROM \"CustOrderHist\"(@CustomerID)",
         CallRowsAffected: -1);
 
+    public override UpdateProcedures? UpdateProcedures => PostgreSqlUpdateProcedures.Instance;
+
     private static readonly RunContainer Container = new(() => new PostgreSqlBuilder("postgres:17").Build());
 
     // The image allows 25 connections in all and a few go to administration. Npgsql pools per connection string and each test

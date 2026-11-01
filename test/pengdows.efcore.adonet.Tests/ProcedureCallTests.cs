@@ -27,15 +27,17 @@ public class ProcedureCallTests
         => _db.ContextOf<ProcContext>(dialect, o => new ProcContext(o));
 
     [Fact]
-    public async Task Iso_calls_the_procedure_with_its_output_as_a_parameter()
+    public async Task Iso_passes_an_output_only_argument_as_null_so_the_driver_binds_the_output()
     {
         await using var context = Context(TestDialects.Ansi);
         context.Add(new Proc { Name = "a" });
 
-        // fakeDb returns no output parameter values.
-        await Assert.ThrowsAsync<DbUpdateException>(() => context.SaveChangesAsync(Ct));
+        // fakeDb returns no output parameter values, so EF reports the missing key. What must not happen is EF refusing the
+        // output parameter because the SQL text refers to it.
+        var error = await Assert.ThrowsAsync<DbUpdateException>(() => context.SaveChangesAsync(Ct));
+        Assert.DoesNotContain("out-only", error.InnerException?.Message ?? string.Empty, StringComparison.Ordinal);
 
-        Assert.Equal("CALL \"Proc_Insert\"(@p0, @p1, @p2);", Assert.Single(_db.Commands));
+        Assert.Equal("CALL \"Proc_Insert\"(@p0, @p1, NULL);", Assert.Single(_db.Commands));
     }
 
     [Fact]
