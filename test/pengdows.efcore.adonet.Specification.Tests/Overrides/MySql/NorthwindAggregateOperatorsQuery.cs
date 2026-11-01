@@ -78,4 +78,13 @@ public partial class NorthwindAggregateOperatorsQueryMySqlTest
 
     public override async Task Contains_with_local_enumerable_inline_closure_mix(bool async)
         => await Assert.ThrowsAsync<InvalidOperationException>(() => base.Contains_with_local_enumerable_inline_closure_mix(async));
+
+    // The FLOAT Discount is summed in MySQL's double precision; EF's reference converts each float to decimal first. The two
+    // agree within the float's precision, as the float average above is compared. The tolerance is wider than that error.
+    public override Task Type_casting_inside_sum(bool async)
+        => AssertSum(
+            async,
+            ss => ss.Set<OrderDetail>(),
+            (OrderDetail x) => (decimal)x.Discount,
+            asserter: (expected, actual) => Assert.InRange(Math.Abs(expected - actual), 0m, 0.00001m));
 }
