@@ -159,6 +159,9 @@ internal sealed class SqlServerSql(int compatibilityLevel) : AnsiSqlDialect
             ["AsText"] = "{0}.STAsText()",
             ["Buffer"] = "{0}.STBuffer({1})",
             ["Contains"] = "{0}.STContains({1})",
+            // SQL Server's geometry has no covers predicate.
+            ["Covers"] = null,
+            ["CoveredBy"] = null,
             ["ConvexHull"] = "{0}.STConvexHull()",
             ["Crosses"] = "{0}.STCrosses({1})",
             ["Difference"] = "{0}.STDifference({1})",

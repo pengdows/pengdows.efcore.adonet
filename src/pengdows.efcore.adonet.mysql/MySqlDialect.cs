@@ -313,6 +313,9 @@ internal sealed class MySqlSql(bool backslashEscapes, bool savepoints, bool mari
             ["NumInteriorRings"] = "ST_NumInteriorRings({0})",
             ["IsValid"] = mariaDb ? null : "ST_IsValid({0})",
             ["Boundary"] = mariaDb ? "ST_Boundary({0})" : null,
+            // MySQL has no ST_Covers or ST_CoveredBy; MariaDB has neither either.
+            ["Covers"] = null,
+            ["CoveredBy"] = null,
             ["PointOnSurface"] = mariaDb ? "ST_PointOnSurface({0})" : null,
             ["InteriorPoint"] = mariaDb ? "ST_PointOnSurface({0})" : null,
             ["Relate"] = mariaDb ? "ST_Relate({0}, {1}, {2})" : null,

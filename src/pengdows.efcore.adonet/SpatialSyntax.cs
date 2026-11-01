@@ -57,6 +57,8 @@ public sealed class SpatialSyntax
         ["AsText"] = "ST_AsText({0})",
         ["Buffer"] = "ST_Buffer({0}, {1})",
         ["Contains"] = "ST_Contains({0}, {1})",
+        ["Covers"] = "ST_Covers({0}, {1})",
+        ["CoveredBy"] = "ST_CoveredBy({0}, {1})",
         ["ConvexHull"] = "ST_ConvexHull({0})",
         ["Crosses"] = "ST_Crosses({0}, {1})",
         ["Difference"] = "ST_Difference({0}, {1})",
