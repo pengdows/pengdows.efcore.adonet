@@ -409,6 +409,15 @@ public class TranslationTests
         { "PadRight with a character", i => i.Name!.PadRight(5, '*') == "a", "RPAD(\"i\".\"Name\", 5, '*')" }
     };
 
+    // A constant index is a constant offset: the database's paging takes a value, not a CASE over the index.
+    [Fact]
+    public void ElementAtOrDefault_with_a_constant_index_pages_by_that_value()
+    {
+        var sql = Ansi(c => c.Items.Where(i => i.Name == c.Items.OrderBy(x => x.Name).Select(x => x.Name).ElementAtOrDefault(1)));
+
+        Assert.DoesNotContain("CASE", sql, StringComparison.Ordinal);
+    }
+
     // String.Join treats a null element as an empty string, where SQL's concatenation would make the whole result null. Each
     // element is therefore coalesced to '' before the separators are joined in.
     public static TheoryData<string, Expression<Func<Item, bool>>, string> JoinTranslations => new()

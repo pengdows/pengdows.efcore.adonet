@@ -220,6 +220,11 @@ public partial class AdoNetQuerySqlGenerator(
 
     protected override Expression VisitExtension(Expression extensionExpression)
     {
+        if (extensionExpression is CaseExpression constantCase && ConstantCaseFolder.TryFold(constantCase, out var folded) && folded is not null)
+        {
+            return Visit(folded);
+        }
+
         if (extensionExpression is JsonArrayTableExpression table)
         {
             var helper = Dependencies.SqlGenerationHelper;
