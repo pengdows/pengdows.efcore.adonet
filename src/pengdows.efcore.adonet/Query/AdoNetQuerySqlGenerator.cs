@@ -303,6 +303,12 @@ public partial class AdoNetQuerySqlGenerator(
             return base.VisitSqlUnary(sqlUnaryExpression);
         }
 
+        if ((sqlUnaryExpression.Operand.Type == typeof(float)) && (typeMappings.CastFromFloat(typeMapping.StoreType) is { } floatCast))
+        {
+            SqlTemplate.Write(floatCast, [sqlUnaryExpression.Operand], text => Sql.Append(text), value => Visit(value));
+            return sqlUnaryExpression;
+        }
+
         WriteCast(sqlUnaryExpression.Operand, typeMapping.StoreType, RequiresParentheses(sqlUnaryExpression, sqlUnaryExpression.Operand));
         return sqlUnaryExpression;
     }

@@ -649,6 +649,10 @@ internal sealed class MySqlTypeMappings : AnsiTypeMappings
     // another collation fails ("Illegal mix of collations": MariaDB 11's utf8mb4_uca1400_ai_ci beside MySqlConnector's
     // utf8mb4_general_ci). CONCAT(x) converts to text as weakly as a number does, so the other side's collation wins, as it
     // would for x itself; LEFT keeps a sized CHAR(n)'s truncation to n.
+    // A FLOAT's CAST to DECIMAL keeps its binary value (8.5999999046...); through its text it is the decimal .NET gives (8.6).
+    public override string? CastFromFloat(string storeType)
+        => storeType == StoreTypes[typeof(decimal)] ? "CAST(CONCAT({0}) AS " + storeType + ")" : null;
+
     public override string Cast(string storeType)
     {
         var target = CastTarget(storeType);

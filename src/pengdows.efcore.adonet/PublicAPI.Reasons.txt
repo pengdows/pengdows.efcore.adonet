@@ -21,3 +21,4 @@ pengdows.efcore.adonet.DatabaseLifecycle.SingleWriter.get -> bool | Whether the 
 pengdows.efcore.adonet.SessionLockStatements | A dialect's server-side session lock for migrations: the statement taking it and the statement releasing it.
 pengdows.efcore.adonet.Storage.DelegatingDataReader.Inner.get | The wrapped reader is virtual so a subclass can substitute the reader it delegates to.
 pengdows.efcore.adonet.Storage.DelegatingDataReader.CloseAsync(System.Threading.CancellationToken) | The cancellable close the async API convention requires; it honours a cancelled token before closing.
+pengdows.efcore.adonet.ITypeMappingDialect.CastFromFloat(string! storeType) -> string? | How a float converts to a store type when a plain CAST would keep its binary value; null keeps Cast. Lets a dialect convert a float through its shortest decimal text, as .NET does.

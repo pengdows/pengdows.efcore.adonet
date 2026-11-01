@@ -932,3 +932,5 @@ pengdows.efcore.adonet.SessionLockStatements.Release.get -> string!
 pengdows.efcore.adonet.ISqlDialect.SessionLock.get -> pengdows.efcore.adonet.SessionLockStatements?
 virtual pengdows.efcore.adonet.AnsiSqlDialect.SessionLock.get -> pengdows.efcore.adonet.SessionLockStatements?
 virtual pengdows.efcore.adonet.Storage.DelegatingDataReader.CloseAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+pengdows.efcore.adonet.ITypeMappingDialect.CastFromFloat(string! storeType) -> string?
+virtual pengdows.efcore.adonet.AnsiTypeMappings.CastFromFloat(string! storeType) -> string?

@@ -283,6 +283,13 @@ public interface ITypeMappingDialect
     string Cast(string storeType);
 
     /// <summary>
+    ///     How a float becomes <paramref name="storeType" /> when the value differs from a plain CAST: a database that converts a
+    ///     float's binary value exactly converts it through its shortest decimal text, as .NET does, where that text is the value.
+    ///     Null keeps <see cref="Cast" />.
+    /// </summary>
+    string? CastFromFloat(string storeType) => null;
+
+    /// <summary>
     ///     The DbType a DateTime parameter binds as: DateTime2 (a date and time with no offset) unless the database has one
     ///     datetime type its drivers bind as DbType.DateTime.
     /// </summary>

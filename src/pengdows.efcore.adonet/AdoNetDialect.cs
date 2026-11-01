@@ -218,6 +218,8 @@ public class AnsiTypeMappings : ITypeMappingDialect
     public virtual string CastTarget(string storeType)
         => storeType;
 
+    public virtual string? CastFromFloat(string storeType) => null;
+
     public virtual string Cast(string storeType)
         => "CAST({0} AS " + CastTarget(storeType) + ")";
 
