@@ -7,7 +7,7 @@ HOSTS = ['SqlServer', 'PostgreSql', 'MySql', 'MariaDb', 'Sqlite', 'DuckDb', 'Fla
 # Databases that take one writer at a time: their test classes run one after another (an xUnit collection).
 # Server-backed fixtures share named databases (especially Northwind) across many EF fixture classes. Serialize the
 # generated server suite as well so one fixture cannot drop/reseed a store while another is reading it.
-SINGLE_WRITER = {'Sqlite', 'DuckDb', 'FlatFile', 'MySql', 'MariaDb'}
+SINGLE_WRITER = {'Sqlite', 'DuckDb', 'FlatFile', 'MySql', 'MariaDb', 'PostgreSql'}
 
 # Abstract fixtures that non-generic bases take, made concrete once per host in TestUtilities/GeneratedSupport.cs.
 SHARED_FIXTURES = {

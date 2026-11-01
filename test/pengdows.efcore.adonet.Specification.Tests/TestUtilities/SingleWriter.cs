@@ -11,4 +11,5 @@ public static class SingleWriter
     public const string FlatFile = "pengdows.flatfile: one writer";
     public const string MySql = "MySQL: shared stores";
     public const string MariaDb = "MariaDB: shared stores";
+    public const string PostgreSql = "PostgreSQL: shared stores";
 }

@@ -21,6 +21,15 @@ internal class AdoNetModificationCommandBatch(
 
     public override bool TryAddCommand(IReadOnlyModificationCommand modificationCommand)
     {
+        // Where the driver binds outputs itself, a command holding several statements cannot carry an output parameter, so a
+        // command with outputs travels alone. Session-variable dialects keep outputs in one command.
+        if ((sql.ProcedureOutputVariable == null)
+            && (ModificationCommands.Count > 0)
+            && (HasDriverOutputs(modificationCommand) || ModificationCommands.Any(HasDriverOutputs)))
+        {
+            return false;
+        }
+
         if (!base.TryAddCommand(modificationCommand))
         {
             return false;
@@ -34,6 +43,9 @@ internal class AdoNetModificationCommandBatch(
         RollbackLastCommand(modificationCommand);
         return false;
     }
+
+    private static bool HasDriverOutputs(IReadOnlyModificationCommand command)
+        => command.ColumnModifications.Any(AdoNetModificationCommand.IsOutput);
 
     private bool ParameterLimitExceeded()
         => RelationalCommandBuilder.Parameters.Count > _maxParametersPerCommand;

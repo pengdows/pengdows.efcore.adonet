@@ -18,6 +18,12 @@ public class ProcedureCallTests
         new PartsSql(keys: KeyRetrieval.SelectAfter("last_id()", "row_count()"), procedureOutputVariable: "@{0}"),
         new DatabaseCapabilities { SupportsMultipleStatementsPerCommand = true, DefaultMaxBatchSize = 10 });
 
+    // The driver binds outputs itself (no session variables), and its commands may hold several statements.
+    private static readonly IAdoNetDialect Driver = new PartsDialect(
+        "Driver outputs",
+        new PartsSql(keys: KeyRetrieval.SelectAfter("last_id()", "row_count()")),
+        new DatabaseCapabilities { SupportsMultipleStatementsPerCommand = true, DefaultMaxBatchSize = 10 });
+
     private readonly FakeDatabase _db = new();
 
     private static CancellationToken Ct
@@ -38,6 +44,21 @@ public class ProcedureCallTests
         Assert.DoesNotContain("out-only", error.InnerException?.Message ?? string.Empty, StringComparison.Ordinal);
 
         Assert.Equal("CALL \"Proc_Insert\"(@p0, @p1, NULL);", Assert.Single(_db.Commands));
+    }
+
+    [Fact]
+    public async Task A_call_with_outputs_is_not_batched_with_another_call()
+    {
+        await using var context = Context(Driver);
+        context.Add(new Proc { Name = "a" });
+        context.Add(new Proc { Name = "b" });
+
+        // The first call's output is missing in fakeDb, so the save stops after the first command is sent. A driver refuses an
+        // output parameter in a command that holds more than one statement, so a batch holding both calls is wrong.
+        await Assert.ThrowsAsync<DbUpdateException>(() => context.SaveChangesAsync(Ct));
+
+        var command = Assert.Single(_db.Commands);
+        Assert.Equal(1, command.Split("CALL ").Length - 1);
     }
 
     [Fact]
