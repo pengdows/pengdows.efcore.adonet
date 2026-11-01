@@ -14,8 +14,6 @@ namespace pengdows.efcore.adonet.postgresql;
 
 public sealed class PostgreSqlDialect : AdoNetDialect
 {
-    public override pengdows.efcore.adonet.Scaffolding.SchemaReader SchemaReader => PostgreSqlSchemaReader.Instance;
-
     public static readonly PostgreSqlDialect Instance = new();
 
     static PostgreSqlDialect()
@@ -52,120 +50,19 @@ public sealed class PostgreSqlDialect : AdoNetDialect
             .TryAdd<Microsoft.EntityFrameworkCore.Diagnostics.IInterceptor, PostgreSqlIntervalReaderInterceptor>()
             .TryAdd<Microsoft.EntityFrameworkCore.Metadata.Conventions.Infrastructure.IProviderConventionSetBuilder, PostgreSqlConventionSetBuilder>()
             .TryAdd<Microsoft.EntityFrameworkCore.Storage.IRelationalTypeMappingSourcePlugin, PostgreSqlXidTypeMappingPlugin>()
+            .TryAdd<Microsoft.EntityFrameworkCore.Query.IMethodCallTranslatorPlugin, PostgreSqlDbFunctionsTranslatorPlugin>()
             .TryAdd<Microsoft.EntityFrameworkCore.Storage.IRelationalTypeMappingSourcePlugin, PostgreSqlProviderTypeMappingPlugin>()
-            .TryAdd<Microsoft.EntityFrameworkCore.Query.IMethodCallTranslatorPlugin, PostgreSqlDbFunctionsTranslatorPlugin>();
-    }
-}
-
-/// <summary>PostgreSQL requires generated columns to use the SQL:2003 STORED form.</summary>
-internal sealed class PostgreSqlMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies dependencies, IAdoNetDialect dialect)
-    : AdoNetMigrationsSqlGenerator(dependencies, dialect)
-{
-    // Every table has PostgreSQL's system columns (xmin, a row version); a model may map them, but no migration declares,
-    // alters or drops one. Behaviour reference (not copied):
-    // https://github.com/npgsql/efcore.pg/blob/v10.0.3/src/EFCore.PG/Migrations/NpgsqlMigrationsSqlGenerator.cs
-    private static readonly HashSet<string> SystemColumns = new(StringComparer.Ordinal) { "tableoid", "xmin", "cmin", "xmax", "cmax", "ctid" };
-
-    protected override void Generate(CreateTableOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
-    {
-        operation.Columns.RemoveAll(c => SystemColumns.Contains(c.Name));
-        base.Generate(operation, model, builder, terminate);
-        if (operation.Comment is not null)
-        {
-            TableComment(operation.Name, operation.Schema, operation.Comment, builder);
-        }
-
-        foreach (var column in operation.Columns.Where(c => c.Comment is not null))
-        {
-            ColumnComment(operation.Name, operation.Schema, column.Name, column.Comment, builder);
-        }
-    }
-
-    protected override void Generate(AddColumnOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
-    {
-        if (!SystemColumns.Contains(operation.Name))
-        {
-            base.Generate(operation, model, builder, terminate);
-            if (operation.Comment is not null)
-            {
-                ColumnComment(operation.Table, operation.Schema, operation.Name, operation.Comment, builder);
-            }
-        }
-    }
-
-    protected override void Generate(AlterColumnOperation operation, IModel? model, MigrationCommandListBuilder builder)
-    {
-        if (!SystemColumns.Contains(operation.Name))
-        {
-            base.Generate(operation, model, builder);
-            if (operation.Comment != operation.OldColumn.Comment)
-            {
-                ColumnComment(operation.Table, operation.Schema, operation.Name, operation.Comment, builder);
-            }
-        }
-    }
-
-    protected override void Generate(DropColumnOperation operation, IModel? model, MigrationCommandListBuilder builder, bool terminate = true)
-    {
-        if (!SystemColumns.Contains(operation.Name))
-        {
-            base.Generate(operation, model, builder, terminate);
-        }
-    }
-
-    // A table comment is COMMENT ON TABLE; the core generator has no table comment, so it was dropped. Clearing one is IS NULL.
-    protected override void Generate(AlterTableOperation operation, IModel? model, MigrationCommandListBuilder builder)
-    {
-        TableComment(operation.Name, operation.Schema, operation.Comment, builder);
-    }
-
-    private void ColumnComment(string table, string? schema, string column, string? comment, MigrationCommandListBuilder builder)
-    {
-        builder
-            .Append("COMMENT ON COLUMN ")
-            .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(table, schema))
-            .Append(".")
-            .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(column))
-            .Append(" IS ")
-            .Append(comment is null ? "NULL" : Dialect.Sql.StringLiteral(comment))
-            .AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
-        EndStatement(builder);
-    }
-
-    private void TableComment(string table, string? schema, string? comment, MigrationCommandListBuilder builder)
-    {
-        builder
-            .Append("COMMENT ON TABLE ")
-            .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier(table, schema))
-            .Append(" IS ")
-            .Append(comment is null ? "NULL" : Dialect.Sql.StringLiteral(comment))
-            .AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
-        EndStatement(builder);
-    }
-
-    protected override void ColumnDefinition(
-        string? schema,
-        string table,
-        string name,
-        ColumnOperation operation,
-        IModel? model,
-        MigrationCommandListBuilder builder)
-    {
-        base.ColumnDefinition(schema, table, name, operation, model, builder);
-        if ((operation.ComputedColumnSql != null) && (operation.IsStored != true))
-        {
-            builder.Append(" STORED");
-        }
+            .TryAdd<Microsoft.EntityFrameworkCore.Storage.IRelationalTypeMappingSource, PostgreSqlTypeMappingSource>()
+            .TryAdd<Microsoft.EntityFrameworkCore.Metadata.IRelationalAnnotationProvider, PostgreSqlAnnotationProvider>()
+            .TryAdd<Microsoft.EntityFrameworkCore.Query.IEvaluatableExpressionFilterPlugin, PostgreSqlEvaluatableExpressionFilterPlugin>()
+            .TryAdd<Microsoft.EntityFrameworkCore.Query.IQuerySqlGeneratorFactory, PostgreSqlQuerySqlGeneratorFactory>()
+            .TryAdd<Microsoft.EntityFrameworkCore.Query.IQueryableMethodTranslatingExpressionVisitorFactory, PostgreSqlQueryableMethodTranslatingExpressionVisitorFactory>();
     }
 }
 
 internal sealed class PostgreSqlSql : AnsiSqlDialect
 {
     public override bool SupportsNullOrderingClauses => true;
-
-    // PostgreSQL needs the cast on an inet parameter: the driver's text would otherwise be compared as text.
-    public override string? ParameterCast(string storeType)
-        => string.Equals(storeType, "inet", StringComparison.OrdinalIgnoreCase) ? "::inet" : null;
 
     // Through the postgres database; WITH (FORCE) ends other sessions (PostgreSQL 13+). Behaviour reference (not copied):
     // https://github.com/npgsql/efcore.pg/blob/v10.0.3/src/EFCore.PG/Storage/Internal/NpgsqlDatabaseCreator.cs
@@ -212,12 +109,6 @@ internal sealed class PostgreSqlTypeMappings : AnsiTypeMappings
     // A uint row version is the xid every row's xmin system column holds (PostgreSqlRowVersionConvention names it).
     public override string? RowVersionStoreType(Type clrType)
         => clrType == typeof(uint) ? "xid" : null;
-
-    // A timestamptz holds an instant: a DateTime (Npgsql writes it as UTC) as well as a DateTimeOffset.
-    public override IReadOnlyList<Type> GetClrTypes(string storeTypeBase)
-        => string.Equals(storeTypeBase, "TIMESTAMP WITH TIME ZONE", StringComparison.OrdinalIgnoreCase)
-            ? [typeof(DateTimeOffset), typeof(DateTime)]
-            : base.GetClrTypes(storeTypeBase);
 
     public override string? GetStoreType(Type clrType)
         => clrType == typeof(byte[]) ? "BYTEA" : base.GetStoreType(clrType);
@@ -289,58 +180,6 @@ internal sealed class PostgreSqlFunctions : FunctionSyntax
     public override string? TimeSpanMilliseconds => "FLOOR(EXTRACT(MILLISECONDS FROM {0}) % 1000)";
     public override string? TimeSpanMicroseconds => "EXTRACT(MICROSECONDS FROM {0}) % 1000";
     public override string? TimeSpanNanoseconds => "0";
-
-    // A time of day: PostgreSQL's time keeps microseconds, so the sub-microsecond part is zero.
-    public override string? Millisecond => "FLOOR(EXTRACT(MILLISECONDS FROM {0}) % 1000)";
-    public override string? Microsecond => "EXTRACT(MICROSECONDS FROM {0}) % 1000";
-    public override string? Nanosecond => "0";
-
-    // Calendar parts and the current date and time. DayOfWeek counts Sunday as 0, as PostgreSQL's DOW does; DayNumber counts
-    // days from 0001-01-01, which is day 0.
-    public override string? DayOfYear => "CAST(EXTRACT(DOY FROM {0}) AS integer)";
-    public override string? DayOfWeek => "CAST(EXTRACT(DOW FROM {0}) AS integer)";
-    public override string? DateOf => "CAST({0} AS date)";
-    public override string? DayNumber => "(CAST({0} AS date) - DATE '0001-01-01')";
-    public override string? Now => "LOCALTIMESTAMP";
-    public override string? Today => "CAST(CAST(LOCALTIMESTAMP AS date) AS timestamp)";
-    public override string? OffsetNow => "CURRENT_TIMESTAMP";
-
-    // A date at a time of day: the date's timestamp plus the time as an interval.
-    public override string? DateAtTime => "(CAST({0} AS timestamp) + CAST({1} AS interval))";
-
-    // IndexOf from a start: POSITION finds the value in the rest of the string, so its position is moved back into the whole
-    // string, and zero stays zero (not found).
-    public override string? PositionFrom
-        => "(CASE WHEN POSITION({0} IN SUBSTRING({1} FROM {2})) = 0 THEN 0 "
-           + "ELSE POSITION({0} IN SUBSTRING({1} FROM {2})) + {2} - 1 END)";
-
-    // Regex.IsMatch is PostgreSQL's case-sensitive regular-expression match, as .NET's default is.
-    public override string? RegexIsMatch => "({0} ~ {1})";
-    public override string? TimeFromDateTime => "CAST({0} AS time)";
-    public override string? TimeFromTimeSpan => "CAST({0} AS time)";
-
-    // time + interval wraps past midnight, as TimeOnly.Add does; IsBetween wraps when its end is earlier than its start.
-    public override string? AddTime => "(CAST({0} AS time) + {1})";
-    public override string? TimeIsBetween => "(CASE WHEN {1} <= {2} THEN {0} >= {1} AND {0} < {2} ELSE {0} >= {1} OR {0} < {2} END)";
-
-    // The math functions PostgreSQL has under other names, or by the same name with a different argument type.
-    public override string? Atan2 => "ATAN2({0}, {1})";
-    public override string? Log2 => "(LN({0}) / LN(2.0))";
-    public override string? Sign => "SIGN({0})";
-    public override string? Truncate => "TRUNC({0})";
-    public override string? Degrees => "DEGREES({0})";
-    public override string? Radians => "RADIANS({0})";
-    public override string? Greatest => "GREATEST({0}, {1})";
-    public override string? Least => "LEAST({0}, {1})";
-    public override string? Asinh => "ASINH({0})";
-
-    // Outside their domains PostgreSQL raises an error where .NET returns NaN; the error is kept, not a NaN that PostgreSQL orders above
-    // every number. Recorded as an engine gap in the specification overrides.
-    public override string? Acosh => "ACOSH({0})";
-    public override string? Atanh => "ATANH({0})";
-
-    // LOG(base, x) takes numerics; the change of base is taken over doubles, as .NET computes it.
-    public override string? LogBase => "(LN(CAST({0} AS double precision)) / LN(CAST({1} AS double precision)))";
 }
 
 internal static class PostgreSqlJson
@@ -353,7 +192,7 @@ internal static class PostgreSqlJson
             "CAST((jsonb_path_query_first({0}, CAST({1} AS jsonpath)) #>> '{}') AS boolean)",
             "decode((jsonb_path_query_first({0}, CAST({1} AS jsonpath)) #>> '{}'), 'base64')",
             "({0} || {1})",
-            "jsonb_set({0}, string_to_array(ltrim(regexp_replace(regexp_replace({1}, '^\\$\\.?', ''), '\\[([0-9]+)\\]', '.\\1', 'g'), '.'), '.'), to_jsonb({2}), true)",
+            "jsonb_set({0}, string_to_array(ltrim(regexp_replace(regexp_replace({1}, '^\\$\\.?', ''), '\\[([0-9]+)\\]', '.\\1', 'g'), '.'), '.'), {2}, true)",
             "CAST({0} AS jsonb)")
     {
         UsesBinaryDocument = true,
@@ -366,19 +205,6 @@ internal static class PostgreSqlJson
         // BOOLEAN, etc., which PostgreSQL correctly rejects.
         ArrayElements = "(SELECT CAST(e.value #>> '{}' AS {3}) AS {2}, e.ordinality AS {1} FROM jsonb_array_elements({0}) WITH ORDINALITY AS e(value))",
         ArrayElementsTextType = "{0}",
-        ArrayElementsBinaryValue = "decode({0}, 'base64')",
-        ConfigureParameter = ConfigureJsonParameter
+        ArrayElementsBinaryValue = "decode({0}, 'base64')"
     };
-
-    // Npgsql's NpgsqlDbType is the jsonb parameter type. Reflection keeps the driver out of this assembly's references.
-    private static void ConfigureJsonParameter(System.Data.Common.DbParameter parameter)
-    {
-        var property = parameter.GetType().GetProperty("NpgsqlDbType");
-        if (property?.PropertyType.IsEnum != true)
-        {
-            return;
-        }
-
-        property.SetValue(parameter, Enum.Parse(property.PropertyType, "Jsonb", ignoreCase: false));
-    }
 }

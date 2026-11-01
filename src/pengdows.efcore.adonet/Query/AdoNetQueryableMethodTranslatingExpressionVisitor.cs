@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 namespace pengdows.efcore.adonet.Query;
 
 /// <summary>EF's relational LINQ translation; the dialect's <see cref="DmlSyntax" /> decides which deletes it writes directly.</summary>
-internal class AdoNetQueryableMethodTranslatingExpressionVisitor : RelationalQueryableMethodTranslatingExpressionVisitor
+public class AdoNetQueryableMethodTranslatingExpressionVisitor : RelationalQueryableMethodTranslatingExpressionVisitor
 {
     private readonly ISqlDialect _dialect;
     private readonly IRelationalTypeMappingSource _typeMappingSource;

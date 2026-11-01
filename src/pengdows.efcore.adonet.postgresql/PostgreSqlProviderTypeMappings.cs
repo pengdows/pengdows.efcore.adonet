@@ -162,58 +162,6 @@ internal sealed class PostgreSqlProviderTypeMappingPlugin(IServiceProvider servi
         => string.Equals(info.StoreTypeNameBase ?? info.StoreTypeName, type, StringComparison.OrdinalIgnoreCase);
 }
 
-internal sealed class PostgreSqlProviderTypeMapping : RelationalTypeMapping
-{
-    public PostgreSqlProviderTypeMapping(Type clrType, string storeType)
-        : this(new RelationalTypeMappingParameters(new CoreTypeMappingParameters(clrType), storeType))
-    {
-    }
-
-    private PostgreSqlProviderTypeMapping(RelationalTypeMappingParameters parameters)
-        : base(parameters)
-    {
-    }
-
-    protected override RelationalTypeMapping Clone(RelationalTypeMappingParameters parameters)
-        => new PostgreSqlProviderTypeMapping(parameters);
-
-    // A range literal is its text, cast to the range type: '[1,5)'::int4range.
-    protected override string GenerateNonNullSqlLiteral(object value)
-        => value switch
-        {
-            IPAddress address => "'" + address + "'::" + StoreType,
-            _ when value.GetType() is { IsGenericType: true } range && range.GetGenericTypeDefinition() == typeof(NpgsqlRange<>)
-                => RangeLiteral(value),
-            _ => throw new NotSupportedException("PostgreSQL provider-specific literals require their native type syntax."),
-        };
-
-    private string RangeLiteral(object range)
-    {
-        var type = range.GetType();
-        object? Property(string name) => type.GetProperty(name)!.GetValue(range);
-        if ((bool)Property(nameof(NpgsqlRange<int>.IsEmpty))!)
-        {
-            return "'empty'::" + StoreType;
-        }
-
-        var lowerInfinite = (bool)Property(nameof(NpgsqlRange<int>.LowerBoundInfinite))!;
-        var upperInfinite = (bool)Property(nameof(NpgsqlRange<int>.UpperBoundInfinite))!;
-        var open = lowerInfinite || !(bool)Property(nameof(NpgsqlRange<int>.LowerBoundIsInclusive))! ? "(" : "[";
-        var close = upperInfinite || !(bool)Property(nameof(NpgsqlRange<int>.UpperBoundIsInclusive))! ? ")" : "]";
-        var lower = lowerInfinite ? "" : RangeBound(Property(nameof(NpgsqlRange<int>.LowerBound)));
-        var upper = upperInfinite ? "" : RangeBound(Property(nameof(NpgsqlRange<int>.UpperBound)));
-        return "'" + open + lower + "," + upper + close + "'::" + StoreType;
-    }
-
-    private static string RangeBound(object? bound)
-        => bound switch
-        {
-            DateOnly date => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-            DateTime time => time.ToString("yyyy-MM-dd HH:mm:ss.ffffff", CultureInfo.InvariantCulture),
-            _ => Convert.ToString(bound, CultureInfo.InvariantCulture) ?? ""
-        };
-}
-
 // Npgsql sends a UTC DateTime as timestamp without time zone unless the parameter names timestamptz.
 internal sealed class PostgreSqlTimestampWithTimeZoneMapping : AdoNetDateTimeTypeMapping
 {
@@ -303,36 +251,3 @@ internal sealed class PostgreSqlTextTypedMapping : RelationalTypeMapping
         => "'" + ((string)value).Replace("'", "''", StringComparison.Ordinal) + "'::" + StoreType;
 }
 
-internal sealed class PostgreSqlArrayTypeMapping : RelationalTypeMapping, IArrayTypeMapping
-{
-    public PostgreSqlArrayTypeMapping(Type clrType, string storeType, RelationalTypeMapping element)
-        : this(new RelationalTypeMappingParameters(
-            new CoreTypeMappingParameters(clrType, elementMapping: element), storeType))
-    {
-    }
-
-    private PostgreSqlArrayTypeMapping(RelationalTypeMappingParameters parameters)
-        : base(parameters)
-    {
-    }
-
-    public string Elements => "(SELECT ROW_NUMBER() OVER () - 1 AS {1}, unnest({0}) AS {2})";
-    public string? Contains => "{1} = ANY({0})";
-    public string? Count => "CARDINALITY({0})";
-    public string? ElementAt => "({0})[{1} + 1]";
-
-    protected override RelationalTypeMapping Clone(RelationalTypeMappingParameters parameters)
-        => new PostgreSqlArrayTypeMapping(parameters);
-
-    protected override void ConfigureParameter(DbParameter parameter)
-    {
-        base.ConfigureParameter(parameter);
-        if (parameter is NpgsqlParameter npgsql)
-        {
-            npgsql.DataTypeName = StoreType;
-        }
-    }
-
-    protected override string GenerateNonNullSqlLiteral(object value)
-        => "ARRAY[" + string.Join(", ", ((Array)value).Cast<object>().Select(v => ((RelationalTypeMapping)ElementTypeMapping!).GenerateSqlLiteral(v))) + "]";
-}
