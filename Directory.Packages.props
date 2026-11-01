@@ -10,6 +10,7 @@
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.11" />
     <PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.12" />
     <PackageVersion Include="DuckDB.NET.Data" Version="0.0.0-local.4240e4d" />
+    <PackageVersion Include="pengdows.efcore.adonet" Version="$(PengdowsVersion)" Condition="'$(UsePackedCore)' == 'true'" />
     <PackageVersion Include="DuckDB.NET.Bindings" Version="0.0.0-local.4240e4d" />
     <PackageVersion Include="DuckDB.NET.Data.Full" Version="1.5.6.1" />
     <PackageVersion Include="DuckDB.NET.Bindings.Full" Version="1.5.6" />

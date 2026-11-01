@@ -4,7 +4,8 @@
     <IsTestProject>false</IsTestProject>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\pengdows.efcore.adonet\pengdows.efcore.adonet.csproj" />
+    <ProjectReference Include="..\pengdows.efcore.adonet\pengdows.efcore.adonet.csproj" Condition="'$(UsePackedCore)' != 'true'" />
+    <PackageReference Include="pengdows.efcore.adonet" Condition="'$(UsePackedCore)' == 'true'" />
     <PackageReference Include="xunit.v3.extensibility.core" />
     <PackageReference Include="xunit.v3.assert" />
     <PackageReference Include="Testcontainers" />

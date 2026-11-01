@@ -3,7 +3,8 @@
     <Description>NetTopologySuite spatial types for pengdows.efcore.adonet, on any dialect with SpatialSyntax.</Description>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\pengdows.efcore.adonet\pengdows.efcore.adonet.csproj" />
+    <ProjectReference Include="..\pengdows.efcore.adonet\pengdows.efcore.adonet.csproj" Condition="'$(UsePackedCore)' != 'true'" />
+    <PackageReference Include="pengdows.efcore.adonet" Condition="'$(UsePackedCore)' == 'true'" />
     <PackageReference Include="NetTopologySuite" />
     <PackageReference Include="NetTopologySuite.IO.SqlServerBytes" />
     <PackageReference Include="NetTopologySuite.IO.SpatiaLite" />

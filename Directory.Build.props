@@ -17,4 +17,10 @@
   <PropertyGroup Condition="$(MSBuildProjectDirectory.Contains('$([System.IO.Path]::DirectorySeparatorChar)src$([System.IO.Path]::DirectorySeparatorChar)'))">
     <NoWarn>$(NoWarn);RS0026;RS0027</NoWarn>
   </PropertyGroup>
+  <!-- UsePackedCore=true builds the MySQL plugin and its tests against the packed core (artifacts/packages), with no project reference
+       to the core: the way an outside plugin builds it. The packed version is the one CI packs. -->
+  <PropertyGroup Condition="'$(UsePackedCore)' == 'true'">
+    <PengdowsVersion Condition="'$(PengdowsVersion)' == ''">0.0.0-outside.1</PengdowsVersion>
+    <RestoreConfigFile>$(MSBuildThisFileDirectory)nuget.packed.config</RestoreConfigFile>
+  </PropertyGroup>
 </Project>

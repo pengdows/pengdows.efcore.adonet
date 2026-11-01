@@ -50,6 +50,19 @@ jobs:
       # Server-backed suites start their database with Testcontainers, which needs the Docker daemon on the runner.
       - run: dotnet test ${{ matrix.project }}
 
+  # The MySQL plugin built the way an outside plugin is: against the core packed into artifacts/packages, with no project reference
+  # to it. Proves the packed core carries everything a plugin needs, including the test kit the MySQL suite uses.
+  mysql-packed:
+    name: MySQL against the packed core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - run: dotnet pack src/pengdows.efcore.adonet/pengdows.efcore.adonet.csproj -c Release -p:Version=0.0.0-outside.1 -o artifacts/packages
+      - run: dotnet test test/pengdows.efcore.adonet.mysql.Tests -p:UsePackedCore=true -p:PengdowsVersion=0.0.0-outside.1 -p:RestoreForce=true
+
   # The EF Core specification suite is not in CI yet: it references the DuckDB plugin, whose DuckDB.NET packages come from
   # local-packages, and it runs every configured provider. Run it locally with: dotnet test test/pengdows.efcore.adonet.Specification.Tests
 

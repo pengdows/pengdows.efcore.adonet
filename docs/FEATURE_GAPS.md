@@ -33,12 +33,12 @@ Each row is a feature the upstream provider has and pengdows is partial or missi
 |---|---|---|---|
 | M1 | EF JSON complex and owned types | SQLite ❌, SQL Server ❌, DuckDB ❌, MySQL ◐, PostgreSQL ◐ | Largest gap. The matrix says many current spec failures happen before SQL translation because the test model lacks the provider's JSON store type. That means part of this may be test-lane configuration, not translation. Needs a cell-by-cell check. |
 | M2 | Retry execution strategy | SQLite ◐, SQL Server ◐, PostgreSQL ◐ | Partial. |
-| M3 | Multiple active readers | MySQL ◐, SQL Server ◐, PostgreSQL ◐ | Partial. |
+| M3 | Multiple active readers | SQL Server ◐, PostgreSQL ◐; MySQL is an engine gap | MySQL is not a to-do: MySQL's protocol has one open result set per connection, and MySqlConnector has no multiple active readers. The specification suites skip it as `[SKIP:MySQL]`. |
 | M4 | Stored procedures | MySQL ◐, SQL Server ◐, PostgreSQL ◐ | Partial. |
 | M5 | Sequences and generated keys | DuckDB ◐ | Partial. |
 | M6 | Identity insert and explicit generated values | SQLite ◐, PostgreSQL ◐ | Partial. |
 | M7 | Concurrency tokens | MySQL ◐, SQLite ◐, SQL Server ◐, PostgreSQL ◐ | Partial. Check each provider's token types. |
-| M8 | Rowversion / system-version token | MySQL ❌ (out of date: `MySqlRowVersionTests` exists), SQL Server ❌, PostgreSQL ◐ (`xmin`) | Re-check MySQL and SQL Server. |
+| M8 | Rowversion / system-version token | MySQL ✅ (`MySqlRowVersionTests`), SQL Server ✅ (`SqlServerRowVersionTests`), PostgreSQL ◐ (`xmin`) | Verified present; the earlier ❌ was stale. |
 | M9 | Migrations SQL generation | SQLite ◐, PostgreSQL ◐, DuckDB ◐ | Partial. PostgreSQL's table and column comments are closed (C12); the rest is open. |
 | M10 | Database scaffolding and schema reader | SQLite ◐, SQL Server ◐, PostgreSQL ◐, DuckDB ? | Partial. |
 | M11 | Bulk insert, update, and delete | MySQL ◐, DuckDB ◐ | Partial. |
@@ -78,11 +78,11 @@ matrix cell is correct. Items not listed here still need a per-feature check.
 | # | Finding | Evidence |
 |---|---|---|
 | M2 | Retry strategy is implemented in core. The matrix's partial status is out of date; a per-provider retry test is still needed. | `AdoNetRetryingExecutionStrategy.cs`, `ExecutionStrategyConformanceTests.cs` |
-| M3 | Multiple active readers: the dialect flag exists, set for FlatFile and per-connection-string for SQL Server. MySQL and PostgreSQL don't set it. | `AdoNetDialect.cs`, `SqlServerCapabilities.cs`, `FlatFileDialect.cs` |
+| M3 | Multiple active readers: the dialect flag exists, set for FlatFile and per-connection-string for SQL Server. MySQL leaves it off, which is correct: the database has no second open result set on one connection, and the specification suites skip those cases as `[SKIP:MySQL]` (`Overrides/MySql/LazyLoadProxy.cs`). PostgreSQL still to decide. | `AdoNetDialect.cs`, `SqlServerCapabilities.cs`, `FlatFileDialect.cs`, `Overrides/MySql/LazyLoadProxy.cs` |
 | M4 | Stored procedures: the flag is `false` for FlatFile and DuckDB, and no MySQL, SQL Server or PostgreSQL stored-procedure support is visible. | `ProviderConformanceTests.cs` gates on it |
 | M5 | Sequences: DuckDB has migration and sequence code; MySQL has a schema reader entry. | `DuckDbMigrations.cs`, `MySqlSchemaReader.cs` |
 | M6 | Identity insert: SQL Server implements `IdentityInsertSyntax`. No SQLite or PostgreSQL implementation. | `SqlServerDialect.cs:176` |
-| M8 | Rowversion: **verified as present**, with tests on MySQL and SQL Server. The matrix row is out of date. | `MySqlRowVersionTests.cs`, `SqlServerRowVersionTests.cs` |
+| M8 | Rowversion: **verified as present**, with tests on MySQL and SQL Server. The matrix row was out of date and is corrected. | `MySqlRowVersionTests.cs`, `SqlServerRowVersionTests.cs` |
 | M1 | JSON complex and owned types: tests exist on SQLite, DuckDB, PostgreSQL, MySQL and the core. The matrix's ❌ on SQLite, SQL Server and DuckDB needs checking against these tests. | `JsonTests.cs`, `DuckDbJsonTests.cs`, `PostgreSqlJsonTests.cs`, `MySqlModelOptionsDdlTests.cs` |
 
 **Result:** of the 14 matrix items, M2 and M8 are shown to be implemented, and M1 has tests the matrix doesn't credit. M3, M4, M5 and M6
