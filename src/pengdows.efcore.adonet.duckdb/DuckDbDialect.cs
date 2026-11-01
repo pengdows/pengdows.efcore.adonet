@@ -63,7 +63,7 @@ internal sealed class DuckDbSql : AnsiSqlDialect
 
     public override string ParameterMarker => "$";
     public override bool ParameterNameIncludesMarker => false;
-    public override PagingSyntax Paging { get; } = PagingSyntax.LimitOffset();
+    public override PagingSyntax Paging { get; } = PagingSyntax.LimitOffset().WithValueLimitsOnly();
     public override FunctionSyntax Functions { get; } = new DuckDbFunctions();
     public override string CurrentSchema => "current_schema()";
 

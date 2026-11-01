@@ -324,6 +324,19 @@ internal class AdoNetQueryableMethodTranslatingExpressionVisitor : RelationalQue
             outerKeySelector,
             Expression.Lambda(resultSelector.Body, resultSelector.Parameters[1], resultSelector.Parameters[0]));
 
+    // A select of a collection's VALUES (or a JSON array's elements), ordered by its ordinal, with nothing else applied to it.
+    private static bool IsOrdinalValues(SelectExpression select)
+        => select is
+        {
+            Tables: [var table],
+            Orderings: [{ Expression: ColumnExpression ordinal, IsAscending: true }],
+            Limit: null,
+            Offset: null,
+            IsDistinct: false
+        }
+        && (ordinal.TableAlias == table.Alias)
+        && (table is ValuesExpression || ((table is JsonArrayTableExpression) && (ordinal.Name == JsonArrayTableExpression.OrdinalColumn)));
+
     protected override ShapedQueryExpression? TranslateElementAtOrDefault(ShapedQueryExpression source, Expression index, bool returnDefault)
     {
         if ((WholeArray(source) is ({ ElementAt: { } elementAt }, var whole))
@@ -340,9 +353,14 @@ internal class AdoNetQueryableMethodTranslatingExpressionVisitor : RelationalQue
         // ElementAtOrDefault's documented result for a position outside the sequence, a negative one included, is the
         // default value. The guard is in SQL, so it holds whether the index is a constant or a parameter: a negative
         // position matches no row, and the OFFSET is clamped to 0 so the database never sees a negative value.
+        // Where OFFSET takes only a value, a position that is a column or expression selects its row by the ordinal instead (the
+        // rewrite below): a position that matches no ordinal is the default, a negative one included.
         if (returnDefault
             && source.QueryExpression is SelectExpression guarded
-            && TranslateExpression(index) is { } guardIndex)
+            && TranslateExpression(index) is { } guardIndex
+            && !(!_dialect.Paging.ComputesLimits
+                && guardIndex is not (SqlConstantExpression or SqlParameterExpression)
+                && IsOrdinalValues(guarded)))
         {
             var intMapping = _typeMappingSource.FindMapping(typeof(int))!;
             guardIndex = _sqlExpressionFactory.ApplyTypeMapping(guardIndex, intMapping)!;
