@@ -37,7 +37,7 @@ Each row is a feature the upstream provider has and pengdows is partial or missi
 | M4 | Stored procedures | MySQL ◐, SQL Server ◐, PostgreSQL ◐ | Partial. |
 | M5 | Sequences and generated keys | DuckDB ◐ | Partial. |
 | M6 | Identity insert and explicit generated values | SQLite ◐, PostgreSQL ◐ | Partial. |
-| M7 | Concurrency tokens | MySQL ◐, SQLite ◐, SQL Server ◐, PostgreSQL ◐ | Partial. Check each provider's token types. |
+| M7 | Concurrency tokens | MySQL ✅ for the concurrency-token groups (checked 2026-10-31); SQLite ◐, SQL Server ◐, PostgreSQL ◐ | The MySQL failures in `docs/specification-results/MySql.tsv` for these groups are stale: `ConcurrencyCheckAttribute_throws_if_value_in_database_changed`, `Can_insert_dependent_with_just_one_parent` and the shared-concurrency-token table splitting pass on the current code. The remaining "not yet provided" stored-procedure concurrency cases belong to M4. |
 | M8 | Rowversion / system-version token | MySQL ✅ (`MySqlRowVersionTests`), SQL Server ✅ (`SqlServerRowVersionTests`), PostgreSQL ◐ (`xmin`) | Verified present; the earlier ❌ was stale. |
 | M9 | Migrations SQL generation | SQLite ◐, PostgreSQL ◐, DuckDB ◐ | Partial. PostgreSQL's table and column comments are closed (C12); the rest is open. |
 | M10 | Database scaffolding and schema reader | SQLite ◐, SQL Server ◐, PostgreSQL ◐, DuckDB ? | Partial. |
