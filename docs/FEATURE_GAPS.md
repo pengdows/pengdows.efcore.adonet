@@ -41,7 +41,7 @@ Each row is a feature the upstream provider has and pengdows is partial or missi
 | M8 | Rowversion / system-version token | MySQL ✅ (`MySqlRowVersionTests`), SQL Server ✅ (`SqlServerRowVersionTests`), PostgreSQL ◐ (`xmin`) | Verified present; the earlier ❌ was stale. |
 | M9 | Migrations SQL generation | SQLite ◐, PostgreSQL ◐, DuckDB ◐ | Partial. PostgreSQL's table and column comments are closed (C12); the rest is open. |
 | M10 | Database scaffolding and schema reader | SQLite ◐, SQL Server ◐, PostgreSQL ◐, DuckDB ? | Partial. |
-| M11 | Bulk insert, update, and delete | MySQL ◐, DuckDB ◐ | Partial. |
+| M11 | Bulk insert, update, and delete | MySQL ◐ (485 of 487 bulk-update specs pass; the one open case is `Update_with_RightJoin`), DuckDB ◐ | The MySQL failures recorded in `MySql.tsv` for bulk update are stale (checked 2026-10-31). The open case: an UPDATE over a RIGHT JOIN. The core rewrites a right join as a swapped left join, which is right for SELECT but may change the UPDATE target; to confirm from the generated SQL before changing anything. |
 | M12 | EF primitive collections | SQLite ◐, SQL Server ◐, PostgreSQL ◐ (improved 2026-10-30, see below), DuckDB ◐ native LIST | Partial. |
 | M13 | NTS and spatial base integration | MySQL ◐, SQLite ❌, PostgreSQL ❌ | Missing on two engines. |
 | M14 | Retry, and other items marked `?` in the matrix | Various | Not audited. |
