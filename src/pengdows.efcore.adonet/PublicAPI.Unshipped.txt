@@ -272,6 +272,7 @@ pengdows.efcore.adonet.ISqlDialect.Savepoints.get -> pengdows.efcore.adonet.Save
 pengdows.efcore.adonet.ISqlDialect.StringLiteral(string! value) -> string!
 pengdows.efcore.adonet.ISqlDialect.SupportsSchemas.get -> bool
 pengdows.efcore.adonet.ISqlDialect.SupportsStoredProcedures.get -> bool
+pengdows.efcore.adonet.ISqlDialect.SupportsForeignKeyCycles.get -> bool
 pengdows.efcore.adonet.ISqlDialect.GeneratesCompositeKeyValues.get -> bool
 pengdows.efcore.adonet.ISqlDialect.SupportsOuterReferencesInDerivedTables.get -> bool
 pengdows.efcore.adonet.ISqlDialect.SupportsWindowFunctions.get -> bool
@@ -434,6 +435,7 @@ virtual pengdows.efcore.adonet.AnsiSqlDialect.Savepoints.get -> pengdows.efcore.
 virtual pengdows.efcore.adonet.AnsiSqlDialect.StringLiteral(string! value) -> string!
 virtual pengdows.efcore.adonet.AnsiSqlDialect.SupportsSchemas.get -> bool
 virtual pengdows.efcore.adonet.AnsiSqlDialect.SupportsStoredProcedures.get -> bool
+virtual pengdows.efcore.adonet.AnsiSqlDialect.SupportsForeignKeyCycles.get -> bool
 virtual pengdows.efcore.adonet.AnsiSqlDialect.GeneratesCompositeKeyValues.get -> bool
 virtual pengdows.efcore.adonet.AnsiSqlDialect.SupportsOuterReferencesInDerivedTables.get -> bool
 virtual pengdows.efcore.adonet.AnsiSqlDialect.SupportsWindowFunctions.get -> bool

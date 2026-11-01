@@ -55,9 +55,11 @@ public sealed class PartsSql(
     bool supportsStoredProcedures = true,
     bool generatesCompositeKeyValues = true,
     bool outerReferencesInDerivedTables = true,
-    bool windowFunctions = true) : AnsiSqlDialect
+    bool windowFunctions = true,
+    bool supportsForeignKeyCycles = true) : AnsiSqlDialect
 {
     public override bool SupportsWindowFunctions => windowFunctions;
+    public override bool SupportsForeignKeyCycles => supportsForeignKeyCycles;
     public override bool SupportsOuterReferencesInDerivedTables => outerReferencesInDerivedTables;
     public override bool SupportsStoredProcedures => supportsStoredProcedures;
     public override bool GeneratesCompositeKeyValues => generatesCompositeKeyValues;
@@ -173,6 +175,8 @@ public static class TestDialects
 
     public static readonly IAdoNetDialect NoStoredProcedures
         = new PartsDialect("No stored procedures", new PartsSql(supportsStoredProcedures: false));
+    public static readonly IAdoNetDialect NoForeignKeyCycles
+        = new PartsDialect("No foreign key cycles", new PartsSql(supportsForeignKeyCycles: false));
     public static readonly IAdoNetDialect NoEscape = new PartsDialect("No escape", new PartsSql(functions: new NoEscapeFunctions()));
     public static readonly IAdoNetDialect NoFunctions = new PartsDialect("No functions", new PartsSql(functions: new NoFunctions()));
     public static readonly IAdoNetDialect EmulatedExclusiveOr = new PartsDialect(

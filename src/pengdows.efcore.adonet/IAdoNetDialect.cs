@@ -89,6 +89,13 @@ public interface ISqlDialect
     bool SupportsStoredProcedures { get; }
 
     /// <summary>
+    ///     Whether the database declares a foreign key that closes a cycle of tables. Where it doesn't, a model whose tables refer
+    ///     to one another in a cycle is refused when the context starts; a foreign key can otherwise be declared only with its
+    ///     table, after the tables it refers to.
+    /// </summary>
+    bool SupportsForeignKeyCycles { get; }
+
+    /// <summary>
     ///     Whether the database generates a value for a column of a primary key of several columns (an owned collection's
     ///     own key). Where it can't (a database that generates only a key of one integer column, its row identifier), the
     ///     database refuses a row that leaves such a column to it, as with the database's own EF Core provider: the model gives

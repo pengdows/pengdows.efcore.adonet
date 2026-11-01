@@ -70,6 +70,7 @@ public class AnsiSqlDialect : ISqlDialect
         => true;
     public virtual bool SupportsSchemas => true;
     public virtual bool SupportsStoredProcedures => true;
+    public virtual bool SupportsForeignKeyCycles => true;
     public virtual bool GeneratesCompositeKeyValues => true;
     public virtual bool SupportsOuterReferencesInDerivedTables => true;
     public virtual bool SupportsWindowFunctions => true;

@@ -45,6 +45,10 @@ public sealed class DuckDbDialect : AdoNetDialect
 
 internal sealed class DuckDbSql : AnsiSqlDialect
 {
+    // DuckDB declares a foreign key only in CREATE TABLE, after the tables it refers to, so two tables that refer to each other
+    // can't be created with their keys.
+    public override bool SupportsForeignKeyCycles => false;
+
     // DuckDB.NET accepts only these: Serializable and the rest are refused, not remapped.
     public override IReadOnlySet<System.Data.IsolationLevel> SupportedIsolationLevels { get; } =
         new HashSet<System.Data.IsolationLevel> { System.Data.IsolationLevel.Unspecified, System.Data.IsolationLevel.Snapshot };
