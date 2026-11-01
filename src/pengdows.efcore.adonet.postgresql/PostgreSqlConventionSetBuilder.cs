@@ -18,6 +18,7 @@ internal sealed class PostgreSqlConventionSetBuilder(
     {
         var conventionSet = base.CreateConventionSet();
         conventionSet.ModelFinalizingConventions.Add(new PostgreSqlRowVersionConvention());
+        conventionSet.ModelFinalizingConventions.Add(new PostgreSqlEnumConvention());
         return conventionSet;
     }
 }
