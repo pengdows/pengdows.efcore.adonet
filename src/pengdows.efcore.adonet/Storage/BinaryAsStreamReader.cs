@@ -63,7 +63,7 @@ internal sealed class BinaryAsStreamReader(DbDataReader reader) : DelegatingData
 /// </summary>
 public abstract class DelegatingDataReader(DbDataReader reader) : DbDataReader
 {
-    protected DbDataReader Inner { get; } = reader;
+    protected virtual DbDataReader Inner { get; } = reader;
 
     public override T GetFieldValue<T>(int ordinal)
         => Inner.GetFieldValue<T>(ordinal);
@@ -134,6 +134,9 @@ public abstract class DelegatingDataReader(DbDataReader reader) : DbDataReader
     public override IEnumerator GetEnumerator() => new DbEnumerator(this, closeReader: false);
     public override void Close() => Inner.Close();
     public override Task CloseAsync() => Inner.CloseAsync();
+
+    public virtual Task CloseAsync(CancellationToken cancellationToken)
+        => cancellationToken.IsCancellationRequested ? Task.FromCanceled(cancellationToken) : CloseAsync();
 
     protected override void Dispose(bool disposing)
     {

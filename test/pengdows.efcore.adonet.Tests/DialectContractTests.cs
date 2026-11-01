@@ -102,7 +102,7 @@ public class DialectContractTests
         string[] recorded =
         [
             "pengdows.efcore.adonet.Bulk.BulkLoad.Connection.get -> System.Data.Common.DbConnection!",
-            "pengdows.efcore.adonet.Storage.DelegatingDataReader.Inner.get -> System.Data.Common.DbDataReader!",
+            "virtual pengdows.efcore.adonet.Storage.DelegatingDataReader.Inner.get -> System.Data.Common.DbDataReader!",
             "pengdows.efcore.adonet.Bulk.BulkLoad.Transaction.get -> System.Data.Common.DbTransaction!",
             "abstract pengdows.efcore.adonet.Testing.ProviderFixture.Factory.get -> System.Data.Common.DbProviderFactory!",
             "abstract pengdows.efcore.adonet.Testing.AdoNetEntryPoints.Factory.get -> System.Data.Common.DbProviderFactory!"

@@ -859,7 +859,7 @@ override pengdows.efcore.adonet.Storage.DelegatingDataReader.this[int ordinal].g
 override pengdows.efcore.adonet.Storage.DelegatingDataReader.this[string! name].get -> object!
 override pengdows.efcore.adonet.Storage.DelegatingDataReader.Dispose(bool disposing) -> void
 pengdows.efcore.adonet.Storage.DelegatingDataReader.DelegatingDataReader(System.Data.Common.DbDataReader! reader) -> void
-pengdows.efcore.adonet.Storage.DelegatingDataReader.Inner.get -> System.Data.Common.DbDataReader!
+virtual pengdows.efcore.adonet.Storage.DelegatingDataReader.Inner.get -> System.Data.Common.DbDataReader!
 
 pengdows.efcore.adonet.Metadata.AdoNetAnnotationProvider
 pengdows.efcore.adonet.Metadata.AdoNetAnnotationProvider.AdoNetAnnotationProvider(Microsoft.EntityFrameworkCore.Metadata.RelationalAnnotationProviderDependencies! dependencies) -> void
@@ -931,3 +931,4 @@ pengdows.efcore.adonet.SessionLockStatements.Acquire.get -> System.Func<System.T
 pengdows.efcore.adonet.SessionLockStatements.Release.get -> string!
 pengdows.efcore.adonet.ISqlDialect.SessionLock.get -> pengdows.efcore.adonet.SessionLockStatements?
 virtual pengdows.efcore.adonet.AnsiSqlDialect.SessionLock.get -> pengdows.efcore.adonet.SessionLockStatements?
+virtual pengdows.efcore.adonet.Storage.DelegatingDataReader.CloseAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!

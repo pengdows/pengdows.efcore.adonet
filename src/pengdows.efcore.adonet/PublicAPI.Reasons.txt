@@ -19,3 +19,5 @@ pengdows.efcore.adonet.DatabaseLifecycle.IsLockable.get -> System.Func<System.Da
 pengdows.efcore.adonet.DatabaseLifecycle.LockFileFor(System.Data.Common.DbConnectionStringBuilder! connection) -> string? | Where a database's migrations lock file is, from its storage: beside its file or directory, and nowhere for a server, an in-memory database, or an unlockable path.
 pengdows.efcore.adonet.DatabaseLifecycle.SingleWriter.get -> bool | Whether the database is single-writer (one writer, any number of readers): its migrations take the lock file beside it.
 pengdows.efcore.adonet.SessionLockStatements | A dialect's server-side session lock for migrations: the statement taking it and the statement releasing it.
+pengdows.efcore.adonet.Storage.DelegatingDataReader.Inner.get | The wrapped reader is virtual so a subclass can substitute the reader it delegates to.
+pengdows.efcore.adonet.Storage.DelegatingDataReader.CloseAsync(System.Threading.CancellationToken) | The cancellable close the async API convention requires; it honours a cancelled token before closing.
