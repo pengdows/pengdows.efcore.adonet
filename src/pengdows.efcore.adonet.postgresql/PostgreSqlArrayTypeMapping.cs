@@ -167,7 +167,14 @@ internal sealed class PostgreSqlTypeMappingSource(
     private static readonly PostgreSqlProviderTypeMapping[] ProviderTypes =
     [
         new(typeof(NpgsqlTypes.NpgsqlTsVector), "tsvector", NpgsqlTypes.NpgsqlDbType.TsVector),
-        new(typeof(NpgsqlTypes.NpgsqlTsQuery), "tsquery", NpgsqlTypes.NpgsqlDbType.TsQuery)
+        new(typeof(NpgsqlTypes.NpgsqlTsQuery), "tsquery", NpgsqlTypes.NpgsqlDbType.TsQuery),
+        new(typeof(System.Net.IPAddress), "inet", NpgsqlTypes.NpgsqlDbType.Inet),
+        new(typeof(NpgsqlTypes.NpgsqlInet), "inet", NpgsqlTypes.NpgsqlDbType.Inet),
+        new(typeof(System.Net.IPNetwork), "cidr", NpgsqlTypes.NpgsqlDbType.Cidr),
+        new(typeof(NpgsqlTypes.NpgsqlCidr), "cidr", NpgsqlTypes.NpgsqlDbType.Cidr),
+        new(typeof(System.Net.NetworkInformation.PhysicalAddress), "macaddr", NpgsqlTypes.NpgsqlDbType.MacAddr),
+        new(typeof(System.Net.NetworkInformation.PhysicalAddress), "macaddr8", NpgsqlTypes.NpgsqlDbType.MacAddr8),
+        .. PostgreSqlRangeTypes.Mappings
     ];
 
     protected override RelationalTypeMapping? FindMapping(in RelationalTypeMappingInfo mappingInfo)

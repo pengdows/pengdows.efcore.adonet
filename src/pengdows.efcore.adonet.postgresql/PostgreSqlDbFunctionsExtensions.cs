@@ -48,7 +48,11 @@ internal sealed class PostgreSqlEvaluatableExpressionFilterPlugin : IEvaluatable
         typeof(PostgreSqlDbFunctionsExtensions),
         typeof(PostgreSqlJsonDbFunctionsExtensions),
         typeof(PostgreSqlFullTextSearchDbFunctionsExtensions),
-        typeof(PostgreSqlFullTextSearchLinqExtensions)
+        typeof(PostgreSqlFullTextSearchLinqExtensions),
+        typeof(PostgreSqlTrigramsDbFunctionsExtensions),
+        typeof(PostgreSqlFuzzyStringMatchDbFunctionsExtensions),
+        typeof(PostgreSqlNetworkDbFunctionsExtensions),
+        typeof(PostgreSqlRangeDbFunctionsExtensions)
     ];
 
     public bool IsEvaluatableExpression(System.Linq.Expressions.Expression expression)
@@ -63,7 +67,10 @@ internal sealed class PostgreSqlDbFunctionsTranslatorPlugin(ISqlExpressionFactor
     [
         new PostgreSqlDbFunctionsTranslator(sqlExpressionFactory, typeMappingSource),
         new PostgreSqlJsonDbFunctionsTranslator(sqlExpressionFactory, typeMappingSource),
-        new PostgreSqlFullTextSearchTranslator(sqlExpressionFactory, typeMappingSource)
+        new PostgreSqlFullTextSearchTranslator(sqlExpressionFactory, typeMappingSource),
+        new PostgreSqlTextSimilarityTranslator(sqlExpressionFactory, typeMappingSource),
+        new PostgreSqlNetworkTranslator(sqlExpressionFactory, typeMappingSource),
+        new PostgreSqlRangeTranslator(sqlExpressionFactory, typeMappingSource)
     ];
 }
 
