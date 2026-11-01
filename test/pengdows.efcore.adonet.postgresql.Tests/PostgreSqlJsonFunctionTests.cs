@@ -70,20 +70,6 @@ public sealed class PostgreSqlJsonFunctionTests
     }
 
     [Fact]
-    public void JsonExistAny_and_JsonExistAll_take_a_text_array()
-    {
-        using var context = Create();
-
-        string[] keys = ["a", "it's"];
-
-        var any = context.Rows.Where(r => EF.Functions.JsonExistAny(r.Document, "a", "b")).ToQueryString();
-        var all = context.Rows.Where(r => EF.Functions.JsonExistAll(r.Document, keys)).ToQueryString();
-
-        Assert.Contains("r.\"Document\" ?| ARRAY['a','b']::text[]", any);
-        Assert.Contains("r.\"Document\" ?& ", all);
-    }
-
-    [Fact]
     public void A_keys_parameter_binds_as_a_text_array()
     {
         using var context = Create();

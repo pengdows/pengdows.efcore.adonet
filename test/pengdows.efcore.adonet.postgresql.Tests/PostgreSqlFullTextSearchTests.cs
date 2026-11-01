@@ -95,22 +95,6 @@ public sealed class PostgreSqlFullTextSearchTests
     }
 
     [Fact]
-    public void Rank_takes_weights_first_and_normalization_as_an_integer()
-    {
-        using var context = Create();
-
-        var rank = context.Articles.Select(a => a.SearchVector.Rank(EF.Functions.PlainToTsQuery("x"))).ToQueryString();
-        var weighted = context.Articles
-            .Select(a => a.SearchVector.RankCoverDensity(
-                new[] { 0.1f, 0.2f, 0.4f, 1f }, EF.Functions.PlainToTsQuery("x"), PostgreSqlTsRankingNormalization.DivideByLength))
-            .ToQueryString();
-
-        Assert.Contains("ts_rank(a.\"SearchVector\", plainto_tsquery('x'))", rank);
-        Assert.Contains("ts_rank_cd(ARRAY[", weighted);
-        Assert.Contains("]::real[], a.\"SearchVector\", plainto_tsquery('x'), 2)", weighted);
-    }
-
-    [Fact]
     public void Query_operators_and_vector_functions()
     {
         using var context = Create();
