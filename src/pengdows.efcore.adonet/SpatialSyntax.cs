@@ -13,7 +13,10 @@ public enum SpatialBinary
     ///     The GAIA geometry BLOB: a header with the byte order, SRID and bounding rectangle, then the geometry in its own
     ///     encoding. Its coordinates are those the column's type names (a <c>Z</c>, <c>M</c> or <c>ZM</c> suffix).
     /// </summary>
-    Gaia
+    Gaia,
+
+    /// <summary>PostGIS's extended well-known binary: the SRID in the header, which the column keeps.</summary>
+    Ewkb
 }
 
 /// <summary>How the ADO.NET provider receives a spatial parameter.</summary>
@@ -104,6 +107,13 @@ public sealed class SpatialSyntax
 
     /// <summary>How the spatial value is bound to an ADO.NET parameter.</summary>
     public SpatialParameterBinding ParameterBinding { get; init; } = SpatialParameterBinding.Binary;
+
+    /// <summary>
+    ///     How a spatial column is read as the binary the driver returns, as a template over the column <c>{0}</c>: a cast to
+    ///     the binary type (<c>CAST({0} AS ...)</c>), which the driver reads as bytes. Null where the driver reads the column's
+    ///     type directly.
+    /// </summary>
+    public string? ReadAs { get; init; }
 
     /// <summary>Whether coordinates keep Z and M; where they don't, only X and Y are written.</summary>
     public bool StoresZAndM { get; init; } = true;

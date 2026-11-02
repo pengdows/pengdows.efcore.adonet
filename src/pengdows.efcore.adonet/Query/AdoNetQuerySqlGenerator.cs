@@ -163,7 +163,7 @@ public partial class AdoNetQuerySqlGenerator(
     {
         if (TryFoldedCase(extensionExpression) is { } folded)
         {
-            return Visit(folded);
+            return Visit(folded)!;
         }
 
         if (extensionExpression is JsonArrayTableExpression table)

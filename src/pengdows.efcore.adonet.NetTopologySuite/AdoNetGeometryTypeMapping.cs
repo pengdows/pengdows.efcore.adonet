@@ -110,9 +110,13 @@ public class AdoNetGeometryTypeMapping<TGeometry> : RelationalGeometryTypeMappin
     {
         var ordinates = GeometryOrdinates(geometry, zAndM);
 
-        var wkb = new WKBWriter(ByteOrder.LittleEndian, handleSRID: false, emitZ: ordinates.HasFlag(Ordinates.Z), emitM: ordinates.HasFlag(Ordinates.M))
-            .Write(geometry);
-        if (binary == SpatialBinary.Wkb)
+        // EWKB carries the SRID in the header, which WKBWriter writes when HandleSRID is set; the reader takes it from there.
+        var wkb = new WKBWriter(
+            ByteOrder.LittleEndian,
+            handleSRID: binary == SpatialBinary.Ewkb,
+            emitZ: ordinates.HasFlag(Ordinates.Z),
+            emitM: ordinates.HasFlag(Ordinates.M)).Write(geometry);
+        if (binary is SpatialBinary.Wkb or SpatialBinary.Ewkb)
         {
             return wkb;
         }
@@ -146,7 +150,7 @@ public class AdoNetGeometryTypeMapping<TGeometry> : RelationalGeometryTypeMappin
 
     private static Geometry Decode(WKBReader reader, byte[] bytes, SpatialBinary binary)
     {
-        if (binary == SpatialBinary.Wkb)
+        if (binary is SpatialBinary.Wkb or SpatialBinary.Ewkb)
         {
             return reader.Read(bytes);
         }

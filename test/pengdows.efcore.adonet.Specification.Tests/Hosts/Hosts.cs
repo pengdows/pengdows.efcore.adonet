@@ -52,8 +52,14 @@ public abstract class ServerHost : IDatabaseHost
         return connection;
     }
 
-    public Task CreateEmptyDatabaseAsync(string database)
-        => ExecuteAdminAsync([.. DropSql(database), .. CreateSql(database)]);
+    public async Task CreateEmptyDatabaseAsync(string database)
+    {
+        await BeforeCreatingDatabaseAsync();
+        await ExecuteAdminAsync([.. DropSql(database), .. CreateSql(database)]);
+    }
+
+    // Work the server does once before any database is created, such as installing an extension its databases copy.
+    protected virtual Task BeforeCreatingDatabaseAsync() => Task.CompletedTask;
 
     public Task DropDatabaseAsync(string database)
         => ExecuteAdminAsync(DropSql(database));
@@ -130,7 +136,21 @@ public sealed class PostgreSqlHost : ServerHost
 
     public override UpdateProcedures? UpdateProcedures => PostgreSqlUpdateProcedures.Instance;
 
-    private static readonly RunContainer Container = new(() => new PostgreSqlBuilder("postgres:17").Build());
+    // PostGIS, which the spatial types need: the image is PostgreSQL 17 with the extension.
+    private static readonly RunContainer Container = new(() => new PostgreSqlBuilder("postgis/postgis:17-3.5").Build());
+
+    // PostGIS is installed in template1 once, so every test database (copied from it) has the extension.
+    private static readonly Lazy<Task> PostgisInTemplate = new(async () =>
+    {
+        await using var connection = new Npgsql.NpgsqlConnection(
+            new Npgsql.NpgsqlConnectionStringBuilder(Container.ConnectionString) { Database = "template1", Pooling = false }.ConnectionString);
+        await connection.OpenAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = "CREATE EXTENSION IF NOT EXISTS postgis";
+        await command.ExecuteNonQueryAsync();
+    });
+
+    protected override Task BeforeCreatingDatabaseAsync() => PostgisInTemplate.Value;
 
     // The image allows 25 connections in all and a few go to administration. Npgsql pools per connection string and each test
     // store has its own database, so a pool size can't bound the total: one StormGate holds the budget for every connection the

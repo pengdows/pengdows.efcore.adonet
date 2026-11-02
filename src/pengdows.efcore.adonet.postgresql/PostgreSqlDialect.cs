@@ -67,6 +67,24 @@ internal sealed class PostgreSqlSql : AnsiSqlDialect
     public override string? ParameterCast(string storeType)
         => string.Equals(storeType, "inet", StringComparison.OrdinalIgnoreCase) ? "::inet" : null;
 
+    // PostGIS's geometry is EWKB: the driver writes it as bytes, which PostgreSQL casts to geometry implicitly, and reads it as
+    // bytes through CAST(... AS bytea), since the driver can't read the geometry type itself. PostGIS's ST_ functions are the
+    // ISO SQL/MM names the default function templates use.
+    public override SpatialSyntax? Spatial { get; } = new()
+    {
+        Binary = SpatialBinary.Ewkb,
+        FromText = "ST_GeomFromText({0}, {1})",
+        StoreType = _ => "geometry",
+        ReadAs = "CAST({0} AS bytea)",
+        // PostGIS names these as its own; the ISO names don't cover them.
+        Functions = new Dictionary<string, string?>(StringComparer.Ordinal)
+        {
+            ["UnaryUnion"] = "ST_UnaryUnion({0})",
+            ["Reverse"] = "ST_Reverse({0})",
+            ["Normalized"] = "ST_Normalize({0})"
+        }
+    };
+
     // Through the postgres database; WITH (FORCE) ends other sessions (PostgreSQL 13+). Behaviour reference (not copied):
     // https://github.com/npgsql/efcore.pg/blob/v10.0.3/src/EFCore.PG/Storage/Internal/NpgsqlDatabaseCreator.cs
     public override DatabaseLifecycle Databases { get; } = DatabaseLifecycle.Server(
@@ -98,10 +116,14 @@ internal sealed class PostgreSqlSql : AnsiSqlDialect
     public override FunctionSyntax Functions { get; } = new PostgreSqlFunctions();
     public override JsonSyntax Json { get; } = PostgreSqlJson.Syntax;
     public override string CurrentSchema => "CURRENT_SCHEMA";
-    // INFORMATION_SCHEMA.TABLES also lists the system catalogs.
+    // INFORMATION_SCHEMA.TABLES also lists the system catalogs, and an extension's tables (PostGIS's spatial_ref_sys) are not
+    // the database's own: a table a CREATE EXTENSION made is an extension member (pg_depend's 'e').
     public override string HasTablesSql
-        => "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' "
-            + "AND TABLE_SCHEMA NOT IN ('pg_catalog', 'information_schema')";
+        => "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES t WHERE t.TABLE_TYPE = 'BASE TABLE' "
+            + "AND t.TABLE_SCHEMA NOT IN ('pg_catalog', 'information_schema') "
+            + "AND NOT EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace "
+            + "JOIN pg_depend d ON d.objid = c.oid AND d.classid = 'pg_class'::regclass "
+            + "WHERE n.nspname = t.TABLE_SCHEMA AND c.relname = t.TABLE_NAME AND d.deptype = 'e')";
 }
 
 internal sealed class PostgreSqlTypeMappings : AnsiTypeMappings

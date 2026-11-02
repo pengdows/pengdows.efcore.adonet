@@ -9,11 +9,20 @@ public partial class AdoNetQuerySqlGenerator
 {
     private SelectExpression? _unionOperand;
     private bool _typingNullProjection;
+    // A select's projection expressions, by reference, and whether one of them is being written: a geometry projection is read
+    // through the dialect's ReadAs, and an expression inside a projection (a function's argument) is not wrapped.
+    private HashSet<Expression>? _projectedExpressions;
+    private bool _projectionItemActive;
 
     protected override void GenerateProjection(SelectExpression selectExpression)
     {
         var previous = _typingNullProjection;
+        var previousProjected = _projectedExpressions;
+        var previousActive = _projectionItemActive;
         _typingNullProjection = ReferenceEquals(selectExpression, _unionOperand);
+        _projectedExpressions = new HashSet<Expression>(
+            selectExpression.Projection.Select(projection => (Expression)projection.Expression), ReferenceEqualityComparer.Instance);
+        _projectionItemActive = false;
         try
         {
             base.GenerateProjection(selectExpression);
@@ -21,6 +30,8 @@ public partial class AdoNetQuerySqlGenerator
         finally
         {
             _typingNullProjection = previous;
+            _projectedExpressions = previousProjected;
+            _projectionItemActive = previousActive;
         }
 
         if ((_selectDepth > 1)
@@ -29,6 +40,37 @@ public partial class AdoNetQuerySqlGenerator
         {
             Sql.Append(AliasSeparator)
                 .Append(Dependencies.SqlGenerationHelper.DelimitIdentifier($"c{_derivedProjectionAlias++}"));
+        }
+    }
+
+    // A geometry a select projects is read through the dialect's ReadAs, since the driver can't read the database's geometry
+    // type. Only a projection item itself is wrapped: an expression visited while one is being written is part of it.
+    public override Expression? Visit(Expression? node)
+    {
+        if ((_projectedExpressions is null) || _projectionItemActive || (node is null) || !_projectedExpressions.Contains(node))
+        {
+            return base.Visit(node);
+        }
+
+        _projectionItemActive = true;
+        try
+        {
+            if (node is SqlExpression { TypeMapping.StoreType: { } storeType }
+                && dialect.Spatial is { ReadAs: { } readAs } spatial
+                && string.Equals(storeType, spatial.StoreType("Geometry"), StringComparison.OrdinalIgnoreCase))
+            {
+                var parts = readAs.Split("{0}");
+                Sql.Append(parts[0]);
+                base.Visit(node);
+                Sql.Append(parts[1]);
+                return node;
+            }
+
+            return base.Visit(node);
+        }
+        finally
+        {
+            _projectionItemActive = false;
         }
     }
 
