@@ -18,6 +18,7 @@ public sealed class DuckDbDialect : AdoNetDialect
     public override string Name => "DuckDB";
     public override ISqlDialect Sql { get; } = new DuckDbSql();
     public override ITypeMappingDialect TypeMappings { get; } = new DuckDbTypeMappings();
+    public override pengdows.efcore.adonet.Scaffolding.SchemaReader SchemaReader { get; } = new DuckDbSchemaReader();
     public override IDatabaseCapabilities Capabilities { get; } = new DatabaseCapabilities
     {
         SupportsMultipleStatementsPerCommand = true,

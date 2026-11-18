@@ -2,6 +2,7 @@
 override pengdows.efcore.adonet.duckdb.DuckDbDialect.Capabilities.get -> pengdows.efcore.adonet.IDatabaseCapabilities!
 override pengdows.efcore.adonet.duckdb.DuckDbDialect.ConfigureServices(Microsoft.Extensions.DependencyInjection.IServiceCollection! services) -> void
 override pengdows.efcore.adonet.duckdb.DuckDbDialect.Name.get -> string!
+override pengdows.efcore.adonet.duckdb.DuckDbDialect.SchemaReader.get -> pengdows.efcore.adonet.Scaffolding.SchemaReader!
 override pengdows.efcore.adonet.duckdb.DuckDbDialect.Sql.get -> pengdows.efcore.adonet.ISqlDialect!
 override pengdows.efcore.adonet.duckdb.DuckDbDialect.TypeMappings.get -> pengdows.efcore.adonet.ITypeMappingDialect!
 pengdows.efcore.adonet.duckdb.DuckDbDbContextOptionsBuilderExtensions

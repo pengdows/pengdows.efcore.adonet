@@ -25,6 +25,39 @@ internal class DuckDbMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies d
         }
 
         base.Generate(operation, model, builder, terminate);
+
+        if (!terminate)
+        {
+            return;
+        }
+
+        if (operation.Comment is { Length: > 0 } tableComment)
+        {
+            CommentOn(builder, "TABLE", Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Name, operation.Schema), tableComment);
+        }
+
+        foreach (var column in operation.Columns.Where(column => column.Comment is not null))
+        {
+            CommentOn(builder, "COLUMN", Dependencies.SqlGenerationHelper.DelimitIdentifier(column.Name, operation.Name), column.Comment);
+        }
+    }
+
+    protected override void Generate(AlterTableOperation operation, IModel? model, MigrationCommandListBuilder builder)
+    {
+        base.Generate(operation, model, builder);
+        if (operation.OldTable.Comment != operation.Comment)
+        {
+            CommentOn(builder, "TABLE", Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Name, operation.Schema), operation.Comment);
+        }
+    }
+
+    protected override void Generate(AlterColumnOperation operation, IModel? model, MigrationCommandListBuilder builder)
+    {
+        base.Generate(operation, model, builder);
+        if (operation.OldColumn.Comment != operation.Comment)
+        {
+            CommentOn(builder, "COLUMN", Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Name, operation.Table), operation.Comment);
+        }
     }
 
     /// <summary>DuckDB can't add a column with a constraint: add it with its default, then make it required.</summary>
@@ -33,6 +66,11 @@ internal class DuckDbMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies d
         if (operation.IsNullable)
         {
             base.Generate(operation, model, builder, terminate);
+            if (terminate && operation.Comment is not null)
+            {
+                CommentOn(builder, "COLUMN", Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Name, operation.Table), operation.Comment);
+            }
+
             return;
         }
 
@@ -54,6 +92,10 @@ internal class DuckDbMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies d
             .Append(" SET NOT NULL")
             .AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
         EndStatement(builder);
+        if (operation.Comment is not null)
+        {
+            CommentOn(builder, "COLUMN", Dependencies.SqlGenerationHelper.DelimitIdentifier(operation.Name, operation.Table), operation.Comment);
+        }
     }
 
     // nextval takes the sequence's name as a string: delimited and qualified as in DDL, then quoted as a literal.
@@ -126,6 +168,14 @@ internal class DuckDbMigrationsSqlGenerator(MigrationsSqlGeneratorDependencies d
 
     private static NotSupportedException SequenceUnchangeable(string name, string change)
         => new($"DuckDB can't {change} sequence '{name}': its sequences can only be created and dropped. Drop it and create it anew.");
+
+    private void CommentOn(MigrationCommandListBuilder builder, string objectType, string target, string? comment)
+    {
+        builder.Append("COMMENT ON ").Append(objectType).Append(" ").Append(target).Append(" IS ")
+            .AppendLine(Dependencies.TypeMappingSource.GetMapping(typeof(string)).GenerateSqlLiteral(comment))
+            .AppendLine(Dependencies.SqlGenerationHelper.StatementTerminator);
+        EndStatement(builder);
+    }
 
     private static string SequenceName(string table, string column)
         => $"{table}_{column}_seq";
